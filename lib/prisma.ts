@@ -21,6 +21,7 @@ import { PrismaClient } from '@prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { normalizeLocalPgConnectionString } from './config/localPgConnectionString';
 
 /**
  * Extended PrismaClient type that works with both development (PG Adapter)
@@ -73,7 +74,9 @@ NODE_ENV: ${process.env.NODE_ENV || 'undefined'}
 
   // LOCAL DEVELOPMENT & TESTING: Use PG Adapter to satisfy WASM engine requirements
   if (isDevelopment) {
-    const connUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
+    const connUrl = normalizeLocalPgConnectionString(
+      process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL
+    );
     const pool = new Pool({
       connectionString: connUrl,
     });

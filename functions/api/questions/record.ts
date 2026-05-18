@@ -15,37 +15,80 @@ import {
   withProductionPregeneratedSafety,
   withProductionQuestionSafety,
 } from '../../../lib/services/questionServingSafety';
+import { resolveOrCreateQuestionIdentity } from '../../../lib/study/questionIdentityPersistence';
 import type { Prisma } from '@prisma/client';
 
 const QuestionRecordSchema = z.object({
   body: z.object({
     questionId: z.string(),
+    canonicalQuestionId: z.string().min(1).max(100).nullable().optional(),
+    sourceQuestionId: z.string().min(1).max(100).optional(),
+    questionSource: z
+      .enum(['question', 'pre_generated', 'staging', 'seed', 'generated'])
+      .optional(),
     questionType: z.string(),
     system: z.string().optional(),
     conditionId: z.string().optional(),
+    medicalContentId: z.string().nullable().optional(),
     wasCorrect: z.boolean().optional(),
     mode: z.string().optional(),
   }),
 });
 
+type QuestionRecordIdentityInput = {
+  canonicalQuestionId?: string | null;
+  sourceQuestionId?: string | null;
+  questionSource?: string | null;
+  system?: string | null;
+  conditionId?: string | null;
+  medicalContentId?: string | null;
+  mode?: string | null;
+  questionType?: string | null;
+};
+
+type QuestionRecordTarget = {
+  questionId: string;
+  conditionId: string | null;
+  medicalContentId: string | null;
+  questionIdentityId: string | null;
+};
+
 async function resolveCanonicalRecordTarget(
   prisma: ReturnType<typeof createEdgePrismaClient>,
-  questionId: string
-): Promise<{ questionId: string; conditionId: string | null; medicalContentId: string | null } | null> {
+  questionId: string,
+  identityInput: QuestionRecordIdentityInput,
+  logger: ReturnType<typeof createEndpointLogger>
+): Promise<QuestionRecordTarget | null> {
   const existing = await prisma.question.findFirst({
     where: withProductionQuestionSafety({ id: questionId }) as Prisma.QuestionWhereInput,
     select: { id: true, conditionId: true, medicalContentId: true },
   });
   if (existing) {
+    const questionIdentityId = await resolveRecordQuestionIdentityId(
+      prisma,
+      {
+        ...identityInput,
+        canonicalQuestionId: identityInput.canonicalQuestionId ?? existing.id,
+        sourceQuestionId: identityInput.sourceQuestionId ?? questionId,
+        questionSource: identityInput.questionSource ?? 'question',
+        conditionId: existing.conditionId ?? identityInput.conditionId ?? null,
+        medicalContentId: existing.medicalContentId ?? identityInput.medicalContentId ?? null,
+      },
+      logger
+    );
+
     return {
       questionId: existing.id,
       conditionId: existing.conditionId ?? null,
       medicalContentId: existing.medicalContentId ?? null,
+      questionIdentityId,
     };
   }
 
   const pregenerated = await prisma.preGeneratedQuestion.findFirst({
-    where: withProductionPregeneratedSafety({ id: questionId }) as Prisma.PreGeneratedQuestionWhereInput,
+    where: withProductionPregeneratedSafety({
+      id: questionId,
+    }) as Prisma.PreGeneratedQuestionWhereInput,
     select: {
       id: true,
       questionData: true,
@@ -68,7 +111,56 @@ async function resolveCanonicalRecordTarget(
     questionId: canonicalQuestionId,
     conditionId: pregenerated.conditionId ?? null,
     medicalContentId: pregenerated.medicalContentId ?? null,
+    questionIdentityId: await resolveRecordQuestionIdentityId(
+      prisma,
+      {
+        ...identityInput,
+        canonicalQuestionId: identityInput.canonicalQuestionId ?? canonicalQuestionId,
+        sourceQuestionId: identityInput.sourceQuestionId ?? pregenerated.id,
+        questionSource: identityInput.questionSource ?? 'pre_generated',
+        conditionId: pregenerated.conditionId ?? identityInput.conditionId ?? null,
+        medicalContentId: pregenerated.medicalContentId ?? identityInput.medicalContentId ?? null,
+        system: pregenerated.system ?? identityInput.system ?? null,
+      },
+      logger
+    ),
   };
+}
+
+async function resolveRecordQuestionIdentityId(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  identity: QuestionRecordIdentityInput,
+  logger: ReturnType<typeof createEndpointLogger>
+): Promise<string | null> {
+  const sourceQuestionId = identity.sourceQuestionId ?? identity.canonicalQuestionId;
+  if (!sourceQuestionId) return null;
+
+  const questionIdentityId = await resolveOrCreateQuestionIdentity(
+    prisma,
+    {
+      questionSource: identity.questionSource,
+      sourceQuestionId,
+      canonicalQuestionId: identity.canonicalQuestionId ?? null,
+      medicalContentId: identity.medicalContentId ?? null,
+      system: identity.system ?? null,
+      conditionId: identity.conditionId ?? null,
+      provenance: {
+        writer: 'questions-record',
+        mode: identity.mode ?? null,
+        questionType: identity.questionType ?? null,
+      },
+    },
+    logger
+  );
+
+  if (!questionIdentityId) {
+    logger.warn('Question record identity FK was not resolved; writing legacy fields only', {
+      questionSource: identity.questionSource ?? 'question',
+      sourceQuestionId,
+    });
+  }
+
+  return questionIdentityId;
 }
 
 export const onRequestPost = authenticatedEndpoint(QuestionRecordSchema, async (context) => {
@@ -77,8 +169,18 @@ export const onRequestPost = authenticatedEndpoint(QuestionRecordSchema, async (
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const { questionId, questionType, system, wasCorrect, mode } =
-      validated.body;
+    const {
+      questionId,
+      canonicalQuestionId,
+      sourceQuestionId,
+      questionSource,
+      questionType,
+      system,
+      conditionId,
+      medicalContentId,
+      wasCorrect,
+      mode,
+    } = validated.body;
 
     // Resolve internal user ID from Clerk auth — never trust client-supplied userId
     const user = await resolveUserByClerkId(prisma, auth.userId);
@@ -90,7 +192,21 @@ export const onRequestPost = authenticatedEndpoint(QuestionRecordSchema, async (
 
     const isRankedAttempt = isRankedMode(mode);
     const now = new Date();
-    const recordTarget = await resolveCanonicalRecordTarget(prisma, questionId);
+    const recordTarget = await resolveCanonicalRecordTarget(
+      prisma,
+      questionId,
+      {
+        canonicalQuestionId,
+        sourceQuestionId,
+        questionSource,
+        system: system ?? null,
+        conditionId: conditionId ?? null,
+        medicalContentId: medicalContentId ?? null,
+        mode,
+        questionType,
+      },
+      logger
+    );
     if (!recordTarget) {
       logger.warn('Question record rejected because canonical target could not be resolved', {
         questionId,
@@ -134,6 +250,9 @@ export const onRequestPost = authenticatedEndpoint(QuestionRecordSchema, async (
         id: attemptId,
         userId,
         questionId: recordTarget.questionId,
+        ...(recordTarget.questionIdentityId
+          ? { questionIdentityId: recordTarget.questionIdentityId }
+          : {}),
         questionType: questionType ?? null,
         system: system ?? null,
         conditionId: recordTarget.conditionId,

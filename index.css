@@ -125,8 +125,28 @@ body,
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+@keyframes atlas-scan-line {
+  0% {
+    transform: translate3d(-120%, 0, 0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  58% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(120%, 0, 0);
+    opacity: 0;
+  }
+}
+
 /* Respect OS prefers-reduced-motion: animations run instantly when user has reduced motion enabled */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
   *,
   *::before,
   *::after {
@@ -136,6 +156,17 @@ body,
   }
   .pulse-badge {
     animation: none !important;
+  }
+  .atlas-scanner-line::after {
+    animation: none !important;
+    opacity: 0.18 !important;
+    transform: none !important;
+  }
+  .atlas-reduced-motion-safe,
+  .atlas-reduced-motion-safe * {
+    animation: none !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
   .dialog-cinematic-enter,
   .dialog-cinematic-exit {
@@ -655,6 +686,146 @@ a,
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2;
   }
 
+  /* Diagnostic Atlas OS foundation utilities - opt-in for redesigned surfaces */
+  .atlas-focus-ring {
+    outline: none;
+  }
+
+  .atlas-focus-ring:focus-visible {
+    box-shadow: var(--atlas-focus-ring);
+  }
+
+  .atlas-medical-grid {
+    background-color: var(--atlas-bg);
+    background-image:
+      linear-gradient(to right, var(--atlas-grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--atlas-grid-line) 1px, transparent 1px),
+      linear-gradient(to right, var(--atlas-grid-line-strong) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--atlas-grid-line-strong) 1px, transparent 1px),
+      radial-gradient(circle at 22% 12%, var(--atlas-glow-cyan), transparent 34%),
+      radial-gradient(circle at 78% 20%, var(--atlas-glow-violet), transparent 32%);
+    background-position:
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      center,
+      center;
+    background-size:
+      32px 32px,
+      32px 32px,
+      160px 160px,
+      160px 160px,
+      100% 100%,
+      100% 100%;
+  }
+
+  .atlas-radial-glow {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .atlas-radial-glow::before {
+    content: '';
+    position: absolute;
+    inset: var(--atlas-glow-inset, -20%);
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at var(--atlas-glow-x, 50%) var(--atlas-glow-y, 24%), var(--atlas-glow-cyan), transparent 34%),
+      radial-gradient(circle at var(--atlas-glow-x-2, 78%) var(--atlas-glow-y-2, 68%), var(--atlas-glow-blue), transparent 38%);
+  }
+
+  .atlas-glass-card {
+    position: relative;
+    overflow: hidden;
+    color: var(--atlas-clinical-white);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 42%),
+      var(--atlas-surface-glass);
+    border: 1px solid var(--atlas-border);
+    border-radius: 18px;
+    box-shadow: var(--atlas-shadow-glass);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+  }
+
+  .atlas-glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: var(--atlas-noise-texture);
+    opacity: var(--atlas-noise-opacity);
+    mix-blend-mode: overlay;
+  }
+
+  .atlas-border-glow {
+    border-color: var(--atlas-border-glow);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--atlas-accent-cyan) 24%, transparent),
+      0 0 34px -18px var(--atlas-accent-cyan);
+  }
+
+  .atlas-scanner-line {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .atlas-scanner-line::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--atlas-scan-width, 32%);
+    pointer-events: none;
+    background:
+      linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(103, 232, 249, 0.05) 18%,
+        rgba(103, 232, 249, 0.28) 50%,
+        rgba(96, 165, 250, 0.08) 82%,
+        transparent 100%
+      );
+    filter: blur(0.2px);
+    animation: atlas-scan-line var(--atlas-scan-duration) var(--atlas-motion-ease) infinite;
+  }
+
+  .atlas-noise-overlay {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .atlas-noise-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: var(--atlas-noise-texture);
+    opacity: var(--atlas-noise-opacity);
+    mix-blend-mode: overlay;
+  }
+
+  .atlas-noise-overlay > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .atlas-motion-safe {
+    transition-duration: var(--atlas-motion-duration-normal);
+    transition-timing-function: var(--atlas-motion-ease);
+  }
+
+  .atlas-reduced-motion-safe {
+    transform: translateZ(0);
+  }
+
+  .theme-diagnostic-atlas [id$='-title'],
+  .diagnostic-atlas-os [id$='-title'] {
+    scroll-margin-top: calc(var(--header-height, 4rem) + 1rem);
+  }
+
   /* Global keyboard focus - visible ring (Cyan/Accent glow, not default browser blue) */
   button:focus-visible,
   a:focus-visible,
@@ -881,6 +1052,48 @@ a,
   
   /* Content max-width - consistent across main content pages */
   --content-max-width: 72rem; /* 1152px = max-w-6xl */
+
+  /* ===== DIAGNOSTIC ATLAS OS TOKENS ===== */
+  /* Dark-first medical command-center foundation for the redesign. These
+     additive tokens do not replace the existing light/dark app theme until a
+     page opts in with .theme-diagnostic-atlas or individual atlas utilities. */
+  --atlas-bg: #030b16;
+  --atlas-bg-soft: #071322;
+  --atlas-surface: #0a1626;
+  --atlas-surface-elevated: #0f2033;
+  --atlas-surface-glass: rgba(12, 30, 48, 0.72);
+  --atlas-border: rgba(178, 224, 255, 0.14);
+  --atlas-border-strong: rgba(178, 224, 255, 0.24);
+  --atlas-border-glow: rgba(103, 232, 249, 0.34);
+  --atlas-accent-cyan: #67e8f9;
+  --atlas-accent-blue: #60a5fa;
+  --atlas-accent-violet: #a78bfa;
+  --atlas-accent-pulse-pink: #fb7185;
+  --atlas-success-green: #34d399;
+  --atlas-warning-amber: #fbbf24;
+  --atlas-text-muted: #a9bad0;
+  --atlas-text-subtle: #7890aa;
+  --atlas-clinical-white: #f8fbff;
+  --atlas-shadow-deep: 0 24px 80px -42px rgba(0, 0, 0, 0.86);
+  --atlas-shadow-glass:
+    0 0 0 1px var(--atlas-border),
+    0 20px 70px -44px rgba(0, 0, 0, 0.88),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --atlas-focus-ring:
+    0 0 0 2px var(--atlas-bg),
+    0 0 0 4px var(--atlas-accent-cyan),
+    0 0 22px rgba(103, 232, 249, 0.38);
+  --atlas-grid-line: rgba(103, 232, 249, 0.075);
+  --atlas-grid-line-strong: rgba(96, 165, 250, 0.12);
+  --atlas-glow-cyan: rgba(103, 232, 249, 0.18);
+  --atlas-glow-blue: rgba(96, 165, 250, 0.14);
+  --atlas-glow-violet: rgba(167, 139, 250, 0.13);
+  --atlas-noise-texture: var(--noise-texture);
+  --atlas-noise-opacity: 0.035;
+  --atlas-scan-duration: 8s;
+  --atlas-motion-duration-fast: 160ms;
+  --atlas-motion-duration-normal: 240ms;
+  --atlas-motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* ===== PANaCEa CLINICAL FOUNDATION - LIGHT MODE ===== */
   /* Warm clinical canvas, clear ink text, and restrained teal action color.
@@ -1157,6 +1370,20 @@ a,
   /* ===== PANaCEa CLINICAL FOUNDATION - DARK MODE ===== */
   /* Deep ink navy, not black. Muted cyan-teal remains readable on dark
      surfaces without turning the app into neon medical sci-fi. */
+  --atlas-bg: #020814;
+  --atlas-bg-soft: #06111f;
+  --atlas-surface: #091526;
+  --atlas-surface-elevated: #10233a;
+  --atlas-surface-glass: rgba(10, 28, 46, 0.76);
+  --atlas-border: rgba(190, 230, 255, 0.15);
+  --atlas-border-strong: rgba(190, 230, 255, 0.26);
+  --atlas-border-glow: rgba(103, 232, 249, 0.4);
+  --atlas-text-muted: #b4c4d8;
+  --atlas-text-subtle: #8198b3;
+  --atlas-glow-cyan: rgba(103, 232, 249, 0.2);
+  --atlas-glow-blue: rgba(96, 165, 250, 0.16);
+  --atlas-glow-violet: rgba(167, 139, 250, 0.15);
+
   --color-action: #6bb6c4;
   --color-action-hover: #8fd0dc;
   --color-action-light: #132b38;
@@ -1339,6 +1566,71 @@ a,
   color-scheme: dark;
   scrollbar-width: thin;
   scrollbar-color: rgba(71, 85, 105, 0.6) var(--color-bg-primary);
+}
+
+/* Opt-in dark clinical theme for redesigned landing/dashboard regions. This
+   maps Diagnostic Atlas OS tokens onto the existing PANaCEa and shadcn vars. */
+.theme-diagnostic-atlas,
+.diagnostic-atlas-os {
+  color-scheme: dark;
+  --color-background: var(--atlas-bg);
+  --color-surface: var(--atlas-surface);
+  --color-surface-elevated: var(--atlas-surface-elevated);
+  --color-surface-muted: var(--atlas-bg-soft);
+  --color-bg-primary: var(--atlas-bg);
+  --color-bg-secondary: var(--atlas-surface);
+  --color-bg-tertiary: var(--atlas-bg-soft);
+  --color-card-bg: var(--atlas-surface-glass);
+  --color-glass-bg: var(--atlas-surface-glass);
+  --color-glass-border: var(--atlas-border);
+  --color-glass-shadow: rgba(0, 0, 0, 0.58);
+  --color-border: var(--atlas-border);
+  --color-border-light: rgba(178, 224, 255, 0.08);
+  --color-border-strong: var(--atlas-border-strong);
+  --color-text-primary: var(--atlas-clinical-white);
+  --color-text-secondary: #dbeafe;
+  --color-text-muted: var(--atlas-text-muted);
+  --color-text-tertiary: var(--atlas-text-subtle);
+  --color-text-inverse: #03101c;
+  --color-accent: var(--atlas-accent-cyan);
+  --color-accent-hover: #a5f3fc;
+  --color-accent-secondary: var(--atlas-accent-blue);
+  --color-accent-light: rgba(103, 232, 249, 0.12);
+  --color-accent-border: var(--atlas-border-glow);
+  --color-focus-ring: var(--atlas-accent-cyan);
+  --color-success: var(--atlas-success-green);
+  --color-warning: var(--atlas-warning-amber);
+  --color-risk: var(--atlas-warning-amber);
+  --color-danger: var(--atlas-accent-pulse-pink);
+  --color-data-pass: var(--atlas-success-green);
+  --color-data-provisional: var(--atlas-warning-amber);
+  --color-data-fail: var(--atlas-accent-pulse-pink);
+  --color-data-neutral: var(--atlas-text-muted);
+  --color-data-neutral-bg: rgba(169, 186, 208, 0.12);
+  --background: var(--atlas-bg);
+  --foreground: var(--atlas-clinical-white);
+  --card: var(--atlas-surface-elevated);
+  --card-foreground: var(--atlas-clinical-white);
+  --primary: var(--atlas-accent-cyan);
+  --primary-foreground: #03101c;
+  --secondary: var(--atlas-surface-elevated);
+  --secondary-foreground: var(--atlas-clinical-white);
+  --muted: var(--atlas-bg-soft);
+  --muted-foreground: var(--atlas-text-muted);
+  --accent: rgba(103, 232, 249, 0.12);
+  --accent-foreground: var(--atlas-clinical-white);
+  --destructive: var(--atlas-accent-pulse-pink);
+  --destructive-foreground: #03101c;
+  --popover: var(--atlas-surface-elevated);
+  --popover-foreground: var(--atlas-clinical-white);
+  --border: var(--atlas-border);
+  --input: var(--atlas-border-strong);
+  --ring: var(--atlas-accent-cyan);
+  --chart-1: var(--atlas-accent-cyan);
+  --chart-2: var(--atlas-accent-blue);
+  --chart-3: var(--atlas-accent-violet);
+  --chart-4: var(--atlas-success-green);
+  --chart-5: var(--atlas-warning-amber);
 }
 
 /* ===== LIGHT MODE: ELEVATED SHADOW OVERRIDES ===== */

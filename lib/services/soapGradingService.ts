@@ -12,6 +12,7 @@
 //     SOAPNoteTrainer and the analytics helpers don't change.
 
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import { geminiLogger } from '../logger';
 
 const LOG_SCOPE = 'SOAPGrading';
@@ -122,8 +123,8 @@ export async function gradeSoapNote(
   if (!response.ok) {
     let serverMessage: string | undefined;
     try {
-      const errBody = (await response.json()) as { error?: string };
-      serverMessage = errBody?.error;
+      const errBody = await response.json();
+      serverMessage = getApiEnvelopeError(errBody, `SOAP grader returned HTTP ${response.status}`);
     } catch {
       /* ignore JSON parse failure on error body */
     }
@@ -134,17 +135,16 @@ export async function gradeSoapNote(
     throw new Error(serverMessage ?? `SOAP grader returned HTTP ${response.status}`);
   }
 
-  let envelope: { data?: GradingResult };
+  let grade: GradingResult;
   try {
-    envelope = (await response.json()) as { data?: GradingResult };
+    grade = unwrapApiEnvelope<GradingResult>(await response.json());
   } catch (err) {
     geminiLogger.error(`[${LOG_SCOPE}] Failed to parse grader response`, { err });
     throw new Error('Failed to parse grading result.');
   }
 
-  const grade = envelope.data;
   if (!grade || typeof grade.totalScore !== 'number' || !grade.breakdown || !grade.feedback) {
-    geminiLogger.error(`[${LOG_SCOPE}] Grader returned malformed envelope`, { envelope });
+    geminiLogger.error(`[${LOG_SCOPE}] Grader returned malformed response`, { grade });
     throw new Error('Grader returned an incomplete response.');
   }
   return grade;

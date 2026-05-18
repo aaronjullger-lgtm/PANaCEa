@@ -10,6 +10,13 @@ const mockPrisma = {
   question: {
     upsert: vi.fn(),
   },
+  questionAnswerChoice: {
+    deleteMany: vi.fn(),
+    upsert: vi.fn(),
+  },
+  questionExplanation: {
+    upsert: vi.fn(),
+  },
 };
 
 vi.mock('../_shared/middleware', () => ({
@@ -86,6 +93,9 @@ describe('POST /api/admin/question-review', () => {
       validationNotes: null,
     });
     mockPrisma.question.upsert.mockResolvedValue({});
+    mockPrisma.questionAnswerChoice.deleteMany.mockResolvedValue({ count: 0 });
+    mockPrisma.questionAnswerChoice.upsert.mockResolvedValue({});
+    mockPrisma.questionExplanation.upsert.mockResolvedValue({});
   });
 
   it('mirrors approved pre-generated questions to canonical Question before marking them approved', async () => {
@@ -118,6 +128,43 @@ describe('POST /api/admin/question-review', () => {
         correctAnswer: 'CT pulmonary angiography',
         lifecycleStatus: 'ACTIVE',
         qaStatus: 'APPROVED',
+      }),
+    });
+    expect(mockPrisma.questionAnswerChoice.upsert).toHaveBeenCalledWith({
+      where: {
+        questionId_choiceKey: {
+          questionId: 'pgq-review-1',
+          choiceKey: 'B',
+        },
+      },
+      create: expect.objectContaining({
+        questionId: 'pgq-review-1',
+        choiceKey: 'B',
+        choiceText: 'CT pulmonary angiography',
+        isCorrect: true,
+        displayOrder: 1,
+      }),
+      update: expect.objectContaining({
+        choiceText: 'CT pulmonary angiography',
+        isCorrect: true,
+        displayOrder: 1,
+      }),
+    });
+    expect(mockPrisma.questionExplanation.upsert).toHaveBeenCalledWith({
+      where: {
+        questionId_explanationType_version: {
+          questionId: 'pgq-review-1',
+          explanationType: 'CORRECT_RATIONALE',
+          version: 1,
+        },
+      },
+      create: expect.objectContaining({
+        questionId: 'pgq-review-1',
+        explanationType: 'CORRECT_RATIONALE',
+        body: 'CT pulmonary angiography confirms PE in a stable high-risk patient.',
+      }),
+      update: expect.objectContaining({
+        body: 'CT pulmonary angiography confirms PE in a stable high-risk patient.',
       }),
     });
     expect(mockPrisma.preGeneratedQuestion.update).toHaveBeenCalledWith(
@@ -181,9 +228,7 @@ describe('POST /api/admin/question-review', () => {
   });
 
   it('auto-approve mirrors candidates before flipping validation status', async () => {
-    mockPrisma.preGeneratedQuestion.count
-      .mockResolvedValueOnce(0)
-      .mockResolvedValueOnce(1);
+    mockPrisma.preGeneratedQuestion.count.mockResolvedValueOnce(0).mockResolvedValueOnce(1);
     mockPrisma.preGeneratedQuestion.findMany.mockResolvedValue([
       preGeneratedQuestion({ id: 'auto-1' }),
     ]);

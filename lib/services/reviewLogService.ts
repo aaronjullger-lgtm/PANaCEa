@@ -42,6 +42,7 @@ export interface CreateReviewLogInput {
   conditionId?: string | null;
   medicalContentId?: string | null;
   questionId?: string | null;
+  questionIdentityId?: string | null;
   questionType?: string | null;
   questionFkId?: string | null;
   sessionId?: string | null;
@@ -113,6 +114,7 @@ export function sanitizeReviewLogInput(input: CreateReviewLogInput): Record<stri
     conditionId: input.conditionId ?? undefined,
     medicalContentId: input.medicalContentId ?? undefined,
     questionId: input.questionId ?? undefined,
+    questionIdentityId: input.questionIdentityId ?? undefined,
     questionFkId: input.questionFkId ?? undefined,
     questionType: input.questionType ?? undefined,
     sessionId: input.sessionId ?? undefined,

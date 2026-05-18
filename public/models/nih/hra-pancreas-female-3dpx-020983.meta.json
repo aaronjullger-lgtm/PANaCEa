@@ -1,0 +1,26 @@
+{
+  "id": "hra-pancreas-female",
+  "title": "3D Reference Organ for Pancreas, Female v1.3",
+  "sourceEntry": "3DPX-020983",
+  "source": "NIH 3D",
+  "sourceUrl": "https://3d.nih.gov/entries/3DPX-020983",
+  "downloadUrl": "https://3d.nih.gov/api/download?submissionId=29130&fileIds=742028",
+  "thumbnailUrl": "https://3d.nih.gov/api/submissions/29130/runs/d422b74b-3a0f-4feb-857a-e0662d07499d/output-files/742031",
+  "license": "CC-BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "author": "Human Reference Atlas",
+  "institution": "Human Reference Atlas / National Institutes of Health",
+  "entryDescription": "Reference organ for the pancreas created using Visible Human Dataset source data and distributed through NIH 3D.",
+  "modelFile": "/models/nih/hra-pancreas-female-3dpx-020983.glb",
+  "thumbnailFile": "/thumbnails/nih/hra-pancreas-female-3dpx-020983.png",
+  "modelBytes": 714668,
+  "thumbnailBytes": 27001,
+  "modelSha256": "edb41456634b8fc887e609520e0a59eb0626e0fd0faa88a5b40985bf358b626d",
+  "thumbnailSha256": "0ce49ef1034e227d6a2924e9431ff1947e30286d4ed44462b4d24a24c79af722",
+  "accessedDate": "2026-05-16",
+  "safeUse": [
+    "Use for educational endocrine and abdominal spatial anatomy review only.",
+    "Do not present as patient-specific anatomy, diagnostic evidence, treatment guidance, or a clinical decision aid.",
+    "Maintain CC-BY attribution whenever this model is displayed or redistributed."
+  ]
+}

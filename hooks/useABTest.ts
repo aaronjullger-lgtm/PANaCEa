@@ -9,6 +9,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export interface ABVariantAssignment {
   variantName: string;
@@ -33,7 +34,7 @@ export function useABTest(getToken?: () => Promise<string | null>) {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) return {};
-      const data: ABAssignmentsResponse = await res.json();
+      const data = unwrapApiEnvelope<ABAssignmentsResponse>(await res.json());
       return data.assignments ?? {};
     },
     staleTime: 5 * 60 * 1000, // 5 minutes — assignments don't change mid-session

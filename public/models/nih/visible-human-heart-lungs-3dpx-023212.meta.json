@@ -1,0 +1,26 @@
+{
+  "id": "visible-human-heart-lungs",
+  "title": "Visible Human Heart Vessels and Lungs",
+  "sourceEntry": "3DPX-023212",
+  "source": "NIH 3D",
+  "sourceUrl": "https://3d.nih.gov/entries/3DPX-023212",
+  "downloadUrl": "https://3d.nih.gov/api/download?submissionId=29629&fileIds=765857",
+  "thumbnailUrl": "https://3d.nih.gov/api/submissions/29629/runs/963581f3-9ea7-4451-a37e-7b76207bbd7d/output-files/765856",
+  "license": "CC-BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "author": "kbrowne",
+  "institution": "National Institutes of Health",
+  "entryDescription": "Anatomical model consisting of the lungs, vessels of the heart, and trachea from the Visible Human male dataset.",
+  "modelFile": "/models/nih/visible-human-heart-lungs-3dpx-023212.glb",
+  "thumbnailFile": "/thumbnails/nih/visible-human-heart-lungs-3dpx-023212.png",
+  "modelBytes": 2590240,
+  "thumbnailBytes": 73548,
+  "modelSha256": "c7a50781d5736ab1a3821a2824438e1a1232343908a03d3aba312fa8570ee90f",
+  "thumbnailSha256": "cc109270dfeb06de9779a1860f37cfd8f9b14fa1c076121de8dcec36ce16a411",
+  "accessedDate": "2026-05-16",
+  "safeUse": [
+    "Use for educational cardiopulmonary spatial anatomy review only.",
+    "Do not present as patient-specific anatomy, diagnostic evidence, treatment guidance, or a clinical decision aid.",
+    "Maintain CC-BY attribution whenever this model is displayed or redistributed."
+  ]
+}

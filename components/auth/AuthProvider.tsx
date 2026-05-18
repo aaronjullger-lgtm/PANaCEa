@@ -44,12 +44,12 @@ const DEV_CLERK_PUBLISHABLE_KEY =
 const MISSING_KEY_ERROR = `Missing Publishable Key for Clerk!
 
 To fix this issue:
-1. Copy env.example to .env: cp env.example .env
+1. Copy .env.example to .env: cp .env.example .env
 2. Get your Clerk publishable key from https://dashboard.clerk.com
 3. Add it to .env as: VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
 4. Restart the development server
 
-See AUTHENTICATION_SETUP.md for detailed setup instructions.`;
+See docs/guides/AUTHENTICATION_SETUP.md for detailed setup instructions.`;
 
 /** Production hosts: use pk_live_ keys; if build baked in pk_test_, show setup page */
 function isProductionHost(hostname: string): boolean {
@@ -173,9 +173,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         },
       }}
     >
-      <SentryUserSync />
-      <DevAutoLogin />
-      {children}
+      <>
+        <SentryUserSync />
+        <DevAutoLogin />
+        {children}
+      </>
     </ClerkProvider>
   );
 }

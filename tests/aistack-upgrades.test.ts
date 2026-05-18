@@ -779,7 +779,7 @@ describe('GraphRAG', () => {
 
 describe('Cloudflare AI Gateway', () => {
   it('buildGeminiUrl routes through gateway when env vars set', async () => {
-    const { buildGeminiUrl } = await import('@/functions/api/_shared/ai-service');
+    const { buildGeminiUrl } = await import('@/functions/api/_shared/ai-gateway');
     const url = buildGeminiUrl('test-key', 'gemini-2.0-flash', 'generateContent', {
       CF_ACCOUNT_ID: 'acc-123',
       CF_AI_GATEWAY_ID: 'gw-456',
@@ -792,7 +792,7 @@ describe('Cloudflare AI Gateway', () => {
   });
 
   it('buildGeminiUrl uses direct API without gateway env', async () => {
-    const { buildGeminiUrl } = await import('@/functions/api/_shared/ai-service');
+    const { buildGeminiUrl } = await import('@/functions/api/_shared/ai-gateway');
     const url = buildGeminiUrl('test-key', 'gemini-2.0-flash', 'generateContent');
     expect(url).toContain('generativelanguage.googleapis.com');
     expect(url).not.toContain('gateway.ai.cloudflare.com');

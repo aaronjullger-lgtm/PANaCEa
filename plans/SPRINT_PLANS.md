@@ -35,7 +35,7 @@ No schema changes required. Grounding sources will be stored in the existing `Pr
 | `functions/api/_shared/question-generator.ts` | Modify | Add search grounding to the few-shot question generation endpoint |
 | `functions/api/intelligence/tutor.ts` | Modify | Already has search grounding — extend to always-on for guideline-heavy topics, add structured citation extraction |
 | `lib/types/question.ts` (or equivalent type file) | Modify | Add `groundingSources?: { uri: string; title: string }[]` to the rationale type |
-| `components/panels/ExplanationPanel.tsx` | Modify | Render grounding sources as clickable citation chips in an "Evidence" section |
+| `components/questions/ExplanationPanel.tsx` | Modify | Render grounding sources as clickable citation chips in an "Evidence" section |
 | `lib/services/question/generationService.test.ts` | Create | Unit tests for grounding metadata parsing |
 
 ### 5. Implementation Steps
@@ -60,7 +60,7 @@ No schema changes required. Grounding sources will be stored in the existing `Pr
 - **Acceptance:** `npm run typecheck` passes
 
 **Step 4: Display citations in ExplanationPanel (1 hour)**
-- Open `components/panels/ExplanationPanel.tsx`
+- Open `components/questions/ExplanationPanel.tsx`
 - After the existing rationale sections (bottomLine, whyCorrect, clinicalPearl), add a conditional "Evidence" section
 - Render each grounding source as a small pill/chip with an external link icon: `[Source Title ↗](uri)`
 - Style with existing Tailwind classes: `text-xs text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)]`
@@ -321,7 +321,7 @@ No schema changes required. Citations stored in existing `questionData` JSON fie
 | `lib/services/question/pubmedEnricher.ts` | Create | Service to query PubMed MCP and format citations |
 | `lib/services/question/generationService.ts` | Modify | Call pubmedEnricher before/during question generation to inject abstract context |
 | `functions/api/_shared/question-generator.ts` | Modify | Add PubMed context to the generation prompt |
-| `components/panels/ExplanationPanel.tsx` | Modify | Extend the "Evidence" section (from Feature 1) to show PubMed citations with PMIDs |
+| `components/questions/ExplanationPanel.tsx` | Modify | Extend the "Evidence" section (from Feature 1) to show PubMed citations with PMIDs |
 | `lib/types/question.ts` | Modify | Add `pubmedCitations?: { pmid: string; title: string; authors: string; journal: string; year: number; url: string }[]` to rationale type |
 
 ### 5. Implementation Steps
@@ -348,7 +348,7 @@ No schema changes required. Citations stored in existing `questionData` JSON fie
 - **Acceptance:** Edge-generated questions include PubMed citations
 
 **Step 4: Extend ExplanationPanel citations (1 hour)**
-- In `components/panels/ExplanationPanel.tsx`, extend the "Evidence" section to distinguish Google Search sources from PubMed citations
+- In `components/questions/ExplanationPanel.tsx`, extend the "Evidence" section to distinguish Google Search sources from PubMed citations
 - PubMed citations render as: `Author et al. (Year). "Title." Journal. PMID: [linked]`
 - Group under a "📚 References" subsection below the Google Search "🔍 Sources"
 - **Acceptance:** Explanation shows formatted PubMed citations with clickable PMID links
@@ -1517,7 +1517,7 @@ No schema changes required.
 | File Path | Action | Purpose |
 |-----------|--------|---------|
 | `lib/services/question/trialEnricher.ts` | Create | Query Clinical Trials MCP for relevant trials |
-| `components/panels/ExplanationPanel.tsx` | Modify | Add "Active Research" section |
+| `components/questions/ExplanationPanel.tsx` | Modify | Add "Active Research" section |
 | `lib/services/question/generationService.ts` | Modify | Optionally enrich questions with trial data |
 
 ### 5. Implementation Steps

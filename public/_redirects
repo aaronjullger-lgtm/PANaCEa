@@ -1,5 +1,3 @@
-# Pass-through: serve static assets with correct MIME types
-/assets/*  /assets/:splat  200
-
-# React Router SPA fallback for direct links and refreshes
-/*  /index.html  200
+# Cloudflare Pages serves Vite assets directly and provides built-in SPA
+# fallback routing when no top-level 404.html exists. Avoid self-rewrite rules
+# such as `/* /index.html 200`; Wrangler rejects them as infinite loops.

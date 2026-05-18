@@ -31,6 +31,18 @@ describe('sanitizeReviewLogInput', () => {
     expect(result.review_type).toBe('real');
   });
 
+  it('preserves question identity links for normalized review analytics', () => {
+    const result = sanitizeReviewLogInput(
+      validInput({
+        questionIdentityId: 'qi_pre_generated_pg-1',
+        questionFkId: 'q-1',
+      })
+    );
+
+    expect(result.questionIdentityId).toBe('qi_pre_generated_pg-1');
+    expect(result.questionFkId).toBe('q-1');
+  });
+
   it('clamps grade to [0, 4]', () => {
     expect(sanitizeReviewLogInput(validInput({ grade: -1 })).grade).toBe(0);
     expect(sanitizeReviewLogInput(validInput({ grade: 5 })).grade).toBe(4);

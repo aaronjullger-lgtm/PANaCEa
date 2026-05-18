@@ -8,7 +8,7 @@ This guide explains how to integrate 3D anatomical models from the NIH 3D Print 
 
 ## Source: NIH 3D Print Exchange
 
-The NIH 3D Print Exchange (https://3d.nih.gov) provides free, scientifically-accurate 3D models that are in the public domain. These models are ideal for medical education.
+The NIH 3D Print Exchange (https://3d.nih.gov) provides free anatomical 3D models with per-entry licensing. Some assets are public domain, while many Human Reference Atlas assets require CC-BY attribution. These models are useful for medical education when provenance, license, file size, and safe-use context are verified per asset.
 
 ### Key Resources
 
@@ -29,6 +29,111 @@ The NIH 3D Print Exchange (https://3d.nih.gov) provides free, scientifically-acc
 **Recommendation**: Use GLB format for best compatibility and performance.
 
 ## Adding a New Model
+
+### Current Checked-In Models
+
+The current local integration includes licensed NIH 3D GLB models used inside the protected visualizer flow.
+
+#### Human Heart
+
+- `/public/models/nih/human-heart-3dpx-022787.glb`
+- `/public/thumbnails/nih/human-heart-3dpx-022787.png`
+- `/public/models/nih/human-heart-3dpx-022787.meta.json`
+- Source entry: `3DPX-022787`
+- License: Public Domain
+- Fallback model id: `heart-basic`
+
+#### Visible Human Heart Vessels and Lungs
+
+- `/public/models/nih/visible-human-heart-lungs-3dpx-023212.glb`
+- `/public/thumbnails/nih/visible-human-heart-lungs-3dpx-023212.png`
+- `/public/models/nih/visible-human-heart-lungs-3dpx-023212.meta.json`
+- Source entry: `3DPX-023212`
+- License: CC-BY 4.0
+- Fallback model id: `visible-human-heart-lungs`
+
+#### Human Reference Atlas Left Kidney
+
+- `/public/models/nih/hra-left-kidney-male-3dpx-021001.glb`
+- `/public/thumbnails/nih/hra-left-kidney-male-3dpx-021001.png`
+- `/public/models/nih/hra-left-kidney-male-3dpx-021001.meta.json`
+- Source entry: `3DPX-021001`
+- License: CC-BY 4.0
+- Fallback model id: `hra-left-kidney-male`
+
+#### Human Reference Atlas Liver
+
+- `/public/models/nih/hra-liver-female-3dpx-020973.glb`
+- `/public/thumbnails/nih/hra-liver-female-3dpx-020973.png`
+- `/public/models/nih/hra-liver-female-3dpx-020973.meta.json`
+- Source entry: `3DPX-020973`
+- License: CC-BY 4.0
+- Fallback model id: `hra-liver-female`
+
+#### Human Reference Atlas Main Bronchus
+
+- `/public/models/nih/hra-main-bronchus-female-3dpx-020976.glb`
+- `/public/thumbnails/nih/hra-main-bronchus-female-3dpx-020976.png`
+- `/public/models/nih/hra-main-bronchus-female-3dpx-020976.meta.json`
+- Source entry: `3DPX-020976`
+- License: CC-BY 4.0
+- Fallback model id: `hra-main-bronchus-female`
+
+#### Human Reference Atlas Pancreas
+
+- `/public/models/nih/hra-pancreas-female-3dpx-020983.glb`
+- `/public/thumbnails/nih/hra-pancreas-female-3dpx-020983.png`
+- `/public/models/nih/hra-pancreas-female-3dpx-020983.meta.json`
+- Source entry: `3DPX-020983`
+- License: CC-BY 4.0
+- Fallback model id: `hra-pancreas-female`
+
+#### Human Reference Atlas Spleen
+
+- `/public/models/nih/hra-spleen-female-3dpx-020989.glb`
+- `/public/thumbnails/nih/hra-spleen-female-3dpx-020989.png`
+- `/public/models/nih/hra-spleen-female-3dpx-020989.meta.json`
+- Source entry: `3DPX-020989`
+- License: CC-BY 4.0
+- Fallback model id: `hra-spleen-female`
+
+#### Human Reference Atlas Prostate
+
+- `/public/models/nih/hra-prostate-male-3dpx-021015.glb`
+- `/public/thumbnails/nih/hra-prostate-male-3dpx-021015.png`
+- `/public/models/nih/hra-prostate-male-3dpx-021015.meta.json`
+- Source entry: `3DPX-021015`
+- License: CC-BY 4.0
+- Fallback model id: `hra-prostate-male`
+
+#### Human Reference Atlas Spinal Cord
+
+- `/public/models/nih/hra-spinal-cord-female-3dpx-020988.glb`
+- `/public/thumbnails/nih/hra-spinal-cord-female-3dpx-020988.png`
+- `/public/models/nih/hra-spinal-cord-female-3dpx-020988.meta.json`
+- Source entry: `3DPX-020988`
+- License: CC-BY 4.0
+- Fallback model id: `hra-spinal-cord-female`
+
+#### Right Femur
+
+- `/public/models/nih/right-femur-3dpx-016822.glb`
+- `/public/thumbnails/nih/right-femur-3dpx-016822.png`
+- `/public/models/nih/right-femur-3dpx-016822.meta.json`
+- Source entry: `3DPX-016822`
+- License: CC-BY 4.0
+- Fallback model id: `right-femur`
+
+Shared app metadata:
+
+- `lib/anatomy/nihAnatomyAssets.ts`
+
+Runtime:
+
+- `components/anatomy/AnatomyModelViewer.tsx` shows a lightweight preview first.
+- `components/anatomy/AnatomyModelCanvas.tsx` imports Three.js only after the user selects the 3D atlas scene. React Three Fiber was not used for this first runtime scene because its JSX type augmentation currently collides with existing icon components in the production TypeScript graph.
+- `pages/VisualizerPage.tsx` lets the student choose between checked-in atlas scenes before loading WebGL.
+- `npm run verify:anatomy-assets` checks local model files, thumbnails, metadata, hashes, registry wiring, service-worker precache exclusion, and model-size budgets.
 
 ### Step 1: Download from NIH
 
@@ -143,7 +248,7 @@ import { AnatomyModelViewer } from '../components/anatomy';
   showControls={true}
   showStructureList={true}
   showCitation={true}
-  onStructureSelect={(structure) => console.log('Selected:', structure)}
+  onStructureSelect={setSelectedStructure}
   config={{
     enableRotation: true,
     enableZoom: true,
@@ -167,15 +272,11 @@ const relatedModels = await anatomyModelService.getModelsForCondition('myocardia
 
 ## Future Enhancements
 
-### Three.js Integration
+### 3D Runtime
 
-When ready to add actual 3D rendering, install:
-
-```bash
-npm install three @react-three/fiber @react-three/drei
-```
-
-Then update `Model3DPlaceholder` in `AnatomyModelViewer.tsx` to use React Three Fiber.
+The protected anatomy viewer now lazy-loads raw Three.js through `AnatomyModelCanvas`.
+React Three Fiber and drei are intentionally not part of the shipped runtime. Add them
+only if a future approved design requires a broader React-based 3D scene graph.
 
 ### Database Integration
 
@@ -205,12 +306,22 @@ model AnatomyModel {
 
 ## Performance Considerations
 
-1. **Model Size**: Keep GLB files under 10MB for good web performance
+1. **Model Size**: Keep each checked-in GLB under 8 MB and the total NIH GLB payload under 32 MB unless the verifier budget is deliberately changed
 2. **Level of Detail**: Use simplified models for quick preview, detailed for zoom
 3. **Lazy Loading**: Load models on-demand, not at page load
 4. **Caching**: Models are cached in the service for repeat views
 
 ## Troubleshooting
+
+### Asset Integrity Check
+
+Run this after adding, replacing, or renaming any checked-in anatomy asset:
+
+```bash
+npm run verify:anatomy-assets
+```
+
+The verifier fails if a GLB, thumbnail, metadata file, SHA-256 hash, registry entry, service-worker precache rule, or model-size budget is inconsistent. If `dist/sw.js` is missing, run a production build first so the precache exclusion can be checked.
 
 ### Model Not Loading
 

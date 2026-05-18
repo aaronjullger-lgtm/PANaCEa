@@ -23,6 +23,11 @@ import { authenticatedEndpoint } from './_shared/middleware';
 import { createEndpointLogger } from './_shared/secureLogger';
 import { getFromCache, setInCache, isKVAvailable } from './_shared/cache';
 import { resolveOrCreateUserId } from './_shared/user-resolver';
+import {
+  questionIdentityLookupKey,
+  resolveOrCreateQuestionIdentityIds,
+  type QuestionIdentityPersistenceInput,
+} from '../../lib/study/questionIdentityPersistence';
 
 // ============================================================================
 // SCHEMAS
@@ -62,6 +67,9 @@ const SyncSRSItemSchema = z.object({
 
 const SyncSavedQuestionSchema = z.object({
   questionId: z.string().max(100).optional(),
+  canonicalQuestionId: z.string().min(1).nullable().optional(),
+  sourceQuestionId: z.string().min(1).optional(),
+  questionSource: z.enum(['question', 'pre_generated', 'staging', 'seed', 'generated']).optional(),
   questionText: z.string().max(5000).optional(),
   correctAnswer: z.string().max(500).optional(),
   explanation: z.string().max(10000).optional(),
@@ -81,6 +89,7 @@ const SyncSavedQuestionSchema = z.object({
   rationale: z.string().optional(),
   condition: z.string().optional(),
   conditionId: z.string().nullable().optional(),
+  medicalContentId: z.string().nullable().optional(),
 });
 
 const PostSyncSchema = z.object({
@@ -149,7 +158,7 @@ async function withRetry<T>(
       const baseDelay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
       const jitter = Math.random() * baseDelay * 0.3; // 0-30% jitter
       const delay = Math.floor(baseDelay + jitter);
-      
+
       log.warn(
         `${operationName} failed (attempt ${attempt}/${MAX_RETRIES}), retrying in ${delay}ms`,
         {
@@ -198,17 +207,21 @@ function mergeSavedQuestions(
 ): { toKeep: any[]; toDelete: string[] } {
   const toDelete: string[] = [];
   const toKeep: any[] = [];
-  
+
   // Create composite keys: questionId:type
-  const cloudMap = new Map(cloudItems.map(item => {
-    const key = `${item.questionId}:${item.type}`;
-    return [key, item];
-  }));
-  
-  const localMap = new Map(localItems.map(item => {
-    const key = `${item.questionId}:${item.type}`;
-    return [key, item];
-  }));
+  const cloudMap = new Map(
+    cloudItems.map((item) => {
+      const key = `${item.questionId}:${item.type}`;
+      return [key, item];
+    })
+  );
+
+  const localMap = new Map(
+    localItems.map((item) => {
+      const key = `${item.questionId}:${item.type}`;
+      return [key, item];
+    })
+  );
 
   // Process all local items
   for (const localItem of localItems) {
@@ -259,6 +272,29 @@ function mergeSavedQuestions(
   return { toKeep, toDelete };
 }
 
+function buildSavedQuestionIdentityResolution(
+  item: any
+): { key: string; input: QuestionIdentityPersistenceInput } | null {
+  const questionId = item.questionId || item.id;
+  const sourceQuestionId = item.sourceQuestionId || questionId;
+  if (!sourceQuestionId || !item.type) return null;
+
+  const questionSource = item.questionSource ?? 'question';
+  return {
+    key: `${questionId}:${item.type}`,
+    input: {
+      questionSource,
+      sourceQuestionId,
+      canonicalQuestionId:
+        item.canonicalQuestionId ?? (questionSource === 'question' ? questionId : null),
+      medicalContentId: item.medicalContentId ?? null,
+      conditionId: item.conditionId ?? null,
+      system: item.system ?? null,
+      source: 'saved_question_sync',
+    },
+  };
+}
+
 // ============================================================================
 // HANDLERS
 // ============================================================================
@@ -294,10 +330,19 @@ export const onRequestGet = authenticatedEndpoint(
         prisma.performanceRecord.findMany({
           where: { userId: internalUserId },
           select: {
-            id: true, userId: true, timestamp: true, topic: true,
-            system: true, focus: true, difficulty: true, isCorrect: true,
-            questionWordCount: true, errorTag: true, subcategoryName: true,
-            conditionName: true, createdAt: true,
+            id: true,
+            userId: true,
+            timestamp: true,
+            topic: true,
+            system: true,
+            focus: true,
+            difficulty: true,
+            isCorrect: true,
+            questionWordCount: true,
+            errorTag: true,
+            subcategoryName: true,
+            conditionName: true,
+            createdAt: true,
           },
           take: 2000,
           orderBy: { timestamp: 'desc' },
@@ -440,7 +485,36 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
       );
 
       // 3-way merge
-      const { toKeep } = mergeSavedQuestions(payload.savedQuestions, cloudItems, payload.localDeletions);
+      const { toKeep } = mergeSavedQuestions(
+        payload.savedQuestions,
+        cloudItems,
+        payload.localDeletions
+      );
+
+      const identityResolutions = toKeep
+        .map(buildSavedQuestionIdentityResolution)
+        .filter((item): item is NonNullable<typeof item> => item !== null);
+      let savedQuestionIdentityIds = new Map<string, string>();
+      if (identityResolutions.length > 0) {
+        try {
+          const identityIds = await resolveOrCreateQuestionIdentityIds(
+            prisma!,
+            identityResolutions.map((item) => item.input),
+            { provenance: { writer: 'sync-saved-questions' } }
+          );
+          savedQuestionIdentityIds = new Map(
+            identityResolutions.flatMap((item) => {
+              const lookupKey = questionIdentityLookupKey(item.input);
+              const questionIdentityId = lookupKey ? identityIds.get(lookupKey) : null;
+              return questionIdentityId ? [[item.key, questionIdentityId] as const] : [];
+            })
+          );
+        } catch (identityError) {
+          log.warn('SavedQuestion identity resolution failed; using legacy questionId links', {
+            error: identityError instanceof Error ? identityError.message : String(identityError),
+          });
+        }
+      }
 
       // Delete all saved questions for these question IDs
       const deleteConditions = questionIds.map((qId) => ({
@@ -477,10 +551,12 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
           if (!questionText) return null;
 
           const updatedAt = item.updatedAt ? new Date(item.updatedAt) : new Date();
+          const identityKey = `${questionId}:${item.type}`;
           return {
             id: crypto.randomUUID(),
             userId: internalUserId,
             questionId,
+            questionIdentityId: savedQuestionIdentityIds.get(identityKey) ?? null,
             questionText,
             correctAnswer: correctAnswer || '',
             explanation,

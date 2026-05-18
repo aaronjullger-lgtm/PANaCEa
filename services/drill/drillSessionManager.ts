@@ -37,6 +37,7 @@ export type DrillType = 'photo_drill' | 'contrastive_drill' | 'rapid_recall' | '
 export interface DrillAttemptData {
   userId: string;
   questionId?: string;
+  questionIdentityId?: string;
   conditionId?: string;
   drillType: DrillType;
   wasCorrect: boolean;
@@ -71,6 +72,7 @@ export async function logDrillAttempt(prisma: PrismaLike, data: DrillAttemptData
   const {
     userId,
     questionId,
+    questionIdentityId,
     conditionId,
     drillType,
     wasCorrect,
@@ -85,6 +87,7 @@ export async function logDrillAttempt(prisma: PrismaLike, data: DrillAttemptData
         id: `drill_${userId}_${Date.now()}_${Math.random().toString(36).substring(7)}`, // Required unique ID
         userId,
         questionId: questionId || `drill_${Date.now()}`,
+        ...(questionIdentityId ? { questionIdentityId } : {}),
         conditionId,
         questionType: drillType,
         wasCorrect,

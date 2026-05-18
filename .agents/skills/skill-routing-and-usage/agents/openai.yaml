@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Routing And Usage"
+  short_description: "Choose, combine, audit, and maintain local agent skills"
+  default_prompt: "Route this request to the right primary and secondary skills, then audit or update the skill library if needed."

@@ -32,6 +32,7 @@ import {
   groupFieldsByCategory,
   getCategoryLabel,
 } from '@/services/domain';
+import { SkeletonText } from '@/components/loading';
 import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 
 interface DDxMatrixViewProps {
@@ -61,7 +62,8 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<any>> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  presentation: 'border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-category-practice)_5%,transparent)]',
+  presentation:
+    'border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-category-practice)_5%,transparent)]',
   demographics: 'border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5',
   pathophysiology: 'border-data-provisional/30 bg-data-provisional/5',
   diagnosis: 'border-data-pass/30 bg-data-pass/5',
@@ -282,10 +284,13 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
         {/* Matrix Content */}
         <div className="flex-1 overflow-auto">
           {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-pulse text-[var(--color-text-muted)]">
-                Loading comparison data...
-              </div>
+            <div
+              className="h-64 p-6"
+              role="status"
+              aria-live="polite"
+              aria-label="Loading comparison data"
+            >
+              <SkeletonText lines={6} />
             </div>
           ) : error ? (
             <div className="flex items-center justify-center h-64 text-data-fail">

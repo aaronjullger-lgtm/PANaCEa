@@ -22,6 +22,10 @@ vi.mock('@/lib/services/dailyStudyAllocatorService', () => ({
 
 import { ensureStudyPlanWindow, updateStudyPlanProgress } from './studyPlanService';
 import { getDailyStudyAllocation } from '@/lib/services/dailyStudyAllocatorService';
+import { analyzePerformanceGaps } from '@/services/optimizer/performanceGapAnalyzer';
+import { scheduleReviews } from '@/services/optimizer/retentionAwareScheduler';
+import { balanceBlueprintPriorities } from '@/services/optimizer/blueprintBalancedSelector';
+import { generateStudyPlan } from '@/services/optimizer/pathGenerator';
 
 function makePersistedPlan(overrides: Record<string, unknown> = {}) {
   return {
@@ -92,9 +96,78 @@ function makePrisma(existingRows: any[]) {
   };
 }
 
+function configurePlannerSignals() {
+  (analyzePerformanceGaps as any).mockResolvedValue([
+    {
+      taxonomyCode: 'Cardiovascular',
+      subcategory: 'Cardiology',
+      currentAccuracy: 0.58,
+      targetAccuracy: 0.75,
+      gap: 0.17,
+      reviewCount: 12,
+      lastReviewedAt: new Date('2026-05-03T16:00:00.000Z'),
+    },
+  ]);
+  (scheduleReviews as any).mockResolvedValue([
+    {
+      taxonomyCode: 'Cardiovascular',
+      subcategory: 'Cardiology',
+      recommendedReviewDate: new Date('2026-05-03T00:00:00.000Z'),
+      urgencyScore: 92,
+      confidence: 0.82,
+    },
+  ]);
+  (balanceBlueprintPriorities as any).mockResolvedValue([
+    {
+      taxonomyCode: 'Cardiovascular',
+      subcategory: 'Cardiology',
+      priorityScore: 91,
+      weightDeviation: 0.08,
+    },
+  ]);
+  (generateStudyPlan as any).mockResolvedValue({
+    plan: {
+      sessions: [
+        {
+          topics: [
+            {
+              taxonomyCode: 'Cardiovascular',
+              recommendedAction: 'REVIEW',
+              estimatedMinutes: 20,
+              urgencyScore: 92,
+            },
+          ],
+        },
+      ],
+    },
+  });
+  (getDailyStudyAllocation as any).mockResolvedValue({
+    recommendedMainCount: 20,
+    recommendedTargetedCount: 40,
+    mainSystems: ['Cardiovascular'],
+    targetedConditions: ['mc-cardiology'],
+    readinessPriority: 55,
+    retentionPriority: 85,
+    recommendedSplit: 'targeted_heavy',
+    reasonSummary: 'Retention pressure is elevated.',
+    generatedAt: new Date('2026-05-03T16:00:00.000Z'),
+  });
+}
+
+function setActiveTarget(prisma: ReturnType<typeof makePrisma>) {
+  prisma.user.findUnique.mockResolvedValue({
+    examDate: new Date('2026-06-01T00:00:00.000Z'),
+    currentRotation: null,
+    rotationExamDate: null,
+    eorTestDate: null,
+    updatedAt: new Date('2026-05-01T00:00:00.000Z'),
+  });
+}
+
 describe('ensureStudyPlanWindow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    configurePlannerSignals();
   });
 
   it('returns persisted accepted plan rows even when the learner has no active target', async () => {
@@ -221,6 +294,105 @@ describe('ensureStudyPlanWindow', () => {
     expect(result.today).toBeNull();
     expect(prisma.dailyStudyPlan.upsert).not.toHaveBeenCalled();
   });
+
+  it('regenerates pending plan rows when a newer real review is logged', async () => {
+    const stalePendingPlan = makePersistedPlan({
+      planDate: new Date('2026-05-04T00:00:00.000Z'),
+      updatedAt: new Date('2026-05-03T10:00:00.000Z'),
+      status: 'pending',
+    });
+    const prisma = makePrisma([stalePendingPlan]);
+    setActiveTarget(prisma);
+    prisma.reviewLog.findFirst.mockResolvedValue({
+      reviewedAt: new Date('2026-05-03T16:00:00.000Z'),
+    });
+
+    await ensureStudyPlanWindow(prisma, 'user-1', {
+      startDate: new Date('2026-05-04T15:00:00.000Z'),
+      days: 1,
+    });
+
+    expect(prisma.reviewLog.findFirst).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-1',
+        review_type: 'real',
+        sessionType: { in: ['MAIN', 'DRILL'] },
+      },
+      orderBy: { reviewedAt: 'desc' },
+      select: { reviewedAt: true },
+    });
+    expect(prisma.dailyStudyPlan.upsert).toHaveBeenCalledTimes(1);
+    const upsertArgs = prisma.dailyStudyPlan.upsert.mock.calls[0][0];
+    expect(upsertArgs.where.userId_planDate).toEqual({
+      userId: 'user-1',
+      planDate: new Date('2026-05-04T00:00:00.000Z'),
+    });
+    expect(upsertArgs.update.recommendedSessions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: 'targeted',
+          systems: ['Cardiovascular'],
+          reason: 'Targeted review weighted toward retention pressure and due material.',
+        }),
+      ])
+    );
+    expect(upsertArgs.update.recommendedSessions).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: 'accepted-task' })])
+    );
+  });
+
+  it.each(['completed', 'in_progress'] as const)(
+    'does not overwrite %s rows even when new review data makes the plan stale',
+    async (status) => {
+      const protectedPlan = makePersistedPlan({
+        planDate: new Date('2026-05-04T00:00:00.000Z'),
+        status,
+        updatedAt: new Date('2026-05-03T10:00:00.000Z'),
+        recommendedSessions: [
+          {
+            id: `${status}-task`,
+            kind: 'main',
+            status,
+            title: 'Protected task',
+            description: 'Already acted on',
+            reason: 'Keep learner progress intact.',
+            systems: ['Pulmonary'],
+            conditionIds: [],
+            estimatedMinutes: 30,
+            targetQuestions: 15,
+            launchSettings: {
+              mode: 'core_adaptive',
+              focus: 'all',
+              count: 15,
+              questionCount: 15,
+              systems: ['Pulmonary'],
+            },
+            route: '/study/main-session?source=study-plan&taskId=protected-task',
+          },
+        ],
+      });
+      const prisma = makePrisma([protectedPlan]);
+      setActiveTarget(prisma);
+      prisma.reviewLog.findFirst.mockResolvedValue({
+        reviewedAt: new Date('2026-05-03T16:00:00.000Z'),
+      });
+
+      const result = await ensureStudyPlanWindow(prisma, 'user-1', {
+        startDate: new Date('2026-05-04T15:00:00.000Z'),
+        days: 1,
+      });
+
+      expect(prisma.dailyStudyPlan.upsert).not.toHaveBeenCalled();
+      expect(result.today?.status).toBe(status);
+      expect(result.today?.tasks[0]).toEqual(
+        expect.objectContaining({
+          id: `${status}-task`,
+          status,
+          systems: ['Pulmonary'],
+        })
+      );
+    }
+  );
 });
 
 describe('updateStudyPlanProgress', () => {

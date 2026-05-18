@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildCoreAdaptiveSessionSettings,
   buildStudyPlanCompletionPayloadFromSummary,
+  CORE_SESSION_STATE_ACTION_CLASSES,
   flushQueuedReviewsForSessionSummary,
 } from './CoreAdaptiveSession';
 
@@ -240,5 +241,35 @@ describe('buildStudyPlanCompletionPayloadFromSummary', () => {
         sessionId: 'session-1',
       })
     ).toBeNull();
+  });
+});
+
+describe('CORE_SESSION_STATE_ACTION_CLASSES', () => {
+  it('keeps state actions on stable semantic foreground/background pairs', () => {
+    expect(CORE_SESSION_STATE_ACTION_CLASSES.retry).toContain(
+      'text-[var(--color-text-primary)]'
+    );
+
+    expect(CORE_SESSION_STATE_ACTION_CLASSES.failExit).toContain(
+      'text-[var(--color-text-primary)]'
+    );
+    expect(CORE_SESSION_STATE_ACTION_CLASSES.failExit).not.toContain(
+      'text-[var(--color-text-inverse)]'
+    );
+
+    expect(CORE_SESSION_STATE_ACTION_CLASSES.provisionalExit).toContain(
+      'text-[var(--color-text-primary)]'
+    );
+    expect(CORE_SESSION_STATE_ACTION_CLASSES.provisionalExit).not.toContain(
+      'text-[var(--color-text-inverse)]'
+    );
+
+    expect(CORE_SESSION_STATE_ACTION_CLASSES.done).toContain('bg-[var(--color-accent)]');
+    expect(CORE_SESSION_STATE_ACTION_CLASSES.done).toContain(
+      'text-[var(--color-text-inverse)]'
+    );
+    expect(CORE_SESSION_STATE_ACTION_CLASSES.done).not.toContain(
+      'bg-[var(--color-bg-tertiary)]'
+    );
   });
 });

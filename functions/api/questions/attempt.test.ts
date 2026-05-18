@@ -8,7 +8,14 @@ const mockPrisma: any = {
   user: { findUnique: vi.fn(), create: vi.fn() },
   questionAttempt: { create: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
   userQuestionSeen: { findUnique: vi.fn(), upsert: vi.fn() },
-  question: { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), upsert: vi.fn(), update: vi.fn() },
+  question: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    upsert: vi.fn(),
+    update: vi.fn(),
+  },
+  questionIdentity: { upsert: vi.fn() },
   preGeneratedQuestion: { findUnique: vi.fn(), findFirst: vi.fn() },
   $queryRaw: vi.fn(),
   $transaction: vi.fn(),
@@ -117,7 +124,10 @@ function makeKV() {
 function makeMockTx() {
   const tx: any = {
     questionAttempt: { create: vi.fn().mockResolvedValue({}) },
-    userQuestionSeen: { findUnique: vi.fn().mockResolvedValue(null), upsert: vi.fn().mockResolvedValue({}) },
+    userQuestionSeen: {
+      findUnique: vi.fn().mockResolvedValue(null),
+      upsert: vi.fn().mockResolvedValue({}),
+    },
     question: { update: vi.fn().mockResolvedValue({}) },
     $queryRaw: vi.fn().mockResolvedValue([{ total: BigInt(10), correct: BigInt(7) }]),
   };
@@ -160,6 +170,9 @@ async function callEndpoint(ctx: any): Promise<{ status: number; body: any }> {
 describe('POST /api/questions/attempt', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPrisma.questionIdentity.upsert.mockImplementation(({ create }: any) =>
+      Promise.resolve({ id: `qi_${create.questionSource}_${create.sourceQuestionId}` })
+    );
   });
 
   // ---- User lookup ----
@@ -269,10 +282,13 @@ describe('POST /api/questions/attempt', () => {
     it('creates QuestionAttempt with correct fields', async () => {
       const tx = makeMockTx();
       setupDefaultMocks(tx);
-      await callEndpoint(makeContext({ questionId: 'q-42', isCorrect: false, system: 'Pulmonary', mode: 'drill' }));
+      await callEndpoint(
+        makeContext({ questionId: 'q-42', isCorrect: false, system: 'Pulmonary', mode: 'drill' })
+      );
       const createCall = tx.questionAttempt.create.mock.calls[0][0];
       expect(createCall.data.userId).toBe('user-db-1');
       expect(createCall.data.questionId).toBe('q-42');
+      expect(createCall.data.questionIdentityId).toBe('qi_question_q-42');
       expect(createCall.data.wasCorrect).toBe(false);
       expect(createCall.data.system).toBe('Pulmonary');
       expect(createCall.data.mode).toBe('drill');
@@ -337,13 +353,68 @@ describe('POST /api/questions/attempt', () => {
       );
       const createCall = tx.questionAttempt.create.mock.calls[0][0];
       expect(createCall.data.questionId).toBe('pgq-1');
+      expect(createCall.data.questionIdentityId).toBe('qi_pre_generated_pgq-1');
       expect(createCall.data.conditionId).toBe('cond-1');
       expect(createCall.data.medicalContentId).toBe('content-1');
+      expect(mockPrisma.questionIdentity.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            questionSource_sourceQuestionId: {
+              questionSource: 'pre_generated',
+              sourceQuestionId: 'pgq-1',
+            },
+          },
+          create: expect.objectContaining({
+            questionSource: 'pre_generated',
+            sourceQuestionId: 'pgq-1',
+            canonicalQuestionId: 'pgq-1',
+            preGeneratedQuestionId: 'pgq-1',
+          }),
+        })
+      );
       expect(mockPrisma.preGeneratedQuestion.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             id: 'pgq-1',
             validationStatus: 'approved',
+          }),
+        })
+      );
+    });
+
+    it('uses explicit source identity metadata when the client submits it', async () => {
+      const tx = makeMockTx();
+      setupDefaultMocks(tx);
+
+      await callEndpoint(
+        makeContext({
+          questionId: 'pgq-client-1',
+          canonicalQuestionId: 'q-client-1',
+          sourceQuestionId: 'pgq-client-1',
+          questionSource: 'pre_generated',
+        })
+      );
+
+      const createCall = tx.questionAttempt.create.mock.calls[0][0];
+      expect(createCall.data.questionId).toBe('pgq-client-1');
+      expect(createCall.data.questionIdentityId).toBe('qi_pre_generated_pgq-client-1');
+      expect(mockPrisma.questionIdentity.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            questionSource_sourceQuestionId: {
+              questionSource: 'pre_generated',
+              sourceQuestionId: 'pgq-client-1',
+            },
+          },
+          create: expect.objectContaining({
+            questionSource: 'pre_generated',
+            sourceQuestionId: 'pgq-client-1',
+            canonicalQuestionId: 'q-client-1',
+            preGeneratedQuestionId: 'pgq-client-1',
+          }),
+          update: expect.objectContaining({
+            canonicalQuestionId: 'q-client-1',
+            preGeneratedQuestionId: 'pgq-client-1',
           }),
         })
       );
@@ -552,7 +623,14 @@ describe('POST /api/questions/attempt', () => {
     it('keeps stats writes intact when conditionId is absent', async () => {
       const tx = makeMockTx();
       setupDefaultMocks(tx);
-      const { status, body } = await callEndpoint(makeContext({ system: 'Neuro', conditionId: undefined, questionType: 'MCQ', isCorrect: false }));
+      const { status, body } = await callEndpoint(
+        makeContext({
+          system: 'Neuro',
+          conditionId: undefined,
+          questionType: 'MCQ',
+          isCorrect: false,
+        })
+      );
       expect(status).toBe(200);
       expect(body.success).toBe(true);
       expect(tx.questionAttempt.create).toHaveBeenCalled();
@@ -562,7 +640,9 @@ describe('POST /api/questions/attempt', () => {
     it('does not schedule even when correctness is omitted for stale offline answers', async () => {
       const tx = makeMockTx();
       setupDefaultMocks(tx);
-      await callEndpoint(makeContext({ isCorrect: undefined, wasCorrect: undefined, system: 'Cardio' }));
+      await callEndpoint(
+        makeContext({ isCorrect: undefined, wasCorrect: undefined, system: 'Cardio' })
+      );
       expect(scheduleConceptReview).not.toHaveBeenCalled();
     });
   });

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Post Launch Response"
+  short_description: "Set up monitoring, incident response, runbooks, and postmortems"
+  default_prompt: "Define monitoring and incident response for this launch or production issue, including runbooks and follow-ups."

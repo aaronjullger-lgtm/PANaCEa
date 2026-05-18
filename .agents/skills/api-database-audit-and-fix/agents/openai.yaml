@@ -1,0 +1,4 @@
+interface:
+  display_name: "API Database Audit"
+  short_description: "Audit and fix API, database, environment, and authorization issues"
+  default_prompt: "Audit this API or database issue, identify the minimal safe fix, add coverage, and verify it."

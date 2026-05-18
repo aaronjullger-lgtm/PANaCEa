@@ -74,25 +74,43 @@ PANaCEa's codebase has grown organically through 11 audit-and-fix cycles, AI-ass
 
 ---
 
-### Finding 12-4: 8 Duplicate Component Pairs — Wrong-File-Edit Risk
+### Finding 12-4: Duplicate Component Pairs — Wrong-File-Edit Risk
 **Severity:** High | **Type:** Architecture debt | **Blocks production:** No
+
+**2026-05-17 current-state update:** `components/layout/DrillShell.tsx`, `components/quiz/AnswerFeedback.tsx`, and `components/panels/ExplanationPanel.tsx` are no longer present in the current tree. `components/panels/BookmarksPanel.tsx` is not dead: `components/navigation/MenuView.tsx` imports it for question bookmarks, while `components/library/BookmarksPanel.tsx` handles condition bookmarks.
 
 **Duplicate pairs (verified by import analysis):**
 
 | Component | Location A (Active) | Location B (Dead/Duplicate) | Status |
 |---|---|---|---|
-| DrillShell | `components/drill/DrillShell.tsx` | `components/layout/DrillShell.tsx` | B is dead — only importer is an example file |
-| AnswerFeedback | `components/session/AnswerFeedback.tsx` | `components/quiz/AnswerFeedback.tsx` | B is dead — zero importers |
-| BookmarksPanel | `components/library/BookmarksPanel.tsx` | `components/panels/BookmarksPanel.tsx` | A is active (MenuView imports it); B dead |
-| ExplanationPanel | `components/session/ExplanationPanel.tsx` (active, imported by AnswerFeedback) | `components/questions/ExplanationPanel.tsx` (also imported by QuizView) | **Both have importers — needs careful merge** |
+| DrillShell | `components/drill/DrillShell.tsx` | `components/layout/DrillShell.tsx` | B has already been removed |
+| AnswerFeedback | `components/session/AnswerFeedback.tsx` | `components/quiz/AnswerFeedback.tsx` | B has already been removed |
+| BookmarksPanel | `components/library/BookmarksPanel.tsx` | `components/panels/BookmarksPanel.tsx` | Not a duplicate; both are active domain-specific panels |
+| ExplanationPanel | `components/questions/ExplanationPanel.tsx` (canonical, imported by AnswerFeedback) | `components/panels/ExplanationPanel.tsx` | Resolved in cleanup — panel copy deleted |
+| TopicMasteryBreakdown | `components/analytics/TopicMasteryBreakdown.tsx` | `components/dashboard/TopicMasteryBreakdown.tsx` | Resolved in cleanup — dashboard path now re-exports analytics implementation |
+| SkeletonLoader | `components/loading/index.tsx` | `components/ui/SkeletonLoader.tsx` | Resolved in cleanup — UI shim deleted |
+| LandingPage | `components/landing/LandingPage.tsx` | `pages/LandingPage.tsx` | Resolved in cleanup — legacy page deleted |
+| SectionHeader | `components/studypanacea/SectionHeader.tsx` | `components/ui/SectionHeader.tsx` | Resolved in cleanup — unused UI header deleted |
+| SmartImage | `components/library/SmartImage.tsx` | `components/ui/SmartImage.tsx` | Resolved in cleanup — unused UI image component deleted |
+| RotationSelector | `components/onboarding/RotationSelector.tsx` | `components/toolkit/RotationSelector.tsx` | Resolved in cleanup — unused toolkit selector deleted |
 
 Additional pairs with lower risk: `ProgressBar`, `LoadingSpinner`, `ThemeToggle` have near-identical implementations in multiple locations.
 
+**2026-05-17 cleanup note:** `components/ui/SkeletonLoader.tsx` was verified as source-dead and removed. Active code imports skeleton primitives from `components/loading/index.tsx`.
+
+**2026-05-17 landing note:** `pages/LandingPage.tsx` was verified as source-dead and removed. The public landing route uses `components/landing/LandingPage.tsx`.
+
+**2026-05-17 section-header note:** `components/ui/SectionHeader.tsx` was verified as source-dead and removed. Product-specific section headers use `components/studypanacea/SectionHeader.tsx`.
+
+**2026-05-17 smart-image note:** `components/ui/SmartImage.tsx` was verified as source-dead and removed. Condition image galleries use `components/library/SmartImage.tsx` for attribution-aware medical images.
+
+**2026-05-17 rotation-selector note:** `components/toolkit/RotationSelector.tsx` was verified as source-dead and removed. Profile/settings rotation selection uses `components/onboarding/RotationSelector.tsx`.
+
 **Root cause:** Components were duplicated during directory reorganizations without removing originals. No barrel exports enforce single source of truth.
 
-**Impact:** A developer editing `components/layout/DrillShell.tsx` would see zero effect in production (the active version is in `drill/`). ExplanationPanel is the highest risk — two different files both imported from different consumers, potentially diverging.
+**Impact:** A developer editing `components/layout/DrillShell.tsx` would see zero effect in production (the active version is in `drill/`). ExplanationPanel was previously a divergence risk; the active path is now `components/questions/ExplanationPanel.tsx`.
 
-**Fix:** Delete confirmed-dead duplicates (DrillShell/layout, AnswerFeedback/quiz, BookmarksPanel/panels). For ExplanationPanel, audit both consumers, consolidate to one file, update imports.
+**Fix:** Keep the surviving canonical components. Do not delete `components/panels/BookmarksPanel.tsx`; it is the active question-bookmark panel for `MenuView`. ExplanationPanel has been consolidated to the question rationale component, and TopicMasteryBreakdown has been consolidated to the analytics implementation.
 
 ---
 
@@ -232,19 +250,16 @@ Additional pairs with lower risk: `ProgressBar`, `LoadingSpinner`, `ThemeToggle`
 
 ---
 
-### Finding 12-14: ExplanationPanel Dual-Import Creates Silent Divergence Risk
+### Finding 12-14: ExplanationPanel Duplicate Path Was Consolidated
 **Severity:** Medium | **Type:** Architecture debt | **Blocks production:** No
 
 **Details:**
 - `components/session/AnswerFeedback.tsx` imports from `components/questions/ExplanationPanel.tsx`
-- `components/session/QuizView.tsx` also references ExplanationPanel (needs re-verification of exact import path)
-- A separate `components/session/ExplanationPanel.tsx` exists
-
-This means two different ExplanationPanel implementations may be serving different consumers. If a developer fixes a bug in one, the other consumer still has the bug.
+- The old `components/panels/ExplanationPanel.tsx` copy was unreferenced outside stale docs and was deleted.
 
 **Root cause:** Component duplication during directory reorganization with import paths never unified.
 
-**Fix:** Diff both ExplanationPanel files. Keep the more complete version. Update all importers to use the canonical path. Delete the duplicate.
+**Fix:** Keep `components/questions/ExplanationPanel.tsx` as canonical and update docs/tsconfig references to that path.
 
 ---
 
@@ -266,7 +281,7 @@ This means two different ExplanationPanel implementations may be serving differe
 | Rank | Finding | Severity | What's at Risk |
 |---|---|---|---|
 | 1 | 12-5: 10+ duplicate service pairs | High | Bugs fixed in wrong file; stale logic served to users |
-| 2 | 12-4: 8 duplicate component pairs | High | Wrong-file edits have zero effect; ExplanationPanel divergence |
+| 2 | 12-4: duplicate component pairs | High | Wrong-file edits have zero effect; stale duplicate paths need clear canonical labels |
 | 3 | 12-6: 3 contentService copies (1 buggy) | Medium | Bug fix applied to wrong copy; content loading broken |
 | 4 | 12-8: Build artifacts git-tracked | Medium | Repo bloat; gitignore mismatch (`backup` vs `backups`) |
 | 5 | 12-1: 22 markdowns + 10 screenshots at root | Medium | Noisy root; permanent binary bloat in git history |
@@ -291,13 +306,13 @@ For each service duplicate:
 
 **Critical path:** `questionService` — root copy still imported by `App.tsx` and `SessionContext.tsx`. Update these first.
 
-### Fix 2: Delete Confirmed-Dead Components + Unify ExplanationPanel (Findings 12-4, 12-14)
+### Fix 2: Keep Component Canonical Paths Explicit (Findings 12-4, 12-14)
 **Effort:** 2 hours | **Impact:** Eliminates wrong-file-edit risk for component layer
 
-1. Delete: `components/layout/DrillShell.tsx`, `components/quiz/AnswerFeedback.tsx`, `components/panels/BookmarksPanel.tsx`
-2. Diff both ExplanationPanel files; keep the more complete version
-3. Update all importers to the surviving ExplanationPanel path
-4. Delete the duplicate
+1. Keep `components/questions/ExplanationPanel.tsx` as the canonical post-answer rationale panel
+2. Keep `components/panels/BookmarksPanel.tsx` for question bookmarks and `components/library/BookmarksPanel.tsx` for condition bookmarks
+3. Keep `components/analytics/TopicMasteryBreakdown.tsx` as the canonical topic-progress implementation
+4. Do not recreate the deleted `components/panels/ExplanationPanel.tsx`, `components/layout/DrillShell.tsx`, or `components/quiz/AnswerFeedback.tsx` copies
 
 ### Fix 3: gitignore Fix + Root Cleanup (Findings 12-1, 12-8, 12-13)
 **Effort:** 1 hour | **Impact:** Clean root, correct gitignore, no more tracked artifacts
@@ -318,7 +333,6 @@ These files have **zero importers** or are confirmed non-functional. Delete with
 |---|---|
 | `components/layout/DrillShell.tsx` | Zero production importers (only example file) |
 | `components/quiz/AnswerFeedback.tsx` | Zero importers |
-| `components/panels/BookmarksPanel.tsx` | Zero importers (library/ version is active) |
 | `scripts/deprecated/` (16 files) | Already marked deprecated; exists as archive |
 | `query.ts` (root) | Diagnostic script; not imported |
 | `audit-queries.js` (root) | Diagnostic script; not imported |
@@ -339,8 +353,7 @@ These files **have importers or ambiguous status**. Verify before modifying:
 
 | File | Why Verification Needed |
 |---|---|
-| `components/questions/ExplanationPanel.tsx` | Imported by `session/AnswerFeedback.tsx` — diff against session/ version first |
-| `components/session/ExplanationPanel.tsx` | May be imported by QuizView — check exact import path |
+| `components/questions/ExplanationPanel.tsx` | Canonical post-answer rationale component imported by `session/AnswerFeedback.tsx` |
 | `services/questionService.ts` (root) | Imported by `App.tsx`, `SessionContext.tsx` — update consumers first |
 | `services/ai/adaptiveFSRSService.ts` | Imported by orchestration test — verify if test should use domain/ version |
 | `lib/services/content/contentService.ts` | Third contentService copy — verify zero importers before deleting |
@@ -370,7 +383,7 @@ These files **have importers or ambiguous status**. Verify before modifying:
 6. Commit: "refactor: consolidate duplicate services to canonical paths"
 
 ### Day 3: Component Deduplication + Directory Organization (3 hours)
-1. Consolidate ExplanationPanel: diff both versions, keep the more complete, update all importers
+1. Preserve the canonical ExplanationPanel path and avoid reintroducing panel/session copies
 2. Move root markdowns: `AUDIT_*.md` → `docs/audits/`, `SESSION_*.md` → `docs/sessions/`
 3. Organize `scripts/`: move diagnostics to `scripts/archive/`, add `scripts/README.md`
 4. Add `plans/` status headers or archive completed plans

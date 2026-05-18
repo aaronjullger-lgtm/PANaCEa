@@ -22,6 +22,7 @@
 
 import type { PrismaClient } from '@prisma/client';
 import { logger } from '../logger';
+import { formatMemorySafetyFlags, sanitizeRetrievedContextText } from './memory/contextSanitizer';
 
 const LOG_SCOPE = 'GuidelineRAG';
 
@@ -254,7 +255,9 @@ function formatPromptContext(snippets: GuidelineSnippet[]): string {
     .map((s, i) => {
       const gradeStr = s.grade ? ` (Grade ${s.grade})` : '';
       const yearStr = s.year ? ` ${s.year}` : '';
-      return `**[${i + 1}] ${s.condition}** — ${s.source}${yearStr}${gradeStr}\n${s.text}`;
+      const sanitized = sanitizeRetrievedContextText(s.text);
+      const safetyFlags = formatMemorySafetyFlags(sanitized.flags);
+      return `**[${i + 1}] ${s.condition}** — ${s.source}${yearStr}${gradeStr}\n${safetyFlags ? `${safetyFlags}\n` : ''}${sanitized.text}`;
     })
     .join('\n\n');
 

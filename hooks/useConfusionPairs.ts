@@ -11,6 +11,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export interface ConfusionPairData {
   id: string;
@@ -50,14 +51,21 @@ export function useConfusionPairs(limit: number = 10) {
         });
 
         if (!response.ok) {
-          throw new Error(`Confusion pairs fetch failed: ${response.status}`);
+          const errorPayload = await response.json().catch(() => ({}));
+          throw new Error(
+            getApiEnvelopeError(errorPayload, `Confusion pairs fetch failed: ${response.status}`)
+          );
         }
 
-        const json = await response.json();
-        if (json?.data?.success) {
+        const json = unwrapApiEnvelope<{
+          success?: boolean;
+          confusionPairs?: ConfusionPairData[];
+          total?: number;
+        }>(await response.json());
+        if (json.success) {
           setData({
-            confusionPairs: json.data.confusionPairs,
-            total: json.data.total,
+            confusionPairs: json.confusionPairs ?? [],
+            total: json.total ?? 0,
           });
         }
       } catch (err) {

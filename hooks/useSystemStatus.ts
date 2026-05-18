@@ -13,6 +13,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export type SystemStatus = 'unknown' | 'healthy' | 'unhealthy' | 'unreachable';
 
@@ -100,7 +101,7 @@ export function useSystemStatus(options: UseSystemStatusOptions = {}): HealthChe
       // /api/health returns 200 when healthy, 503 when unhealthy — both JSON.
       let payload: HealthResponse | null = null;
       try {
-        payload = (await response.json()) as HealthResponse;
+        payload = unwrapApiEnvelope<HealthResponse>(await response.json());
       } catch {
         payload = null;
       }

@@ -24,7 +24,12 @@
 
 import React, { useCallback, useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import type { Question as QuizQuestion, PerformanceRecord, ErrorTag, SessionSettings } from '@/types';
+import type {
+  Question as QuizQuestion,
+  PerformanceRecord,
+  ErrorTag,
+  SessionSettings,
+} from '@/types';
 import { DEFAULT_SESSION_SIZE } from '@/lib/constants/sessionDefaults';
 import { SessionScopeSelector } from '@/components/session/SessionScopeSelector';
 import { DrillLoadingState } from '@/components/loading';
@@ -88,7 +93,10 @@ export function buildCoreAdaptiveSessionSettings({
   studyPlanDate,
   launchSettings,
 }: {
-  blueprint: Pick<BlueprintState, 'weights' | 'gatedSystems' | 'label' | 'examTypes' | 'stage' | 'urgencyMultiplier'>;
+  blueprint: Pick<
+    BlueprintState,
+    'weights' | 'gatedSystems' | 'label' | 'examTypes' | 'stage' | 'urgencyMultiplier'
+  >;
   sessionScope: CoreAdaptiveSessionScope | null;
   studyPlanSource?: string | null;
   studyPlanTaskId?: string | null;
@@ -96,7 +104,7 @@ export function buildCoreAdaptiveSessionSettings({
   launchSettings?: SessionSettings | null;
 }): SessionSettings {
   const blueprintSystems = Object.keys(blueprint.weights).filter(
-    s => !blueprint.gatedSystems.includes(s)
+    (s) => !blueprint.gatedSystems.includes(s)
   );
   const scopedSystems =
     sessionScope?.systems && sessionScope.systems.length > 0
@@ -110,12 +118,20 @@ export function buildCoreAdaptiveSessionSettings({
     sessionScope?.mode === 'condition';
 
   const isDedicatedFocusedMode = studyPlanSource === 'mode-library' && hasFocusedScope;
-  const isStudyPlanConditionTarget = sessionScope?.mode === 'condition' && studyPlanSource === 'study-plan';
+  const isStudyPlanConditionTarget =
+    sessionScope?.mode === 'condition' && studyPlanSource === 'study-plan';
 
   const baseSettings: SessionSettings = {
-    mode: isDedicatedFocusedMode || isStudyPlanConditionTarget ? ('targeted' as const) : ('standard' as const),
+    mode:
+      isDedicatedFocusedMode || isStudyPlanConditionTarget
+        ? ('targeted' as const)
+        : ('standard' as const),
     focus: hasFocusedScope ? ('topic' as const) : ('all' as const),
-    topic: sessionScope?.conditionName ?? sessionScope?.conditionId ?? sessionScope?.subcategory ?? sessionScope?.system,
+    topic:
+      sessionScope?.conditionName ??
+      sessionScope?.conditionId ??
+      sessionScope?.subcategory ??
+      sessionScope?.system,
     systems: scopedSystems,
     difficulty: 'adaptive' as const,
     count: sessionScope?.size ?? DEFAULT_SESSION_SIZE,
@@ -126,8 +142,8 @@ export function buildCoreAdaptiveSessionSettings({
     examTypes: blueprint.examTypes,
     stage: blueprint.stage,
     interleaveMode: scopedSystems.length > 1 ? ('interleaved' as const) : ('focused' as const),
-    studyPlanTaskId: studyPlanSource === 'study-plan' ? studyPlanTaskId ?? undefined : undefined,
-    studyPlanDate: studyPlanSource === 'study-plan' ? studyPlanDate ?? undefined : undefined,
+    studyPlanTaskId: studyPlanSource === 'study-plan' ? (studyPlanTaskId ?? undefined) : undefined,
+    studyPlanDate: studyPlanSource === 'study-plan' ? (studyPlanDate ?? undefined) : undefined,
     studyPlanSource: studyPlanSource === 'study-plan' ? studyPlanSource : undefined,
     urgencyMultiplier: blueprint.urgencyMultiplier,
   };
@@ -250,7 +266,7 @@ export function buildStudyPlanCompletionPayloadFromSummary({
   const questionsAnswered =
     typeof summary.persistedAnswers === 'number'
       ? summary.persistedAnswers
-      : summary.totalQuestions ?? 0;
+      : (summary.totalQuestions ?? 0);
 
   if (questionsAnswered <= 0 || !reviewSyncFlushed) {
     return null;
@@ -267,6 +283,16 @@ export function buildStudyPlanCompletionPayloadFromSummary({
     linkedSessionId: sessionId,
   };
 }
+
+export const CORE_SESSION_STATE_ACTION_CLASSES = {
+  retry:
+    'px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2',
+  failExit:
+    'px-4 py-2 rounded-lg border border-[var(--color-data-fail)]/50 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-data-fail)]/15 transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2',
+  provisionalExit:
+    'px-4 py-2 rounded-lg border border-[var(--color-data-provisional)]/50 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-data-provisional)]/15 transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2',
+  done: 'w-full px-4 py-2.5 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors duration-200 text-sm font-medium mt-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2',
+} as const;
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -295,7 +321,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
   // Blueprint resolution state
   const [blueprint, setBlueprint] = useState<BlueprintState>({
-    label: 'Loading...',
+    label: 'Adaptive readiness',
     stage: 'general',
     examTypes: ['PANCE'],
     weights: {},
@@ -373,7 +399,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
         let distData: DistributionCheckResponse | null = null;
         const distResponse = await api.postResult<DistributionCheckResponse>(
           '/api/study/check-distribution',
-          { weights: bp.weights },
+          { weights: bp.weights }
         );
 
         if (distResponse.ok) {
@@ -410,7 +436,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
             systems: scope.systems,
             subcategory: scope.subcategory,
             conditionId: scope.conditionId,
-          },
+          }
         );
         if (cancelled) return;
 
@@ -421,7 +447,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
         if (!cancelled) {
           console.error('[CoreAdaptiveSession] Init failed:', err);
           setError(err.message ?? 'Failed to initialize study session');
-          setBlueprint(prev => ({ ...prev, error: err.message }));
+          setBlueprint((prev) => ({ ...prev, error: err.message }));
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -429,7 +455,9 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
     }
 
     initialize();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [getToken, retryCount, sessionScope]);
   // ── Session end: fetch summary, then exit ──
   const [sessionSummary, setSessionSummary] = useState<SessionSummaryResponse | null>(null);
@@ -445,7 +473,10 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
     try {
       const token = await getToken();
-      if (!token) { onExit(); return; }
+      if (!token) {
+        onExit();
+        return;
+      }
 
       const api = createApiClient(getToken);
       const reviewSyncFlushed = await flushQueuedReviewsForSessionSummary({ getToken });
@@ -454,7 +485,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
       }
       const summaryResult = await api.postResult<SessionSummaryResponse>(
         '/api/study/session-summary',
-        { sessionId },
+        { sessionId }
       );
 
       if (summaryResult.ok) {
@@ -470,7 +501,9 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           });
 
           if (!completionPayload) {
-            setPlanSyncWarning("Session saved. Today's plan will update after answer sync finishes.");
+            setPlanSyncWarning(
+              "Session saved. Today's plan will update after answer sync finishes."
+            );
           } else {
             try {
               const progressResult = await api.postResult('/api/study-plan/progress', {
@@ -490,12 +523,19 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
                 if (!compatibilityResult.ok) {
                   console.warn('[CoreAdaptiveSession] Failed to mark study-plan task complete');
-                  setPlanSyncWarning("Session saved. Today's plan may take a moment to reflect completion.");
+                  setPlanSyncWarning(
+                    "Session saved. Today's plan may take a moment to reflect completion."
+                  );
                 }
               }
             } catch (progressError) {
-              console.warn('[CoreAdaptiveSession] Failed to mark study-plan task complete', progressError);
-              setPlanSyncWarning("Session saved. Today's plan may take a moment to reflect completion.");
+              console.warn(
+                '[CoreAdaptiveSession] Failed to mark study-plan task complete',
+                progressError
+              );
+              setPlanSyncWarning(
+                "Session saved. Today's plan may take a moment to reflect completion."
+              );
             }
           }
         }
@@ -508,23 +548,61 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
     }
 
     onExit(); // Fallback: exit if summary fails
-  }, [sessionId, getToken, onExit, studyPlanDate, studyPlanTaskId, studyPlanSource, questions.length]);
+  }, [
+    sessionId,
+    getToken,
+    onExit,
+    studyPlanDate,
+    studyPlanTaskId,
+    studyPlanSource,
+    questions.length,
+  ]);
 
   // ── Distribution health helpers ──
   const distributionBadge = useMemo(() => {
     if (distribution.isBalanced) {
-      return { text: 'Balanced', color: 'text-[var(--color-data-pass)] bg-[var(--color-data-pass)]' };
+      return {
+        text: 'Balanced',
+        color:
+          'border border-[var(--color-data-pass)]/40 bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]',
+      };
     }
     if (distribution.skewScore > 0.5) {
-      return { text: `Rebalancing (${distribution.overRepresented.length} over)`, color: 'text-[var(--color-data-fail)] bg-[var(--color-data-fail)]' };
+      return {
+        text: `Rebalancing (${distribution.overRepresented.length} over)`,
+        color:
+          'border border-[var(--color-data-fail)]/40 bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]',
+      };
     }
-    return { text: 'Slight skew', color: 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]' };
+    return {
+      text: 'Slight skew',
+      color:
+        'border border-[var(--color-data-provisional)]/40 bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]',
+    };
   }, [distribution]);
 
   const urgencyBadge = useMemo(() => {
-    if (blueprint.urgencyMultiplier >= 2.0) return { text: 'Cram mode', color: 'text-[var(--color-data-fail)] bg-[var(--color-data-fail)]' };
-    if (blueprint.urgencyMultiplier >= 1.4) return { text: 'High priority', color: 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]' };
-    if (blueprint.urgencyMultiplier >= 1.0) return { text: 'On track', color: 'text-[var(--color-accent)] bg-[var(--color-accent)]' };
+    if (blueprint.urgencyMultiplier >= 2.0) {
+      return {
+        text: 'Cram mode',
+        color:
+          'border border-[var(--color-data-fail)]/40 bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]',
+      };
+    }
+    if (blueprint.urgencyMultiplier >= 1.4) {
+      return {
+        text: 'High priority',
+        color:
+          'border border-[var(--color-data-provisional)]/40 bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]',
+      };
+    }
+    if (blueprint.urgencyMultiplier >= 1.0) {
+      return {
+        text: 'On track',
+        color:
+          'border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 text-[var(--color-accent)]',
+      };
+    }
     return null; // No badge for relaxed / no exam
   }, [blueprint.urgencyMultiplier]);
 
@@ -538,7 +616,14 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
       studyPlanDate,
       launchSettings: initialSessionSettings,
     });
-  }, [blueprint, sessionScope, studyPlanDate, studyPlanSource, studyPlanTaskId, initialSessionSettings]);
+  }, [
+    blueprint,
+    sessionScope,
+    studyPlanDate,
+    studyPlanSource,
+    studyPlanTaskId,
+    initialSessionSettings,
+  ]);
 
   // ── Render ──
 
@@ -571,27 +656,22 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-4">
-        <div className="bg-[var(--color-data-fail)] border border-[var(--color-data-fail)] rounded-xl p-6 max-w-md text-center">
-          <h3 className="text-[var(--color-data-fail)] font-semibold mb-2">
-            Session Error
-          </h3>
-          <p className="text-[var(--color-data-fail)] text-sm mb-4">{error}</p>
+        <div className="rounded-xl border border-[var(--color-data-fail)]/40 bg-[var(--color-data-fail)]/10 p-6 max-w-md text-center">
+          <h3 className="text-[var(--color-data-fail)] font-semibold mb-2">Session Error</h3>
+          <p className="text-[var(--color-text-primary)] text-sm mb-4">{error}</p>
           <div className="flex items-center justify-center gap-3">
             <button
               onClick={() => {
                 setError(null);
                 setIsLoading(true);
                 // Re-trigger initialization by toggling a retry key
-                setRetryCount(c => c + 1);
+                setRetryCount((c) => c + 1);
               }}
-              className="px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className={CORE_SESSION_STATE_ACTION_CLASSES.retry}
             >
               Retry
             </button>
-            <button
-              onClick={onExit}
-              className="px-4 py-2 bg-[var(--color-data-fail)] text-[var(--color-data-fail)] rounded-lg hover:bg-[var(--color-data-fail)] transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
-            >
+            <button onClick={onExit} className={CORE_SESSION_STATE_ACTION_CLASSES.failExit}>
               Back to Menu
             </button>
           </div>
@@ -603,19 +683,16 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   if (questions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-4">
-        <div className="bg-[var(--color-data-provisional)] border border-[var(--color-data-provisional)] rounded-xl p-6 max-w-md text-center">
+        <div className="rounded-xl border border-[var(--color-data-provisional)]/40 bg-[var(--color-data-provisional)]/10 p-6 max-w-md text-center">
           <h3 className="text-[var(--color-data-provisional)] font-semibold mb-2">
             No Questions Available
           </h3>
-          <p className="text-[var(--color-data-provisional)] text-sm mb-4">
+          <p className="text-[var(--color-text-primary)] text-sm mb-4">
             {blueprint.gatedSystems.length > 0
               ? `Your current study plan covers ${Object.keys(blueprint.weights).length} systems. More content will unlock as you progress in your program.`
               : 'All questions have been reviewed recently. Check back later or try a different study mode.'}
           </p>
-          <button
-            onClick={onExit}
-            className="px-4 py-2 bg-[var(--color-data-provisional)] text-[var(--color-data-provisional)] rounded-lg hover:bg-[var(--color-data-provisional)] transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
-          >
+          <button onClick={onExit} className={CORE_SESSION_STATE_ACTION_CLASSES.provisionalExit}>
             Back to Menu
           </button>
         </div>
@@ -632,7 +709,9 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 px-4">
         <div className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl p-6 max-w-lg w-full shadow-sm">
-          <h3 className="text-[var(--color-text-primary)] font-semibold text-lg mb-1">Session Complete</h3>
+          <h3 className="text-[var(--color-text-primary)] font-semibold text-lg mb-1">
+            Session Complete
+          </h3>
           <p className="text-[var(--color-text-muted)] text-sm mb-4">
             {sessionSummary.blueprintLabel ?? blueprint.label}
           </p>
@@ -640,7 +719,8 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           {/* Score */}
           <div className="flex items-center gap-4 mb-4">
             <div className="text-3xl font-bold text-[var(--color-text-primary)]">
-              {sessionSummary.correctAnswers ?? 0}/{sessionSummary.totalQuestions ?? questions.length}
+              {sessionSummary.correctAnswers ?? 0}/
+              {sessionSummary.totalQuestions ?? questions.length}
             </div>
             <div className="text-sm text-[var(--color-text-muted)]">correct</div>
           </div>
@@ -654,7 +734,9 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           {/* System breakdown */}
           {Object.keys(breakdown).length > 0 && (
             <div className="mb-4">
-              <h4 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">By System</h4>
+              <h4 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
+                By System
+              </h4>
               <div className="space-y-1">
                 {Object.entries(breakdown)
                   .sort((a: any, b: any) => b[1].count - a[1].count)
@@ -662,7 +744,9 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
                   .map(([sys, data]: [string, any]) => (
                     <div key={sys} className="flex items-center justify-between text-sm">
                       <span className="text-[var(--color-text-secondary)]">{sys}</span>
-                      <span className={`font-medium ${data.accuracy >= 0.7 ? 'text-[var(--color-data-pass)]' : data.accuracy >= 0.5 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}>
+                      <span
+                        className={`font-medium ${data.accuracy >= 0.7 ? 'text-[var(--color-data-pass)]' : data.accuracy >= 0.5 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}
+                      >
                         {Math.round(data.accuracy * 100)}% ({data.count}q)
                       </span>
                     </div>
@@ -674,8 +758,12 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           {/* Rolling health */}
           {health && (
             <div className="mb-4 flex items-center gap-2">
-              <span className={`text-xs px-2 py-0.5 rounded-full ${health.isBalanced ? 'text-[var(--color-data-pass)] bg-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]'}`}>
-                {health.isBalanced ? 'Balanced distribution' : `${health.overRepresented?.length ?? 0} systems over-represented`}
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full border ${health.isBalanced ? 'border-[var(--color-data-pass)]/40 bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]' : 'border-[var(--color-data-provisional)]/40 bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]'}`}
+              >
+                {health.isBalanced
+                  ? 'Balanced distribution'
+                  : `${health.overRepresented?.length ?? 0} systems over-represented`}
               </span>
             </div>
           )}
@@ -683,19 +771,20 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           {/* Recommendations */}
           {recs.length > 0 && (
             <div className="mb-4">
-              <h4 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Next Steps</h4>
+              <h4 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
+                Next Steps
+              </h4>
               <div className="space-y-1">
                 {recs.map((rec: string, i: number) => (
-                  <p key={i} className="text-sm text-[var(--color-text-secondary)]">{rec}</p>
+                  <p key={i} className="text-sm text-[var(--color-text-secondary)]">
+                    {rec}
+                  </p>
                 ))}
               </div>
             </div>
           )}
 
-          <button
-            onClick={onExit}
-            className="w-full px-4 py-2.5 bg-[var(--color-bg-tertiary)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors duration-200 text-sm font-medium mt-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
-          >
+          <button onClick={onExit} className={CORE_SESSION_STATE_ACTION_CLASSES.done}>
             Done
           </button>
         </div>
@@ -720,7 +809,8 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           )}
           {blueprint.daysToExam !== null && blueprint.daysToExam <= 0 && (
             <span className="text-xs text-[var(--color-data-fail)] font-medium">
-              Exam day{blueprint.daysToExam < 0 ? ` was ${Math.abs(blueprint.daysToExam)}d ago` : '!'}
+              Exam day
+              {blueprint.daysToExam < 0 ? ` was ${Math.abs(blueprint.daysToExam)}d ago` : '!'}
             </span>
           )}
           {urgencyBadge && (
@@ -734,7 +824,10 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
             {distributionBadge.text}
           </span>
           {distribution.skewScore > 0 && (
-            <span className="text-xs text-[var(--color-text-muted)]" title="Distribution skew score">
+            <span
+              className="text-xs text-[var(--color-text-muted)]"
+              title="Distribution skew score"
+            >
               {Math.round(distribution.skewScore * 100)}% skew
             </span>
           )}
@@ -743,11 +836,11 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
       {/* Rotation transition notice */}
       {rotationNotice && (
-        <div className="flex items-center justify-between px-4 py-2 bg-[var(--color-accent)] border-b border-[var(--color-accent)]">
-          <p className="text-xs text-[var(--color-accent)]">{rotationNotice}</p>
+        <div className="flex items-center justify-between px-4 py-2 bg-[var(--color-accent)]/10 border-b border-[var(--color-accent)]/40">
+          <p className="text-xs text-[var(--color-text-primary)]">{rotationNotice}</p>
           <button
             onClick={() => setRotationNotice(null)}
-            className="text-xs text-[var(--color-accent)] hover:text-[var(--color-accent)] ml-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 rounded"
+            className="text-xs text-[var(--color-accent)] hover:text-[var(--color-text-primary)] ml-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 rounded"
           >
             Dismiss
           </button>
@@ -756,14 +849,16 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
       {/* QuizView — wired with full shared props from DrillViewRouter */}
       <div className="flex-1">
-        <Suspense fallback={
-          <DrillLoadingState
-            message="Preparing your questions..."
-            variant="question"
-            showTimer
-            showProgress
-          />
-        }>
+        <Suspense
+          fallback={
+            <DrillLoadingState
+              message="Preparing your questions..."
+              variant="question"
+              showTimer
+              showProgress
+            />
+          }
+        >
           <QuizView
             initialQueue={questions}
             setParentQueue={setQuestions}

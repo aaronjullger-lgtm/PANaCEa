@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 import { logger } from '@/lib/logger';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 const LOG_SCOPE = 'PharmDrill';
 
@@ -109,12 +110,15 @@ export function usePharmDrill(): UsePharmDrillReturn {
         }
 
         const response = await fetch(`/api/drills/pharm?${params.toString()}`);
+        const responseJson = await response.json().catch(() => null);
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch questions: ${response.statusText}`);
+          throw new Error(
+            getApiEnvelopeError(responseJson, `Failed to fetch questions: ${response.statusText}`)
+          );
         }
 
-        const questions: PharmQuestion[] = await response.json();
+        const questions = unwrapApiEnvelope<PharmQuestion[]>(responseJson);
         return questions;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load questions';

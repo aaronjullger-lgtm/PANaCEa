@@ -110,6 +110,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
   onStartSession,
   onNavigateToSrsReview,
   onNavigateToStudyPathDashboard,
+  onOpenSettings,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -211,6 +212,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
           onOpenReview: onNavigateToSrsReview ?? (() => navigate(ROUTES.PROGRESS)),
           onOpenPractice: () => navigate(ROUTES.PRACTICE),
           onStartSession,
+          onOpenSettings,
         },
       }),
     [
@@ -226,6 +228,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
       navigate,
       onNavigateToSrsReview,
       onNavigateToStudyPathDashboard,
+      onOpenSettings,
       onStartSession,
       performanceData,
       profile,

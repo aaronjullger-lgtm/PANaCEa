@@ -23,6 +23,7 @@ import {
   BarChart3,
   Activity,
 } from 'lucide-react';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -245,12 +246,12 @@ export default function CalibrationInsightsDashboard() {
         const res = await fetch('/api/study/calibration-insights', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json() as { data?: InsightsData } | InsightsData | null;
-        const normalized = json && typeof json === 'object' && 'data' in json
-          ? json.data ?? null
-          : json;
-        if (!cancelled) setData(normalized as InsightsData | null);
+        if (!res.ok) {
+          const errorPayload = await res.json().catch(() => ({}));
+          throw new Error(getApiEnvelopeError(errorPayload, `HTTP ${res.status}`));
+        }
+        const normalized = unwrapApiEnvelope<InsightsData | null>(await res.json());
+        if (!cancelled) setData(normalized);
       } catch (err: any) {
         console.warn('[CalibrationInsightsDashboard] Fetch failed', err);
         if (!cancelled) setError(err.message);

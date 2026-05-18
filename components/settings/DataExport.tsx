@@ -15,6 +15,7 @@ import Papa from 'papaparse';
 import jsPDF from 'jspdf';
 import { Download, FileSpreadsheet, FileText, AlertCircle } from 'lucide-react';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface ReviewExportData {
   id: string;
@@ -26,10 +27,18 @@ interface ReviewExportData {
   telemetryJson?: any;
   system?: string;
   conditionId?: string;
+  reviewedAt?: string;
+  rating?: number;
+  gradeContinuous?: number | null;
+  stability?: number | null;
+  difficulty?: number | null;
+  retrievability?: number | null;
+  sessionType?: string;
+  reviewType?: string;
 }
 
 export const DataExport: React.FC = () => {
-  const { userId, getToken } = useAuth();
+  const { getToken } = useAuth();
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<{
     type: 'success' | 'error' | null;
@@ -44,7 +53,7 @@ export const DataExport: React.FC = () => {
     const timeout = setTimeout(() => controller.abort(), 30000);
     const token = await getToken();
     if (!token) throw new Error('Authentication required');
-    const response = await fetch(`/api/user/review-history?userId=${userId}&limit=10000`, {
+    const response = await fetch('/api/user/review-history?limit=10000&mainOnly=true', {
       signal: controller.signal,
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -54,7 +63,7 @@ export const DataExport: React.FC = () => {
       throw new Error(`Failed to fetch review history: ${response.statusText}`);
     }
 
-    const data = (await response.json()) as { reviews?: ReviewExportData[] };
+    const data = unwrapApiEnvelope<{ reviews?: ReviewExportData[] }>(await response.json());
     return data.reviews || [];
   };
 
@@ -86,13 +95,22 @@ export const DataExport: React.FC = () => {
           system: review.system || 'Unknown',
           condition_id: review.conditionId || '',
           was_correct: review.wasCorrect ? 'YES' : 'NO',
-          timestamp: new Date(review.createdAt).toISOString(),
-          date: new Date(review.createdAt).toLocaleDateString(),
-          time: new Date(review.createdAt).toLocaleTimeString(),
+          timestamp: new Date(review.reviewedAt ?? review.createdAt).toISOString(),
+          date: new Date(review.reviewedAt ?? review.createdAt).toLocaleDateString(),
+          time: new Date(review.reviewedAt ?? review.createdAt).toLocaleTimeString(),
+          session_type: review.sessionType || '',
+          review_type: review.reviewType || '',
 
           // Duration metrics
           duration_ms: review.durationMs || 0,
           duration_seconds: (review.durationMs || 0) / 1000,
+
+          // FSRS metrics
+          fsrs_rating: review.rating ?? '',
+          grade_continuous: review.gradeContinuous ?? '',
+          stability: review.stability ?? '',
+          difficulty: review.difficulty ?? '',
+          retrievability: review.retrievability ?? '',
 
           // Behavioral metrics
           answer_changes: review.answerChangedCount || 0,

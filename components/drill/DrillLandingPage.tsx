@@ -26,6 +26,7 @@ import {
   Lightbulb,
   ArrowLeft,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 export interface DrillStats {
   totalAttempts?: number;
@@ -170,13 +171,7 @@ export function DrillLandingPage({
             className={`w-full ${colors.button} text-[var(--color-text-inverse)] font-semibold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2`}
           >
             {isLoading ? (
-              <motion.div
-                className="w-6 h-6 border-2 border-white border-t-transparent rounded-full"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-                role="status"
-                aria-label="Loading"
-              />
+              <InlineSpinner size="md" className="text-[var(--color-text-inverse)]" />
             ) : (
               <Play className="w-6 h-6" aria-hidden="true" />
             )}
@@ -215,7 +210,11 @@ export function DrillLandingPage({
 
         {/* Stats Cards — staggered widget entrance with blur-dissolve */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" aria-live="polite" aria-label="Drill statistics">
+          <div
+            className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6"
+            aria-live="polite"
+            aria-label="Drill statistics"
+          >
             {stats.totalAttempts !== undefined && (
               <motion.div
                 variants={widgetEntrance}
@@ -304,12 +303,16 @@ export function DrillLandingPage({
           >
             <div className="flex items-center gap-2 mb-4">
               <BookOpen className={`w-5 h-5 ${colors.text}`} />
-              <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">How it Works</h2>
+              <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                How it Works
+              </h2>
             </div>
             <ul className="space-y-3" role="list" aria-label="Instructions">
               {instructions.map((instruction, index) => (
                 <li key={index} className="flex items-start gap-3">
-                  <span className={`${colors.text} font-semibold text-lg mt-0.5`}>{index + 1}.</span>
+                  <span className={`${colors.text} font-semibold text-lg mt-0.5`}>
+                    {index + 1}.
+                  </span>
                   <span className="text-[var(--color-text-secondary)] flex-1">{instruction}</span>
                 </li>
               ))}
@@ -319,11 +322,7 @@ export function DrillLandingPage({
 
         {/* Custom Content */}
         {children && (
-          <motion.div
-            initial={{ y: 20 }}
-            animate={{ y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
+          <motion.div initial={{ y: 20 }} animate={{ y: 0 }} transition={{ delay: 0.4 }}>
             {children}
           </motion.div>
         )}
@@ -336,7 +335,11 @@ export function DrillLandingPage({
             transition={{ delay: 0.45 }}
             className="text-center"
           >
-            <button onClick={onViewHistory} aria-label={`View ${title} history and statistics`} className="btn-ghost">
+            <button
+              onClick={onViewHistory}
+              aria-label={`View ${title} history and statistics`}
+              className="btn-ghost"
+            >
               View History and Stats
             </button>
           </motion.div>

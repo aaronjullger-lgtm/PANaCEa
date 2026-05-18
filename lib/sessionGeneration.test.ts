@@ -144,7 +144,7 @@ describe('buildSessionModeLabel', () => {
   it('all labels contain "Practice"', () => {
     const modes = ['review', 'focused', 'system', 'subcategory', 'condition', null] as const;
     for (const mode of modes) {
-      const label = buildSessionModeLabel(mode === null ? null : { mode } as any);
+      const label = buildSessionModeLabel(mode === null ? null : ({ mode } as any));
       expect(label).toContain('Practice');
     }
   });
@@ -275,14 +275,26 @@ describe('normalizeSessionQuestion', () => {
 
   it('normalizes difficulty to valid value or undefined', () => {
     const easy = normalizeSessionQuestion({
-      question: 'Q?', options: ['A'], correctAnswerIndex: 0,
-      conditionId: 'c', condition: 'C', topic: 'T', rationale: 'R', difficulty: 'easy',
+      question: 'Q?',
+      options: ['A'],
+      correctAnswerIndex: 0,
+      conditionId: 'c',
+      condition: 'C',
+      topic: 'T',
+      rationale: 'R',
+      difficulty: 'easy',
     } as any);
     expect(easy.difficulty).toBe('easy');
 
     const invalid = normalizeSessionQuestion({
-      question: 'Q?', options: ['A'], correctAnswerIndex: 0,
-      conditionId: 'c', condition: 'C', topic: 'T', rationale: 'R', difficulty: 'INVALID',
+      question: 'Q?',
+      options: ['A'],
+      correctAnswerIndex: 0,
+      conditionId: 'c',
+      condition: 'C',
+      topic: 'T',
+      rationale: 'R',
+      difficulty: 'INVALID',
     } as any);
     expect(['easy', 'medium', 'hard', undefined]).toContain(invalid.difficulty);
   });
@@ -301,6 +313,7 @@ describe('buildStudySessionQuestionRecords', () => {
       questionSource: 'question',
       canonicalQuestionId: 'q-1',
       sourceQuestionId: 'q-1',
+      questionIdentityId: 'qi-question-q-1',
       source: 'new_card',
     } as any);
 
@@ -309,6 +322,7 @@ describe('buildStudySessionQuestionRecords', () => {
         sessionId: 'ses-1',
         questionId: 'q-1',
         preGeneratedQuestionId: null,
+        questionIdentityId: 'qi-question-q-1',
         sequenceIndex: 0,
         source: 'question',
         metadata: expect.objectContaining({
@@ -332,6 +346,7 @@ describe('buildStudySessionQuestionRecords', () => {
       questionSource: 'pre_generated',
       sourceQuestionId: 'pg-1',
       canonicalQuestionId: null,
+      questionIdentityId: 'qi-pre-generated-pg-1',
       source: 'new_card',
     } as any);
 
@@ -340,6 +355,7 @@ describe('buildStudySessionQuestionRecords', () => {
         sessionId: 'ses-1',
         questionId: null,
         preGeneratedQuestionId: 'pg-1',
+        questionIdentityId: 'qi-pre-generated-pg-1',
         sequenceIndex: 0,
         source: 'pre_generated',
         metadata: expect.objectContaining({

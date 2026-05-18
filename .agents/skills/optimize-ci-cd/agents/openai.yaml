@@ -1,0 +1,4 @@
+interface:
+  display_name: "Optimize CI/CD"
+  short_description: "Audit and improve CI, caching, secrets, and deployment workflows"
+  default_prompt: "Audit this CI/CD workflow, fix failures or inefficiencies, and keep secrets and deploy gates safe."

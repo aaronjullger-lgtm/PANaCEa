@@ -1,0 +1,4 @@
+interface:
+  display_name: "AIDesigner Frontend"
+  short_description: "Generate or refine frontend designs with AIDesigner and port them into the repo"
+  default_prompt: "Use AIDesigner to create or refine this frontend direction, then adapt it into the StudyPANaCEa component system."

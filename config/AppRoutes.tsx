@@ -307,15 +307,16 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const normalizedView = view === 'menu' ? 'command_center' : view;
   const contentMaxWidth =
-    normalizedView === 'command_center' ||
-    normalizedView === 'my_library' ||
-    normalizedView === 'study_companion' ||
-    normalizedView === 'pearl_deck' ||
-    normalizedView === 'agent_chat'
-      ? '80rem'
-      : normalizedView === 'quiz' || normalizedView === 'session_runner'
-        ? '64rem'
-      : '56rem';
+    normalizedView === 'command_center'
+      ? '96rem'
+      : normalizedView === 'my_library' ||
+          normalizedView === 'study_companion' ||
+          normalizedView === 'pearl_deck' ||
+          normalizedView === 'agent_chat'
+        ? '80rem'
+        : normalizedView === 'quiz' || normalizedView === 'session_runner'
+          ? '64rem'
+          : '56rem';
   const mainSessionLaunch = useMemo(
     () => parseMainSessionLaunch(location.search),
     [location.search]
@@ -1112,6 +1113,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                                       setView('study_companion')
                                     }
                                     onNavigateToSrsReview={() => setView('srs_review')}
+                                    onOpenSettings={() => setIsSettingsModalOpen(true)}
                                     onBack={() => setView('command_center')}
                                   />
                                 </Suspense>

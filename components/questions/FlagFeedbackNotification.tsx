@@ -23,6 +23,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { SkeletonText } from '@/components/loading';
 
 interface FlaggedQuestion {
   id: string;
@@ -409,8 +410,13 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
             {/* Flags List */}
             <div className="flex-1 overflow-y-auto">
               {isLoading ? (
-                <div className="p-8 text-center text-[var(--color-text-muted)]">
-                  Loading your flags...
+                <div
+                  className="p-6"
+                  role="status"
+                  aria-live="polite"
+                  aria-label="Loading flagged questions"
+                >
+                  <SkeletonText lines={4} />
                 </div>
               ) : (
                 flags.map((flag) => <FlagItem key={flag.id} flag={flag} />)

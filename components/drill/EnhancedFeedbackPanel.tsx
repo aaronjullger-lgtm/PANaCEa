@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface RelatedReference {
   type: 'physiology' | 'anatomy' | 'lab' | 'procedure' | 'ecg' | 'finding' | 'imaging';
@@ -130,29 +131,27 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
             limit: 5,
           }),
         });
+        const responseJson = await response.json().catch(() => null);
 
         if (response.ok) {
-          const result = (await response.json()) as {
-            success?: boolean;
-            data?: {
-              primary?: unknown;
-              related?: Array<{
-                id?: string;
-                displayName?: string;
-                name?: string;
-                description?: string;
-                normalRange?: string;
-                category?: string;
-              }>;
-            };
-          };
-          if (result.success && result.data) {
-            if (result.data.primary) {
-              setRelatedData(result.data.primary);
+          const result = unwrapApiEnvelope<{
+            primary?: unknown;
+            related?: Array<{
+              id?: string;
+              displayName?: string;
+              name?: string;
+              description?: string;
+              normalRange?: string;
+              category?: string;
+            }>;
+          }>(responseJson);
+          if (result) {
+            if (result.primary) {
+              setRelatedData(result.primary);
             }
-            if (result.data.related && result.data.related.length > 0) {
+            if (result.related && result.related.length > 0) {
               setRelatedReferences(
-                result.data.related.map((item) => ({
+                result.related.map((item) => ({
                   type: category as RelatedReference['type'],
                   id: item.id ?? '',
                   name: item.displayName ?? item.name ?? '',
@@ -163,7 +162,9 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
             }
           }
         } else {
-          console.warn('Failed to fetch related content:', response.status);
+          console.warn(
+            getApiEnvelopeError(responseJson, `Failed to fetch related content: ${response.status}`)
+          );
           setRelatedError(true);
         }
       } catch (err) {

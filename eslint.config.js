@@ -9,6 +9,7 @@ export default tseslint.config(
     ignores: [
       'dist',
       'node_modules',
+      'node_modules*',
       'playwright-report',
       '.wrangler',
       '.claude',
@@ -78,17 +79,17 @@ export default tseslint.config(
         'warn',
         {
           selector:
-            "Literal[value=/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/]",
+            'Literal[value=/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/]',
           message:
             'Raw hex colors are not allowed outside `lib/tokens/`. Import from `@/lib/tokens` or add a CSS variable in `index.css` and expose it via the token layer.',
         },
         {
           selector:
-            "TemplateElement[value.raw=/#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})(?![0-9a-fA-F])/]",
+            'TemplateElement[value.raw=/#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})(?![0-9a-fA-F])/]',
           message:
             'Raw hex colors in template strings are not allowed outside `lib/tokens/`. Import from `@/lib/tokens`.',
         },
       ],
     },
-  },
+  }
 );

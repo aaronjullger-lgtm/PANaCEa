@@ -29,6 +29,31 @@ interface Env {
   GEMINI_API_KEY: string;
 }
 
+async function deleteGeminiCachedContent(
+  apiKey: string,
+  cacheName: string,
+  log: ReturnType<typeof createEndpointLogger>
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${GEMINI_BASE}/v1beta/${cacheName}?key=${apiKey}`, {
+      method: 'DELETE',
+    });
+    if (res.ok || res.status === 404) return true;
+
+    log.warn('Gemini student-context cache delete failed', {
+      status: res.status,
+      name: cacheName,
+    });
+    return false;
+  } catch (error) {
+    log.warn('Gemini student-context cache delete errored', {
+      name: cacheName,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
+}
+
 export const onRequestPost = aiEndpoint(StudentContextBodySchema, async (context) => {
   const { env, validated, auth } = context as {
     env: Env;
@@ -135,14 +160,12 @@ export const onRequestPost = aiEndpoint(StudentContextBodySchema, async (context
     });
 
     if (!res.ok) {
-      const text = await res.text();
+      await res.text();
       log.warn('Gemini student-context cache create failed', {
         status: res.status,
-        text: text.slice(0, 300),
       });
       return fail(res.status === 429 ? ErrorCode.RATE_LIMITED : ErrorCode.GEMINI_ERROR, {
         message: 'Failed to create student context cache',
-        details: text.slice(0, 500),
       });
     }
 
@@ -155,12 +178,15 @@ export const onRequestPost = aiEndpoint(StudentContextBodySchema, async (context
       });
     }
 
+    let replacedCacheDeleted: boolean | undefined;
     if (existing) {
+      replacedCacheDeleted = await deleteGeminiCachedContent(apiKey, existing.geminiCacheName, log);
       await prisma.knowledgeCache.delete({ where: { id: existing.id } });
     }
 
     await prisma.knowledgeCache.create({
       data: {
+        id: crypto.randomUUID(),
         userId: user.id,
         displayName: 'Student context (weak spots)',
         geminiCacheName,
@@ -173,7 +199,12 @@ export const onRequestPost = aiEndpoint(StudentContextBodySchema, async (context
 
     log.info('Student context cache created', { userId: user.id, name: geminiCacheName });
 
-    return ok({ cachedContentName: geminiCacheName, expiresAt: expireTime, reused: false });
+    return ok({
+      cachedContentName: geminiCacheName,
+      expiresAt: expireTime,
+      reused: false,
+      replacedCacheDeleted,
+    });
   } catch (err) {
     log.error('Student context cache error', err);
     return fail(ErrorCode.INTERNAL_ERROR, { message: 'Internal server error' });

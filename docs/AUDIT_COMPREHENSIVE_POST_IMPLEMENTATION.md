@@ -40,7 +40,7 @@
 
 ### 4. **XSS surface: rationale and HTML rendered without sanitization**
 
-**Location:** `components/session/QuizView.tsx`, `components/panels/ExplanationPanel.tsx`
+**Location:** `components/session/QuizView.tsx`, `components/questions/ExplanationPanel.tsx`
 
 **Issue:** `dangerouslySetInnerHTML` is used for `currentQuestion.rationale`, table HTML, pearls, and explanation bullets. Rationale is generated server-side (Gemini), so risk is lower than user input, but (a) a compromised or buggy generator could emit script, and (b) any future user-editable or external content would be unsafe. The codebase uses `stripHtmlTags` in `geminiService` for options/condition but not for all HTML rendered in the client.
 

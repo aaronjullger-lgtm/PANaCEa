@@ -38,6 +38,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { getDrillLandingStats, getCategoryBreakdown } from '@/services/analytics';
 import QuizView from '@/components/session/QuizView';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import type { Question, PerformanceRecord, SessionSettings } from '@/types';
 
 interface PharmacologyDrillSessionProps {
@@ -196,15 +197,16 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
         headers,
         body: JSON.stringify({ drugClass, difficulty }),
       });
+      const responseJson = await response.json().catch(() => null);
 
       if (!response.ok) {
         if (response.status === 401) {
-          throw new Error('Please sign in to access questions');
+          throw new Error(getApiEnvelopeError(responseJson, 'Please sign in to access questions'));
         }
-        throw new Error(`Failed to fetch question: ${response.status}`);
+        throw new Error(getApiEnvelopeError(responseJson, `Failed to fetch question: ${response.status}`));
       }
 
-      return response.json();
+      return unwrapApiEnvelope<Question>(responseJson);
     },
     [getToken]
   );

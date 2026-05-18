@@ -1,0 +1,26 @@
+{
+  "id": "hra-prostate-male",
+  "title": "3D Reference Organ for Prostate, Male v1.1",
+  "sourceEntry": "3DPX-021015",
+  "source": "NIH 3D",
+  "sourceUrl": "https://3d.nih.gov/entries/3DPX-021015",
+  "downloadUrl": "https://3d.nih.gov/api/download?submissionId=29100&fileIds=741686",
+  "thumbnailUrl": "https://3d.nih.gov/api/submissions/29100/runs/f49a4d0b-a6af-4378-bd19-468cde7918ae/output-files/741689",
+  "license": "CC-BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "author": "Human Reference Atlas",
+  "institution": "Human Reference Atlas / National Institutes of Health",
+  "entryDescription": "Reference organ for the prostate created using Visible Human Male source data and distributed through NIH 3D.",
+  "modelFile": "/models/nih/hra-prostate-male-3dpx-021015.glb",
+  "thumbnailFile": "/thumbnails/nih/hra-prostate-male-3dpx-021015.png",
+  "modelBytes": 4086328,
+  "thumbnailBytes": 34011,
+  "modelSha256": "ec1023e0a1b81f71865872bb720404abc7bb6378a54ac71fa9f24579b097f48a",
+  "thumbnailSha256": "9ed926442b110da42e6a812ac4d9b883278dd2c7488ed6bc3a4b8c86ab4459c9",
+  "accessedDate": "2026-05-16",
+  "safeUse": [
+    "Use for educational reproductive and urinary spatial anatomy review only.",
+    "Do not present as patient-specific anatomy, diagnostic evidence, treatment guidance, or a clinical decision aid.",
+    "Maintain CC-BY attribution whenever this model is displayed or redistributed."
+  ]
+}

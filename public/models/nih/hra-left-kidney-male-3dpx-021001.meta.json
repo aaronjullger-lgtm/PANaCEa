@@ -1,0 +1,26 @@
+{
+  "id": "hra-left-kidney-male",
+  "title": "3D Reference Organ for Kidney, Male, Left v1.2",
+  "sourceEntry": "3DPX-021001",
+  "source": "NIH 3D",
+  "sourceUrl": "https://3d.nih.gov/entries/3DPX-021001",
+  "downloadUrl": "https://3d.nih.gov/api/download?submissionId=29113&fileIds=741799",
+  "thumbnailUrl": "https://3d.nih.gov/api/submissions/29113/runs/747b5529-024a-452e-91e0-7ef4c92b2252/output-files/741806",
+  "license": "CC-BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "author": "Kristen Browne; Heidi Schlehlein",
+  "institution": "Human Reference Atlas / National Institutes of Health",
+  "entryDescription": "Reference organ for the left kidney created using Visible Human Male source data and distributed through NIH 3D.",
+  "modelFile": "/models/nih/hra-left-kidney-male-3dpx-021001.glb",
+  "thumbnailFile": "/thumbnails/nih/hra-left-kidney-male-3dpx-021001.png",
+  "modelBytes": 1536532,
+  "thumbnailBytes": 21622,
+  "modelSha256": "733eef9ec169796196470e538dc248c4397bce0ff7ed679f7b7eb0bb9f185612",
+  "thumbnailSha256": "7ba8a99ab16323b944ff86e64c1aaedccf614e6c33ad183f8df0b88275ad51d1",
+  "accessedDate": "2026-05-16",
+  "safeUse": [
+    "Use for educational urinary-system spatial anatomy review only.",
+    "Do not present as patient-specific anatomy, diagnostic evidence, treatment guidance, or a clinical decision aid.",
+    "Maintain CC-BY attribution whenever this model is displayed or redistributed."
+  ]
+}

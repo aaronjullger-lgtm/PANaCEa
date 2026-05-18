@@ -181,7 +181,7 @@ All tools generate timestamped JSON reports in `reports/`:
 
 Required for content generation:
 
-- `GEMINI_API_KEY` or `VITE_GEMINI_API_KEY` - Google Gemini API key
+- `GEMINI_API_KEY` - Google Gemini API key
 
 Required for database operations:
 
@@ -317,7 +317,7 @@ jobs:
 
 ### "No Gemini API key found"
 
-- Set `GEMINI_API_KEY` or `VITE_GEMINI_API_KEY` environment variable
+- Set the server-side `GEMINI_API_KEY` environment variable
 - Or use `--skip-generation` flag to skip content generation
 
 ### "Database connection failed"

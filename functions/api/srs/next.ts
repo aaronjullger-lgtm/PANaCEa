@@ -17,23 +17,29 @@ import {
   withProductionQuestionSafety,
 } from '../../../lib/services/questionServingSafety';
 
-const SRSNextQuerySchema = z.object({
-  mode: z.enum(['MAIN', 'CRAM', 'RAPID_RECALL']).optional(),
-  progressContext: z.preprocess(
-    (value) => (typeof value === 'string' ? value.toUpperCase() : value),
-    z.enum(['READINESS', 'TARGETED']).optional()
-  ),
-  context: z.preprocess(
-    (value) => (typeof value === 'string' ? value.toUpperCase() : value),
-    z.enum(['READINESS', 'TARGETED']).optional()
-  ),
-}).transform(({ mode, progressContext, context }) => ({
-  mode,
-  progressContext: progressContext ?? context,
-}));
+const SRSNextQuerySchema = z
+  .object({
+    mode: z.enum(['MAIN', 'CRAM', 'RAPID_RECALL']).optional(),
+    progressContext: z.preprocess(
+      (value) => (typeof value === 'string' ? value.toUpperCase() : value),
+      z.enum(['READINESS', 'TARGETED']).optional()
+    ),
+    context: z.preprocess(
+      (value) => (typeof value === 'string' ? value.toUpperCase() : value),
+      z.enum(['READINESS', 'TARGETED']).optional()
+    ),
+  })
+  .transform(({ mode, progressContext, context }) => ({
+    mode,
+    progressContext: progressContext ?? context,
+  }));
 
 type NormalizedSrsQuestion = {
   id: string;
+  canonicalQuestionId: string | null;
+  sourceQuestionId: string;
+  questionSource: 'pre_generated' | 'question';
+  questionIdentityId?: string | null;
   question: string;
   vignette?: string;
   options: string[];
@@ -46,6 +52,12 @@ type NormalizedSrsQuestion = {
   difficulty?: string | null;
   source: 'pre_generated' | 'question';
   rawQuestionId: string;
+};
+
+type QuestionIdentityOverrides = {
+  canonicalQuestionId?: string | null;
+  sourceQuestionId?: string | null;
+  questionIdentityId?: string | null;
 };
 
 function normalizeOptions(raw: unknown): string[] {
@@ -61,7 +73,11 @@ function normalizeOptions(raw: unknown): string[] {
   return [];
 }
 
-function normalizeSrsQuestion(record: any, source: 'pre_generated' | 'question'): NormalizedSrsQuestion | null {
+function normalizeSrsQuestion(
+  record: any,
+  source: 'pre_generated' | 'question',
+  identity: QuestionIdentityOverrides = {}
+): NormalizedSrsQuestion | null {
   const data =
     source === 'pre_generated' && record?.questionData && typeof record.questionData === 'object'
       ? (record.questionData as Record<string, unknown>)
@@ -88,13 +104,16 @@ function normalizeSrsQuestion(record: any, source: 'pre_generated' | 'question')
 
   return {
     id: String(record.id),
+    canonicalQuestionId:
+      identity.canonicalQuestionId ?? (source === 'question' ? String(record.id) : null),
+    sourceQuestionId: identity.sourceQuestionId ?? String(record.id),
+    questionSource: source,
+    questionIdentityId: identity.questionIdentityId ?? null,
     question: questionText,
     vignette: typeof data.vignette === 'string' ? data.vignette : undefined,
     options,
     correctAnswer:
-      typeof data.correctAnswer === 'string'
-        ? data.correctAnswer
-        : options[resolvedIndex],
+      typeof data.correctAnswer === 'string' ? data.correctAnswer : options[resolvedIndex],
     correctAnswerIndex: resolvedIndex,
     explanation:
       typeof data.explanation === 'string'
@@ -154,6 +173,7 @@ export const onRequestGet = authenticatedEndpoint(
         select: {
           id: true,
           questionId: true,
+          questionIdentityId: true,
           progressContext: true,
           due: true,
           stability: true,
@@ -189,7 +209,11 @@ export const onRequestGet = authenticatedEndpoint(
           continue;
         }
 
-        const normalizedQuestion = normalizeSrsQuestion(card.Question, 'question');
+        const normalizedQuestion = normalizeSrsQuestion(card.Question, 'question', {
+          canonicalQuestionId: card.questionId,
+          sourceQuestionId: card.questionId,
+          questionIdentityId: card.questionIdentityId ?? null,
+        });
         if (!normalizedQuestion) {
           logger.warn('Skipping due Card with unparseable Question', {
             userId: userId.substring(0, 10),
@@ -209,13 +233,12 @@ export const onRequestGet = authenticatedEndpoint(
           data: {
             srsItemId: null,
             cardId: card.id,
+            questionIdentityId: card.questionIdentityId ?? null,
             topicProgressId: null,
             question: normalizedQuestion,
             isVariant: false,
             progressContext: card.progressContext,
-            taskType:
-              card.Question.taskType ??
-              getTaskTypeFromContent(normalizedQuestion.question),
+            taskType: card.Question.taskType ?? getTaskTypeFromContent(normalizedQuestion.question),
           },
         };
       }

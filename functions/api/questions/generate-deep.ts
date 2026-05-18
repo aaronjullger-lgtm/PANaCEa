@@ -17,11 +17,7 @@ import { z } from 'zod';
 import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import {
-  gateway,
-  GatewayError,
-  toGatewayContext,
-} from '../../../lib/ai/aiGateway';
+import { gateway, GatewayError, toGatewayContext } from '../../../lib/ai/aiGateway';
 
 const GenerateDeepSchema = z.object({
   body: z.object({
@@ -42,41 +38,44 @@ const GenerateDeepSchema = z.object({
 // - Deep-context question generation hits Gemini + a 1M-token cache. The
 //   endpoint returns non-submittable preview content, never learner-servable
 //   questions. Learner routes must use persisted, reviewed session generation.
-export const onRequestPost = adminAuthenticatedEndpoint(GenerateDeepSchema, async (context) => {
-  const { env, auth, validated } = context;
-  const logger = createEndpointLogger('/api/questions/generate-deep');
+export const onRequestPost = adminAuthenticatedEndpoint(
+  GenerateDeepSchema,
+  async (context) => {
+    const { env, auth, validated } = context;
+    const logger = createEndpointLogger('/api/questions/generate-deep');
 
-  if (!env.GEMINI_API_KEY) {
-    return fail(ErrorCode.ENV_MISCONFIGURED, { message: 'GEMINI_API_KEY not configured' });
-  }
+    if (!env.GEMINI_API_KEY) {
+      return fail(ErrorCode.ENV_MISCONFIGURED, { message: 'AI generation service not configured' });
+    }
 
-  const { condition, category, implicitDifficulty, cachedContent, count = 1 } = validated.body;
-  const cacheName =
-    cachedContent ??
-    (typeof (env as { CACHE_PANCE_MASTER_NAME?: string }).CACHE_PANCE_MASTER_NAME === 'string'
-      ? (env as { CACHE_PANCE_MASTER_NAME: string }).CACHE_PANCE_MASTER_NAME
-      : null);
+    const { condition, category, implicitDifficulty, cachedContent, count = 1 } = validated.body;
+    const cacheName =
+      cachedContent ??
+      (typeof (env as { CACHE_PANCE_MASTER_NAME?: string }).CACHE_PANCE_MASTER_NAME === 'string'
+        ? (env as { CACHE_PANCE_MASTER_NAME: string }).CACHE_PANCE_MASTER_NAME
+        : null);
 
-  if (!cacheName) {
-    return fail(ErrorCode.VALIDATION_FAILED, {
-      message: 'No cached content. Provide body.cachedContent or set CACHE_PANCE_MASTER_NAME (run admin knowledge ingest first).',
-    });
-  }
+    if (!cacheName) {
+      return fail(ErrorCode.VALIDATION_FAILED, {
+        message:
+          'No cached content. Provide body.cachedContent or set CACHE_PANCE_MASTER_NAME (run admin knowledge ingest first).',
+      });
+    }
 
-  const difficultyHint =
-    implicitDifficulty != null
-      ? implicitDifficulty < 0.4
-        ? 'straightforward recall; minimal distractors'
-        : implicitDifficulty < 0.7
-          ? 'moderate complexity; one strong distractor'
-          : 'challenging; multiple plausible distractors'
-      : 'match to PANCE blueprint difficulty';
+    const difficultyHint =
+      implicitDifficulty != null
+        ? implicitDifficulty < 0.4
+          ? 'straightforward recall; minimal distractors'
+          : implicitDifficulty < 0.7
+            ? 'moderate complexity; one strong distractor'
+            : 'challenging; multiple plausible distractors'
+        : 'match to PANCE blueprint difficulty';
 
-  const categoryRef = category
-    ? ` Cross-reference the "${category}" section of the cached blueprint.`
-    : '';
+    const categoryRef = category
+      ? ` Cross-reference the "${category}" section of the cached blueprint.`
+      : '';
 
-  const prompt = `Generate ${count} high-quality PANCE-style multiple-choice question(s) for the condition: ${condition}.${categoryRef}
+    const prompt = `Generate ${count} high-quality PANCE-style multiple-choice question(s) for the condition: ${condition}.${categoryRef}
 Use the cached PANCE blueprint and textbook content as the sole source for accuracy. Ensure the vignette, answer choices, and explanation are clinically accurate and aligned with the cached material.
 Difficulty: ${difficultyHint}.
 Output valid JSON only, no markdown:
@@ -93,132 +92,146 @@ Output valid JSON only, no markdown:
   ]
 }`;
 
-  try {
-    const normalizedCacheName = cacheName.startsWith('cachedContents/')
-      ? cacheName
-      : `cachedContents/${cacheName}`;
-
-    let rawText: string;
     try {
-      const result = await gateway.callText(toGatewayContext(context), {
-        mode: 'text',
-        task: 'generation',
-        tier: 'balanced', // gemini-2.5-flash — preserves prior endpoint model
-        endpoint: '/api/questions/generate-deep',
-        userPrompt: prompt,
-        temperature: 0.7,
-        maxOutputTokens: 4096,
-        cachedContent: normalizedCacheName,
+      const normalizedCacheName = cacheName.startsWith('cachedContents/')
+        ? cacheName
+        : `cachedContents/${cacheName}`;
+
+      let rawText: string;
+      try {
+        const result = await gateway.callText(toGatewayContext(context), {
+          mode: 'text',
+          task: 'generation',
+          tier: 'balanced', // gemini-2.5-flash — preserves prior endpoint model
+          endpoint: '/api/questions/generate-deep',
+          userPrompt: prompt,
+          temperature: 0.7,
+          maxOutputTokens: 4096,
+          cachedContent: normalizedCacheName,
+        });
+        if (result.blocked) {
+          logger.warn('Gemini generate-deep blocked by safety filter', {
+            reason: result.blockReason ?? 'unknown',
+          });
+          return fail(ErrorCode.VALIDATION_FAILED, {
+            message: 'Generation blocked by safety filter',
+          });
+        }
+        rawText = (result.text ?? '').trim();
+      } catch (err) {
+        if (err instanceof GatewayError) {
+          const status =
+            err.code === 'RATE_LIMITED'
+              ? 429
+              : err.code === 'UNAUTHORIZED' || err.code === 'MISSING_API_KEY'
+                ? 500
+                : err.code === 'BAD_REQUEST'
+                  ? 400
+                  : 502;
+          logger.warn('Gateway error during generate-deep', {
+            code: err.code,
+            retryable: err.retryable,
+            requestId: err.requestId,
+            traceId: err.traceId,
+          });
+          const errorCode =
+            err.code === 'RATE_LIMITED'
+              ? ErrorCode.RATE_LIMITED
+              : err.code === 'UNAUTHORIZED' || err.code === 'MISSING_API_KEY'
+                ? ErrorCode.ENV_MISCONFIGURED
+                : err.code === 'BAD_REQUEST'
+                  ? ErrorCode.VALIDATION_FAILED
+                  : ErrorCode.GEMINI_ERROR;
+          return fail(errorCode, {
+            message: `Generation failed: ${err.code}`,
+            details: err.message.slice(0, 500),
+          });
+        }
+        throw err;
+      }
+
+      // Strip markdown code fences if present — the gateway's text path does not
+      // force responseMimeType=application/json so the model may wrap JSON in
+      // ```json ... ``` fences depending on the prompt.
+      let jsonText = rawText;
+      if (jsonText.startsWith('```json')) jsonText = jsonText.slice(7);
+      else if (jsonText.startsWith('```')) jsonText = jsonText.slice(3);
+      if (jsonText.endsWith('```')) jsonText = jsonText.slice(0, -3);
+      jsonText = jsonText.trim();
+
+      let questions: Array<{
+        question: string;
+        options: string[];
+        correctAnswerIndex: number;
+        explanation?: string;
+        system?: string;
+        conditionId?: string;
+      }> = [];
+
+      try {
+        const parsed = JSON.parse(jsonText) as { questions?: typeof questions };
+        if (Array.isArray(parsed.questions)) {
+          // Filter out malformed items before serving — a question with missing required
+          // fields is worse than no question (undefined behaviour for downstream consumers).
+          const REQUIRED_DEEP_FIELDS = ['question', 'options', 'correctAnswerIndex'] as const;
+          const valid = parsed.questions.filter((q) => {
+            const hasAllRequired = REQUIRED_DEEP_FIELDS.every(
+              (f) =>
+                f in q && q[f as keyof typeof q] !== null && q[f as keyof typeof q] !== undefined
+            );
+            const hasEnoughOptions = Array.isArray(q.options) && q.options.length >= 4;
+            const hasValidIndex =
+              typeof q.correctAnswerIndex === 'number' &&
+              q.correctAnswerIndex >= 0 &&
+              q.correctAnswerIndex < (q.options?.length ?? 0);
+            if (!hasAllRequired || !hasEnoughOptions || !hasValidIndex) {
+              logger.warn('generate-deep: filtered malformed question', {
+                missingFields: REQUIRED_DEEP_FIELDS.filter(
+                  (f) =>
+                    !(f in q) ||
+                    q[f as keyof typeof q] === null ||
+                    q[f as keyof typeof q] === undefined
+                ),
+                optionCount: Array.isArray(q.options) ? q.options.length : 0,
+              });
+            }
+            return hasAllRequired && hasEnoughOptions && hasValidIndex;
+          });
+          questions = valid.slice(0, count);
+        }
+      } catch {
+        logger.warn('generate-deep JSON parse failed', { text: rawText.slice(0, 200) });
+      }
+
+      logger.info('Deep questions generated', {
+        condition,
+        count: questions.length,
+        userId: auth.userId?.substring(0, 10),
       });
-      if (result.blocked) {
-        logger.warn('Gemini generate-deep blocked by safety filter', {
-          reason: result.blockReason ?? 'unknown',
-        });
-        return fail(ErrorCode.VALIDATION_FAILED, { message: 'Generation blocked by safety filter' });
-      }
-      rawText = (result.text ?? '').trim();
-    } catch (err) {
-      if (err instanceof GatewayError) {
-        const status =
-          err.code === 'RATE_LIMITED'
-            ? 429
-            : err.code === 'UNAUTHORIZED' || err.code === 'MISSING_API_KEY'
-              ? 500
-              : err.code === 'BAD_REQUEST'
-                ? 400
-                : 502;
-        logger.warn('Gateway error during generate-deep', {
-          code: err.code,
-          retryable: err.retryable,
-          requestId: err.requestId,
-          traceId: err.traceId,
-        });
-        const errorCode =
-          err.code === 'RATE_LIMITED' ? ErrorCode.RATE_LIMITED :
-          err.code === 'UNAUTHORIZED' || err.code === 'MISSING_API_KEY' ? ErrorCode.ENV_MISCONFIGURED :
-          err.code === 'BAD_REQUEST' ? ErrorCode.VALIDATION_FAILED :
-          ErrorCode.GEMINI_ERROR;
-        return fail(errorCode, { message: `Generation failed: ${err.code}`, details: err.message.slice(0, 500) });
-      }
-      throw err;
-    }
 
-    // Strip markdown code fences if present — the gateway's text path does not
-    // force responseMimeType=application/json so the model may wrap JSON in
-    // ```json ... ``` fences depending on the prompt.
-    let jsonText = rawText;
-    if (jsonText.startsWith('```json')) jsonText = jsonText.slice(7);
-    else if (jsonText.startsWith('```')) jsonText = jsonText.slice(3);
-    if (jsonText.endsWith('```')) jsonText = jsonText.slice(0, -3);
-    jsonText = jsonText.trim();
-
-    let questions: Array<{
-      question: string;
-      options: string[];
-      correctAnswerIndex: number;
-      explanation?: string;
-      system?: string;
-      conditionId?: string;
-    }> = [];
-
-    try {
-      const parsed = JSON.parse(jsonText) as { questions?: typeof questions };
-      if (Array.isArray(parsed.questions)) {
-        // Filter out malformed items before serving — a question with missing required
-        // fields is worse than no question (undefined behaviour for downstream consumers).
-        const REQUIRED_DEEP_FIELDS = ['question', 'options', 'correctAnswerIndex'] as const;
-        const valid = parsed.questions.filter((q) => {
-          const hasAllRequired = REQUIRED_DEEP_FIELDS.every(
-            (f) => f in q && q[f as keyof typeof q] !== null && q[f as keyof typeof q] !== undefined
-          );
-          const hasEnoughOptions = Array.isArray(q.options) && q.options.length >= 4;
-          const hasValidIndex =
-            typeof q.correctAnswerIndex === 'number' &&
-            q.correctAnswerIndex >= 0 &&
-            q.correctAnswerIndex < (q.options?.length ?? 0);
-          if (!hasAllRequired || !hasEnoughOptions || !hasValidIndex) {
-            logger.warn('generate-deep: filtered malformed question', {
-              missingFields: REQUIRED_DEEP_FIELDS.filter(
-                (f) => !(f in q) || q[f as keyof typeof q] === null || q[f as keyof typeof q] === undefined
-              ),
-              optionCount: Array.isArray(q.options) ? q.options.length : 0,
-            });
-          }
-          return hasAllRequired && hasEnoughOptions && hasValidIndex;
-        });
-        questions = valid.slice(0, count);
-      }
-    } catch {
-      logger.warn('generate-deep JSON parse failed', { text: rawText.slice(0, 200) });
-    }
-
-    logger.info('Deep questions generated', {
-      condition,
-      count: questions.length,
-      userId: auth.userId?.substring(0, 10),
-    });
-
-    return ok({
-      questions: questions.map((question, index) => ({
-        ...question,
-        id: `deep-preview-${Date.now()}-${index}`,
-        submissionReady: false,
-        requiresApproval: true,
-        metadata: {
-          source: 'generate-deep-preview',
-          persistence: 'admin_preview_only',
-          adminPreviewOnly: true,
+      return ok({
+        questions: questions.map((question, index) => ({
+          ...question,
+          id: `deep-preview-${Date.now()}-${index}`,
           submissionReady: false,
           requiresApproval: true,
-          condition,
-          category: category ?? null,
-        },
-      })),
-    });
-  } catch (error) {
-    logger.error('generate-deep error', {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw new Error('Failed to generate deep questions');
-  }
-}, { requestsPerMinute: 25 });
+          metadata: {
+            source: 'generate-deep-preview',
+            persistence: 'admin_preview_only',
+            adminPreviewOnly: true,
+            submissionReady: false,
+            requiresApproval: true,
+            condition,
+            category: category ?? null,
+          },
+        })),
+      });
+    } catch (error) {
+      logger.error('generate-deep error', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw new Error('Failed to generate deep questions');
+    }
+  },
+  { requestsPerMinute: 25 }
+);

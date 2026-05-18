@@ -192,3 +192,112 @@ Many lower-priority client fetch callers still parse API JSON directly. Some may
 
 ### Follow-Up Tasks
 Continue the envelope migration by domain: session runner and calibration dashboards next, then library/reference/admin surfaces.
+
+## Entry: 2026-05-16 23:54 America/New_York
+
+### Slice
+Session, calibration, analytics, and user-owned hook response envelopes.
+
+### Files Changed
+- `components/session/SessionRunner.tsx`
+- `components/session/CalibrationInsightsDashboard.tsx`
+- `components/dashboard/CalibrationChart.tsx`
+- `components/dashboard/CalibrationDashboard/CalibrationDashboard.tsx`
+- `components/analytics/AnalyticsDashboard.tsx`
+- `components/analytics/TopicMasteryBreakdown.tsx`
+- `components/analytics/UserFriendlyStatsDisplay.tsx`
+- `components/dashboard/TopicMasteryBreakdown.tsx`
+- `hooks/useConfusionPairs.ts`
+- `hooks/useRatingAudit.ts`
+- `hooks/useQuestionFlag.ts`
+- `hooks/useImplicitMetrics.ts`
+- `hooks/useStreakAutoFreeze.ts`
+- `hooks/useABTest.ts`
+- `BACKEND_IMPLEMENTATION_LOG.md`
+
+### Reason
+The next envelope migration pass targeted core session resume, calibration dashboards, user stats, topic mastery, confusion-pair analytics, rating audit, question flags, implicit metrics, streak auto-freeze, and A/B assignment callers. These callers hit authenticated backend routes but still parsed raw JSON or used one-off `{ data }` logic.
+
+### What Changed
+Moved the touched callers to `unwrapApiEnvelope()` and `getApiEnvelopeError()`. Simplified session resume and calibration/dashboard fetchers to consume unwrapped domain payloads. Fixed `UserFriendlyStatsDisplay` so it no longer attempts to read the same `Response` body twice and now sends the Clerk token when available. Converted the legacy dashboard topic mastery component from the current topic-progress response into its expected task-type map.
+
+### Verification
+- `npm test -- lib/utils/apiEnvelope.test.ts functions/api/user/goals.test.ts`
+- `npm run typecheck`
+- Targeted TypeScript transpile check for:
+  - `components/session/SessionRunner.tsx`
+  - `components/session/CalibrationInsightsDashboard.tsx`
+  - `components/dashboard/CalibrationChart.tsx`
+  - `components/dashboard/CalibrationDashboard/CalibrationDashboard.tsx`
+  - `components/analytics/AnalyticsDashboard.tsx`
+  - `hooks/useConfusionPairs.ts`
+  - `hooks/useRatingAudit.ts`
+  - `components/analytics/TopicMasteryBreakdown.tsx`
+  - `components/dashboard/TopicMasteryBreakdown.tsx`
+  - `components/analytics/UserFriendlyStatsDisplay.tsx`
+  - `hooks/useQuestionFlag.ts`
+  - `hooks/useImplicitMetrics.ts`
+  - `hooks/useStreakAutoFreeze.ts`
+  - `hooks/useABTest.ts`
+  - `lib/utils/apiEnvelope.ts`
+
+### Result
+Pass. API envelope and goals endpoint regression tests passed. Targeted transpile passed 15 files with 0 failures. Production TypeScript typecheck passed.
+
+### Remaining Risks
+Some reference/library/admin and specialty game/drill components still parse API JSON directly. A few of those paths may intentionally consume public or third-party payloads and should be reviewed selectively.
+
+### Follow-Up Tasks
+Continue domain-by-domain migration for library/reference/admin surfaces, then add a lightweight lint/test guard for authenticated API callers that bypass the shared envelope helper.
+
+## Entry: 2026-05-17 00:07 America/New_York
+
+### Slice
+Learner pipeline, drill, study-path, and reference client response envelopes.
+
+### Files Changed
+- `components/dashboard/GapAnalysisDashboard.tsx`
+- `components/dashboard/StudyPathDashboard/index.tsx`
+- `components/drill/ContrastiveDrillSession.tsx`
+- `components/drill/DrillSetup.tsx`
+- `components/drill/EnhancedFeedbackPanel.tsx`
+- `components/drill/PharmacologyDrillSession.tsx`
+- `components/library/hooks/useConditionDetail.ts`
+- `components/library/hooks/useSmartCondition.ts`
+- `components/pages/StudyCompanionPage.tsx`
+- `components/pages/TutorChatPage.tsx`
+- `components/session/QuickReviewMode.tsx`
+- `hooks/game/use-anatomy-drill.ts`
+- `hooks/game/use-condition-drill.ts`
+- `hooks/game/use-pharm-drill.ts`
+- `hooks/game/use-physiology-drill.ts`
+- `hooks/game/use-ventilator-drill.ts`
+- `hooks/useCausalChain.ts`
+- `hooks/useDiagnosticPuzzle.ts`
+- `hooks/usePatientVitals.ts`
+- `hooks/useSystemStatus.ts`
+- `lib/conditionSearch.ts`
+- `lib/services/soapGradingService.ts`
+- `lib/services/srsReviewClient.ts`
+- `scripts/audit-api-envelope-callers.mjs`
+
+### Reason
+The remaining high-risk client/backend contract gap was inconsistent parsing of authenticated endpoint envelopes. Several learner-facing flows still parsed canonical `{ ok, data }` responses as raw objects, which can silently empty dashboards, drill queues, reference detail panels, and study-path actions.
+
+### What Changed
+Migrated the touched callers to `unwrapApiEnvelope()` and `getApiEnvelopeError()`. Added a static audit script for direct internal API `response.json()` callers so future migrations are trackable. Tightened error handling for gap analytics, study-path accept/regenerate, contrastive drill setup/start, drill related-content, pharmacology and condition drill queues, anatomy/physiology/ventilator queues, OSCE intervention vitals, health polling, shared condition search, smart condition detail loading, SOAP grading, and SRS variant review clients.
+
+### Verification
+- `node scripts/audit-api-envelope-callers.mjs`
+- `git diff --check`
+- `npm test -- lib/utils/apiEnvelope.test.ts functions/api/user/goals.test.ts`
+- `npm run typecheck`
+
+### Result
+Partial. The static audit script ran and reports the remaining unaudited callers. `git diff --check` passed. Vitest could not run because `vitest` is not installed in the current workspace. Typecheck launched but failed at repository setup/dependency level with many missing package declarations such as `lucide-react`, `@prisma/client`, `@cloudflare/workers-types`, `vite`, and related frontend/backend dependencies.
+
+### Remaining Risks
+The migration is broad but not complete. Remaining unaudited callers are concentrated in admin review panels, library/reference widgets, OSCE specialty panels, pearls/social/toolkit surfaces, `hooks/useAnatomy.ts`, and offline/sync services. Full runtime and type verification is blocked until dependencies are restored.
+
+### Follow-Up Tasks
+Restore `node_modules` with a reproducible install, rerun targeted Vitest and production typecheck, then continue the audit-script queue by domain: admin review panels, OSCE/specialty mode panels, reference/library widgets, and offline/sync services.

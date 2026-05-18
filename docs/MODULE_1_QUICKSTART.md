@@ -360,15 +360,24 @@ function playTransitionAnimation(type: TransitionType, duration: number) {
       
     case 'crossfade':
       // Fade out current video, fade in new video
-      gsap.to(currentVideoRef.current, { opacity: 0, duration: duration / 1000 });
-      gsap.fromTo(newVideoRef.current, { opacity: 0 }, { opacity: 1, duration: duration / 1000 });
+      currentVideoRef.current?.animate([{ opacity: 1 }, { opacity: 0 }], {
+        duration,
+        fill: 'forwards',
+      });
+      newVideoRef.current?.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration,
+        fill: 'forwards',
+      });
       break;
       
     case 'medical_scan':
       // Red scanner overlay effect (like medical diagnostic)
       const scanLine = document.createElement('div');
       scanLine.className = 'scan-line';
-      gsap.fromTo(scanLine, { top: '0%' }, { top: '100%', duration: duration / 1000, ease: 'power2.inOut' });
+      scanLine.animate([{ top: '0%' }, { top: '100%' }], {
+        duration,
+        easing: 'ease-in-out',
+      });
       break;
   }
 }

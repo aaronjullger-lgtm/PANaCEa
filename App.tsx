@@ -307,9 +307,11 @@ const App: React.FC = () => {
 
   // ---- Preload large data files in background for better performance ----
   useEffect(() => {
-    // Start preloading data after initial mount
+    if ((!authLoaded || !isSignedIn) && !isGuestMode) return;
+
+    // Start preloading data once the user has an app execution context.
     preloadData();
-  }, []);
+  }, [authLoaded, isGuestMode, isSignedIn]);
 
   // ---- Optimize initial load time with performance monitoring ----
   const performanceReportRef = React.useRef(performanceReport);

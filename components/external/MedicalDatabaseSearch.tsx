@@ -23,7 +23,7 @@ import {
   Filter,
   Download,
 } from 'lucide-react';
-import { InlineSpinner } from '@/components/loading';
+import { SkeletonText } from '@/components/loading';
 
 interface MedicalDatabaseSearchProps {
   initialQuery?: string;
@@ -351,18 +351,12 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
 
             {isLoading ? (
               <div
-                className="flex items-center justify-center py-8"
+                className="space-y-3 py-8"
                 role="status"
                 aria-live="polite"
+                aria-label={`Searching ${getDatabaseName(selectedDatabase)}`}
               >
-                <div className="text-center">
-                  <div className="flex justify-center mb-2">
-                    <InlineSpinner size="lg" className="text-[var(--color-category-practice)]" />
-                  </div>
-                  <p className="text-sm text-[var(--color-text-muted)]">
-                    Searching {getDatabaseName(selectedDatabase)}...
-                  </p>
-                </div>
+                <SkeletonText lines={4} />
               </div>
             ) : searchResults.length === 0 ? (
               <div className="text-center py-8">

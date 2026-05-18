@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { normalizeMedicalContent } from '@/lib/utils/normalization';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export interface ConditionDetailData {
   id: string;
@@ -137,19 +138,15 @@ export function useConditionDetail(
 
     try {
       const res = await fetch(`/api/content/condition/${encodeURIComponent(conditionId)}`);
-      const json = (await res.json()) as { data?: Record<string, unknown>; error?: string };
+      const json = await res.json().catch(() => null);
 
       if (!res.ok) {
-        const errMsg =
-          json?.error ??
-          (json?.data?.error as string) ??
-          `Failed to load condition (${res.status})`;
-        setError(errMsg);
+        setError(getApiEnvelopeError(json, `Failed to load condition (${res.status})`));
         setData(null);
         return;
       }
 
-      const raw = json?.data ?? json;
+      const raw = unwrapApiEnvelope<Record<string, unknown>>(json);
       if (!raw || (typeof raw === 'object' && 'error' in raw)) {
         setError(
           raw && typeof raw === 'object' && 'error' in raw

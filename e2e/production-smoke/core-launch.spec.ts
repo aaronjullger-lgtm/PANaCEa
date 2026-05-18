@@ -1,15 +1,13 @@
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-
-declare global {
-  interface Window {
-    Clerk?: any;
-  }
-}
+import { expect, test, type APIRequestContext } from '@playwright/test';
+import {
+  getClerkE2ECredentials,
+  missingClerkE2ECredentialsMessage,
+  signInWithClerkCredentials,
+} from '../helpers/clerkAuth';
 
 const authRequired = process.env.E2E_REQUIRE_AUTH === '1';
-const clerkEmail = process.env.E2E_CLERK_TEST_EMAIL;
-const clerkPassword = process.env.E2E_CLERK_TEST_PASSWORD;
-const hasAuthCredentials = Boolean(clerkEmail && clerkPassword);
+const clerkCredentials = getClerkE2ECredentials();
+const hasAuthCredentials = Boolean(clerkCredentials);
 const hiddenPrivateBetaRoutes = [
   '/daily-challenges',
   '/live-collaboration',
@@ -21,51 +19,7 @@ const hiddenPrivateBetaRoutes = [
 ] as const;
 
 if (authRequired && !hasAuthCredentials) {
-  throw new Error(
-    'E2E_REQUIRE_AUTH=1 requires E2E_CLERK_TEST_EMAIL and E2E_CLERK_TEST_PASSWORD.'
-  );
-}
-
-async function signInWithClerk(page: Page): Promise<string> {
-  if (!clerkEmail || !clerkPassword) {
-    throw new Error('Missing Clerk smoke test credentials.');
-  }
-
-  await page.goto('/study', { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => Boolean(window.Clerk), null, { timeout: 30_000 });
-
-  await page.evaluate(
-    async ({ email, password }) => {
-      const clerk = window.Clerk;
-      if (!clerk) throw new Error('Clerk is not available on window.');
-      if (typeof clerk.load === 'function') await clerk.load();
-
-      const attempt = await clerk.client.signIn.create({
-        identifier: email,
-        password,
-      });
-      const activeAttempt = clerk.client.signIn ?? attempt;
-      const status = activeAttempt.status ?? attempt.status;
-      if (status !== 'complete') {
-        throw new Error(`Clerk sign-in did not complete. Status: ${status}`);
-      }
-
-      const sessionId = activeAttempt.createdSessionId ?? attempt.createdSessionId;
-      if (!sessionId) throw new Error('Clerk sign-in completed without a session id.');
-      await clerk.setActive({ session: sessionId });
-    },
-    { email: clerkEmail, password: clerkPassword }
-  );
-
-  await expect
-    .poll(async () => page.evaluate(() => Boolean(window.Clerk?.session)), {
-      timeout: 20_000,
-    })
-    .toBe(true);
-
-  const token = await page.evaluate(async () => window.Clerk?.session?.getToken());
-  if (!token) throw new Error('Clerk session did not return an API token.');
-  return token;
+  throw new Error(missingClerkE2ECredentialsMessage());
 }
 
 async function getJson(request: APIRequestContext, path: string, token?: string) {
@@ -104,9 +58,10 @@ function expectStandardError(body: any, code: string) {
 }
 
 function taskLaunchUrl(task: any): string {
-  const route = typeof task?.route === 'string' && task.route.startsWith('/')
-    ? task.route
-    : '/study/main-session';
+  const route =
+    typeof task?.route === 'string' && task.route.startsWith('/')
+      ? task.route
+      : '/study/main-session';
   const url = new URL(route, 'https://panacea.test');
   const launchParams =
     task?.launchParams && typeof task.launchParams === 'object' ? task.launchParams : {};
@@ -143,9 +98,7 @@ test.describe('production smoke: public runtime', () => {
     await expect(page.locator('body')).not.toContainText(/missing publishable key/i);
   });
 
-  test('unauthenticated protected API request returns standard 401 shape', async ({
-    request,
-  }) => {
+  test('unauthenticated protected API request returns standard 401 shape', async ({ request }) => {
     const response = await request.get('/api/user/stats');
     expect(response.status()).toBe(401);
 
@@ -159,9 +112,14 @@ test.describe.serial('production smoke: authenticated core study loop', () => {
     page,
     request,
   }, testInfo) => {
-    test.skip(!hasAuthCredentials, 'Set Clerk smoke credentials to run authenticated smoke.');
+    if (!clerkCredentials) {
+      test.skip(true, 'Set Clerk smoke credentials to run authenticated smoke.');
+      return;
+    }
 
-    const token = await signInWithClerk(page);
+    const token = await signInWithClerkCredentials(page, clerkCredentials, {
+      startPath: '/study',
+    });
     await page.context().storageState({ path: testInfo.outputPath('auth-state.json') });
 
     for (const route of hiddenPrivateBetaRoutes) {

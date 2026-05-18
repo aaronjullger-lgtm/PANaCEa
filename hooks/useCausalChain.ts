@@ -21,6 +21,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import type { CausalChain, CausalChainDisplayLevel } from '@/types/causalChain';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 // ─── Types ─────────────────────────────────────────────────────────
 
@@ -171,13 +172,12 @@ export function useCausalChain(): UseCausalChainResult {
 
         if (!response.ok) {
           const body = await response.json().catch(() => ({}));
-          const msg = (body as any)?.error || `Server error (${response.status})`;
+          const msg = getApiEnvelopeError(body, `Server error (${response.status})`);
           setError(msg);
           return;
         }
 
-        const body = await response.json();
-        const generatedChain = (body as any)?.data as CausalChain | undefined;
+        const generatedChain = unwrapApiEnvelope<CausalChain | undefined>(await response.json());
 
         if (!generatedChain) {
           setError('Invalid response from server');

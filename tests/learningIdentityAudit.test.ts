@@ -26,9 +26,7 @@ describe('learning identity audit', () => {
       $queryRawUnsafe: vi
         .fn()
         .mockResolvedValueOnce([{ count: '2' }])
-        .mockResolvedValueOnce([
-          { id: 'attempt-1', createdAt: new Date('2026-05-01T12:00:00Z') },
-        ])
+        .mockResolvedValueOnce([{ id: 'attempt-1', createdAt: new Date('2026-05-01T12:00:00Z') }])
         .mockResolvedValueOnce([{ count: BigInt(1) }])
         .mockResolvedValueOnce([{ id: 'progress-1', conditionId: 'legacy-cond' }]),
     };
@@ -80,6 +78,18 @@ describe('learning identity audit', () => {
         count: 1,
         samples: [],
       },
+      {
+        id: 'question_identity_table_missing',
+        description: '',
+        count: 1,
+        samples: [],
+      },
+      {
+        id: 'question_attempt_missing_identity',
+        description: '',
+        count: 3,
+        samples: [],
+      },
     ];
 
     const recommendations = buildLearningIdentityRecommendations(probes);
@@ -88,5 +98,48 @@ describe('learning identity audit', () => {
     expect(recommendations.join('\n')).toContain('StudySessionQuestion links');
     expect(recommendations.join('\n')).toContain('StudySession.questionIds');
     expect(recommendations.join('\n')).toContain('ReviewLog source identity');
+    expect(recommendations.join('\n')).toContain('QuestionIdentity migration');
+    expect(recommendations.join('\n')).toContain('missing questionIdentityId');
+  });
+
+  it('skips rollout probes when required identity columns are not deployed yet', async () => {
+    const probes: LearningIdentityProbe[] = [
+      {
+        id: 'question_attempt_missing_identity',
+        description: 'attempts missing normalized identity',
+        countSql: 'SELECT count FROM identity_attempts',
+        sampleSql: 'SELECT sample FROM identity_attempts',
+        requires: {
+          columns: [{ table: 'QuestionAttempt', column: 'questionIdentityId' }],
+        },
+      },
+    ];
+    const prisma = {
+      $queryRawUnsafe: vi
+        .fn()
+        .mockResolvedValueOnce([
+          { table_name: 'QuestionAttempt', column_name: 'questionIdentityId' },
+        ]),
+    };
+
+    const report = await runLearningIdentityAudit(prisma, probes);
+
+    expect(report.totalIssues).toBe(0);
+    expect(report.probes).toEqual([
+      {
+        id: 'question_attempt_missing_identity',
+        description: 'attempts missing normalized identity',
+        count: 0,
+        samples: [
+          {
+            status: 'skipped',
+            reason: 'required table or column is missing',
+            missingTables: [],
+            missingColumns: [{ table: 'QuestionAttempt', column: 'questionIdentityId' }],
+          },
+        ],
+      },
+    ]);
+    expect(prisma.$queryRawUnsafe).toHaveBeenCalledTimes(1);
   });
 });

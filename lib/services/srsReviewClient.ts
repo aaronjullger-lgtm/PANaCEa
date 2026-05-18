@@ -1,4 +1,5 @@
 import { fsrsLogger } from '../logger';
+import { unwrapApiEnvelope } from '../utils/apiEnvelope';
 
 export interface VariantNextResponse {
   srsItemId: string | null;
@@ -62,7 +63,7 @@ export async function fetchNextVariantCard(
       return null;
     }
 
-    return await response.json();
+    return unwrapApiEnvelope<VariantNextResponse>(await response.json());
   } catch (error) {
     fsrsLogger.error('Error fetching next variant card', { error });
     return null;
@@ -100,9 +101,7 @@ export async function submitVariantReview(
       return null;
     }
 
-    const json = await response.json();
-    const data = json && typeof json === 'object' && 'data' in json ? json.data : json;
-    return data as VariantSubmitResponse;
+    return unwrapApiEnvelope<VariantSubmitResponse>(await response.json());
   } catch (error) {
     fsrsLogger.error('Error submitting variant review', { error });
     return null;

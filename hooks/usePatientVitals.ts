@@ -9,6 +9,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export interface VitalsDisplay {
   hr: number;
@@ -199,22 +200,17 @@ export function usePatientVitals(options: UsePatientVitalsOptions): UsePatientVi
           }),
         });
 
-        const json = (await res.json()) as {
-          error?: string;
-          message?: string;
-          data?: { vitals?: VitalsDisplay; isEmergency?: boolean };
-          vitals?: VitalsDisplay;
-          isEmergency?: boolean;
-        };
+        const json = await res.json().catch(() => null);
         if (!res.ok) {
           return {
             success: false,
-            error: json?.error ?? json?.message ?? 'Intervention failed',
+            error: getApiEnvelopeError(json, 'Intervention failed'),
           };
         }
 
-        const vitals = json?.data?.vitals ?? json?.vitals;
-        const isEmergency = json?.data?.isEmergency ?? json?.isEmergency ?? false;
+        const data = unwrapApiEnvelope<{ vitals?: VitalsDisplay; isEmergency?: boolean }>(json);
+        const vitals = data?.vitals;
+        const isEmergency = data?.isEmergency ?? false;
 
         if (vitals) {
           setVitalsFromSession(vitals);

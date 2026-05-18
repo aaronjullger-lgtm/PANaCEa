@@ -79,16 +79,17 @@ export const pathFinder = {
       };
     }
 
-    // BFS queue: each entry is { nodeId, path, edges }
+    // BFS queue: each entry is { nodeId, path, edges, totalWeight }
     const queue: Array<{
       nodeId: string;
       path: string[];
       edges: string[];
-    }> = [{ nodeId: startNodeId, path: [startNodeId], edges: [] }];
+      totalWeight: number;
+    }> = [{ nodeId: startNodeId, path: [startNodeId], edges: [], totalWeight: 0 }];
     const visited = new Set<string>([startNodeId]);
 
     while (queue.length > 0) {
-      const { nodeId, path, edges } = queue.shift()!;
+      const { nodeId, path, edges, totalWeight } = queue.shift()!;
       if (path.length > maxDepth) continue;
 
       // Fetch outgoing edges (optionally also incoming for undirected graph)
@@ -108,8 +109,8 @@ export const pathFinder = {
       });
 
       const neighbors = [
-        ...outgoing.map(e => ({ neighborId: e.targetId, edgeId: e.id, weight: e.weight ?? 1 })),
-        ...incoming.map(e => ({ neighborId: e.sourceId, edgeId: e.id, weight: e.weight ?? 1 })),
+        ...outgoing.map((e) => ({ neighborId: e.targetId, edgeId: e.id, weight: e.weight ?? 1 })),
+        ...incoming.map((e) => ({ neighborId: e.sourceId, edgeId: e.id, weight: e.weight ?? 1 })),
       ];
 
       for (const { neighborId, edgeId, weight } of neighbors) {
@@ -118,6 +119,7 @@ export const pathFinder = {
 
         const newPath = [...path, neighborId];
         const newEdges = [...edges, edgeId];
+        const newTotalWeight = totalWeight + weight;
 
         if (neighborId === endNodeId) {
           // Found path, retrieve node details
@@ -130,13 +132,18 @@ export const pathFinder = {
           return {
             path: newPath,
             edges: newEdges,
-            totalWeight: newEdges.reduce((sum, _, idx) => sum + (neighbors[idx]?.weight ?? 1), 0),
+            totalWeight: newTotalWeight,
             nodes: nodes.map(mapGraphNodeToResponse),
             edgesDetail: edgesDetail.map(mapGraphEdgeToResponse),
           };
         }
 
-        queue.push({ nodeId: neighborId, path: newPath, edges: newEdges });
+        queue.push({
+          nodeId: neighborId,
+          path: newPath,
+          edges: newEdges,
+          totalWeight: newTotalWeight,
+        });
       }
     }
 
@@ -225,12 +232,12 @@ export const pathFinder = {
       ]);
 
       const neighbors = [
-        ...outgoing.map(e => ({
+        ...outgoing.map((e) => ({
           neighborId: e.targetId,
           edgeId: e.id,
           weight: e.weight ?? 1.0,
         })),
-        ...incoming.map(e => ({
+        ...incoming.map((e) => ({
           neighborId: e.sourceId,
           edgeId: e.id,
           weight: e.weight ?? 1.0,
@@ -296,10 +303,7 @@ export const pathFinder = {
   /**
    * Retrieve a node by its label (exact match, case‑insensitive).
    */
-  async getNodeByLabel(
-    prisma: EdgePrismaClient,
-    label: string
-  ): Promise<GraphNodeResponse | null> {
+  async getNodeByLabel(prisma: EdgePrismaClient, label: string): Promise<GraphNodeResponse | null> {
     const node = await prisma.graphNode.findFirst({
       where: { label: { equals: label, mode: 'insensitive' } },
     });

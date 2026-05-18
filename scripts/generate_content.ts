@@ -28,8 +28,8 @@ const pool = new Pool({ connectionString: directUrl });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-// Initialize Gemini AI
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+// Initialize Gemini AI. Keep this server-side; do not use a VITE_ key.
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 if (!GEMINI_API_KEY) {
   console.error('❌ GEMINI_API_KEY not found in environment variables');
   process.exit(1);
@@ -273,8 +273,7 @@ async function generateMissingContent(dryRun: boolean = false, limit: number = 1
   let successCount = 0;
   let errorCount = 0;
 
-  for (let i = 0; i < tasks.length; i++) {
-    const task = tasks[i];
+  for (const [i, task] of tasks.entries()) {
     console.log(`\n[${i + 1}/${tasks.length}] ${task.condition}`);
     console.log(`   Missing: ${task.missingFields.join(', ')}`);
 
@@ -333,7 +332,9 @@ async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const limitArg = args.find((arg) => arg.startsWith('--limit='));
-  const limit = limitArg ? parseInt(limitArg.split('=')[1]) : 10;
+  const limitValue = limitArg?.split('=')[1];
+  const parsedLimit = limitValue ? parseInt(limitValue, 10) : 10;
+  const limit = Number.isFinite(parsedLimit) ? parsedLimit : 10;
 
   console.log('🤖 Starting Automated Content Generator...\n');
   console.log(`Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}`);

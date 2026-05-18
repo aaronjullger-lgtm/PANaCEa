@@ -30,27 +30,8 @@ import { fromCloudflareEnv } from '@/lib/langchain/envAdapter';
 import type { TaskType } from '@/lib/langchain/config';
 import { createTrace, type LangfuseEnv } from '@/lib/observability/langfuse';
 import { sanitizeEnvValue } from './env-validation';
-
-// ─── Constants ──────────────────────────────────────────────────────────────
-
-export const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com';
-export const GEMINI_API_VERSION = 'v1beta';
-
-/**
- * Cloudflare AI Gateway base URL.
- * When CF_AI_GATEWAY_ID and CF_ACCOUNT_ID are set in env, all Gemini requests
- * are proxied through Cloudflare AI Gateway for:
- * - Semantic caching (configurable TTL, great for repeated student queries)
- * - Per-model analytics and cost tracking at edge
- * - Rate limiting across providers
- * - Zero additional infrastructure cost
- */
-function getAIGatewayBaseUrl(env?: Record<string, string>): string | null {
-  const accountId = env?.CF_ACCOUNT_ID;
-  const gatewayId = env?.CF_AI_GATEWAY_ID;
-  if (!accountId || !gatewayId) return null;
-  return `https://gateway.ai.cloudflare.com/v1/${accountId}/${gatewayId}/google-ai-studio`;
-}
+import { buildGeminiUrl } from './ai-gateway';
+export { buildGeminiUrl, GEMINI_API_VERSION, GEMINI_BASE_URL } from './ai-gateway';
 
 /**
  * Canonical model identifiers. Use these instead of hardcoded strings
@@ -161,24 +142,6 @@ interface AIServiceContext {
 }
 
 // ─── Core Functions ─────────────────────────────────────────────────────────
-
-/**
- * Build the full Gemini API URL for a given model and action.
- * Routes through Cloudflare AI Gateway when CF_ACCOUNT_ID + CF_AI_GATEWAY_ID are set.
- */
-export function buildGeminiUrl(
-  apiKey: string,
-  model: string,
-  action: 'generateContent' | 'streamGenerateContent' | 'embedContent' = 'generateContent',
-  env?: Record<string, string>
-): string {
-  const gatewayBase = getAIGatewayBaseUrl(env);
-  if (gatewayBase) {
-    // CF AI Gateway proxies: gateway/google-ai-studio/v1beta/models/...
-    return `${gatewayBase}/${GEMINI_API_VERSION}/models/${model}:${action}?key=${apiKey}`;
-  }
-  return `${GEMINI_BASE_URL}/${GEMINI_API_VERSION}/models/${model}:${action}?key=${apiKey}`;
-}
 
 /**
  * Build the request body for a Gemini API call.

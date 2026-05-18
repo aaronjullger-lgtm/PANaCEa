@@ -15,6 +15,10 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import type { CloudflareEnv } from '../_shared/types';
 import { gateway, GatewayError, toGatewayContext } from '../../../lib/ai/aiGateway';
 import { getEmbedding } from '../../../lib/gemini';
+import {
+  formatMemorySafetyFlags,
+  sanitizeRetrievedContextText,
+} from '../../../lib/services/memory/contextSanitizer';
 
 const TOP_K = 3;
 const HNSW_EF_SEARCH = 100;
@@ -45,6 +49,12 @@ function buildExcerpt(item: {
   return parts.join('\n');
 }
 
+function buildSafeExcerpt(item: Parameters<typeof buildExcerpt>[0]): string {
+  const sanitized = sanitizeRetrievedContextText(buildExcerpt(item));
+  const safetyFlags = formatMemorySafetyFlags(sanitized.flags);
+  return safetyFlags ? `${safetyFlags}\n${sanitized.text}` : sanitized.text;
+}
+
 export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
   const { env, validated, auth } = context as {
     env: Env;
@@ -67,7 +77,7 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
   const apiKey = env.GEMINI_API_KEY;
   const logger = createEndpointLogger('/api/library/answer', auth.userId);
   if (!apiKey) {
-    return { status: 500, error: 'GEMINI_API_KEY not configured' };
+    return { status: 500, error: 'AI answer service not configured' };
   }
 
   try {
@@ -143,7 +153,7 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
       })
       .filter((r): r is NonNullable<typeof r> => r !== null);
 
-    const excerpts = results.map((r) => buildExcerpt(r)).join('\n\n---\n\n');
+    const excerpts = results.map((r) => buildSafeExcerpt(r)).join('\n\n---\n\n');
     const prompt = `You are a medical reference assistant. Using ONLY the following reference excerpts, answer the user's question in exactly one short sentence. Do not add caveats or "it depends." If the excerpts do not contain the answer, say "Not found in the reference cards."
 
 Reference excerpts:
@@ -202,10 +212,14 @@ One-sentence answer:`;
     // Cache the answer for future similar queries
     const cachePayload = { answer, results, count: results.length };
     try {
-      await cacheGeneratedQuestion(prisma, {
-        queryText: query,
-        questionType: 'library_answer',
-      }, cachePayload);
+      await cacheGeneratedQuestion(
+        prisma,
+        {
+          queryText: query,
+          questionType: 'library_answer',
+        },
+        cachePayload
+      );
     } catch {
       // Cache write failure should not block the response
     }

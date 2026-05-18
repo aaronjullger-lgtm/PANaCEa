@@ -1,4 +1,4 @@
-# 🎭 Playwright Smoke Test Suite for StudyPANaCEa
+# Playwright Smoke Test Suite for StudyPANaCEa
 
 This directory contains comprehensive end-to-end tests that verify every study mode in the application loads correctly and doesn't crash with 500/401 errors.
 
@@ -31,13 +31,13 @@ This directory contains comprehensive end-to-end tests that verify every study m
 
 ## 🚀 Quick Start Guide
 
-### Step 1: Install Playwright (Already Done!)
+### Step 1: Install Playwright Browsers
 
 ```bash
-npm init playwright@latest
+npx playwright install
 ```
 
-### Step 2: One-Time Authentication Setup
+### Step 2: Authentication Setup
 
 **Start your dev server:**
 
@@ -45,26 +45,42 @@ npm init playwright@latest
 npm run dev
 ```
 
-**In a new terminal, run the auth setup:**
+Preferred credential-based setup:
+
+1. Create a dedicated Clerk test user with MFA / Client Trust disabled.
+2. Set local-only values in `.env` or your shell:
+
+```env
+E2E_CLERK_TEST_EMAIL=test-learner@example.com
+E2E_CLERK_TEST_PASSWORD=replace-with-local-test-password
+```
+
+3. In a new terminal, run:
 
 ```bash
-npx playwright test e2e/auth.setup.ts --headed
+npm run test:auth
 ```
 
 **What happens:**
 
-1. A browser window opens
-2. You manually log in via Clerk (once!)
-3. Script saves your session to `playwright/.auth/user.json`
-4. All future tests reuse this session ✨
+1. A browser window opens.
+2. `e2e/auth.setup.ts` signs in through Clerk with the E2E credentials.
+3. The script saves your session to `playwright/.auth/user.json`.
+4. Browser E2E tests that use saved auth reuse that session.
 
-> **Note:** You only need to do this once, or when your session expires.
+Manual fallback:
+
+If the E2E credential variables are not set, `npm run test:auth` waits up to 2
+minutes for you to sign in manually, then saves the session.
+
+> Note: `npm run test:auth` loads `.env`. Raw `npx playwright test
+> e2e/auth.setup.ts --headed` only sees variables already exported in your shell.
 
 ---
 
 ### Step 3: Run the Smoke Tests
 
-**Run all tests:**
+**Run all saved-auth tests:**
 
 ```bash
 npx playwright test e2e/all-modes
@@ -93,6 +109,23 @@ npx playwright test e2e/all-modes --debug
 ```bash
 npx playwright test e2e/all-modes --project=chromium
 ```
+
+### Production-Parity Smoke
+
+Use this when testing Cloudflare Pages Functions routing and the core authenticated
+study loop against Wrangler:
+
+```bash
+# Terminal 1
+npm run dev:wrangler
+
+# Terminal 2
+BASE_URL=http://localhost:8788 npm run test:e2e:production-smoke
+```
+
+Set `E2E_REQUIRE_AUTH=1` when you want the command to fail fast if Clerk E2E
+credentials are missing. Without credentials, the public production-smoke tests
+run and the authenticated core-loop test is skipped.
 
 ---
 
@@ -129,8 +162,9 @@ npx playwright test e2e/all-modes --project=chromium
 
 ### `e2e/auth.setup.ts`
 
-- Runs ONCE before all tests
-- Manual login with Clerk
+- Runs before saved-auth Playwright projects
+- Signs in with `E2E_CLERK_TEST_EMAIL` / `E2E_CLERK_TEST_PASSWORD` when present
+- Falls back to manual Clerk login when credentials are not present
 - Saves session to `playwright/.auth/user.json`
 
 ### `e2e/all-modes.spec.ts`
@@ -178,8 +212,7 @@ Already configured in `.github/workflows/playwright.yml`
 ### Authentication Expired
 
 ```bash
-# Re-run auth setup
-npx playwright test e2e/auth.setup.ts --headed
+npm run test:auth
 ```
 
 ### Dev Server Not Running

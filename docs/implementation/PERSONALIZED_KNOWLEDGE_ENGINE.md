@@ -12,7 +12,7 @@ This doc summarizes the **My Library** and **Tutor + active cache** feature: upl
 | Area | Location | Notes |
 |------|----------|--------|
 | **My Library page** | `components/pages/MyLibraryPage.tsx` | List caches, set/clear active, upload (PDF), delete. Uses `usePreferences()` for active cache; stores `activeKnowledgeCacheName` and `activeKnowledgeCacheDisplayName` in `customSettings`. |
-| **ExplanationPanel Tutor** | `components/panels/ExplanationPanel.tsx` | Reads active cache from preferences; passes `cachedContent` to `callGeminiTextStreaming`; shows “Answering using: [name]”. |
+| **ExplanationPanel Tutor** | `components/questions/ExplanationPanel.tsx` | Reads active cache from preferences; passes `cachedContent` to `callGeminiTextStreaming`; shows “Answering using: [name]”. |
 | **Knowledge API** | `functions/api/knowledge/` | `POST /upload`, `POST /cache`, `GET /caches`, `DELETE /api/knowledge/cache/:name`. Auth, rate limit, and error handling via shared middleware. |
 | **Study Companion** | `functions/api/study/chat.ts` | Resource-based “Chat with your textbook” (cold start, cache reuse, citations). Separate from My Library; can be wired to resources later. |
 | **Gemini proxy** | `functions/api/gemini/index.ts`, `stream.ts` | Accept optional `cachedContent`; forwarded to Gemini `generateContent` / `streamGenerateContent`. |

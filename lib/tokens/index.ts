@@ -17,3 +17,4 @@ export * from './safety';
 export * from './entityAccents';
 export * from './dataViz';
 export * from './workspacePalette';
+export * from './medical';

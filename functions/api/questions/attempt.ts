@@ -22,6 +22,7 @@ import {
   withProductionPregeneratedSafety,
   withProductionQuestionSafety,
 } from '../../../lib/services/questionServingSafety';
+import { resolveOrCreateQuestionIdentity } from '../../../lib/study/questionIdentityPersistence';
 import type { Prisma } from '@prisma/client';
 
 import { ANSWER_LETTERS } from '../../../lib/answerLetterMap';
@@ -55,27 +56,96 @@ type QuestionAttemptTarget = {
   questionId: string;
   conditionId: string | null;
   medicalContentId: string | null;
+  questionIdentityId: string | null;
 };
+
+type QuestionAttemptIdentityInput = {
+  canonicalQuestionId?: string | null;
+  sourceQuestionId?: string | null;
+  questionSource?: string | null;
+  system?: string | null;
+  conditionId?: string | null;
+  medicalContentId?: string | null;
+  mode?: string | null;
+  questionType?: string | null;
+};
+
+async function resolveAttemptQuestionIdentityId(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  identity: QuestionAttemptIdentityInput,
+  logger: ReturnType<typeof createEndpointLogger>
+): Promise<string | null> {
+  const sourceQuestionId = identity.sourceQuestionId ?? identity.canonicalQuestionId;
+  if (!sourceQuestionId) return null;
+
+  const questionIdentityId = await resolveOrCreateQuestionIdentity(
+    prisma,
+    {
+      questionSource: identity.questionSource,
+      sourceQuestionId,
+      canonicalQuestionId: identity.canonicalQuestionId ?? null,
+      medicalContentId: identity.medicalContentId ?? null,
+      system: identity.system ?? null,
+      conditionId: identity.conditionId ?? null,
+      provenance: {
+        writer: 'questions-attempt',
+        mode: identity.mode ?? null,
+        questionType: identity.questionType ?? null,
+      },
+    },
+    logger
+  );
+
+  if (!questionIdentityId) {
+    logger.warn(
+      'QuestionAttempt identity FK was not resolved; writing legacy attempt fields only',
+      {
+        questionSource: identity.questionSource ?? 'question',
+        sourceQuestionId,
+      }
+    );
+  }
+
+  return questionIdentityId;
+}
 
 async function resolveQuestionAttemptTarget(
   prisma: ReturnType<typeof createEdgePrismaClient>,
   questionId: string,
-  logger: ReturnType<typeof createEndpointLogger>
+  logger: ReturnType<typeof createEndpointLogger>,
+  identityInput: QuestionAttemptIdentityInput = {}
 ): Promise<QuestionAttemptTarget | null> {
   const existingQuestion = await prisma.question.findFirst({
     where: withProductionQuestionSafety({ id: questionId }) as Prisma.QuestionWhereInput,
     select: { id: true, conditionId: true, medicalContentId: true },
   });
   if (existingQuestion) {
+    const questionIdentityId = await resolveAttemptQuestionIdentityId(
+      prisma,
+      {
+        ...identityInput,
+        canonicalQuestionId: identityInput.canonicalQuestionId ?? existingQuestion.id,
+        sourceQuestionId: identityInput.sourceQuestionId ?? questionId,
+        questionSource: identityInput.questionSource ?? 'question',
+        conditionId: existingQuestion.conditionId ?? identityInput.conditionId ?? null,
+        medicalContentId:
+          existingQuestion.medicalContentId ?? identityInput.medicalContentId ?? null,
+      },
+      logger
+    );
+
     return {
       questionId: existingQuestion.id,
       conditionId: existingQuestion.conditionId ?? null,
       medicalContentId: existingQuestion.medicalContentId ?? null,
+      questionIdentityId,
     };
   }
 
   const preGenerated = await prisma.preGeneratedQuestion.findFirst({
-    where: withProductionPregeneratedSafety({ id: questionId }) as Prisma.PreGeneratedQuestionWhereInput,
+    where: withProductionPregeneratedSafety({
+      id: questionId,
+    }) as Prisma.PreGeneratedQuestionWhereInput,
     select: {
       id: true,
       questionData: true,
@@ -89,18 +159,22 @@ async function resolveQuestionAttemptTarget(
   if (!preGenerated) return null;
 
   try {
-    const canonicalQuestionId = await upsertCanonicalQuestionMirror(prisma, {
-      id: preGenerated.id,
-      questionData: preGenerated.questionData,
-      system: preGenerated.system,
-      difficulty: preGenerated.difficulty,
-      conditionId: preGenerated.conditionId,
-      medicalContentId: preGenerated.medicalContentId,
-      generatedAt: preGenerated.generatedAt,
-    }, {
-      source: 'pre_generated_identity_mirror',
-      humanReviewed: true,
-    });
+    const canonicalQuestionId = await upsertCanonicalQuestionMirror(
+      prisma,
+      {
+        id: preGenerated.id,
+        questionData: preGenerated.questionData,
+        system: preGenerated.system,
+        difficulty: preGenerated.difficulty,
+        conditionId: preGenerated.conditionId,
+        medicalContentId: preGenerated.medicalContentId,
+        generatedAt: preGenerated.generatedAt,
+      },
+      {
+        source: 'pre_generated_identity_mirror',
+        humanReviewed: true,
+      }
+    );
     if (!canonicalQuestionId) {
       logger.warn('Pre-generated question missing mirrorable scoring data', { questionId });
       return null;
@@ -109,6 +183,19 @@ async function resolveQuestionAttemptTarget(
       questionId: canonicalQuestionId,
       conditionId: preGenerated.conditionId ?? null,
       medicalContentId: preGenerated.medicalContentId ?? null,
+      questionIdentityId: await resolveAttemptQuestionIdentityId(
+        prisma,
+        {
+          ...identityInput,
+          questionSource: identityInput.questionSource ?? 'pre_generated',
+          sourceQuestionId: identityInput.sourceQuestionId ?? preGenerated.id,
+          canonicalQuestionId: identityInput.canonicalQuestionId ?? canonicalQuestionId,
+          conditionId: preGenerated.conditionId ?? identityInput.conditionId ?? null,
+          medicalContentId: preGenerated.medicalContentId ?? identityInput.medicalContentId ?? null,
+          system: preGenerated.system ?? identityInput.system ?? null,
+        },
+        logger
+      ),
     };
   } catch (error) {
     if (!isUniqueConstraintError(error)) {
@@ -125,9 +212,12 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/attempt');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  let duplicateContext:
-    | { idempotencyKey: string; userId: string; attemptId: string; system?: string }
-    | null = null;
+  let duplicateContext: {
+    idempotencyKey: string;
+    userId: string;
+    attemptId: string;
+    system?: string;
+  } | null = null;
 
   try {
     const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
@@ -135,6 +225,9 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
     const userId = user.id;
     const {
       questionId,
+      canonicalQuestionId,
+      sourceQuestionId,
+      questionSource,
       isCorrect,
       wasCorrect,
       system,
@@ -183,7 +276,16 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
           ? (ANSWER_LETTERS[selectedAnswerRaw] ?? null)
           : selectedAnswerRaw;
 
-    const attemptTarget = await resolveQuestionAttemptTarget(prisma, questionId, logger);
+    const attemptTarget = await resolveQuestionAttemptTarget(prisma, questionId, logger, {
+      canonicalQuestionId,
+      sourceQuestionId,
+      questionSource,
+      system: system ?? null,
+      conditionId: conditionId ?? null,
+      medicalContentId: medicalContentId ?? null,
+      mode,
+      questionType,
+    });
     if (!attemptTarget) {
       return {
         data: {
@@ -213,7 +315,9 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       });
       if (existingAttempt) {
         const stats = await getAggregateAttemptStats(prisma, userId);
-        const detailedSystemStats = system ? await getUserSystemStats(prisma, userId, system) : null;
+        const detailedSystemStats = system
+          ? await getUserSystemStats(prisma, userId, system)
+          : null;
         const responseData = {
           success: true,
           attemptId,
@@ -242,6 +346,9 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
           id: attemptId,
           userId,
           questionId: attemptTarget.questionId,
+          ...(attemptTarget.questionIdentityId
+            ? { questionIdentityId: attemptTarget.questionIdentityId }
+            : {}),
           wasCorrect: correctness,
           system: system ?? null,
           conditionId: attemptTarget.conditionId ?? conditionId ?? null,
@@ -353,8 +460,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
           system,
           totalAttempts: sysTotalAttempts,
           correctAnswers: sysCorrect,
-          accuracy:
-            sysTotalAttempts > 0 ? Math.round((sysCorrect / sysTotalAttempts) * 100) : 0,
+          accuracy: sysTotalAttempts > 0 ? Math.round((sysCorrect / sysTotalAttempts) * 100) : 0,
         };
       }
 

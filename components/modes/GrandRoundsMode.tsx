@@ -26,7 +26,7 @@ import { useUser, useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import type { Question } from '@/types';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { DrillLoadingState, InlineButtonSpinner } from '@/components/loading';
+import { DrillLoadingState, InlineButtonSpinner, SkeletonText } from '@/components/loading';
 import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface GrandRoundsModeProps {
@@ -281,7 +281,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(getApiEnvelopeError(errData, `HTTP ${response.status}: Failed to fetch challenge`));
+        throw new Error(
+          getApiEnvelopeError(errData, `HTTP ${response.status}: Failed to fetch challenge`)
+        );
       }
 
       const data = unwrapApiEnvelope<
@@ -340,7 +342,8 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         });
         if (!res.ok || cancelled) {
           const errorPayload = await res.json().catch(() => ({}));
-          if (!cancelled) setLeaderboardError(getApiEnvelopeError(errorPayload, 'Failed to load leaderboard'));
+          if (!cancelled)
+            setLeaderboardError(getApiEnvelopeError(errorPayload, 'Failed to load leaderboard'));
           return;
         }
         const json = unwrapApiEnvelope<{ leaderboard?: unknown[] }>(await res.json());
@@ -631,7 +634,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
-              <div className="text-4xl font-bold text-muted-amber-500 tabular-nums">{completedStats.score}</div>
+              <div className="text-4xl font-bold text-muted-amber-500 tabular-nums">
+                {completedStats.score}
+              </div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Total Score</div>
             </div>
 
@@ -667,9 +672,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 <Users className="w-4 h-4 text-muted-amber-500" />
                 Today&apos;s Leaderboard
               </h3>
-              {leaderboardLoading && (
-                <p className="text-sm text-[var(--color-text-muted)]">Loading...</p>
-              )}
+              {leaderboardLoading && <SkeletonText lines={3} className="py-1" />}
               {leaderboardError && (
                 <p className="text-sm text-[var(--color-text-muted)]">{leaderboardError}</p>
               )}
@@ -708,7 +711,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               {reviewLoading ? (
                 <>
                   <InlineButtonSpinner />
-                  Loading...
+                  Fetching review
                 </>
               ) : (
                 'Review answers'
@@ -852,13 +855,20 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             )}
           </div>
 
-          <div className="bg-muted-amber-500/20 border-2 border-muted-amber-500/50 rounded-xl p-4" role="alert">
+          <div
+            className="bg-muted-amber-500/20 border-2 border-muted-amber-500/50 rounded-xl p-4"
+            role="alert"
+          >
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-6 h-6 text-muted-amber-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <AlertCircle
+                className="w-6 h-6 text-muted-amber-500 flex-shrink-0 mt-0.5"
+                aria-hidden="true"
+              />
               <div className="text-sm text-[var(--color-text-primary)]">
                 <strong className="text-muted-amber-500 text-base">One Attempt Per Day</strong>
                 <p className="mt-1 text-[var(--color-text-secondary)]">
-                  You can only complete this challenge once. Choose your answers carefully — there are no retries. New challenges available daily at midnight UTC.
+                  You can only complete this challenge once. Choose your answers carefully — there
+                  are no retries. New challenges available daily at midnight UTC.
                 </p>
               </div>
             </div>
@@ -1067,11 +1077,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           className="max-w-2xl w-full bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6"
         >
           <div className="text-center space-y-4">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={springs.bouncy}
-            >
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={springs.bouncy}>
               {isTopPercentile ? (
                 <Crown className="w-20 h-20 text-muted-amber-500 mx-auto" aria-hidden="true" />
               ) : (
@@ -1098,7 +1104,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               transition={{ delay: 0.1 }}
               className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
             >
-              <div className="text-4xl font-bold text-muted-amber-500 tabular-nums">{completedStats.score}</div>
+              <div className="text-4xl font-bold text-muted-amber-500 tabular-nums">
+                {completedStats.score}
+              </div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Total Score</div>
             </motion.div>
 
@@ -1154,9 +1162,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 <Users className="w-4 h-4 text-muted-amber-500" />
                 Today&apos;s Leaderboard
               </h3>
-              {leaderboardLoading && (
-                <p className="text-sm text-[var(--color-text-muted)]">Loading...</p>
-              )}
+              {leaderboardLoading && <SkeletonText lines={3} className="py-1" />}
               {leaderboardError && (
                 <p className="text-sm text-[var(--color-text-muted)]">{leaderboardError}</p>
               )}
@@ -1200,7 +1206,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               {reviewLoading ? (
                 <>
                   <InlineButtonSpinner />
-                  Loading...
+                  Fetching review
                 </>
               ) : (
                 'Review answers'

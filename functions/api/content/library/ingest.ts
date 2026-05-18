@@ -83,7 +83,6 @@ export const onRequestPost = authenticatedEndpoint(IngestBodySchema, async (cont
       });
       return fail(ErrorCode.UPSTREAM_ERROR, {
         message: 'Failed to upload structuredData to storage',
-        details: errText.slice(0, 300),
       });
     }
 

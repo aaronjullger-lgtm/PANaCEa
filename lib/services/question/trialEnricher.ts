@@ -9,7 +9,7 @@
  *
  * ClinicalTrials.gov API v2 docs: https://clinicaltrials.gov/data-api/about-api
  *
- * @see components/panels/ExplanationPanel.tsx
+ * @see components/questions/ExplanationPanel.tsx
  */
 
 import { logger } from '../../logger';

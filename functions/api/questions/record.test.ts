@@ -6,6 +6,7 @@ const mockPrisma: any = {
   user: { findUnique: vi.fn() },
   question: { findUnique: vi.fn(), findFirst: vi.fn(), upsert: vi.fn() },
   preGeneratedQuestion: { findFirst: vi.fn() },
+  questionIdentity: { upsert: vi.fn() },
   userQuestionSeen: { upsert: vi.fn() },
   questionAttempt: { create: vi.fn() },
 };
@@ -90,6 +91,9 @@ describe('POST /api/questions/record', () => {
     mockResolveUserByClerkId.mockResolvedValue({ id: 'user-db-1' });
     mockPrisma.question.findFirst.mockResolvedValue(null);
     mockPrisma.preGeneratedQuestion.findFirst.mockResolvedValue(null);
+    mockPrisma.questionIdentity.upsert.mockImplementation(({ create }: any) =>
+      Promise.resolve({ id: `qi_${create.questionSource}_${create.sourceQuestionId}` })
+    );
     mockPrisma.question.upsert.mockResolvedValue({});
     mockPrisma.userQuestionSeen.upsert.mockResolvedValue({});
     mockPrisma.questionAttempt.create.mockResolvedValue({});
@@ -138,8 +142,30 @@ describe('POST /api/questions/record', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           questionId: 'pg-1',
+          questionIdentityId: 'qi_pre_generated_pg-1',
           conditionId: 'cond-1',
           medicalContentId: 'content-1',
+        }),
+      })
+    );
+    expect(mockPrisma.questionIdentity.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          questionSource_sourceQuestionId: {
+            questionSource: 'pre_generated',
+            sourceQuestionId: 'pg-1',
+          },
+        },
+        create: expect.objectContaining({
+          questionSource: 'pre_generated',
+          sourceQuestionId: 'pg-1',
+          canonicalQuestionId: 'pg-1',
+          preGeneratedQuestionId: 'pg-1',
+          provenance: expect.objectContaining({
+            writer: 'questions-record',
+            mode: 'session',
+            questionType: 'mcq',
+          }),
         }),
       })
     );
@@ -175,6 +201,60 @@ describe('POST /api/questions/record', () => {
             questionType: 'mcq',
           },
         },
+      })
+    );
+    expect(mockPrisma.questionAttempt.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          questionId: 'q-approved-1',
+          questionIdentityId: 'qi_question_q-approved-1',
+        }),
+      })
+    );
+  });
+
+  it('uses explicit source identity metadata when the client submits it', async () => {
+    mockPrisma.question.findFirst.mockResolvedValue({
+      id: 'q-client-1',
+      conditionId: 'cond-1',
+      medicalContentId: 'content-1',
+    });
+
+    const context = makeContext('q-client-1');
+    context.validated.body.canonicalQuestionId = 'q-client-1';
+    context.validated.body.sourceQuestionId = 'pg-client-1';
+    context.validated.body.questionSource = 'pre_generated';
+
+    const { status, body } = await callEndpoint(context);
+
+    expect(status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(mockPrisma.questionAttempt.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          questionId: 'q-client-1',
+          questionIdentityId: 'qi_pre_generated_pg-client-1',
+        }),
+      })
+    );
+    expect(mockPrisma.questionIdentity.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          questionSource_sourceQuestionId: {
+            questionSource: 'pre_generated',
+            sourceQuestionId: 'pg-client-1',
+          },
+        },
+        create: expect.objectContaining({
+          questionSource: 'pre_generated',
+          sourceQuestionId: 'pg-client-1',
+          canonicalQuestionId: 'q-client-1',
+          preGeneratedQuestionId: 'pg-client-1',
+        }),
+        update: expect.objectContaining({
+          canonicalQuestionId: 'q-client-1',
+          preGeneratedQuestionId: 'pg-client-1',
+        }),
       })
     );
   });

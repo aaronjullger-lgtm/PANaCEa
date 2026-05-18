@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Readiness"
+  short_description: "Check production readiness, release notes, rollback, and ship gates"
+  default_prompt: "Run a release-readiness review for this change, identify blockers, and prepare release and rollback notes."

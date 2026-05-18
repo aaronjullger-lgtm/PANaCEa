@@ -2,7 +2,7 @@
 
 **Role:** Senior Full-Stack Architect & QA Lead  
 **Scope:** Plan fidelity, repo consistency, logic/security, brittleness/scalability, refactoring.  
-**Reference:** `.cursor/plans/personalized_knowledge_engine_5ba76595.plan.md` and implementation in `functions/api/knowledge/`, `components/pages/MyLibraryPage.tsx`, `components/panels/ExplanationPanel.tsx`, streaming/gemini proxy, preferences.
+**Reference:** `.cursor/plans/personalized_knowledge_engine_5ba76595.plan.md` and implementation in `functions/api/knowledge/`, `components/pages/MyLibraryPage.tsx`, `components/questions/ExplanationPanel.tsx`, streaming/gemini proxy, preferences.
 
 ---
 

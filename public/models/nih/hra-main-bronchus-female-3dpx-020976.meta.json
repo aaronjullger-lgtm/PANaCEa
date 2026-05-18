@@ -1,0 +1,26 @@
+{
+  "id": "hra-main-bronchus-female",
+  "title": "3D Reference Organ for Main Bronchus, Female v1.0",
+  "sourceEntry": "3DPX-020976",
+  "source": "NIH 3D",
+  "sourceUrl": "https://3d.nih.gov/entries/3DPX-020976",
+  "downloadUrl": "https://3d.nih.gov/api/download?submissionId=29135&fileIds=742058",
+  "thumbnailUrl": "https://3d.nih.gov/api/submissions/29135/runs/e8af389a-ab4b-4318-8214-208e52fa93ab/output-files/742063",
+  "license": "CC-BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "author": "Kristen Browne; Heidi Schlehlein",
+  "institution": "Human Reference Atlas / National Institutes of Health",
+  "entryDescription": "Reference organ for the main bronchus created using Visible Human Dataset source data and distributed through NIH 3D.",
+  "modelFile": "/models/nih/hra-main-bronchus-female-3dpx-020976.glb",
+  "thumbnailFile": "/thumbnails/nih/hra-main-bronchus-female-3dpx-020976.png",
+  "modelBytes": 2858776,
+  "thumbnailBytes": 41397,
+  "modelSha256": "c58e5b8fb61d982eb72f7385b6ce858e07e05766b0101ff0e15c7bc469cf60ff",
+  "thumbnailSha256": "23e18ff384c97d3ba63b5e6572d664fe241af4002e793b47cc793bc8b55742d3",
+  "accessedDate": "2026-05-16",
+  "safeUse": [
+    "Use for educational airway and respiratory spatial anatomy review only.",
+    "Do not present as patient-specific anatomy, diagnostic evidence, treatment guidance, or a clinical decision aid.",
+    "Maintain CC-BY attribution whenever this model is displayed or redistributed."
+  ]
+}

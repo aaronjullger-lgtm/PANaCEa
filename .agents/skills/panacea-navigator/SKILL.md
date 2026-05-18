@@ -5,11 +5,11 @@ description: "Use this skill for any PANaCEa repo work: adding features, debuggi
 
 # PANaCEa Navigator
 
-Use this first for repo orientation. The repo does not currently have `AGENTS.md`; use `CLAUDE.md`, `README.md`, `package.json`, and the files you plan to touch.
+Use this first for repo orientation. This repo has `AGENTS.md`; read and follow it before editing. Use `CLAUDE.md`, `README.md`, `package.json`, and the files you plan to touch as additional context.
 
 ## Read Path
 
-- Project rules/context: `CLAUDE.md`
+- Project rules/context: `AGENTS.md`, `CLAUDE.md`
 - Commands and runtime overview: `README.md`, `package.json`
 - Current database model: `prisma/schema.prisma`
 - App route/view wiring: `config/appViews.ts`, `config/lazyComponents.tsx`, `config/AppRoutes.tsx`

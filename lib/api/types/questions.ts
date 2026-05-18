@@ -52,6 +52,7 @@ export interface QuestionDTO {
   canonicalQuestionId?: string | null;
   sourceQuestionId?: string | null;
   questionSource?: 'question' | 'pre_generated' | 'staging' | 'seed' | 'generated';
+  questionIdentityId?: string | null;
   question: string;
   vignette?: string | null;
   options: string[];

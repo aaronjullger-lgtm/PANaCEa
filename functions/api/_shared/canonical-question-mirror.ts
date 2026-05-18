@@ -22,6 +22,7 @@ export type CanonicalQuestionMirrorData = {
   options: string[];
   correctAnswer: string;
   explanation: string;
+  correctAnswerIndex?: number;
   system: string;
   difficulty: string;
   source: string;
@@ -34,6 +35,20 @@ export type CanonicalQuestionMirrorData = {
   qaStatus: 'APPROVED';
   humanReviewed: boolean;
   updatedAt: Date;
+};
+
+type PrismaWithCanonicalMirror = {
+  question?: {
+    upsert?(args: unknown): Promise<unknown> | unknown;
+    createMany?(args: unknown): Promise<unknown> | unknown;
+  };
+  questionAnswerChoice?: {
+    upsert?(args: unknown): Promise<unknown> | unknown;
+    deleteMany?(args: unknown): Promise<unknown> | unknown;
+  };
+  questionExplanation?: {
+    upsert?(args: unknown): Promise<unknown> | unknown;
+  };
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -59,7 +74,14 @@ function normalizeOptions(value: unknown): string[] {
         return String(option).trim();
       }
       const optionRecord = asRecord(option);
-      return firstString(optionRecord.text, optionRecord.label, optionRecord.value, optionRecord.answer) ?? '';
+      return (
+        firstString(
+          optionRecord.text,
+          optionRecord.label,
+          optionRecord.value,
+          optionRecord.answer
+        ) ?? ''
+      );
     })
     .filter(Boolean);
 }
@@ -73,7 +95,10 @@ function normalizeExplanation(value: unknown): string {
   );
 }
 
-function resolveCorrectAnswer(questionData: Record<string, unknown>, options: string[]): string | null {
+function resolveCorrectAnswerDetails(
+  questionData: Record<string, unknown>,
+  options: string[]
+): { answer: string; index: number | null } | null {
   const numericIndex =
     typeof questionData.correctAnswerIndex === 'number'
       ? questionData.correctAnswerIndex
@@ -87,7 +112,7 @@ function resolveCorrectAnswer(questionData: Record<string, unknown>, options: st
     numericIndex >= 0 &&
     numericIndex < options.length
   ) {
-    return options[numericIndex] ?? null;
+    return { answer: options[numericIndex] ?? '', index: numericIndex };
   }
 
   const rawAnswer = firstString(
@@ -101,7 +126,9 @@ function resolveCorrectAnswer(questionData: Record<string, unknown>, options: st
   if (!rawAnswer) return null;
 
   const resolvedIndex = resolveAnswerIndexFromValue(rawAnswer, options);
-  return resolvedIndex !== null ? (options[resolvedIndex] ?? null) : null;
+  return resolvedIndex !== null
+    ? { answer: options[resolvedIndex] ?? '', index: resolvedIndex }
+    : null;
 }
 
 function normalizeDate(value: Date | string | null | undefined): Date | undefined {
@@ -120,9 +147,16 @@ export function buildCanonicalQuestionMirrorData(
   const questionData = asRecord(input.questionData);
   const metadata = asRecord(questionData.metadata);
   const provenance = asRecord(questionData.provenance);
-  const answerOptions = normalizeOptions(questionData.options ?? questionData.answers ?? questionData.choices);
-  const question = firstString(questionData.question, questionData.stem, questionData.text, questionData.vignette);
-  const correctAnswer = resolveCorrectAnswer(questionData, answerOptions);
+  const answerOptions = normalizeOptions(
+    questionData.options ?? questionData.answers ?? questionData.choices
+  );
+  const question = firstString(
+    questionData.question,
+    questionData.stem,
+    questionData.text,
+    questionData.vignette
+  );
+  const correctAnswer = resolveCorrectAnswerDetails(questionData, answerOptions);
 
   if (!input.id || !question || answerOptions.length < 2 || !correctAnswer) {
     return null;
@@ -141,22 +175,37 @@ export function buildCanonicalQuestionMirrorData(
     provenance.conditionId
   );
   const safeConditionId = conditionId && conditionId !== medicalContentId ? conditionId : undefined;
-  const generatedAt = normalizeDate(input.generatedAt ?? (questionData.generatedAt as Date | string | null | undefined));
+  const generatedAt = normalizeDate(
+    input.generatedAt ?? (questionData.generatedAt as Date | string | null | undefined)
+  );
 
   return {
     id: input.id,
     vignette: firstString(questionData.vignette, questionData.stem, question) ?? question,
     question,
     options: answerOptions,
-    correctAnswer,
+    correctAnswer: correctAnswer.answer,
+    correctAnswerIndex: correctAnswer.index ?? undefined,
     explanation: normalizeExplanation(questionData.explanation ?? questionData.rationale),
-    system: firstString(input.system, questionData.system, metadata.system, provenance.taxonomyCode) ?? 'General',
+    system:
+      firstString(input.system, questionData.system, metadata.system, provenance.taxonomyCode) ??
+      'General',
     difficulty: firstString(input.difficulty, questionData.difficulty) ?? 'medium',
     source: options.source ?? 'pre_generated_identity_mirror',
     conditionId: safeConditionId,
     medicalContentId: medicalContentId ?? undefined,
-    category: firstString(questionData.category, questionData.subcategory, metadata.subcategory, provenance.subcategory),
-    topic: firstString(questionData.topic, questionData.conditionName, metadata.conditionName, provenance.conditionName),
+    category: firstString(
+      questionData.category,
+      questionData.subcategory,
+      metadata.subcategory,
+      provenance.subcategory
+    ),
+    topic: firstString(
+      questionData.topic,
+      questionData.conditionName,
+      metadata.conditionName,
+      provenance.conditionName
+    ),
     generatedAt,
     lifecycleStatus: 'ACTIVE',
     qaStatus: 'APPROVED',
@@ -165,26 +214,124 @@ export function buildCanonicalQuestionMirrorData(
   };
 }
 
+function buildAnswerChoiceRows(data: CanonicalQuestionMirrorData) {
+  const correctAnswer = data.correctAnswer.trim().toLowerCase();
+  const keyedCorrectIndex =
+    typeof data.correctAnswerIndex === 'number' &&
+    Number.isInteger(data.correctAnswerIndex) &&
+    data.correctAnswerIndex >= 0 &&
+    data.correctAnswerIndex < data.options.length
+      ? data.correctAnswerIndex
+      : null;
+  const firstCorrectIndex =
+    keyedCorrectIndex ??
+    data.options.findIndex((choiceText) => choiceText.trim().toLowerCase() === correctAnswer);
+
+  return data.options.map((choiceText, index) => {
+    const choiceKey = String.fromCharCode(65 + index);
+    const normalizedChoice = choiceText.trim().toLowerCase();
+
+    return {
+      questionId: data.id,
+      choiceKey,
+      choiceText,
+      isCorrect:
+        firstCorrectIndex >= 0 ? index === firstCorrectIndex : normalizedChoice === correctAnswer,
+      displayOrder: index,
+    };
+  });
+}
+
+function toQuestionRowData(data: CanonicalQuestionMirrorData) {
+  const { correctAnswerIndex: _correctAnswerIndex, ...row } = data;
+  return row;
+}
+
+async function syncCanonicalQuestionRelations(
+  prisma: PrismaWithCanonicalMirror,
+  data: CanonicalQuestionMirrorData
+): Promise<void> {
+  const choices = buildAnswerChoiceRows(data);
+
+  if (prisma.questionAnswerChoice?.deleteMany) {
+    await prisma.questionAnswerChoice.deleteMany({
+      where: {
+        questionId: data.id,
+        choiceKey: { notIn: choices.map((choice) => choice.choiceKey) },
+      },
+    });
+  }
+
+  if (prisma.questionAnswerChoice?.upsert) {
+    await Promise.all(
+      choices.map((choice) =>
+        prisma.questionAnswerChoice!.upsert!({
+          where: {
+            questionId_choiceKey: {
+              questionId: choice.questionId,
+              choiceKey: choice.choiceKey,
+            },
+          },
+          create: choice,
+          update: {
+            choiceText: choice.choiceText,
+            isCorrect: choice.isCorrect,
+            displayOrder: choice.displayOrder,
+          },
+        })
+      )
+    );
+  }
+
+  if (data.explanation.trim() && prisma.questionExplanation?.upsert) {
+    await prisma.questionExplanation.upsert({
+      where: {
+        questionId_explanationType_version: {
+          questionId: data.id,
+          explanationType: 'CORRECT_RATIONALE',
+          version: 1,
+        },
+      },
+      create: {
+        questionId: data.id,
+        explanationType: 'CORRECT_RATIONALE',
+        title: 'Correct rationale',
+        body: data.explanation,
+        version: 1,
+        isActive: true,
+      },
+      update: {
+        title: 'Correct rationale',
+        body: data.explanation,
+        isActive: true,
+      },
+    });
+  }
+}
+
 export async function upsertCanonicalQuestionMirror(
-  prisma: { question?: { upsert?(args: unknown): Promise<unknown> | unknown } },
+  prisma: PrismaWithCanonicalMirror,
   input: CanonicalQuestionMirrorInput,
   options: CanonicalQuestionMirrorOptions = {}
 ): Promise<string | null> {
   const data = buildCanonicalQuestionMirrorData(input, options);
   if (!data || !prisma.question?.upsert) return null;
-  const { id, ...updateData } = data;
+  const createData = toQuestionRowData(data);
+  const { id, ...updateData } = createData;
 
   await prisma.question.upsert({
     where: { id },
-    create: data,
+    create: createData,
     update: updateData,
   });
+
+  await syncCanonicalQuestionRelations(prisma, data);
 
   return id;
 }
 
 export async function createCanonicalQuestionMirrors(
-  prisma: { question?: { createMany?(args: unknown): Promise<unknown> | unknown } },
+  prisma: PrismaWithCanonicalMirror,
   inputs: CanonicalQuestionMirrorInput[],
   options: CanonicalQuestionMirrorOptions = {}
 ): Promise<Set<string>> {
@@ -195,9 +342,12 @@ export async function createCanonicalQuestionMirrors(
   if (rows.length === 0 || !prisma.question?.createMany) return new Set();
 
   await prisma.question.createMany({
-    data: rows,
+    data: rows.map(toQuestionRowData),
     skipDuplicates: true,
   });
+  for (const row of rows) {
+    await syncCanonicalQuestionRelations(prisma, row);
+  }
 
   return new Set(rows.map((row) => row.id));
 }

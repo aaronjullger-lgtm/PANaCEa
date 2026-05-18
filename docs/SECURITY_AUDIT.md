@@ -22,7 +22,7 @@
 - **Do not use `VITE_` prefix for server secrets.**  
   `VITE_*` is embedded in the client bundle at build time. Only use it for non-sensitive, client-safe values (e.g. `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_API_URL`).
 - **Server-only:** `CLERK_SECRET_KEY`, `GEMINI_API_KEY`, `DATABASE_URL`, etc. must be set in Cloudflare env (or wrangler secrets), never as `VITE_*`.
-- **Client-side:** Avoid `VITE_GEMINI_API_KEY` and `VITE_TODOIST_CLIENT_SECRET` in production; prefer server-proxy or backend-only usage.
+- **Client-side:** Avoid browser-exposed Gemini keys and `VITE_TODOIST_CLIENT_SECRET` in production; prefer server-proxy or backend-only usage.
 
 ## RLS (Supabase / Postgres)
 

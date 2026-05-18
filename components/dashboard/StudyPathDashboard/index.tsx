@@ -160,9 +160,12 @@ const StudyPathDashboard = () => {
         },
         body: JSON.stringify({ planId: plan.id, plan }),
       });
+      const responseJson = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(`Failed to accept plan: ${response.status}`);
+        throw new Error(
+          getApiEnvelopeError(responseJson, `Failed to accept plan: ${response.status}`)
+        );
       }
 
       showToast({
@@ -193,9 +196,12 @@ const StudyPathDashboard = () => {
         },
         body: JSON.stringify({}),
       });
+      const responseJson = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error('Unable to regenerate study plan. Please try again.');
+        throw new Error(
+          getApiEnvelopeError(responseJson, 'Unable to regenerate study plan. Please try again.')
+        );
       }
 
       await mutate();

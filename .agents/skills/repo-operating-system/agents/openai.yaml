@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repo Operating System"
+  short_description: "Create and maintain repo maps, architecture docs, commands, and standards"
+  default_prompt: "Audit this repository and update the project operating docs, standards, commands, and verification checklist."

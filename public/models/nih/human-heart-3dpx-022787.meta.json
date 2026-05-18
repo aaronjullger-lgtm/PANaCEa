@@ -1,0 +1,24 @@
+{
+  "id": "heart-basic",
+  "source": "NIH 3D",
+  "sourceEntry": "3DPX-022787",
+  "title": "Human Heart 3d Model",
+  "author": "Sourav Pan",
+  "institution": "National Institutes of Health",
+  "license": "Public Domain",
+  "sourceUrl": "https://3d.nih.gov/entries/3DPX-022787?version=1.01",
+  "downloadUrl": "https://3d.nih.gov/api/download?submissionId=28985&fileIds=738513",
+  "thumbnailUrl": "https://3d.nih.gov/api/submissions/28985/runs/12647ffa-ff7b-4ce7-aeaf-7f069e6d0ea3/output-files/738518",
+  "accessedDate": "2026-05-16",
+  "modelFile": "/models/nih/human-heart-3dpx-022787.glb",
+  "thumbnailFile": "/thumbnails/nih/human-heart-3dpx-022787.png",
+  "modelBytes": 3986136,
+  "thumbnailBytes": 27259,
+  "modelSha256": "67d65729bbe67b2d7d49f137e6d06f41dd79c504c9c5d7a975d641e60ed0caf5",
+  "thumbnailSha256": "75274bdfd6287c6e65628e4cb73b64a49ccf8c1aefb488f24615661a1cc17cdf",
+  "safeUse": [
+    "Use for educational spatial anatomy review only.",
+    "Do not present as patient-specific anatomy, diagnostic evidence, treatment guidance, or a clinical decision aid.",
+    "Keep WebGL loading on demand for performance."
+  ]
+}

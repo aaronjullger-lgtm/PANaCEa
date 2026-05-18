@@ -45,6 +45,7 @@ import { LearningCurveChart } from '@/components/analytics/LearningCurveChart';
 import { ChartContainer } from '@/components/shared/ChartContainer';
 import chartTheme from '@/lib/chartTheme';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import { getQuadrantLabel } from '@/lib/calibrationQuadrants';
 import {
   getSpeedBenchmarkLabel,
@@ -172,7 +173,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch user stats');
+          const errorPayload = await response.json().catch(() => ({}));
+          throw new Error(getApiEnvelopeError(errorPayload, 'Failed to fetch user stats'));
         }
 
         const contentType = response.headers.get('content-type');
@@ -180,7 +182,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           throw new Error(`Expected JSON but got ${contentType || 'text/html'}`);
         }
 
-        const result = (await response.json()) as UserStatsResponse;
+        const result = unwrapApiEnvelope<UserStatsResponse>(await response.json());
         setUserStats(result);
       } catch (error) {
         analyticsLogger.error('Failed to fetch user stats', { error });
@@ -211,7 +213,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch stability trend');
+          const errorPayload = await response.json().catch(() => ({}));
+          throw new Error(getApiEnvelopeError(errorPayload, 'Failed to fetch stability trend'));
         }
 
         const contentType = response.headers.get('content-type');
@@ -219,9 +222,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           throw new Error(`Expected JSON but got ${contentType || 'text/html'}`);
         }
 
-        const result = (await response.json()) as {
+        const result = unwrapApiEnvelope<{
           data?: Array<{ date: string; avgStability?: number; totalReviews?: number }>;
-        };
+        }>(await response.json());
 
         if (result.data && Array.isArray(result.data)) {
           // Format dates for display
@@ -252,10 +255,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     const res = await fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
-    if (!res.ok) throw new Error('Failed to fetch calibration');
-    const json = await res.json();
-    // API middleware sends result.data as body, so response is { calibration, days }
-    return json as { calibration: CalibrationQuadrantData; days: number };
+    if (!res.ok) {
+      const errorPayload = await res.json().catch(() => ({}));
+      throw new Error(getApiEnvelopeError(errorPayload, 'Failed to fetch calibration'));
+    }
+    return unwrapApiEnvelope<{ calibration: CalibrationQuadrantData; days: number }>(
+      await res.json()
+    );
   };
   const { data: calibrationData } = useSWR<{ calibration: CalibrationQuadrantData; days: number }>(
     userStats && userStats.stats?.overall?.totalAttempts > 0

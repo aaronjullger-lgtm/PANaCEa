@@ -290,9 +290,10 @@ describe('computeFSRSUpdate', () => {
 
     expect(prisma.userProgress.findUnique).toHaveBeenCalledWith({
       where: {
-        userId_conditionId: {
+        userId_conditionId_progressContext: {
           userId: 'user_123',
           conditionId: 'cond_789',
+          progressContext: 'READINESS',
         },
       },
     });
@@ -300,6 +301,23 @@ describe('computeFSRSUpdate', () => {
     // Should return valid result even with existing state
     expect(result.updatedCard).toHaveProperty('stability');
     expect(result.previousCard.stability).toBe(12.5);
+  });
+
+  it('should load targeted progress when progressContext is TARGETED', async () => {
+    await computeFSRSUpdate(prisma, {
+      ...baseInput,
+      progressContext: 'TARGETED',
+    });
+
+    expect(prisma.userProgress.findUnique).toHaveBeenCalledWith({
+      where: {
+        userId_conditionId_progressContext: {
+          userId: 'user_123',
+          conditionId: 'cond_789',
+          progressContext: 'TARGETED',
+        },
+      },
+    });
   });
 
   it('should produce confidence telemetry with expected pipeline keys', async () => {

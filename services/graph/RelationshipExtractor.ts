@@ -83,17 +83,31 @@ export class RelationshipExtractor {
 
     // Treatment edges (drugs)
     if (content.treatment) {
-      const drugs = await prisma.drug.findMany({ select: { id: true, name: true } });
+      const drugs = await prisma.drug.findMany({
+        select: {
+          id: true,
+          genericName: true,
+          brandName: true,
+          displayName: true,
+          aliases: true,
+        },
+      });
       const lowerTreatment = content.treatment.toLowerCase();
       for (const drug of drugs) {
-        if (drug.name && lowerTreatment.includes(drug.name.toLowerCase())) {
+        const names = [
+          drug.genericName,
+          drug.brandName,
+          drug.displayName,
+          ...(drug.aliases ?? []),
+        ].filter((name): name is string => Boolean(name));
+        if (names.some((name) => lowerTreatment.includes(name.toLowerCase()))) {
           edges.push({
             id: `semantic:${sourceNodeId}->drug:${drug.id}:treats`,
             sourceId: `drug:${drug.id}`,
             targetId: sourceNodeId,
-            edgeType: GraphEdgeType.ASSOCIATED,
+            edgeType: GraphEdgeType.TREATS,
             weight: 0.8,
-            description: `${drug.displayName ?? drug.brandName ?? 'Drug'} treats condition`,
+            description: `${drug.displayName ?? drug.brandName ?? drug.genericName} treats condition`,
             evidenceCount: 1,
           });
         }
@@ -181,9 +195,10 @@ export class RelationshipExtractor {
               description: edge.description,
               evidenceCount: edge.evidenceCount,
               metadata: edge.metadata as Prisma.InputJsonValue,
+              updatedAt: new Date(),
             },
-          }),
-        ),
+          })
+        )
       );
     }
   }

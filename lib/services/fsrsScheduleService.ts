@@ -51,6 +51,11 @@ export interface FSRSUpdateInput {
   questionId: string;
   conditionId: string;
   system?: string | null;
+  /**
+   * UserProgress partition to read. READINESS is the default longitudinal track;
+   * TARGETED keeps focused-study FSRS state isolated.
+   */
+  progressContext?: 'READINESS' | 'TARGETED';
 
   /** Discrete rating after Ghost Grader (Again=1, Good=3) */
   rating: Rating;
@@ -158,6 +163,7 @@ export async function computeFSRSUpdate(
     questionId,
     conditionId,
     system,
+    progressContext = 'READINESS',
     rating,
     gradeContinuous,
     implicitConfidence,
@@ -182,7 +188,7 @@ export async function computeFSRSUpdate(
   const fsrs = optimizedParams ? new FSRS(optimizedParams) : new FSRS();
 
   const existingProgress = await prisma.userProgress.findUnique({
-    where: { userId_conditionId: { userId, conditionId } },
+    where: { userId_conditionId_progressContext: { userId, conditionId, progressContext } },
   });
 
   const fsrsCardData = (existingProgress?.fsrsCard as Record<string, unknown>) || {};

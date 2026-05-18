@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { SignIn, SignUp } from '@clerk/clerk-react';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { SkeletonText } from '@/components/loading';
 import { getProtectedRouteIntent } from '@/lib/routing/protectedRouteIntent';
 
 type ProtectedRouteGateProps = {
@@ -26,8 +27,10 @@ export function ProtectedRouteGate({ pathname, authLoading = false }: ProtectedR
           to="/"
           className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
         >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          PANaCEa home
+          <span className="inline-flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <span>PANaCEa home</span>
+          </span>
         </Link>
 
         <section className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,440px)]">
@@ -75,7 +78,9 @@ export function ProtectedRouteGate({ pathname, authLoading = false }: ProtectedR
                 aria-live="polite"
                 className="flex min-h-[24rem] flex-col items-center justify-center gap-3 rounded-xl bg-[var(--color-bg-secondary)] px-6 text-center"
               >
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-accent)]" />
+                <div className="w-full max-w-xs" aria-hidden="true">
+                  <SkeletonText lines={3} />
+                </div>
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                   Checking access...
                 </p>

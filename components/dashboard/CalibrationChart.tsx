@@ -19,6 +19,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import { TOOLTIP_CALIBRATION } from '@/lib/constants/copy';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface CalibrationBucket {
   confidenceRange: [number, number];
@@ -80,12 +81,11 @@ export default function CalibrationChart() {
       const res = await fetch('/api/user/calibration', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error('Failed to fetch calibration data');
-      const json = await res.json() as { data?: CalibrationData } | CalibrationData | null;
-      const normalized = json && typeof json === 'object' && 'data' in json
-        ? json.data ?? null
-        : json;
-      setData(normalized as CalibrationData | null);
+      if (!res.ok) {
+        const errorPayload = await res.json().catch(() => ({}));
+        throw new Error(getApiEnvelopeError(errorPayload, 'Failed to fetch calibration data'));
+      }
+      setData(unwrapApiEnvelope<CalibrationData | null>(await res.json()));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error');
     } finally {

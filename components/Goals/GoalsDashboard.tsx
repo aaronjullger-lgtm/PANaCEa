@@ -15,18 +15,17 @@
 
 import React, { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import {
-  Target,
-  Plus,
-  Flame,
-  Trophy,
-  CheckCircle,
-  Filter,
-} from 'lucide-react';
+import { Target, Plus, Flame, Trophy, CheckCircle, Filter } from 'lucide-react';
 import GoalCard from './GoalCard.js';
 import GoalCreateModal from './GoalCreateModal.js';
 import GoalEditModal from './GoalEditModal.js';
-import { useGoals, useCreateGoal, useUpdateGoal, useDeleteGoal } from '@/hooks/queries/useGoalQueries';
+import { SkeletonCard } from '@/components/loading';
+import {
+  useGoals,
+  useCreateGoal,
+  useUpdateGoal,
+  useDeleteGoal,
+} from '@/hooks/queries/useGoalQueries';
 import type { UserGoal } from '@/hooks/queries/useGoalQueries';
 
 // Re-export for downstream consumers
@@ -96,9 +95,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
             <Target className="w-8 h-8 text-[var(--color-category-practice)]" />
             Your Goals
           </h1>
-          <p className="text-data-neutral mt-1">
-            Track your progress and stay motivated
-          </p>
+          <p className="text-data-neutral mt-1">Track your progress and stay motivated</p>
         </div>
 
         <button
@@ -117,9 +114,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
             <Target className="w-4 h-4" />
             Active Goals
           </div>
-          <div className="text-2xl font-bold text-data-neutral">
-            {stats.active}
-          </div>
+          <div className="text-2xl font-bold text-data-neutral">{stats.active}</div>
         </div>
 
         <div className="bg-[var(--color-bg-primary)] p-4 rounded-xl border border-data-neutral">
@@ -135,7 +130,9 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
             <Flame className="w-4 h-4" />
             Total Streak
           </div>
-          <div className="text-2xl font-bold text-[var(--color-data-provisional)]">{stats.totalStreak}</div>
+          <div className="text-2xl font-bold text-[var(--color-data-provisional)]">
+            {stats.totalStreak}
+          </div>
         </div>
 
         <div className="bg-[var(--color-bg-primary)] p-4 rounded-xl border border-data-neutral">
@@ -143,7 +140,9 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
             <Trophy className="w-4 h-4" />
             Best Streak
           </div>
-          <div className="text-2xl font-bold text-[var(--color-data-provisional)]">{stats.bestStreak}</div>
+          <div className="text-2xl font-bold text-[var(--color-data-provisional)]">
+            {stats.bestStreak}
+          </div>
         </div>
       </div>
 
@@ -185,7 +184,16 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
 
       {/* Goals List */}
       {isLoading ? (
-        <div className="text-center py-12 text-data-neutral">Loading goals...</div>
+        <div
+          className="grid gap-4 md:grid-cols-2"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading goals"
+        >
+          {Array.from({ length: 4 }).map((_, index) => (
+            <SkeletonCard key={index} className="h-40" />
+          ))}
+        </div>
       ) : error ? (
         <div className="text-center py-12">
           <p className="text-data-fail mb-4">{error}</p>

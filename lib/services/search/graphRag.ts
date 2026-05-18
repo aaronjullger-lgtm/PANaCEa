@@ -8,8 +8,9 @@
  * - Causal chains ("what causes X?")
  * - Treatment pathways ("what treats X?")
  *
- * Combines graph traversal with vector similarity for hybrid GraphRAG.
- * Uses Prisma queries against PostgreSQL — no Neo4j needed.
+ * This module is graph-only today: it lexically seeds graph nodes, then expands
+ * relationships with Prisma queries against PostgreSQL. Vector-seeded graph
+ * traversal belongs in the hybrid retrieval router, not this graph primitive.
  *
  * @module lib/services/search/graphRag
  */
@@ -17,14 +18,28 @@
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 export type NodeType =
-  | 'CONDITION' | 'FINDING' | 'DRUG' | 'PROCEDURE'
-  | 'SYSTEM' | 'ANATOMY' | 'LAB_TEST' | 'IMAGING'
-  | 'VITAL_SIGN' | 'OTHER';
+  | 'CONDITION'
+  | 'FINDING'
+  | 'DRUG'
+  | 'PROCEDURE'
+  | 'SYSTEM'
+  | 'ANATOMY'
+  | 'LAB_TEST'
+  | 'IMAGING'
+  | 'VITAL_SIGN'
+  | 'OTHER';
 
 export type EdgeType =
-  | 'HIERARCHICAL' | 'CO_OCCURRENCE' | 'SEMANTIC' | 'EXPLICIT'
-  | 'ASSOCIATED' | 'TREATS' | 'CAUSES' | 'MANIFESTS'
-  | 'DIFFERENTIAL' | 'COMPLICATES';
+  | 'HIERARCHICAL'
+  | 'CO_OCCURRENCE'
+  | 'SEMANTIC'
+  | 'EXPLICIT'
+  | 'ASSOCIATED'
+  | 'TREATS'
+  | 'CAUSES'
+  | 'MANIFESTS'
+  | 'DIFFERENTIAL'
+  | 'COMPLICATES';
 
 export interface GraphSearchResult {
   nodes: GraphNodeResult[];
@@ -40,7 +55,7 @@ export interface GraphNodeResult {
   description?: string;
   sourceType: string;
   sourceId: string;
-  relevance: number;  // 0-1
+  relevance: number; // 0-1
 }
 
 export interface GraphEdgeResult {
@@ -52,25 +67,28 @@ export interface GraphEdgeResult {
 }
 
 export interface GraphPath {
-  nodes: string[];   // labels
-  edges: string[];   // edge types
+  nodes: string[]; // labels
+  edges: string[]; // edge types
   totalWeight: number;
 }
 
 export interface TraversalOptions {
-  maxDepth?: number;      // Default: 2
-  maxResults?: number;    // Default: 20
+  maxDepth?: number; // Default: 2
+  maxResults?: number; // Default: 20
   edgeTypes?: EdgeType[]; // Filter to specific edge types
   nodeTypes?: NodeType[]; // Filter to specific node types
-  minWeight?: number;     // Default: 0.1
+  minWeight?: number; // Default: 0.1
 }
 
 // ─── Query Classification ──────────────────────────────────────────────────
 
 const DDX_PATTERNS = /\b(differential|ddx|rule\s*out|distinguish|differentiate|vs\.?|versus)\b/i;
-const DRUG_INTERACTION_PATTERNS = /\b(interact\w*|contraindic\w*|combine|concomitant|co-administ\w*|drug.+drug)\b/i;
-const CAUSAL_PATTERNS = /\b(cause[sd]?|etiology|pathogenesis|leads?\s+to|results?\s+in|mechanism\w*)\b/i;
-const TREATMENT_PATTERNS = /\b(treat\w*|therap\w*|manag\w*|first[- ]line|prescrib\w*|medication|drug\s+of\s+choice)\b/i;
+const DRUG_INTERACTION_PATTERNS =
+  /\b(interact\w*|contraindic\w*|combine|concomitant|co-administ\w*|drug.+drug)\b/i;
+const CAUSAL_PATTERNS =
+  /\b(cause[sd]?|etiology|pathogenesis|leads?\s+to|results?\s+in|mechanism\w*)\b/i;
+const TREATMENT_PATTERNS =
+  /\b(treat\w*|therap\w*|manag\w*|first[- ]line|prescrib\w*|medication|drug\s+of\s+choice)\b/i;
 
 /**
  * Classify query intent for graph traversal strategy.
@@ -97,7 +115,17 @@ export function getEdgeTypesForQuery(queryType: GraphSearchResult['queryType']):
     case 'treatment':
       return ['TREATS', 'ASSOCIATED', 'HIERARCHICAL'];
     case 'general':
-      return ['HIERARCHICAL', 'ASSOCIATED', 'SEMANTIC', 'CO_OCCURRENCE', 'TREATS', 'CAUSES', 'MANIFESTS', 'DIFFERENTIAL', 'COMPLICATES'];
+      return [
+        'HIERARCHICAL',
+        'ASSOCIATED',
+        'SEMANTIC',
+        'CO_OCCURRENCE',
+        'TREATS',
+        'CAUSES',
+        'MANIFESTS',
+        'DIFFERENTIAL',
+        'COMPLICATES',
+      ];
   }
 }
 
@@ -106,26 +134,42 @@ export function getEdgeTypesForQuery(queryType: GraphSearchResult['queryType']):
 /** Minimal Prisma client interface for graph queries */
 interface PrismaGraphClient {
   graphNode: {
-    findMany: (args: Record<string, unknown>) => Promise<Array<{
-      id: string;
-      nodeType: string;
-      label: string;
-      description: string | null;
-      sourceType: string;
-      sourceId: string;
-      outgoingEdges: Array<{
-        edgeType: string;
-        weight: number | null;
+    findMany: (args: Record<string, unknown>) => Promise<
+      Array<{
+        id: string;
+        nodeType: string;
+        label: string;
         description: string | null;
-        target: { id: string; nodeType: string; label: string; description: string | null; sourceType: string; sourceId: string };
-      }>;
-      incomingEdges: Array<{
-        edgeType: string;
-        weight: number | null;
-        description: string | null;
-        source: { id: string; nodeType: string; label: string; description: string | null; sourceType: string; sourceId: string };
-      }>;
-    }>>;
+        sourceType: string;
+        sourceId: string;
+        outgoingEdges: Array<{
+          edgeType: string;
+          weight: number | null;
+          description: string | null;
+          target: {
+            id: string;
+            nodeType: string;
+            label: string;
+            description: string | null;
+            sourceType: string;
+            sourceId: string;
+          };
+        }>;
+        incomingEdges: Array<{
+          edgeType: string;
+          weight: number | null;
+          description: string | null;
+          source: {
+            id: string;
+            nodeType: string;
+            label: string;
+            description: string | null;
+            sourceType: string;
+            sourceId: string;
+          };
+        }>;
+      }>
+    >;
   };
 }
 
@@ -137,7 +181,10 @@ export async function findSeedNodes(
   query: string,
   options?: { nodeTypes?: NodeType[]; limit?: number }
 ): Promise<GraphNodeResult[]> {
-  const terms = query.toLowerCase().split(/\s+/).filter((t) => t.length > 2);
+  const terms = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((t) => t.length > 2);
 
   const where: Record<string, unknown> = {
     OR: [
@@ -161,22 +208,25 @@ export async function findSeedNodes(
     },
   });
 
-  return (nodes as Array<{
-    id: string;
-    nodeType: string;
-    label: string;
-    description: string | null;
-    sourceType: string;
-    sourceId: string;
-    outgoingEdges: Array<{ edgeType: string }>;
-    incomingEdges: Array<{ edgeType: string }>;
-  }>).map((n) => {
+  return (
+    nodes as Array<{
+      id: string;
+      nodeType: string;
+      label: string;
+      description: string | null;
+      sourceType: string;
+      sourceId: string;
+      outgoingEdges: Array<{ edgeType: string }>;
+      incomingEdges: Array<{ edgeType: string }>;
+    }>
+  ).map((n) => {
     // Compute relevance based on label match quality
     const labelLower = n.label.toLowerCase();
     const queryLower = query.toLowerCase();
     const exactMatch = labelLower === queryLower ? 1.0 : 0;
     const containsMatch = labelLower.includes(queryLower) ? 0.8 : 0;
-    const termOverlap = terms.filter((t) => labelLower.includes(t)).length / Math.max(terms.length, 1) * 0.6;
+    const termOverlap =
+      (terms.filter((t) => labelLower.includes(t)).length / Math.max(terms.length, 1)) * 0.6;
     const connectionBoost = Math.min((n.outgoingEdges.length + n.incomingEdges.length) / 20, 0.2);
 
     return {
@@ -299,7 +349,13 @@ export async function traverseGraph(
       resultEdges.push(edgeResult);
 
       if (!visited.has(edge.source.id)) {
-        queue.push([edge.source.id, depth + 1, currentPath, [...pathEdgeTypes, edge.edgeType], pathWeight * (edge.weight ?? 1.0)]);
+        queue.push([
+          edge.source.id,
+          depth + 1,
+          currentPath,
+          [...pathEdgeTypes, edge.edgeType],
+          pathWeight * (edge.weight ?? 1.0),
+        ]);
       }
     }
   }
@@ -335,10 +391,13 @@ export async function graphRAGQuery(
 
   // Determine seed node types based on query type
   const seedNodeTypes: NodeType[] | undefined =
-    queryType === 'drug_interaction' ? ['DRUG'] :
-    queryType === 'ddx' ? ['CONDITION', 'FINDING'] :
-    queryType === 'treatment' ? ['CONDITION', 'DRUG'] :
-    undefined;
+    queryType === 'drug_interaction'
+      ? ['DRUG']
+      : queryType === 'ddx'
+        ? ['CONDITION', 'FINDING']
+        : queryType === 'treatment'
+          ? ['CONDITION', 'DRUG']
+          : undefined;
 
   const seeds = await findSeedNodes(prisma, query, { nodeTypes: seedNodeTypes });
 
@@ -378,9 +437,7 @@ export function buildGraphContext(result: GraphSearchResult): string {
 
   // Top paths
   if (result.paths.length > 0) {
-    const pathStrings = result.paths
-      .slice(0, 5)
-      .map((p) => p.nodes.join(' → '));
+    const pathStrings = result.paths.slice(0, 5).map((p) => p.nodes.join(' → '));
     sections.push(`Clinical pathways:\n${pathStrings.join('\n')}`);
   }
 

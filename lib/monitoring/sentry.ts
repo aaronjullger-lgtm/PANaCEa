@@ -5,8 +5,23 @@
  * Sentry is only loaded when VITE_SENTRY_DSN is configured.
  */
 
+type SentryBrowser = typeof import('@sentry/browser');
+type SentryReact = typeof import('@sentry/react');
+type SentryClient = SentryReact & {
+  browserTracingIntegration: SentryBrowser['browserTracingIntegration'];
+  replayIntegration: SentryBrowser['replayIntegration'];
+  makeFetchTransport: SentryBrowser['makeFetchTransport'];
+  setTags: SentryBrowser['setTags'];
+  setExtras: SentryBrowser['setExtras'];
+  setUser: SentryBrowser['setUser'];
+  captureException: SentryBrowser['captureException'];
+  captureMessage: SentryBrowser['captureMessage'];
+  addBreadcrumb: SentryBrowser['addBreadcrumb'];
+  startSpan: SentryBrowser['startSpan'];
+};
+
 // Sentry instance - loaded lazily only when DSN is configured
-let Sentry: typeof import('@sentry/react') | null = null;
+let Sentry: SentryClient | null = null;
 let isInitialized = false;
 
 export interface SentryConfig {
@@ -39,9 +54,13 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
   }
 
   try {
-    // Dynamically import Sentry only when we have a DSN
-    const SentryModule = await import('@sentry/react');
-    Sentry = SentryModule;
+    // Dynamically import Sentry only when we have a DSN. Merge the React package
+    // with browser exports so wrapper helpers keep access to transport and scope APIs.
+    const [SentryReact, SentryBrowser] = await Promise.all([
+      import('@sentry/react'),
+      import('@sentry/browser'),
+    ]);
+    Sentry = { ...SentryBrowser, ...SentryReact } as SentryClient;
     if (Sentry == null) return;
 
     const defaultConfig: SentryConfig = {
@@ -74,13 +93,11 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
       sendDefaultPii: false, // Disabled — medical education platform should minimize PII sent to third parties
 
       // Custom transport to suppress tunnel errors
-      transport: (options: Parameters<NonNullable<typeof Sentry>['makeFetchTransport']>[0]) => {
+      transport: (options: Parameters<SentryClient['makeFetchTransport']>[0]) => {
         const defaultTransport = Sentry!.makeFetchTransport(options);
         return {
           send: (
-            envelope: Parameters<
-              ReturnType<NonNullable<typeof Sentry>['makeFetchTransport']>['send']
-            >[0]
+            envelope: Parameters<ReturnType<SentryClient['makeFetchTransport']>['send']>[0]
           ) => {
             // Wrap PromiseLike in Promise.resolve() to get .catch() support
             return Promise.resolve(defaultTransport.send(envelope)).catch((error: unknown) => {

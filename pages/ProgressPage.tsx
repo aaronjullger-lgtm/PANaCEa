@@ -6,10 +6,12 @@ import {
   BookOpen,
   Brain,
   CalendarClock,
+  CheckCircle2,
   Clock3,
   Gauge,
   History,
   ListChecks,
+  Play,
   RefreshCw,
   Target,
   TrendingUp,
@@ -34,6 +36,9 @@ import { ConfusionPairCard } from '@/components/dashboard/ConfusionPairCard';
 import { ReviewCalendar } from '@/components/dashboard/ReviewCalendar';
 import { ROUTES } from '@/config/routes';
 import { useDashboardAnalytics } from '@/hooks/useDashboardAnalytics';
+import { useStudyPlan } from '@/hooks/useStudyPlan';
+import { useStudyPlanLaunch } from '@/hooks/useStudyPlanLaunch';
+import type { StudyPlanTask } from '@/lib/api/types/studyPlan';
 import type { DashboardUpcomingReviewSummary } from '@/lib/dashboard/realStudyAnalytics';
 import { buildMainSessionLaunchPath } from '@/lib/study/mainSessionLaunch';
 import { workspaceAccent } from '@/lib/tokens';
@@ -107,12 +112,51 @@ function formatDueLabel(review: DashboardUpcomingReviewSummary): string {
   });
 }
 
+function isActionablePlanTask(task: StudyPlanTask): boolean {
+  return !['completed', 'skipped', 'rescheduled'].includes(task.status);
+}
+
+function formatTaskKind(kind: StudyPlanTask['kind']): string {
+  switch (kind) {
+    case 'review':
+      return 'Review';
+    case 'targeted':
+      return 'Targeted';
+    case 'content':
+      return 'Content';
+    case 'rest':
+      return 'Rest';
+    default:
+      return 'Readiness';
+  }
+}
+
+function formatTaskFocus(task: StudyPlanTask): string {
+  const focus = [
+    ...(task.systems ?? []),
+    ...(task.conditionIds ?? []),
+  ].filter(Boolean);
+  if (focus.length === 0) return 'Mixed blueprint';
+  return focus.slice(0, 2).join(', ');
+}
+
 export const ProgressPage: React.FC<ProgressPageProps> = ({
   performanceData: _performanceData,
   dueCount: _dueCount,
 }) => {
   const navigate = useNavigate();
   const { data, isLoading, error, refetch } = useDashboardAnalytics();
+  const {
+    data: studyPlan,
+    isLoading: isStudyPlanLoading,
+    error: studyPlanError,
+    refresh: refreshStudyPlan,
+  } = useStudyPlan({ days: 7 });
+  const {
+    launchTask,
+    isLaunching: isLaunchingStudyPlanTask,
+    error: studyPlanLaunchError,
+  } = useStudyPlanLaunch();
 
   if (isLoading && !data) {
     return (
@@ -202,6 +246,9 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
   const fsrs = analytics.fsrs;
   const hasUpcomingReviews = fsrs.upcomingReviews.length > 0;
   const optimizer = fsrs.optimizer;
+  const todayStudyPlan = studyPlan?.today ?? null;
+  const actionablePlanTasks = todayStudyPlan?.tasks.filter(isActionablePlanTask).slice(0, 3) ?? [];
+  const studyPlanProblem = studyPlanError ?? studyPlanLaunchError;
 
   return (
     <WorkspacePage density="wide" mode="analytics">
@@ -355,7 +402,133 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
         </div>
       </WorkspaceReveal>
 
-      <WorkspaceReveal delay={0.11}>
+      <WorkspaceReveal delay={0.1}>
+        <WorkspaceSection
+          title="Today's adaptive plan"
+          subtitle="Daily tasks combine due FSRS reviews, blueprint gaps, and your available workload."
+        >
+          <WorkspaceSurface accent={workspaceAccent.plum}>
+            {isStudyPlanLoading && !studyPlan ? (
+              <DashboardSkeleton height="h-48" />
+            ) : studyPlanProblem ? (
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 text-[var(--color-data-provisional)]" />
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                      Study plan is unavailable.
+                    </p>
+                    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                      {studyPlanProblem}
+                    </p>
+                  </div>
+                </div>
+                <Button type="button" size="sm" variant="outline" onClick={() => void refreshStudyPlan()}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Retry
+                </Button>
+              </div>
+            ) : todayStudyPlan && actionablePlanTasks.length > 0 ? (
+              <div className="space-y-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                      {todayStudyPlan.title}
+                    </p>
+                    <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--color-text-secondary)]">
+                      {todayStudyPlan.summary}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-[var(--color-bg-tertiary)] px-2.5 py-1 text-xs font-semibold text-[var(--color-text-muted)]">
+                      {todayStudyPlan.progress.percentComplete}% complete
+                    </span>
+                    <span className="rounded-full bg-[var(--color-bg-tertiary)] px-2.5 py-1 text-xs font-semibold text-[var(--color-text-muted)]">
+                      {todayStudyPlan.targetQuestionsCount} questions
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 lg:grid-cols-3">
+                  {actionablePlanTasks.map((task, index) => (
+                    <article
+                      key={task.id}
+                      className="flex min-h-48 flex-col justify-between rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-4"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <span className="rounded-full bg-[var(--color-bg-tertiary)] px-2.5 py-1 text-xs font-semibold text-[var(--color-text-muted)]">
+                            {formatTaskKind(task.kind)}
+                          </span>
+                          {task.status === 'in_progress' ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-data-success)]/12 px-2.5 py-1 text-xs font-semibold text-[var(--color-data-success)]">
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              Started
+                            </span>
+                          ) : null}
+                        </div>
+                        <div>
+                          <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
+                            {task.title}
+                          </h3>
+                          <p className="mt-2 line-clamp-3 text-sm leading-6 text-[var(--color-text-secondary)]">
+                            {task.reason}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-5 space-y-3">
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[var(--color-text-muted)]">
+                          <span className="rounded-full bg-[var(--color-bg-tertiary)] px-2.5 py-1">
+                            {formatTaskFocus(task)}
+                          </span>
+                          <span className="rounded-full bg-[var(--color-bg-tertiary)] px-2.5 py-1">
+                            {task.estimatedMinutes} min
+                          </span>
+                          <span className="rounded-full bg-[var(--color-bg-tertiary)] px-2.5 py-1">
+                            {task.targetQuestions} q
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="w-full"
+                          disabled={isLaunchingStudyPlanTask}
+                          onClick={() => void launchTask(todayStudyPlan.planDate, task)}
+                        >
+                          <Play className="mr-2 h-4 w-4" />
+                          {index === 0 ? 'Start next task' : 'Open task'}
+                        </Button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <WorkspaceEmptyState
+                icon={ListChecks}
+                title={
+                  studyPlan?.state === 'needs-target'
+                    ? 'Set a target to generate a plan'
+                    : 'No remaining tasks today'
+                }
+                description={
+                  studyPlan?.state === 'needs-target'
+                    ? 'Add an exam date or active goal so the planner can balance due reviews with readiness work.'
+                    : "Completed and skipped tasks are already reflected in today's progress."
+                }
+                action={
+                  <Button type="button" variant="outline" onClick={() => navigate(ROUTES.STUDY_PATH)}>
+                    Open full plan
+                  </Button>
+                }
+              />
+            )}
+          </WorkspaceSurface>
+        </WorkspaceSection>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.13}>
         <WorkspaceSection
           title="Retention and scheduling"
           subtitle="FSRS review events power the review queue, optimizer readiness, and the next cards due for focused review."

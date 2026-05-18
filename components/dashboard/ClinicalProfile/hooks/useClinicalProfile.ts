@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export interface ClinicalProfileData {
   overall: { accuracy: number; totalQuestions: number; avgTimeMs: number | null };
@@ -41,10 +42,19 @@ export function useClinicalProfile() {
           404: 'Clinical profile not found.',
           429: 'Too many requests. Please wait a moment and try again.',
         };
-        throw new Error(safeMessages[res.status] ?? 'Unable to load your clinical profile. Please try again.');
+        const errorPayload = await res.json().catch(() => ({}));
+        throw new Error(
+          getApiEnvelopeError(
+            errorPayload,
+            safeMessages[res.status] ?? 'Unable to load your clinical profile. Please try again.'
+          )
+        );
       }
-      const payload = (await res.json()) as { data?: ClinicalProfileData };
-      setState({ data: payload.data ?? null, isLoading: false, error: null });
+      setState({
+        data: unwrapApiEnvelope<ClinicalProfileData | null>(await res.json()),
+        isLoading: false,
+        error: null,
+      });
     } catch (error) {
       const msg = error instanceof Error ? error.message : '';
       const isSafe = msg.length > 0 && msg.length < 200 && !msg.includes('prisma') && !msg.includes('Invalid');

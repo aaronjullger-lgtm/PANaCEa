@@ -149,6 +149,84 @@ describe('banditRerankQuestions', () => {
 });
 
 describe('selectSessionQuestions serving safety', () => {
+  it('hydrates normalized answer choices and active explanations when present', async () => {
+    const prisma: any = {
+      userProgress: { findMany: vi.fn().mockResolvedValue([]) },
+      questionAttempt: { findMany: vi.fn().mockResolvedValue([]) },
+      medicalContent: { findMany: vi.fn().mockResolvedValue([]) },
+      question: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: 'q-normalized',
+            question: 'Which medication improves mortality after MI?',
+            vignette: null,
+            options: ['legacy A', 'legacy B'],
+            correctAnswer: 'A',
+            explanation: 'Legacy explanation should be replaced.',
+            system: 'Cardiovascular',
+            category: null,
+            topic: 'ACS',
+            difficulty: 'medium',
+            conditionId: 'cond-acs',
+            medicalContentId: 'mc-acs',
+            QuestionAnswerChoice: [
+              {
+                choiceKey: 'B',
+                choiceText: 'Metoprolol',
+                isCorrect: true,
+                rationale: 'Beta blockers reduce mortality after MI when not contraindicated.',
+                displayOrder: 2,
+              },
+              {
+                choiceKey: 'A',
+                choiceText: 'Furosemide',
+                isCorrect: false,
+                rationale: 'Loop diuretics relieve congestion but do not provide the same mortality benefit.',
+                displayOrder: 1,
+              },
+            ],
+            QuestionExplanation: [
+              {
+                explanationType: 'PEARL',
+                title: 'High-yield pearl',
+                body: 'Use secondary prevention after acute coronary syndrome.',
+                sourceCitation: null,
+                version: 2,
+              },
+              {
+                explanationType: 'CORRECT_RATIONALE',
+                title: 'Rationale',
+                body: 'Beta blockers reduce post-MI mortality in appropriate patients.',
+                sourceCitation: null,
+                version: 1,
+              },
+            ],
+          },
+        ]),
+      },
+    };
+
+    const result = await selectSessionQuestions(prisma, {
+      userId: 'user-1',
+      mode: 'system',
+      size: 5,
+      blueprintWeights: { Cardiovascular: 1 },
+      system: 'Cardiovascular',
+      blueprintStage: 'pance_prep' as any,
+      urgencyMultiplier: 1,
+    });
+
+    expect(result.questions[0]).toEqual(
+      expect.objectContaining({
+        id: 'q-normalized',
+        options: ['Furosemide', 'Metoprolol'],
+        correctAnswer: 'Metoprolol',
+        correctAnswerIndex: 1,
+        explanation: 'Beta blockers reduce post-MI mortality in appropriate patients.',
+      })
+    );
+  });
+
   it('adds active approved filters to scoped new-card queries', async () => {
     const prisma: any = {
       userProgress: { findMany: vi.fn().mockResolvedValue([]) },

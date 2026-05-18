@@ -1,7 +1,7 @@
 /**
  * AnatomyModelViewer Component
  *
- * A 3D model viewer for anatomical structures using Three.js/React Three Fiber.
+ * A 3D model viewer for anatomical structures using on-demand Three.js.
  * Designed to display NIH 3D Print Exchange models with proper citations.
  *
  * Features:
@@ -13,11 +13,9 @@
  */
 
 import React, { Suspense, useState, useCallback, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   Rotate3D,
-  ZoomIn,
-  ZoomOut,
   RotateCcw,
   Info,
   BookOpen,
@@ -28,7 +26,6 @@ import {
   Eye,
   EyeOff,
   Layers,
-  Settings,
 } from 'lucide-react';
 import type {
   AnatomyModel,
@@ -37,7 +34,19 @@ import type {
   AnatomySystem,
 } from '../../types/anatomy-model';
 import { DEFAULT_VIEWER_CONFIG } from '../../types/anatomy-model';
-import { anatomyModelService } from '@/services/domain';
+import { anatomyModelService } from '@/services/domain/anatomyModelService';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+
+const LazyAnatomyModelCanvas = React.lazy(async () => {
+  const module = await import('./AnatomyModelCanvas');
+  return { default: module.AnatomyModelCanvas };
+});
+
+const formatAssetSize = (bytes?: number): string => {
+  if (!bytes) return 'file size pending';
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 // Skeleton loader for when 3D libraries are loading
 const ModelSkeleton = () => (
@@ -52,42 +61,51 @@ const ModelSkeleton = () => (
   </div>
 );
 
-// Placeholder 3D Scene - Will be replaced with actual Three.js when models are added
+// On-demand preview. WebGL is intentionally loaded only after user intent.
 const Model3DPlaceholder: React.FC<{
   model: AnatomyModel;
-  onStructureClick?: (structureName: string) => void;
-  highlightedStructures: string[];
-  wireframe: boolean;
-  autoRotate: boolean;
-}> = ({ model, onStructureClick, highlightedStructures, wireframe, autoRotate }) => {
+  onLoadModel: () => void;
+  canLoadModel: boolean;
+}> = ({ model, onLoadModel, canLoadModel }) => {
   return (
-    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] rounded-xl overflow-hidden">
-      <div className="relative">
-        {/* Animated placeholder representing 3D model */}
-        <motion.div
-          className="w-48 h-48 rounded-full bg-gradient-to-br from-[var(--color-data-pass)]/30 to-[var(--color-accent)]/30 border-2 border-[var(--color-data-pass)]/50 flex items-center justify-center"
-          animate={autoRotate ? { rotateY: 360 } : {}}
-          transition={autoRotate ? { duration: 10, repeat: Infinity, ease: 'linear' } : {}}
-        >
-          <div className="text-center">
-            <Rotate3D className="w-12 h-12 text-[var(--color-data-pass)] mx-auto mb-2" />
-            <p className="text-sm text-[var(--color-text-secondary)] font-medium">{model.name}</p>
-          </div>
-        </motion.div>
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-[var(--color-bg-secondary)]">
+      {model.thumbnailUrl ? (
+        <img
+          src={model.thumbnailUrl}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-45 blur-[1px]"
+          aria-hidden="true"
+        />
+      ) : null}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,color-mix(in_srgb,var(--atlas-accent-cyan)_20%,transparent),transparent_42%),linear-gradient(135deg,color-mix(in_srgb,var(--atlas-surface)_92%,transparent),color-mix(in_srgb,var(--atlas-bg)_96%,transparent))]"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-8 top-1/2 h-px bg-[var(--atlas-scanner-line)] shadow-[0_0_28px_color-mix(in_srgb,var(--atlas-accent-cyan)_55%,transparent)]"
+      />
 
-        {/* Structure indicators */}
-        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-center">
-          <p className="text-xs text-[var(--color-text-muted)]">
-            {model.structures.length} structures available
-          </p>
+      <div className="relative z-10 mx-auto max-w-sm px-6 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[var(--atlas-border-glow)] bg-[var(--atlas-glass)] shadow-[0_0_40px_color-mix(in_srgb,var(--atlas-accent-cyan)_22%,transparent)]">
+          <Rotate3D className="h-8 w-8 text-[var(--atlas-accent-cyan)]" aria-hidden="true" />
         </div>
-      </div>
-
-      {/* Placeholder message */}
-      <div className="absolute bottom-4 left-4 right-4 text-center">
-        <p className="text-xs text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)]/80 rounded-lg px-3 py-2">
-          3D model loading requires Three.js. Add NIH GLB/GLTF files to /public/models/
+        <p className="text-sm font-semibold text-[var(--color-text-primary)]">{model.name}</p>
+        <p className="mt-2 text-xs leading-5 text-[var(--color-text-secondary)]">
+          {model.structures.length} tagged structures. Load the WebGL scene when you need
+          interactive spatial review.
         </p>
+        <p className="mt-2 text-[0.68rem] font-medium uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+          {formatAssetSize(model.assetSizeBytes)} · {model.citation.license}
+        </p>
+        <button
+          type="button"
+          onClick={onLoadModel}
+          disabled={!canLoadModel}
+          className="mt-5 rounded-lg border border-[var(--atlas-border-glow)] bg-[var(--atlas-accent-cyan)]/15 px-4 py-2 text-xs font-semibold text-[var(--atlas-accent-cyan)] transition-colors hover:bg-[var(--atlas-accent-cyan)]/24 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--atlas-accent-cyan)] disabled:cursor-not-allowed disabled:opacity-55"
+        >
+          {canLoadModel ? 'Load 3D atlas scene' : '3D file unavailable'}
+        </button>
       </div>
     </div>
   );
@@ -99,7 +117,7 @@ const StructureList: React.FC<{
   selectedStructure: string | null;
   highlightedStructures: string[];
   onStructureSelect: (structure: string) => void;
-  onStructureHighlight: (structure: string) => void;
+  onStructureHighlight: (structure: string, active: boolean) => void;
 }> = ({
   model,
   selectedStructure,
@@ -120,10 +138,16 @@ const StructureList: React.FC<{
 
           return (
             <button
+              type="button"
               key={structure}
               onClick={() => onStructureSelect(structure)}
+              onMouseEnter={() => onStructureHighlight(structure, true)}
+              onMouseLeave={() => onStructureHighlight(structure, false)}
+              onFocus={() => onStructureHighlight(structure, true)}
+              onBlur={() => onStructureHighlight(structure, false)}
+              aria-pressed={isSelected}
               className={`
-                w-full text-left px-3 py-2 rounded-lg text-sm transition-all
+                w-full text-left px-3 py-2 rounded-lg text-sm transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--atlas-accent-cyan)]
                 ${
                   isSelected
                     ? 'bg-[var(--color-data-pass)]/30 text-[var(--color-data-pass)] border border-[var(--color-data-pass)]/50'
@@ -168,8 +192,10 @@ const CitationPanel: React.FC<{
         <div className="flex gap-1">
           {(['AMA', 'APA', 'MLA'] as const).map((format) => (
             <button
+              type="button"
               key={format}
               onClick={() => onFormatChange(format)}
+              aria-pressed={citationFormat === format}
               className={`
                 px-2 py-1 text-xs rounded transition-colors
                 ${
@@ -190,8 +216,10 @@ const CitationPanel: React.FC<{
           {citation}
         </p>
         <button
+          type="button"
           onClick={handleCopy}
           className="absolute top-2 right-2 p-1.5 rounded-md bg-[var(--color-bg-tertiary)]/50 hover:bg-[var(--color-bg-tertiary)] transition-colors"
+          aria-label="Copy anatomy model citation"
           title="Copy citation"
         >
           {copied ? (
@@ -257,11 +285,16 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
   const [showAnnotations, setShowAnnotations] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [citationFormat, setCitationFormat] = useState<'AMA' | 'APA' | 'MLA'>('AMA');
+  const [isModelSceneLoaded, setIsModelSceneLoaded] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   // Config
   const config = { ...DEFAULT_VIEWER_CONFIG, ...userConfig };
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const canLoadModelScene = model?.format === 'glb' || model?.format === 'gltf';
+  const hasAnnotations = Boolean(model?.annotations?.length);
 
   // Load model
   useEffect(() => {
@@ -290,6 +323,10 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
     }
   }, [modelId, providedModel]);
 
+  useEffect(() => {
+    setIsModelSceneLoaded(false);
+  }, [model?.id]);
+
   // Handle structure selection
   const handleStructureSelect = useCallback(
     (structure: string) => {
@@ -300,9 +337,13 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
   );
 
   // Handle structure highlight
-  const handleStructureHighlight = useCallback((structure: string) => {
+  const handleStructureHighlight = useCallback((structure: string, active: boolean) => {
     setHighlightedStructures((prev) =>
-      prev.includes(structure) ? prev.filter((s) => s !== structure) : [...prev, structure]
+      active
+        ? prev.includes(structure)
+          ? prev
+          : [...prev, structure]
+        : prev.filter((s) => s !== structure)
     );
   }, []);
 
@@ -319,12 +360,25 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
     if (!containerRef.current) return;
 
     if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen();
-      setIsFullscreen(true);
+      containerRef.current
+        .requestFullscreen()
+        .then(() => setIsFullscreen(true))
+        .catch(() => setIsFullscreen(false));
     } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
+      document
+        .exitFullscreen()
+        .then(() => setIsFullscreen(false))
+        .catch(() => setIsFullscreen(Boolean(document.fullscreenElement)));
     }
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === containerRef.current);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
   // Loading state
@@ -368,48 +422,65 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
         {showControls && (
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => setWireframe((prev) => !prev)}
+              aria-label="Toggle anatomy wireframe view"
+              aria-pressed={wireframe}
               className={`p-2 rounded-lg transition-colors ${
                 wireframe
                   ? 'bg-[var(--color-data-pass)] text-[var(--color-text-inverse)]'
                   : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]'
-              }`}
+              } focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--atlas-accent-cyan)]`}
               title="Toggle wireframe"
             >
               <Layers className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={() => setAutoRotate((prev) => !prev)}
+              aria-label="Toggle anatomy auto rotation"
+              aria-pressed={autoRotate}
               className={`p-2 rounded-lg transition-colors ${
                 autoRotate
                   ? 'bg-[var(--color-data-pass)] text-[var(--color-text-inverse)]'
                   : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]'
-              }`}
+              } focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--atlas-accent-cyan)]`}
               title="Toggle auto-rotate"
             >
               <Rotate3D className="w-4 h-4" />
             </button>
+            {hasAnnotations ? (
+              <button
+                type="button"
+                onClick={() => setShowAnnotations((prev) => !prev)}
+                aria-label="Toggle anatomy annotations"
+                aria-pressed={showAnnotations}
+                className={`p-2 rounded-lg transition-colors ${
+                  showAnnotations
+                    ? 'bg-[var(--color-data-pass)] text-[var(--color-text-inverse)]'
+                    : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]'
+                } focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--atlas-accent-cyan)]`}
+                title="Toggle annotations"
+              >
+                {showAnnotations ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </button>
+            ) : null}
             <button
-              onClick={() => setShowAnnotations((prev) => !prev)}
-              className={`p-2 rounded-lg transition-colors ${
-                showAnnotations
-                  ? 'bg-[var(--color-data-pass)] text-[var(--color-text-inverse)]'
-                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]'
-              }`}
-              title="Toggle annotations"
-            >
-              {showAnnotations ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-            </button>
-            <button
+              type="button"
               onClick={handleResetView}
-              className="p-2 rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+              aria-label="Reset anatomy model view"
+              className="p-2 rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--atlas-accent-cyan)]"
               title="Reset view"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={toggleFullscreen}
-              className="p-2 rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+              aria-label={
+                isFullscreen ? 'Exit anatomy fullscreen view' : 'Open anatomy fullscreen view'
+              }
+              className="p-2 rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--atlas-accent-cyan)]"
               title="Toggle fullscreen"
             >
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -422,30 +493,42 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
       <div className="flex h-[500px]">
         {/* 3D Viewer */}
         <div className="flex-1 relative">
-          <Suspense fallback={<ModelSkeleton />}>
+          {isModelSceneLoaded && canLoadModelScene ? (
+            <ErrorBoundary variant="inline">
+              <Suspense fallback={<ModelSkeleton />}>
+                <LazyAnatomyModelCanvas
+                  modelUrl={model.modelUrl}
+                  modelName={model.name}
+                  scale={model.scale}
+                  defaultRotation={model.defaultRotation}
+                  autoRotate={autoRotate}
+                  wireframe={wireframe}
+                  reducedMotion={Boolean(prefersReducedMotion)}
+                />
+              </Suspense>
+            </ErrorBoundary>
+          ) : (
             <Model3DPlaceholder
               model={model}
-              onStructureClick={handleStructureSelect}
-              highlightedStructures={highlightedStructures}
-              wireframe={wireframe}
-              autoRotate={autoRotate}
+              canLoadModel={canLoadModelScene}
+              onLoadModel={() => setIsModelSceneLoaded(true)}
             />
-          </Suspense>
+          )}
 
           {/* Selected structure info */}
           <AnimatePresence>
             {selectedStructure && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
+                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
                 className="absolute bottom-4 left-4 right-4 bg-[var(--color-bg-secondary)]/90 backdrop-blur-sm rounded-xl p-4"
               >
                 <h4 className="text-sm font-semibold text-[var(--color-text-inverse)] capitalize mb-1">
                   {selectedStructure}
                 </h4>
                 <p className="text-xs text-[var(--color-text-muted)]">
-                  Click to learn more about this anatomical structure
+                  Keep this structure in focus while rotating the model or reviewing the citation.
                 </p>
               </motion.div>
             )}

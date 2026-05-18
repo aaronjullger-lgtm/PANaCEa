@@ -1,189 +1,335 @@
-import React, { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { AnimatePresence, motion, useInView } from 'framer-motion';
-import {
-  ArrowRight,
-  BadgeCheck,
-  Check,
-  CheckCircle2,
-  Clock,
-} from 'lucide-react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { SignIn, SignUp } from '@clerk/clerk-react';
-import { useReducedMotion } from '../../hooks/useReducedMotion';
-import { SkipNavigation } from '../shared/SkipNavigation';
+import { ArrowRight, Check, LockKeyhole, Menu, ScanLine, X } from 'lucide-react';
 import {
-  CTA_ASSURANCES,
-  FEATURE_CARDS,
-  FEATURE_PILLARS,
-  HERO_SIGNALS,
-  NAV_LINKS,
-  PROCESS_SIGNALS,
-  PROCESS_STEPS,
-  TESTIMONIALS,
-  OUTCOME_STRIP,
-  TRUST_CALLOUTS,
-  TRUST_METRICS,
-} from './content';
-import './landing.css';
+  MedicalGlassCard,
+  MedicalGridBackground,
+  PremiumCTAButton,
+  SectionHeader,
+} from '@/components/studypanacea';
+import { SkipNavigation } from '@/components/shared/SkipNavigation';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
+import { ClinicalImageTraining } from './ClinicalImageTraining';
+import { DiagnosticScrollStory } from './DiagnosticScrollStory';
+import { Hero } from './Hero';
+import { TrainingModesDock } from './TrainingModesDock';
+import { CTA_ASSURANCES, NAV_LINKS, WORKFLOW_STEPS } from './content';
 
-const PREMIUM_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+type AuthMode = 'sign-in' | 'sign-up';
 
-function revealProps(prefersReducedMotion: boolean, delay = 0, amount = 0.2) {
-  if (prefersReducedMotion) {
-    return {};
-  }
+const DashboardPreview = lazy(() =>
+  import('./DashboardPreview').then((module) => ({ default: module.DashboardPreview }))
+);
 
-  return {
-    initial: { opacity: 0, y: 28, filter: 'blur(8px)' },
-    whileInView: { opacity: 1, y: 0, filter: 'blur(0px)' },
-    viewport: { once: true, amount },
-    transition: {
-      duration: 0.8,
-      delay,
-      ease: PREMIUM_EASE,
-    },
-  };
-}
+const clerkAppearance = {
+  elements: {
+    rootBox: 'mx-auto w-full',
+    card: 'bg-transparent shadow-none border-0',
+    headerTitle: 'hidden',
+    headerSubtitle: 'hidden',
+    socialButtonsBlockButton:
+      'bg-atlas-glass border border-atlas-border text-atlas-white hover:bg-atlas-elevated transition',
+    formButtonPrimary:
+      'bg-atlas-cyan text-atlas-background hover:bg-atlas-white shadow-[0_18px_52px_-24px_var(--atlas-accent-cyan)]',
+    formFieldLabel: 'text-atlas-muted',
+    formFieldInput:
+      'bg-atlas-background-soft border-atlas-border text-atlas-white placeholder:text-atlas-muted focus:border-atlas-cyan',
+    footerActionLink: 'text-atlas-cyan hover:text-atlas-white',
+  },
+};
 
-function accentStyle(accent: string): CSSProperties {
-  return { '--landing-accent': accent } as CSSProperties;
-}
-
-function AnimatedMetricCard({
-  metric,
-  index,
-  prefersReducedMotion,
-  className,
-}: {
-  metric: (typeof TRUST_METRICS)[number];
-  index: number;
-  prefersReducedMotion: boolean;
-  className?: string;
-}) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const isInView = useInView(ref, { once: true, amount: 0.5 });
-  const [currentValue, setCurrentValue] = useState(prefersReducedMotion ? metric.value : 0);
+function LandingHeader({ onSignIn, onSignUp }: { onSignIn: () => void; onSignUp: () => void }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    if (!isInView) return;
-
-    if (prefersReducedMotion) {
-      setCurrentValue(metric.value);
-      return;
+    if (!mobileOpen) {
+      return undefined;
     }
 
-    let animationFrame = 0;
-    const duration = 1200 + index * 180;
-    const startTime = performance.now();
-
-    const step = (timestamp: number) => {
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCurrentValue(metric.value * eased);
-
-      if (progress < 1) {
-        animationFrame = window.requestAnimationFrame(step);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileOpen(false);
       }
     };
 
-    animationFrame = window.requestAnimationFrame(step);
-    return () => window.cancelAnimationFrame(animationFrame);
-  }, [index, isInView, metric.value, prefersReducedMotion]);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileOpen]);
 
   return (
-    <motion.article
-      ref={ref}
-      {...revealProps(prefersReducedMotion, index * 0.08)}
-      className={`panacea-glass panacea-card panacea-metric-card ${className ?? ''}`}
-      style={accentStyle(metric.accent)}
+    <header className="sticky top-0 z-40 border-b border-atlas-border bg-atlas-background/85 backdrop-blur-xl">
+      <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <a href="#hero" className="atlas-focus-ring flex items-center gap-3 rounded-xl">
+          <span className="flex size-11 items-center justify-center rounded-2xl border border-atlas-border bg-atlas-glass shadow-atlas-glass">
+            <img src="/favicondarkmodeTP.svg" alt="" className="size-7" aria-hidden="true" />
+          </span>
+          <span className="flex flex-col leading-none">
+            <span className="font-poppins text-base font-semibold text-atlas-white">
+              StudyPanacea
+            </span>
+            <span className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-atlas-cyan">
+              PANCE Command Center
+            </span>
+          </span>
+        </a>
+
+        <nav className="hidden items-center gap-7 lg:flex" aria-label="Primary navigation">
+          {NAV_LINKS.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="atlas-focus-ring rounded-lg text-sm font-medium text-atlas-muted transition-colors hover:text-atlas-white"
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="hidden items-center gap-3 sm:flex">
+          <button
+            type="button"
+            onClick={onSignIn}
+            className="atlas-focus-ring rounded-xl px-3 py-2 text-sm font-semibold text-atlas-muted transition-colors hover:text-atlas-white"
+          >
+            Sign in
+          </button>
+          <PremiumCTAButton
+            onClick={onSignUp}
+            scannerAccent
+            iconRight={<ArrowRight className="size-4" aria-hidden="true" />}
+          >
+            Start readiness scan
+          </PremiumCTAButton>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setMobileOpen((current) => !current)}
+          className="atlas-focus-ring inline-flex size-11 items-center justify-center rounded-xl border border-atlas-border bg-atlas-glass text-atlas-white sm:hidden"
+          aria-expanded={mobileOpen}
+          aria-controls="landing-mobile-menu"
+          aria-label="Toggle landing navigation"
+        >
+          {mobileOpen ? (
+            <X className="size-5" aria-hidden="true" />
+          ) : (
+            <Menu className="size-5" aria-hidden="true" />
+          )}
+        </button>
+      </div>
+
+      {mobileOpen ? (
+        <div
+          id="landing-mobile-menu"
+          className="border-t border-atlas-border bg-atlas-background-soft px-4 py-4 sm:hidden"
+        >
+          <nav className="grid gap-2" aria-label="Mobile navigation">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className="atlas-focus-ring rounded-xl px-3 py-3 text-sm font-semibold text-atlas-muted hover:bg-atlas-glass hover:text-atlas-white"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+          <div className="mt-4 grid gap-3">
+            <PremiumCTAButton
+              onClick={() => {
+                setMobileOpen(false);
+                onSignUp();
+              }}
+              scannerAccent
+              iconRight={<ArrowRight className="size-4" aria-hidden="true" />}
+            >
+              Start readiness scan
+            </PremiumCTAButton>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileOpen(false);
+                onSignIn();
+              }}
+              className="atlas-focus-ring rounded-xl border border-atlas-border bg-atlas-glass px-4 py-3 text-sm font-semibold text-atlas-white"
+            >
+              Sign in
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </header>
+  );
+}
+
+function SectionShell({
+  id,
+  children,
+  className,
+  'aria-labelledby': ariaLabelledBy,
+}: React.HTMLAttributes<HTMLElement> & { id: string }) {
+  return (
+    <section
+      id={id}
+      aria-labelledby={ariaLabelledBy}
+      className={cn(
+        'relative scroll-mt-24 px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24',
+        className
+      )}
     >
-      <p className="panacea-card-label">{metric.label}</p>
-      <div className="panacea-metric-value panacea-gold-shimmer">{metric.format(currentValue)}</div>
-      <p className="panacea-card-copy">{metric.detail}</p>
-    </motion.article>
+      <div className="mx-auto max-w-7xl">{children}</div>
+    </section>
+  );
+}
+
+function StoryConnector({ from, to }: { from: string; to: string }) {
+  return (
+    <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" aria-hidden="true">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <span className="h-px bg-gradient-to-r from-transparent via-atlas-border-glow to-atlas-border" />
+        <span className="inline-flex min-h-10 items-center gap-2 rounded-full border border-atlas-border bg-atlas-background/80 px-3 py-2 shadow-atlas-glass backdrop-blur-xl">
+          <ScanLine className="size-3.5 text-atlas-cyan" aria-hidden="true" />
+          <span className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-atlas-muted">
+            {from}
+          </span>
+          <ArrowRight className="size-3.5 text-atlas-subtle" aria-hidden="true" />
+          <span className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-atlas-white">
+            {to}
+          </span>
+        </span>
+        <span className="h-px bg-gradient-to-r from-atlas-border via-atlas-border-glow to-transparent" />
+      </div>
+    </div>
+  );
+}
+
+function AuthDialog({ authMode, onClose }: { authMode: AuthMode; onClose: () => void }) {
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="theme-diagnostic-atlas w-[calc(100vw-2rem)] max-w-xl overflow-hidden border-atlas-border bg-[color-mix(in_srgb,var(--atlas-bg-elevated)_94%,transparent)] p-0 text-atlas-white shadow-atlas-glass sm:rounded-2xl">
+        <DialogHeader className="border-b border-atlas-border px-6 py-5 pr-14 text-left">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-atlas-cyan">
+            StudyPanacea access
+          </p>
+          <DialogTitle
+            id="panacea-auth-title"
+            className="mt-2 font-poppins text-2xl font-semibold leading-tight text-atlas-white"
+          >
+            {authMode === 'sign-up'
+              ? 'Start your adaptive plan.'
+              : 'Return to your study surface.'}
+          </DialogTitle>
+          <DialogDescription
+            id="panacea-auth-description"
+            className="mt-2 text-sm leading-6 text-atlas-muted"
+          >
+            {authMode === 'sign-up'
+              ? 'Create an account to begin targeted questions, clinical image training, and readiness tracking.'
+              : 'Sign in to resume your review queue, weak-area plan, and exam timeline.'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="px-4 py-6 sm:px-6">
+          {authMode === 'sign-up' ? (
+            <SignUp appearance={clerkAppearance} fallbackRedirectUrl="/" />
+          ) : (
+            <SignIn appearance={clerkAppearance} fallbackRedirectUrl="/" />
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function LandingFooter({ onSignUp }: { onSignUp: () => void }) {
   return (
-    <footer className="relative z-10">
-      <div className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
-        <div className="panacea-footer-shell flex flex-col gap-10">
-          <div className="flex flex-col gap-8 lg:[flex-direction:row] lg:items-end lg:justify-between">
-            <div className="max-w-xl space-y-4">
-              <div className="flex items-center gap-3">
-                <img src="/favicondarkmodeTP.svg" alt="PANaCEa" className="h-10 w-auto" />
-                <span className="text-2xl font-semibold tracking-normal text-white">
-                  PANaCEa
-                </span>
-              </div>
-              <p className="max-w-lg text-sm leading-7 text-slate-400">
-                Clinical study intelligence for PA students who need the next move, the reason,
-                and the expected benefit without opening an overloaded study surface.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-6 text-sm text-slate-400">
-              {NAV_LINKS.map((link) => (
-                <a key={link.href} href={link.href} className="panacea-footer-link">
-                  {link.label}
-                </a>
-              ))}
-              <button type="button" onClick={onSignUp} className="panacea-footer-link">
-                Start adaptive plan
-              </button>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 border-t border-white/6 pt-6 text-xs text-slate-500 sm:[flex-direction:row] sm:items-center sm:justify-between">
-            <p>&copy; {new Date().getFullYear()} PANaCEa. Built for serious PANCE preparation.</p>
-            <p>Not affiliated with NCCPA.</p>
-          </div>
+    <footer className="border-t border-atlas-border px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 text-sm text-atlas-muted md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="font-poppins text-base font-semibold text-atlas-white">StudyPanacea</p>
+          <p className="mt-2 max-w-xl">
+            A premium PANCE prep command center for question practice, image training, weak-area
+            targeting, and readiness analytics.
+          </p>
         </div>
+        <button
+          type="button"
+          onClick={onSignUp}
+          className="atlas-focus-ring inline-flex items-center gap-2 self-start rounded-xl border border-atlas-border bg-atlas-glass px-4 py-3 font-semibold text-atlas-white transition-colors hover:border-atlas-border-glow md:self-center"
+        >
+          <span className="inline-flex items-center gap-2">
+            Begin readiness scan
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </span>
+        </button>
       </div>
     </footer>
   );
 }
 
+function DashboardPreviewFallback({ onOpenDashboard }: { onOpenDashboard: () => void }) {
+  return (
+    <SectionShell id="analytics-preview" aria-labelledby="analytics-preview-title">
+      <div className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
+        <SectionHeader
+          eyebrow="Readiness command preview"
+          title="The dashboard should tell you what to study next."
+          description="Readiness vitals, organ-system pressure, image accuracy, and today’s prescription stay connected so each metric points to a next action."
+          titleId="analytics-preview-title"
+        />
+        <MedicalGlassCard scannerAccent className="min-h-[18rem] p-5 sm:p-6">
+          <div className="flex h-full flex-col justify-between gap-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-atlas-cyan">
+                Loading readiness command preview
+              </p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                {[72, 84, 58].map((width, index) => (
+                  <div
+                    key={`${width}-${index}`}
+                    className="rounded-2xl border border-atlas-border bg-atlas-background-soft p-4"
+                  >
+                    <div className="h-3 w-24 rounded-full bg-atlas-border" />
+                    <div
+                      className="mt-5 h-8 rounded-full bg-atlas-border"
+                      style={{ width: `${width}%` }}
+                    />
+                    <div className="mt-4 h-2 rounded-full bg-atlas-border" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <PremiumCTAButton
+              onClick={onOpenDashboard}
+              scannerAccent
+              className="self-start"
+              iconRight={<ArrowRight className="size-4" aria-hidden="true" />}
+            >
+              Open your readiness dashboard
+            </PremiumCTAButton>
+          </div>
+        </MedicalGlassCard>
+      </div>
+    </SectionShell>
+  );
+}
+
 export function LandingPage() {
+  const [authMode, setAuthMode] = useState<AuthMode>('sign-up');
   const [showAuth, setShowAuth] = useState(false);
-  const [authMode, setAuthMode] = useState<'sign-in' | 'sign-up'>('sign-up');
-  const prefersReducedMotion = useReducedMotion();
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const metaTheme = document.getElementById('meta-theme-color');
-    const previousTheme = metaTheme?.getAttribute('content');
-
-    root.classList.add('panacea-landing-scroll');
-    metaTheme?.setAttribute('content', 'rgb(7 17 31)');
-
-    return () => {
-      root.classList.remove('panacea-landing-scroll');
-      if (previousTheme) {
-        metaTheme?.setAttribute('content', previousTheme);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (showAuth) {
-      document.body.style.overflow = 'hidden';
-      const handleEscape = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-          setShowAuth(false);
-        }
-      };
-
-      document.addEventListener('keydown', handleEscape);
-      return () => {
-        document.body.style.overflow = '';
-        document.removeEventListener('keydown', handleEscape);
-      };
-    }
-
-    document.body.style.overflow = '';
-    return undefined;
-  }, [showAuth]);
 
   const openSignUp = () => {
     setAuthMode('sign-up');
@@ -195,585 +341,126 @@ export function LandingPage() {
     setShowAuth(true);
   };
 
+  useEffect(() => {
+    if (!showAuth) {
+      return undefined;
+    }
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [showAuth]);
+
   return (
-    <div className="panacea-landing min-h-screen text-slate-50">
+    <div className="theme-diagnostic-atlas relative isolate min-h-screen overflow-hidden bg-atlas-background text-atlas-white">
+      <MedicalGridBackground />
       <SkipNavigation mainContentId="landing-main" />
+      <LandingHeader onSignIn={openSignIn} onSignUp={openSignUp} />
 
-      <div className="panacea-landing__noise" aria-hidden="true" />
+      <main id="landing-main">
+        <Hero onStartStudying={openSignUp} />
+        <StoryConnector from="Scan" to="Diagnose" />
 
-      <header className="panacea-header">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-          <a href="#hero" className="flex items-center gap-3 text-white">
-            <img src="/favicondarkmodeTP.svg" alt="PANaCEa" className="h-11 w-auto" />
-            <span className="text-2xl font-semibold tracking-normal text-white sm:text-3xl">
-              PANaCEa
-            </span>
-          </a>
+        <DiagnosticScrollStory />
+        <StoryConnector from="Diagnose" to="Train" />
 
-          <nav className="hidden items-center gap-7 text-sm text-slate-300 lg:flex">
-            {NAV_LINKS.map((link) => (
-              <a key={link.href} href={link.href} className="panacea-nav-link">
-                {link.label}
-              </a>
-            ))}
-          </nav>
+        <TrainingModesDock />
+        <StoryConnector from="Train" to="Interpret" />
 
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={openSignIn}
-              className="hidden text-sm font-medium text-slate-300 transition-colors duration-300 hover:text-white sm:inline-flex"
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={openSignUp}
-              className="panacea-button panacea-button--primary"
-            >
-              Start adaptive plan
-            </button>
-          </div>
-        </div>
-      </header>
+        <ClinicalImageTraining />
+        <StoryConnector from="Interpret" to="Measure" />
 
-      <main id="landing-main" className="relative z-10">
-        <section id="hero" className="panacea-section panacea-section--hero">
-          <div className="mx-auto grid max-w-7xl gap-14 px-4 pt-4 sm:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:px-8 lg:pt-6">
-            <div className="max-w-3xl space-y-8">
-              <motion.div
-                {...revealProps(prefersReducedMotion)}
-                className="inline-flex items-center gap-3 rounded-full border border-[var(--landing-border)] bg-[var(--landing-panel)] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-slate-200"
-              >
-                <span className="panacea-status-dot" />
-                Clinical study operator for PA students
-              </motion.div>
+        <Suspense fallback={<DashboardPreviewFallback onOpenDashboard={openSignUp} />}>
+          <DashboardPreview onOpenDashboard={openSignUp} />
+        </Suspense>
+        <StoryConnector from="Measure" to="Begin" />
 
-              <motion.div {...revealProps(prefersReducedMotion, 0.08)} className="space-y-6">
-                <h1 className="panacea-display-title">
-                  PANCE mastery,
-                  <span className="panacea-display-break">
-                    guided by clinical intelligence.
-                  </span>
-                </h1>
-                <p className="max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
-                  PANaCEa turns missed questions, recall decay, and blueprint gaps into a precise
-                  daily study plan.
-                </p>
-              </motion.div>
+        <SectionShell id="start" aria-labelledby="final-cta-title" className="pb-12 sm:pb-16">
+          <MedicalGlassCard scannerAccent className="mx-auto max-w-6xl overflow-hidden p-0">
+            <div className="grid gap-3 border-b border-atlas-border bg-atlas-background/55 p-4 text-left sm:grid-cols-3 sm:p-5">
+              {WORKFLOW_STEPS.map((step, index) => {
+                const Icon = step.icon;
 
-              <motion.div
-                {...revealProps(prefersReducedMotion, 0.16)}
-                className="flex flex-col items-start gap-4 sm:[flex-direction:row] sm:items-center"
-              >
-                <button
-                  type="button"
-                  onClick={openSignUp}
-                  className="panacea-button panacea-button--hero"
-                >
-                  Start adaptive plan
-                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
-                </button>
-
-                <a
-                  href="#how-it-works"
-                  className="panacea-button panacea-button--secondary"
-                >
-                  See how it works
-                </a>
-              </motion.div>
-
-              <motion.div
-                {...revealProps(prefersReducedMotion, 0.24)}
-                className="grid gap-3 sm:grid-cols-3"
-              >
-                {HERO_SIGNALS.map((signal) => (
-                  <div key={signal.label} className="panacea-signal-chip">
-                    <p className="panacea-card-label">{signal.label}</p>
-                    <p className="mt-1 text-sm font-medium text-slate-100">{signal.value}</p>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-
-            <div className="relative">
-              <motion.div
-                {...revealProps(prefersReducedMotion, 0.16)}
-                className="panacea-card panacea-operator-preview"
-              >
-                <div className="flex flex-col gap-6">
-                  <div className="flex flex-col gap-4 border-b border-white/8 pb-5 sm:[flex-direction:row] sm:items-start sm:justify-between">
-                    <div>
-                      <p className="panacea-card-label">Next Best Action</p>
-                      <h2 className="mt-2 text-2xl font-semibold tracking-normal text-white sm:text-3xl">
-                        PE vs pneumonia differentiation
-                      </h2>
-                    </div>
-                    <div className="panacea-preview-impact">
-                      High impact
-                    </div>
-                  </div>
-
-                  <p className="panacea-preview-summary">
-                    12 questions · 28 min · High impact
-                  </p>
-
-                  <div className="panacea-preview-meta">
-                    <span>12 questions</span>
-                    <span>28 min</span>
-                    <span>High impact</span>
-                  </div>
-
-                  <div className="panacea-preview-section">
-                    <p className="panacea-card-label">Sample rationale</p>
-                    <p className="mt-2 text-base leading-7 text-slate-200">
-                      Example pulmonary pattern · high-yield PANCE topic · plan-ready review set
-                    </p>
-                  </div>
-
-                  <div className="panacea-preview-section panacea-preview-section--gain">
-                    <p className="panacea-card-label">Modeled lift range</p>
-                    <div className="mt-3 flex flex-col gap-3 sm:[flex-direction:row] sm:items-end sm:justify-between">
-                      <div className="panacea-preview-gain">+8–12%</div>
-                      <p className="max-w-sm text-sm leading-6 text-slate-300">
-                        A sample planning range shown only after enough learner signal exists in the
-                        signed-in dashboard.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="panacea-preview-plan">
-                    {[
-                      ['Focused block', '28 min'],
-                      ['Quick review', '12 min'],
-                      ['Notes / reset', '5 min'],
-                    ].map(([label, time], index) => (
-                      <div key={label} className="panacea-preview-step">
-                        <span className="panacea-preview-step__index">{index + 1}</span>
-                        <span className="flex-1">{label}</span>
-                        <span className="inline-flex items-center gap-1.5 text-slate-300">
-                          <Clock className="h-3.5 w-3.5 text-[var(--landing-gold)]" aria-hidden="true" />
-                          {time}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={openSignUp}
-                    className="panacea-preview-action"
+                return (
+                  <div
+                    key={step.title}
+                    className="rounded-2xl border border-atlas-border bg-atlas-glass p-4"
                   >
-                    Start focused block
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </div>
-              </motion.div>
-
-              <motion.div
-                {...revealProps(prefersReducedMotion, 0.24)}
-                className="panacea-preview-note"
-              >
-                <CheckCircle2 className="h-4 w-4 text-[var(--landing-success)]" aria-hidden="true" />
-                <span>One recommended move, with the rationale visible before the student starts.</span>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        <section id="features" className="panacea-section">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-              <motion.div
-                {...revealProps(prefersReducedMotion)}
-                className="panacea-section-intro lg:pr-8"
-              >
-                <p className="panacea-section-eyebrow">Platform depth</p>
-                <h2 className="panacea-section-title panacea-section-title--left">
-                  Clinical infrastructure that starts with the next move.
-                </h2>
-                <p className="panacea-section-copy panacea-section-copy--left">
-                  PANaCEa keeps the surface calm while the system decides whether the student
-                  should repair a missed pattern, clear reviews, protect recall, or close a
-                  blueprint gap.
-                </p>
-
-                <div className="panacea-section-list mt-8">
-                  {FEATURE_PILLARS.map((pillar, index) => (
-                    <motion.div
-                      key={pillar}
-                      {...revealProps(prefersReducedMotion, 0.08 + index * 0.05)}
-                      className="panacea-section-list__item"
-                    >
-                      <CheckCircle2 className="h-4 w-4 text-[var(--landing-gold)]" />
-                      <span>{pillar}</span>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-
-              <div className="panacea-feature-mosaic">
-                {FEATURE_CARDS.map((feature, index) => (
-                  <motion.article
-                    key={feature.title}
-                    {...revealProps(prefersReducedMotion, index * 0.07)}
-                    className={`panacea-glass panacea-card panacea-feature-card ${
-                      index === 0 || index === 3 ? 'panacea-feature-card--wide' : ''
-                    }`}
-                    style={accentStyle(feature.accent)}
-                    whileHover={
-                      prefersReducedMotion
-                        ? undefined
-                        : {
-                            scale: 1.02,
-                            y: -8,
-                            transition: { duration: 0.35, ease: PREMIUM_EASE },
-                          }
-                    }
-                  >
-                    <div className="panacea-feature-topline" />
-                    <div className="panacea-feature-icon">
-                      <feature.icon className="h-6 w-6" />
-                    </div>
-                    <p className="panacea-card-label">{feature.eyebrow}</p>
-                    <h3 className="mt-3 text-2xl font-semibold tracking-normal text-white">
-                      {feature.title}
-                    </h3>
-                    <p className="mt-4 text-sm leading-7 text-slate-300">{feature.description}</p>
-                    <div className="mt-6 flex items-center gap-2 text-sm text-slate-400">
-                      <ArrowRight className="h-4 w-4 text-[var(--landing-accent)]" />
-                      <span>{feature.detail}</span>
-                    </div>
-                  </motion.article>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="proof" className="panacea-section panacea-section--proof">
-          <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:px-8">
-            <div className="space-y-6">
-              <motion.div {...revealProps(prefersReducedMotion)}>
-                <p className="panacea-section-eyebrow">Trust and outcomes</p>
-                <h2 className="panacea-section-title text-left">
-                  Trust lands faster when the study system feels measurable, not mysterious.
-                </h2>
-                <p className="panacea-section-copy panacea-section-copy--left">
-                  Premium is not a glow effect. It is the feeling that the next step is justified,
-                  the weak spots are visible, and the product is not hiding behind vague language.
-                </p>
-              </motion.div>
-
-              <div className="panacea-proof-metric-grid">
-                {TRUST_METRICS.map((metric, index) => (
-                  <AnimatedMetricCard
-                    key={metric.label}
-                    metric={metric}
-                    index={index}
-                    prefersReducedMotion={prefersReducedMotion}
-                    className={index === 0 ? 'panacea-metric-card--featured' : ''}
-                  />
-                ))}
-              </div>
-
-              <motion.div
-                {...revealProps(prefersReducedMotion, 0.18)}
-                className="panacea-glass panacea-card panacea-proof-note"
-              >
-                <p className="panacea-card-label">What that trust should feel like</p>
-                <div className="mt-5 space-y-3">
-                  {TRUST_CALLOUTS.map((item) => (
-                    <div key={item} className="panacea-section-list__item">
-                      <BadgeCheck className="h-4 w-4 text-[var(--landing-gold)]" />
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-
-            <div className="grid gap-5 lg:grid-cols-2 lg:pt-10">
-              {TESTIMONIALS.map((testimonial, index) => (
-                <motion.article
-                  key={testimonial.name}
-                  {...revealProps(prefersReducedMotion, index * 0.08)}
-                  className={`panacea-glass panacea-card panacea-testimonial ${
-                    index === 0 ? 'panacea-testimonial--featured' : ''
-                  }`}
-                  style={accentStyle(testimonial.accent)}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">
-                      <BadgeCheck className="h-4 w-4 text-[var(--landing-accent)]" />
-                      Early student feedback
-                    </div>
-                  </div>
-                  <p className="panacea-testimonial__quote mt-6 text-lg leading-8 text-slate-100">
-                    &ldquo;{testimonial.quote}&rdquo;
-                  </p>
-                  <div className="mt-8 flex items-center justify-between gap-4 border-t border-white/8 pt-5">
-                    <div>
-                      <p className="font-semibold text-white">{testimonial.name}</p>
-                      <p className="pt-1 text-sm text-slate-400">{testimonial.role}</p>
-                    </div>
-                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300">
-                      PANCE prep
-                    </div>
-                  </div>
-                </motion.article>
-              ))}
-            </div>
-          </div>
-
-          <div className="mx-auto mt-12 max-w-7xl px-4 sm:px-6 lg:px-8">
-            <motion.div
-              {...revealProps(prefersReducedMotion, 0.12)}
-              className="panacea-glass panacea-card panacea-proof-strip"
-            >
-              <p className="panacea-card-label">Outcome clarity</p>
-              <div className="mt-6 grid gap-6 md:grid-cols-3">
-                {OUTCOME_STRIP.map((item) => (
-                  <div key={item.title} className="panacea-proof-strip__item">
-                    <h3 className="text-lg font-semibold tracking-normal text-white">
-                      {item.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-7 text-slate-400">{item.detail}</p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        <section id="how-it-works" className="panacea-section">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
-              <motion.div {...revealProps(prefersReducedMotion)} className="panacea-section-intro">
-                <p className="panacea-section-eyebrow">How it works</p>
-                <h2 className="panacea-section-title panacea-section-title--left">
-                  A three-step path from uncertainty to exam-day composure.
-                </h2>
-                <p className="panacea-section-copy panacea-section-copy--left">
-                  The surface stays simple while PANaCEa ranks the next useful block underneath.
-                </p>
-
-                <div className="panacea-glass panacea-card panacea-process-note mt-8">
-                  <p className="panacea-card-label">Behind every block</p>
-                  <p className="mt-3 text-base leading-8 text-slate-300">
-                    Timing, missed patterns, distractor behavior, and blueprint coverage keep
-                    updating so the next recommendation never feels arbitrary.
-                  </p>
-                </div>
-              </motion.div>
-
-              <div>
-                <div className="panacea-process-line" aria-hidden="true" />
-
-                <div className="grid gap-6 xl:grid-cols-3">
-                  {PROCESS_STEPS.map((step, index) => (
-                    <motion.article
-                      key={step.step}
-                      {...revealProps(prefersReducedMotion, index * 0.08)}
-                      className="panacea-glass panacea-card panacea-step-card"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="panacea-step-badge">{step.step}</div>
-                        <div className="panacea-feature-icon">
-                          <step.icon className="h-6 w-6" />
-                        </div>
+                    <div className="flex items-start gap-3">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-atlas-border bg-atlas-background-soft text-atlas-cyan">
+                        <Icon className="size-4" aria-hidden="true" />
                       </div>
-                      <h3 className="mt-8 text-2xl font-semibold tracking-normal text-white">
-                        {step.title}
-                      </h3>
-                      <p className="mt-4 text-sm leading-7 text-slate-300">{step.description}</p>
-                    </motion.article>
-                  ))}
-                </div>
-
-                <motion.div
-                  {...revealProps(prefersReducedMotion, 0.22)}
-                  className="panacea-glass panacea-card panacea-process-strip mt-10 flex flex-col gap-6 p-6 lg:[flex-direction:row] lg:items-center lg:justify-between"
-                >
-                  <div className="max-w-2xl">
-                    <p className="panacea-card-label">What adapts behind the scenes</p>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-normal text-white">
-                      PANaCEa keeps ranking what matters next.
-                    </h3>
-                    <p className="mt-3 text-sm leading-7 text-slate-400">
-                      Instead of treating all misses the same, PANaCEa weighs the timing, severity,
-                      and clinical context of each pattern so your next block always feels
-                      purposeful.
-                    </p>
+                      <div>
+                        <p className="font-mono text-xs text-atlas-muted">0{index + 1}</p>
+                        <h3 className="mt-1 font-poppins text-base font-semibold text-atlas-white">
+                          {step.title}
+                        </h3>
+                        <p className="mt-2 text-xs leading-5 text-atlas-muted">
+                          {step.description}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="flex flex-wrap gap-3 lg:max-w-md lg:justify-end">
-                    {PROCESS_SIGNALS.map((signal) => (
-                      <span key={signal} className="panacea-inline-pill">
-                        <Check className="h-3.5 w-3.5 text-[var(--landing-gold)]" />
-                        {signal}
-                      </span>
-                    ))}
-                  </div>
-                </motion.div>
-              </div>
+                );
+              })}
             </div>
-          </div>
-        </section>
 
-        <section id="start" className="panacea-section panacea-section--final">
-          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-            <motion.div
-              {...revealProps(prefersReducedMotion)}
-              className="panacea-glass panacea-card panacea-final-panel"
-            >
-              <p className="panacea-section-eyebrow">Final call</p>
-              <h2 className="panacea-final-title">
-                Walk into the PANCE
-                <span className="panacea-display-break panacea-gold-shimmer">
-                  clear on what matters next.
-                </span>
+            <div className="px-6 py-8 text-center sm:px-10 sm:py-10">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-atlas-border bg-atlas-cyan/10 text-atlas-cyan">
+                <LockKeyhole className="size-6" aria-hidden="true" />
+              </div>
+              <h2
+                id="final-cta-title"
+                className="mx-auto mt-6 max-w-3xl font-poppins text-3xl font-semibold leading-tight text-atlas-white sm:text-4xl"
+              >
+                Start the next study block with a readiness scan, not a guess.
               </h2>
-              <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
-                Build a plan that adapts to your clinical year, protects your study time, and keeps
-                the highest-yield material in front of you until it sticks.
+              <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-atlas-muted sm:text-base">
+                StudyPanacea turns today’s weak system, image-read confidence, and review debt into
+                one focused PANCE study prescription.
               </p>
 
-              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:[flex-direction:row]">
-                <button
-                  type="button"
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <PremiumCTAButton
                   onClick={openSignUp}
-                  className="panacea-button panacea-button--hero"
+                  scannerAccent
+                  className="w-full sm:w-auto"
+                  iconRight={<ArrowRight className="size-4" aria-hidden="true" />}
                 >
-                  Create My Free Account
-                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
-                </button>
-
+                  Start readiness scan
+                </PremiumCTAButton>
                 <button
                   type="button"
                   onClick={openSignIn}
-                  className="inline-flex items-center gap-2 text-sm font-medium text-slate-300 transition-colors duration-300 hover:text-white"
+                  className="atlas-focus-ring inline-flex min-h-12 items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-atlas-muted transition-colors hover:text-atlas-white"
                 >
                   Returning learner? Sign in
                 </button>
               </div>
 
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
                 {CTA_ASSURANCES.map((item) => (
-                  <span key={item} className="panacea-inline-pill panacea-inline-pill--soft">
-                    <Check className="h-3.5 w-3.5 text-[var(--landing-gold)]" />
-                    {item}
+                  <span
+                    key={item}
+                    className="inline-flex items-center gap-2 rounded-full border border-atlas-border bg-atlas-glass px-3 py-1.5 text-xs font-semibold text-atlas-muted"
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <Check className="size-3.5 text-atlas-success" aria-hidden="true" />
+                      {item}
+                    </span>
                   </span>
                 ))}
               </div>
-            </motion.div>
-          </div>
-        </section>
+            </div>
+          </MedicalGlassCard>
+        </SectionShell>
       </main>
 
       <LandingFooter onSignUp={openSignUp} />
-
-      <AnimatePresence>
-        {showAuth ? (
-          <motion.div
-            key="panacea-auth-dialog"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.22, ease: PREMIUM_EASE }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#050814]/80 p-4 backdrop-blur-xl"
-            onClick={() => setShowAuth(false)}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="panacea-auth-title"
-          >
-            <motion.div
-              initial={prefersReducedMotion ? undefined : { opacity: 0, y: 24, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={prefersReducedMotion ? undefined : { opacity: 0, y: 10, scale: 0.98 }}
-              transition={{ duration: 0.3, ease: PREMIUM_EASE }}
-              className="w-full max-w-xl"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="panacea-glass panacea-auth-shell">
-                <div className="flex items-start justify-between gap-4 border-b border-white/8 px-6 py-5">
-                  <div>
-                    <p className="panacea-card-label">PANaCEa access</p>
-                    <h3
-                      id="panacea-auth-title"
-                      className="mt-2 text-2xl font-semibold tracking-normal text-white"
-                    >
-                      {authMode === 'sign-up'
-                        ? 'Start your adaptive plan.'
-                        : 'Return to your study surface.'}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-400">
-                      {authMode === 'sign-up'
-                        ? 'Create a free account to unlock adaptive drills, readiness tracking, and clinical review.'
-                        : 'Sign in to resume your current rotations, review queue, and exam timeline.'}
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowAuth(false)}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-colors duration-300 hover:text-white"
-                    aria-label="Close authentication dialog"
-                  >
-                    <span aria-hidden="true" className="text-lg leading-none">
-                      ×
-                    </span>
-                  </button>
-                </div>
-
-                <div className="px-4 py-6 sm:px-6">
-                  {authMode === 'sign-up' ? (
-                    <SignUp
-                      appearance={{
-                        elements: {
-                          rootBox: 'mx-auto',
-                          card: 'bg-transparent shadow-none',
-                          headerTitle: 'hidden',
-                          headerSubtitle: 'hidden',
-                          socialButtonsBlockButton:
-                            'bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:scale-[1.01] transition',
-                          formButtonPrimary:
-                            'bg-[#c4b78a] text-[#0a0e1a] hover:bg-[#d7c99a] shadow-[0_16px_50px_rgba(196,183,138,0.28)]',
-                          formFieldLabel: 'text-slate-200',
-                          formFieldInput:
-                            'bg-[#0a0e1a]/70 border-white/10 text-white placeholder:text-slate-500',
-                          footerActionLink: 'text-[#c4b78a] hover:text-[#e2d6ad]',
-                        },
-                      }}
-                      fallbackRedirectUrl="/"
-                    />
-                  ) : (
-                    <SignIn
-                      appearance={{
-                        elements: {
-                          rootBox: 'mx-auto',
-                          card: 'bg-transparent shadow-none',
-                          headerTitle: 'hidden',
-                          headerSubtitle: 'hidden',
-                          socialButtonsBlockButton:
-                            'bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:scale-[1.01] transition',
-                          formButtonPrimary:
-                            'bg-[#c4b78a] text-[#0a0e1a] hover:bg-[#d7c99a] shadow-[0_16px_50px_rgba(196,183,138,0.28)]',
-                          formFieldLabel: 'text-slate-200',
-                          formFieldInput:
-                            'bg-[#0a0e1a]/70 border-white/10 text-white placeholder:text-slate-500',
-                          footerActionLink: 'text-[#c4b78a] hover:text-[#e2d6ad]',
-                        },
-                      }}
-                      fallbackRedirectUrl="/"
-                    />
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      {showAuth ? <AuthDialog authMode={authMode} onClose={() => setShowAuth(false)} /> : null}
     </div>
   );
 }

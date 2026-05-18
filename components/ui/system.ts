@@ -1,6 +1,6 @@
 /**
  * Legacy class-string tokens. Re-exported from `@/lib/tokens` so existing
- * consumers (SectionHeader, EmptyState, ContentGrid) keep working while the
+ * consumers (EmptyState, ContentGrid) keep working while the
  * canonical tokens live in a single place.
  */
 import { textClass } from '@/lib/tokens';

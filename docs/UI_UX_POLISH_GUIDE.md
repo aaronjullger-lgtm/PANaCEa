@@ -108,12 +108,22 @@ Dashboard > Cardiology > OSCE > Case #47 (STEMI) > Interview
 
 ```typescript
 // Zoom into the finding, then expand to procedure view
-const transition = gsap.timeline();
-transition
-  .to(currentView, { scale: 2, duration: 0.3, ease: 'power2.in' })
-  .to(currentView, { opacity: 0, duration: 0.2 })
-  .set(nextView, { opacity: 0, scale: 0.5 })
-  .to(nextView, { opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' });
+currentView.animate(
+  [
+    { transform: 'scale(1)', opacity: 1 },
+    { transform: 'scale(2)', opacity: 1, offset: 0.6 },
+    { transform: 'scale(2)', opacity: 0 },
+  ],
+  { duration: 500, easing: 'ease-in', fill: 'forwards' }
+);
+
+nextView.animate(
+  [
+    { transform: 'scale(0.5)', opacity: 0 },
+    { transform: 'scale(1)', opacity: 1 },
+  ],
+  { delay: 300, duration: 400, easing: 'ease-out', fill: 'forwards' }
+);
 ```
 
 **Use Case**: Identified pneumothorax → Zoom in → Transition to chest tube procedure

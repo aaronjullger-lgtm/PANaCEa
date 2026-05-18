@@ -8,7 +8,7 @@
  *
  * Sprint 4 migration notes:
  *   - Dropped `geminiApiKey` from the service config. Its removal closes the
- *     long-standing `VITE_GEMINI_API_KEY` browser-bundle leak.
+ *     long-standing browser-bundled Gemini key leak.
  *   - `extractSOAPElements()` now POSTs `{ context, currentNote }` to the
  *     server and receives a Zod-validated partial SOAPNote back. Merging
  *     logic is unchanged so the draft-note mutation behavior is identical.

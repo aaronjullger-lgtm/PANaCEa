@@ -20,6 +20,11 @@ import { z } from 'zod';
 export const QuestionAttemptRequestSchema = z
   .object({
     questionId: z.string().min(1).max(100),
+    canonicalQuestionId: z.string().min(1).max(100).nullable().optional(),
+    sourceQuestionId: z.string().min(1).max(100).optional(),
+    questionSource: z
+      .enum(['question', 'pre_generated', 'staging', 'seed', 'generated'])
+      .optional(),
     isCorrect: z.boolean().optional(),
     wasCorrect: z.boolean().optional(),
     system: z.string().optional(),

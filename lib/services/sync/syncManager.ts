@@ -10,7 +10,8 @@
  * - Supports background sync via Service Worker
  */
 
-import { logger } from "@/lib/simple-logger";
+import { logger } from '@/lib/simple-logger';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import type { TelemetryData } from '@/types/telemetry';
 import { offlineStore, isIndexedDBAvailable } from './offlineStore';
 
@@ -177,7 +178,7 @@ function pruneSyncedFromJsonValue(value: string): string {
     if (!Array.isArray(parsed)) return value;
     const filtered = parsed.filter(
       (item: unknown) =>
-        !item || typeof item !== 'object' || (item as { synced?: boolean }).synced !== true,
+        !item || typeof item !== 'object' || (item as { synced?: boolean }).synced !== true
     );
     if (filtered.length === parsed.length) return value;
     return JSON.stringify(filtered);
@@ -188,8 +189,8 @@ function pruneSyncedFromJsonValue(value: string): string {
 
 async function parseSyncErrorMessage(response: Response): Promise<string> {
   try {
-    const payload = (await response.json()) as { error?: string; message?: string; details?: string };
-    const message = payload?.error || payload?.message || payload?.details;
+    const payload = await response.json();
+    const message = getApiEnvelopeError(payload, '');
     if (message) return message;
   } catch (err) {
     console.debug('[SyncManager] non-JSON error payload, falling back to HTTP status', err);
@@ -204,7 +205,8 @@ async function parseSyncErrorMessage(response: Response): Promise<string> {
 class SyncManager {
   private listeners: Map<SyncEventType, Set<SyncEventCallback>> = new Map();
   private isSyncing = false;
-  private syncAllPromise: Promise<{ answers: number; pearls: number; reviews: number }> | null = null;
+  private syncAllPromise: Promise<{ answers: number; pearls: number; reviews: number }> | null =
+    null;
   private syncRetryTimeout: ReturnType<typeof setTimeout> | null = null;
   /** Tracks consecutive sync failures for true exponential backoff (Finding 7 fix). */
   private consecutiveFailures = 0;
@@ -489,7 +491,9 @@ class SyncManager {
   // SYNC OPERATIONS
   // ===========================================================================
 
-  public async syncAll(token?: string | null): Promise<{ answers: number; pearls: number; reviews: number }> {
+  public async syncAll(
+    token?: string | null
+  ): Promise<{ answers: number; pearls: number; reviews: number }> {
     if (this.syncAllPromise) {
       syncLog.debug('Awaiting sync already in progress');
       const result = await this.syncAllPromise;
@@ -602,11 +606,9 @@ class SyncManager {
 
         if (response.ok) {
           answer.synced = true;
-          const data = (await response.json().catch(() => ({}))) as {
-            data?: { attemptId?: string };
-            attemptId?: string;
-          };
-          const payload = data?.data ?? data;
+          const payload = unwrapApiEnvelope<{ attemptId?: string }>(
+            await response.json().catch(() => ({}))
+          );
           if (payload?.attemptId) answer.attemptId = payload.attemptId;
           synced++;
         } else {
@@ -753,10 +755,9 @@ class SyncManager {
       });
 
       if (response.ok) {
-        const data = (await response.json().catch(() => ({}))) as {
-          data?: Array<{ questionId: string; success: boolean; error?: string }>;
-        };
-        const results = data?.data ?? [];
+        const results = unwrapApiEnvelope<
+          Array<{ questionId: string; success: boolean; error?: string }>
+        >(await response.json().catch(() => []));
 
         if (!Array.isArray(results) || results.length === 0) {
           const message = 'Review sync did not return per-item status';
@@ -769,7 +770,10 @@ class SyncManager {
         } else {
           const questionIdBuckets = new Map<
             string,
-            { results: Array<{ questionId: string; success: boolean; error?: string }>; cursor: number }
+            {
+              results: Array<{ questionId: string; success: boolean; error?: string }>;
+              cursor: number;
+            }
           >();
           for (const result of results) {
             const bucket = questionIdBuckets.get(result.questionId) ?? { results: [], cursor: 0 };
@@ -785,9 +789,7 @@ class SyncManager {
                 ? bucket.results[bucket.cursor++]
                 : undefined;
             const result =
-              positionalResult?.questionId === review.questionId
-                ? positionalResult
-                : fallback;
+              positionalResult?.questionId === review.questionId ? positionalResult : fallback;
             if (result?.success) {
               review.synced = true;
               synced++;
@@ -838,10 +840,7 @@ class SyncManager {
     }
 
     // Exponential backoff using consecutive failure count: 30s → 60s → 120s → 240s → 300s (cap)
-    const baseDelay = Math.min(
-      30000 * Math.pow(2, Math.min(this.consecutiveFailures, 4)),
-      300000
-    );
+    const baseDelay = Math.min(30000 * Math.pow(2, Math.min(this.consecutiveFailures, 4)), 300000);
 
     // ±25% jitter to prevent thundering herd when multiple clients reconnect simultaneously
     const jitter = baseDelay * (0.75 + Math.random() * 0.5);
@@ -949,9 +948,12 @@ class SyncManager {
         }
         // Still full after pruning — persist-to-IndexedDB path already captured the record,
         // so we surface a warning instead of crashing the session.
-        syncLog.error('localStorage remains full after pruning; record persisted to IndexedDB only', {
-          key,
-        });
+        syncLog.error(
+          'localStorage remains full after pruning; record persisted to IndexedDB only',
+          {
+            key,
+          }
+        );
         this.emit('storage-full', this.getStatus());
       }
     }
@@ -1017,7 +1019,9 @@ class SyncManager {
    * and trigger a fresh sync. If the underlying issue is still present, they will
    * be re-flagged after MAX_SYNC_ATTEMPTS.
    */
-  public async retryDeadLettered(token?: string | null): Promise<{ answers: number; pearls: number; reviews: number }> {
+  public async retryDeadLettered(
+    token?: string | null
+  ): Promise<{ answers: number; pearls: number; reviews: number }> {
     const answers = this.getOfflineAnswers();
     answers.forEach((a) => {
       if (isDeadLetteredItem(a)) {
@@ -1078,12 +1082,14 @@ class SyncManager {
     if (counts.pearlActions > 0) this.saveOfflinePearlActions(keptActions);
 
     // Best-effort IndexedDB cleanup
-    isIndexedDBAvailable().then((available) => {
-      if (!available) return;
-      // IndexedDB doesn't track dead-letter flags; full clear is too aggressive,
-      // so we leave IDB records to fall out via the normal 24h cleanup window.
-      syncLog.debug('discardDeadLettered: localStorage pruned; IDB retains records');
-    }).catch(() => {});
+    isIndexedDBAvailable()
+      .then((available) => {
+        if (!available) return;
+        // IndexedDB doesn't track dead-letter flags; full clear is too aggressive,
+        // so we leave IDB records to fall out via the normal 24h cleanup window.
+        syncLog.debug('discardDeadLettered: localStorage pruned; IDB retains records');
+      })
+      .catch(() => {});
 
     if (counts.answers + counts.reviews + counts.pearlActions > 0) {
       this.emit('sync-complete', this.getStatus());
@@ -1103,14 +1109,17 @@ class SyncManager {
     store: 'answers' | 'reviews' | 'pearlActions',
     record: OfflineAnswer | OfflineReview | OfflinePearlAction
   ): void {
-    isIndexedDBAvailable().then((available) => {
-      if (!available) return;
-      const target = offlineStore[store];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (target as any).add(record).catch((err: unknown) => {
-        syncLog.warn(`IndexedDB write failed for ${store}`, { error: err });
+    isIndexedDBAvailable()
+      .then((available) => {
+        if (!available) return;
+        const target = offlineStore[store];
+        (target as any).add(record).catch((err: unknown) => {
+          syncLog.warn(`IndexedDB write failed for ${store}`, { error: err });
+        });
+      })
+      .catch(() => {
+        syncLog.debug('IndexedDB not available for persist');
       });
-    }).catch(() => { syncLog.debug('IndexedDB not available for persist'); });
   }
 
   /**
@@ -1123,7 +1132,9 @@ class SyncManager {
       .then((reg) => {
         // Background Sync API (Chrome/Edge/Android)
         if ('sync' in reg) {
-          return (reg as unknown as { sync: { register: (tag: string) => Promise<void> } }).sync.register(tag);
+          return (
+            reg as unknown as { sync: { register: (tag: string) => Promise<void> } }
+          ).sync.register(tag);
         }
         return undefined;
       })
@@ -1150,13 +1161,23 @@ class SyncManager {
     // were not — stale reviews could re-sync as ghost records.
     this.saveOfflineReviews([]);
     // Also clear IndexedDB stores
-    isIndexedDBAvailable().then((available) => {
-      if (available) {
-        offlineStore.answers.clear().catch((e) => syncLog.debug('IndexedDB answers clear skipped', { error: e }));
-        offlineStore.pearlActions.clear().catch((e) => syncLog.debug('IndexedDB pearlActions clear skipped', { error: e }));
-        offlineStore.reviews.clear().catch((e) => syncLog.debug('IndexedDB reviews clear skipped', { error: e }));
-      }
-    }).catch(() => { syncLog.debug('IndexedDB not available for clear'); });
+    isIndexedDBAvailable()
+      .then((available) => {
+        if (available) {
+          offlineStore.answers
+            .clear()
+            .catch((e) => syncLog.debug('IndexedDB answers clear skipped', { error: e }));
+          offlineStore.pearlActions
+            .clear()
+            .catch((e) => syncLog.debug('IndexedDB pearlActions clear skipped', { error: e }));
+          offlineStore.reviews
+            .clear()
+            .catch((e) => syncLog.debug('IndexedDB reviews clear skipped', { error: e }));
+        }
+      })
+      .catch(() => {
+        syncLog.debug('IndexedDB not available for clear');
+      });
     syncLog.debug('Cleared all pending items');
   }
 }

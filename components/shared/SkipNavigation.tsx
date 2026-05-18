@@ -57,9 +57,11 @@ export const SkipNavigation: React.FC<SkipNavigationProps> = ({
         mainContent.setAttribute('tabindex', '-1');
       }
 
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
       // Focus and scroll to main content
       mainContent.focus();
-      mainContent.scrollIntoView({ behavior: 'smooth' });
+      mainContent.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
 
       // Remove focus after a delay to prevent focus trap
       setTimeout(() => {

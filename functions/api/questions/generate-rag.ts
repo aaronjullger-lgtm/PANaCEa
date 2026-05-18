@@ -157,6 +157,11 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
           const critiquePromptText = buildCritiquePrompt(gen);
           const critiqueResult = await critiqueQuestion(aiEnv, critiquePromptText);
           const critique = parseCritiqueResponse(critiqueResult.output);
+          if (!critique) {
+            refinementMetrics = buildRefinementMetrics(false, 'Critique parsing failed', null);
+            refinedQuestions.push(q);
+            continue;
+          }
 
           if (critique.overallScore < 0.8) {
             // Rewrite via LangChain
@@ -167,9 +172,11 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
               const cleaned = rewriteResult.output.replace(/```json|```/g, '').trim();
               const rewritten = JSON.parse(cleaned);
               refinedQuestions.push({ ...rewritten, _refined: true });
-              refinementMetrics = buildRefinementMetrics(gen, critique);
+              refinementMetrics = buildRefinementMetrics(true, null, critique);
               continue;
-            } catch { /* fall through to original */ }
+            } catch {
+              /* fall through to original */
+            }
           }
         } catch (e) {
           logger.warn('RAG self-refine failed; using original generated question', {
@@ -192,9 +199,8 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
     const stagingFailures: string[] = [];
 
     for (const q of questions) {
-      const record = q && typeof q === 'object' && !Array.isArray(q)
-        ? (q as Record<string, unknown>)
-        : {};
+      const record =
+        q && typeof q === 'object' && !Array.isArray(q) ? (q as Record<string, unknown>) : {};
       const metadata = {
         source: 'rag_question_generate_endpoint',
         conditionName,
@@ -284,7 +290,7 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
     return {
       status: 500,
       code: ErrorCode.INTERNAL_ERROR,
-      error: error instanceof Error ? error.message : 'RAG question generation failed',
+      error: 'RAG question generation failed',
     };
   } finally {
     await safePrismaDisconnect(prisma);

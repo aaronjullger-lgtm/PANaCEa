@@ -16,6 +16,7 @@
 import { useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getBrowserTimezone } from '../lib/circadian';
+import { getApiEnvelopeError } from '@/lib/utils/apiEnvelope';
 
 /**
  * Metrics collected during a single question attempt
@@ -215,10 +216,8 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
         });
 
         if (!response.ok) {
-          const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
-            error?: string;
-          };
-          throw new Error(errorData.error || `HTTP ${response.status}`);
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(getApiEnvelopeError(errorData, `HTTP ${response.status}`));
         }
 
         console.debug('[useImplicitMetrics] Metrics posted successfully:', {

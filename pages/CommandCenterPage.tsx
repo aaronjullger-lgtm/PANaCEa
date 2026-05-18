@@ -27,6 +27,7 @@ interface CommandCenterPageProps {
   onNavigateToMyLibrary?: () => void;
   onNavigateToStudyCompanion?: () => void;
   onNavigateToSrsReview?: () => void;
+  onOpenSettings?: () => void;
   onBack: () => void;
 }
 
@@ -46,6 +47,7 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
   onNavigateToMyLibrary,
   onNavigateToStudyCompanion,
   onNavigateToSrsReview,
+  onOpenSettings,
   onBack: _onBack,
 }) => {
   useEffect(() => { document.title = 'Command Center | PANaCEa'; }, []);
@@ -89,6 +91,7 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
             onNavigateToMyLibrary={onNavigateToMyLibrary ?? (() => {})}
             onNavigateToStudyCompanion={onNavigateToStudyCompanion ?? (() => {})}
             onNavigateToSrsReview={onNavigateToSrsReview ?? (() => {})}
+            onOpenSettings={onOpenSettings}
           />
         </motion.div>
       </div>

@@ -1,0 +1,89 @@
+# purpose: Gate memory/RAG changes with offline golden-query, safety, graph, and cache regression checks.
+# owner: AI Systems / Platform
+# trigger strategy: memory-related push, pull_request, and manual run
+# secrets required: none
+# expected runtime: 5-10 minutes
+# failure behavior: Review memory-eval-report artifact and failing Vitest output before merge.
+name: Memory Evals
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'lib/services/**'
+      - 'functions/api/**'
+      - 'services/graph/**'
+      - 'prisma/**'
+      - 'evals/memory/**'
+      - 'scripts/memory/**'
+      - 'tests/memory/**'
+      - 'tests/graph/**'
+      - 'tests/domain/pathFinderService.test.ts'
+      - 'docs/memory-*.md'
+      - '.agents/skills/**'
+      - '.github/workflows/memory-evals.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'lib/services/**'
+      - 'functions/api/**'
+      - 'services/graph/**'
+      - 'prisma/**'
+      - 'evals/memory/**'
+      - 'scripts/memory/**'
+      - 'tests/memory/**'
+      - 'tests/graph/**'
+      - 'tests/domain/pathFinderService.test.ts'
+      - 'docs/memory-*.md'
+      - '.agents/skills/**'
+      - '.github/workflows/memory-evals.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: memory-evals-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  memory-evals:
+    name: Static Memory Eval Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run golden memory manifest gate
+        run: npm run eval:memory -- --out memory-eval-report.json
+
+      - name: Run memory regression tests
+        run: npm run test:memory
+
+      - name: Upload memory eval report
+        uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: memory-eval-report
+          path: memory-eval-report.json
+          retention-days: 14

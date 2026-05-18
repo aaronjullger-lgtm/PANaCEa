@@ -16,9 +16,9 @@ See [prisma/schema.prisma](schema.prisma) for the full schema. Migrations live i
 
 ## Normalized study schema
 
-The additive normalized study layer introduces `Course`, `StudyTopic`, `CourseStudyTopic`, `StudyTopicCondition`, `QuestionStudyTopic`, `QuestionAnswerChoice`, `QuestionExplanation`, `QuestionExplanationCitation`, `StudyPlan`, `StudyPlanItem`, and `StudySessionQuestion`. These tables give study modes, question generation, explanations, daily plans, and scheduler analytics relational joins while preserving legacy JSON/string fields during migration.
+The additive normalized study layer introduces `Course`, `StudyTopic`, `CourseStudyTopic`, `StudyTopicCondition`, `QuestionStudyTopic`, `QuestionAnswerChoice`, `QuestionExplanation`, `QuestionExplanationCitation`, `StudyPlan`, `StudyPlanItem`, `StudySessionQuestion`, and `QuestionIdentity`. These tables give study modes, question generation, explanations, daily plans, and scheduler analytics relational joins while preserving legacy JSON/string fields during migration.
 
-See [docs/database/normalized-study-schema.md](../docs/database/normalized-study-schema.md) and migration `20260502000000_normalized_study_schema`.
+See [docs/database/normalized-study-schema.md](../docs/database/normalized-study-schema.md), migration `20260502000000_normalized_study_schema`, and migration `20260517000000_add_question_identity_contract`.
 
 ## UserProgress → ReviewLog migration
 

@@ -68,6 +68,27 @@ export const color = {
     focusRing:    'var(--color-focus-ring)',
   },
 
+  // Diagnostic Atlas OS redesign tokens
+  atlas: {
+    background:      'var(--atlas-bg)',
+    backgroundSoft:  'var(--atlas-bg-soft)',
+    surface:         'var(--atlas-surface)',
+    surfaceElevated: 'var(--atlas-surface-elevated)',
+    glass:           'var(--atlas-surface-glass)',
+    border:          'var(--atlas-border)',
+    borderStrong:    'var(--atlas-border-strong)',
+    borderGlow:      'var(--atlas-border-glow)',
+    cyan:            'var(--atlas-accent-cyan)',
+    blue:            'var(--atlas-accent-blue)',
+    violet:          'var(--atlas-accent-violet)',
+    pulsePink:       'var(--atlas-accent-pulse-pink)',
+    successGreen:    'var(--atlas-success-green)',
+    warningAmber:    'var(--atlas-warning-amber)',
+    textMuted:       'var(--atlas-text-muted)',
+    textSubtle:      'var(--atlas-text-subtle)',
+    clinicalWhite:   'var(--atlas-clinical-white)',
+  },
+
   // Data-viz / state semantics
   data: {
     pass:        'var(--color-data-pass)',
@@ -154,6 +175,22 @@ export const colorClass = {
     text:   'text-[var(--color-accent)]',
     border: 'border-[var(--color-accent)]',
     ring:   'focus-visible:ring-[var(--color-accent)]',
+  },
+  atlas: {
+    background: 'bg-atlas-background',
+    surface:    'bg-atlas-surface',
+    elevated:   'bg-atlas-elevated',
+    glass:      'bg-atlas-glass',
+    border:     'border-atlas-border',
+    borderGlow: 'border-atlas-border-glow',
+    cyanText:   'text-atlas-cyan',
+    blueText:   'text-atlas-blue',
+    violetText: 'text-atlas-violet',
+    pulseText:  'text-atlas-pulse',
+    successText:'text-atlas-success',
+    warningText:'text-atlas-warning',
+    mutedText:  'text-atlas-muted',
+    whiteText:  'text-atlas-white',
   },
   data: {
     passBg:        'bg-[var(--color-data-pass)]',

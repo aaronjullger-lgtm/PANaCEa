@@ -1,0 +1,4 @@
+interface:
+  display_name: "Debug Reproduce Isolate"
+  short_description: "Reproduce bugs, isolate root causes, and add regression tests"
+  default_prompt: "Reproduce this issue, isolate the root cause, implement the smallest safe fix, and add regression coverage."

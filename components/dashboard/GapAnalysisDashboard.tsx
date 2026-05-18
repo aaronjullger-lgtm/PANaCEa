@@ -35,6 +35,7 @@ import {
 } from '@/components/workspace';
 import { ROUTES } from '@/config/routes';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import ChartContainer from '@/components/shared/ChartContainer';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
@@ -276,20 +277,30 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
         const response = await fetch(getApiEndpoint(API_ENDPOINTS.ANALYTICS_PERFORMANCE_DELTAS), {
           headers: { Authorization: `Bearer ${token}` },
         });
+        const responseJson = await response.json().catch(() => null);
 
         if (!response.ok) {
           if (response.status === 404) {
-            setError('No performance data found. Complete some questions to see your analytics.');
+            setError(getApiEnvelopeError(
+              responseJson,
+              'No performance data found. Complete some questions to see your analytics.'
+            ));
           } else if (response.status === 500) {
-            setError('Server error loading your data. Please try again in a moment.');
+            setError(getApiEnvelopeError(
+              responseJson,
+              'Server error loading your data. Please try again in a moment.'
+            ));
           } else {
-            setError(`Failed to load data (${response.status}). Please try refreshing.`);
+            setError(getApiEnvelopeError(
+              responseJson,
+              `Failed to load data (${response.status}). Please try refreshing.`
+            ));
           }
           setIsLoading(false);
           return;
         }
 
-        const result: PerformanceDeltasResponse = await response.json();
+        const result = unwrapApiEnvelope<PerformanceDeltasResponse>(responseJson);
         if (!result || typeof result !== 'object') {
           throw new Error('Invalid response format');
         }

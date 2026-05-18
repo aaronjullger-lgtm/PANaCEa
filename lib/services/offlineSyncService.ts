@@ -6,6 +6,7 @@
 
 import { StorageKeys } from '../storage/storageRegistry';
 import { syncLogger } from '../logger';
+import { unwrapApiEnvelope } from '../utils/apiEnvelope';
 
 // Debug logging - set to true to re-enable verbose logs
 const DEBUG_OFFLINE_SYNC = false;
@@ -168,8 +169,7 @@ export async function syncPendingOperations(
       return result;
     }
 
-    if (DEBUG_OFFLINE_SYNC)
-      syncLogger.debug(`Syncing ${pending.length} pending operations...`);
+    if (DEBUG_OFFLINE_SYNC) syncLogger.debug(`Syncing ${pending.length} pending operations...`);
 
     // Process in batches
     const batches = chunkArray(pending, BATCH_SIZE);
@@ -264,7 +264,7 @@ async function syncSingleOperation(
 
     // Handle conflicts (409 status)
     if (response.status === 409) {
-      const serverData = await response.json();
+      const serverData = unwrapApiEnvelope(await response.json());
       const resolved = await resolveConflict(op, serverData, conflictResolution);
 
       if (resolved) {

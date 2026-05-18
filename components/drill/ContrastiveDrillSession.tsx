@@ -24,6 +24,7 @@ import DrillShell from './DrillShell';
 import DrillSummaryCard from './DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
 import { toast } from '@/lib/toast';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface ContrastiveSetData {
   id: string;
@@ -62,9 +63,12 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
         const response = await fetch('/api/drills/contrastive/sets', {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
+        const responseJson = await response.json().catch(() => null);
         if (response.ok) {
-          const data = (await response.json()) as { data?: { sets?: ContrastiveSetData[] } };
-          setAvailableSets(data.data?.sets || []);
+          const data = unwrapApiEnvelope<{ sets?: ContrastiveSetData[] }>(responseJson);
+          setAvailableSets(data.sets || []);
+        } else {
+          console.warn(getApiEnvelopeError(responseJson, 'Failed to fetch contrastive sets'));
         }
       } catch (error) {
         console.error('Failed to fetch contrastive sets:', error);
@@ -104,13 +108,14 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
         },
         body: JSON.stringify({ setId: selectedSet.id }),
       });
+      const responseJson = await response.json().catch(() => null);
 
       if (response.ok) {
-        const data = (await response.json()) as { data?: { set?: { id?: string } } };
-        setDrillId(data.data?.set?.id || selectedSet.id);
+        const data = unwrapApiEnvelope<{ set?: { id?: string } }>(responseJson);
+        setDrillId(data.set?.id || selectedSet.id);
         setIsPlaying(true);
       } else {
-        toast.error('Failed to start drill. Please try again.');
+        toast.error(getApiEnvelopeError(responseJson, 'Failed to start drill. Please try again.'));
       }
     } catch (error) {
       console.error('Failed to start drill:', error);

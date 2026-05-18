@@ -1,0 +1,4 @@
+interface:
+  display_name: "Think"
+  short_description: "Reason through personal priorities, trade-offs, and stuck decisions"
+  default_prompt: "Think through this decision by identifying constraints, trade-offs, and the next concrete action."

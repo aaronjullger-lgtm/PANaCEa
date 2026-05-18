@@ -1,18 +1,13 @@
-/**
- * Daily Triad Service
- *
- * Provides one "Gold Standard" or "Clinical Pearl" condition per day.
- * Helps users build systematic knowledge by focusing on high-yield content.
- *
- * @architecture Database-First: Triads stored in PostgreSQL, rotated daily
- * @integration Used by components/dashboard/DailyTriad.tsx
- */
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
 
 export interface DailyTriad {
+  /** Canonical condition identifier from MedicalContent */
+  conditionId: string;
+
   /** Name of the condition (e.g., "Acute Myocardial Infarction") */
   condition: string;
 
@@ -26,16 +21,19 @@ export interface DailyTriad {
   system: string;
 
   /** Subcategory within system (optional) */
-  subcategory?: string;
+  subcategory: string | null;
 
   /** PANCE exam yield percentage (if applicable) */
-  panceYield?: number;
+  panceYield: number | null;
 
   /** Key buzzwords for pattern recognition */
   buzzwords: string[];
 
   /** Source reference (e.g., "AAPA Guidelines 2025") */
-  source: string;
+  source: 'database';
+
+  /** Last source update timestamp */
+  updatedAt: string;
 }
 
 // ============================================================================
@@ -53,15 +51,15 @@ export interface DailyTriad {
  * @returns Promise resolving to today's DailyTriad
  * @throws Error if fetch fails
  */
-export async function fetchDailyTriad(): Promise<DailyTriad> {
-  const response = await fetch('/api/dashboard/daily-triad');
+export async function fetchDailyTriad(signal?: AbortSignal): Promise<DailyTriad> {
+  const response = await fetch('/api/dashboard/daily-triad', { signal });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch daily triad: ${response.statusText}`);
+    const errorPayload = await response.json().catch(() => ({}));
+    throw new Error(getApiEnvelopeError(errorPayload, 'Failed to fetch daily triad'));
   }
 
-  const data = await response.json() as DailyTriad;
-  return data;
+  return unwrapApiEnvelope<DailyTriad>(await response.json());
 }
 
 /**
@@ -78,11 +76,11 @@ export async function fetchPersonalizedTriad(token: string): Promise<DailyTriad>
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch personalized triad: ${response.statusText}`);
+    const errorPayload = await response.json().catch(() => ({}));
+    throw new Error(getApiEnvelopeError(errorPayload, 'Failed to fetch personalized triad'));
   }
 
-  const data = await response.json() as DailyTriad;
-  return data;
+  return unwrapApiEnvelope<DailyTriad>(await response.json());
 }
 
 /**
@@ -101,6 +99,7 @@ export async function markTriadReviewed(token: string): Promise<void> {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to mark triad as reviewed: ${response.statusText}`);
+    const errorPayload = await response.json().catch(() => ({}));
+    throw new Error(getApiEnvelopeError(errorPayload, 'Failed to mark triad as reviewed'));
   }
 }

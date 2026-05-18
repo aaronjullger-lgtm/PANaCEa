@@ -46,6 +46,7 @@ export interface AnatomyModel {
   modelUrl: string;
   format: ModelFormat;
   thumbnailUrl?: string;
+  assetSizeBytes?: number;
 
   // Citation
   citation: NIHCitation;

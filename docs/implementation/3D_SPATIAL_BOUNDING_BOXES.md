@@ -8,7 +8,7 @@
 |-------|--------|------|
 | Model | **Gemini 2.5 Pro** or **Gemini 3 Pro (Preview)** | Trained to output explicit 3D coordinates relative to the object's physical space |
 | Output format | **9-parameter 3D bounding box** | `[x_center, y_center, z_center, x_size, y_size, z_size, roll, pitch, yaw]` |
-| Visualization | **Three.js** or **React Three Fiber** | Map 3D coordinates to a 3D canvas; cannot render as a simple 2D div overlay |
+| Visualization | **Three.js** | Map 3D coordinates to a 3D canvas; cannot render as a simple 2D div overlay |
 
 ## Prompt Engineering
 
@@ -56,7 +56,7 @@ response = client.models.generate_content(
 
 - **Do not** draw a 2D div on the image; 3D coordinates (center, size, roll/pitch/yaw) require a 3D scene.
 - **Options:**
-  - **Three.js** (or **React Three Fiber**): Create a scene, camera, and for each `box_3d` render a wireframe box at `(x_center, y_center, z_center)` with dimensions `(x_size, y_size, z_size)` and rotation `(roll, pitch, yaw)`.
+  - **Three.js**: Create a scene, camera, and for each `box_3d` render a wireframe box at `(x_center, y_center, z_center)` with dimensions `(x_size, y_size, z_size)` and rotation `(roll, pitch, yaw)`.
   - **Alternative:** Side-by-side view: original 2D image + a separate 3D canvas showing the inferred bones as oriented boxes (e.g., for “Clinical Eye” anatomy mode).
 - **Units:** Confirm with the model whether values are in meters or 0–1 normalized; scale the 3D scene accordingly.
 

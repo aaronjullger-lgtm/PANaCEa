@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import type { DiagnosticPuzzleDailyPayload } from '@/services/core/diagnosticPuzzleService';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface DiagnosticPuzzleHookReturn {
   // Data
@@ -59,10 +60,10 @@ export function useDiagnosticPuzzle(): DiagnosticPuzzleHookReturn {
 
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch puzzle');
+        throw new Error(getApiEnvelopeError(result, 'Failed to fetch puzzle'));
       }
 
-      const payload = result.data as DiagnosticPuzzleDailyPayload;
+      const payload = unwrapApiEnvelope<DiagnosticPuzzleDailyPayload>(result);
       setPuzzle(payload.puzzle);
       setUserState(payload.userState);
     } catch (err: unknown) {
@@ -94,10 +95,10 @@ export function useDiagnosticPuzzle(): DiagnosticPuzzleHookReturn {
 
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to submit guess');
+        throw new Error(getApiEnvelopeError(result, 'Failed to submit guess'));
       }
 
-      const payload = result.data as DiagnosticPuzzleDailyPayload;
+      const payload = unwrapApiEnvelope<DiagnosticPuzzleDailyPayload>(result);
       setPuzzle(payload.puzzle);
       setUserState(payload.userState);
     } catch (err: unknown) {
@@ -120,9 +121,9 @@ export function useDiagnosticPuzzle(): DiagnosticPuzzleHookReturn {
       });
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch stats');
+        throw new Error(getApiEnvelopeError(result, 'Failed to fetch stats'));
       }
-      setStats(result.data);
+      setStats(unwrapApiEnvelope<DiagnosticPuzzleHookReturn['stats']>(result));
     } catch (err) {
       console.error('Failed to fetch diagnostic puzzle stats:', err);
     }

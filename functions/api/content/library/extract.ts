@@ -73,7 +73,6 @@ export const onRequestPost = authenticatedEndpoint(ExtractStartBodySchema, async
     if (!pdfRes.ok) {
       return fail(ErrorCode.UPSTREAM_ERROR, {
         message: `Failed to fetch PDF`,
-        details: String(pdfRes.status),
       });
     }
     const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
@@ -102,7 +101,7 @@ export const onRequestPost = authenticatedEndpoint(ExtractStartBodySchema, async
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Extract start failed';
     log.warn('Extract start failed', { error: message });
-    return fail(ErrorCode.UPSTREAM_ERROR, { message });
+    return fail(ErrorCode.UPSTREAM_ERROR, { message: 'Failed to start PDF extraction' });
   }
 });
 
@@ -155,7 +154,7 @@ export const onRequestGet = authenticatedEndpoint(
         return ok({
           status: 'failed',
           errorCode: statusRes.errorCode,
-          errorMessage: statusRes.errorMessage ?? 'Extract job failed',
+          errorMessage: 'Extract job failed',
         });
       }
 

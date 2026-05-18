@@ -22,6 +22,7 @@ import {
   WorkspaceSurface,
 } from '@/components/workspace';
 import { API_ENDPOINTS, buildApiUrl } from '@/lib/utils/apiConfig';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface StudyCompanionPageProps {
   onExit: () => void;
@@ -108,12 +109,12 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
       });
 
       if (!response.ok) {
-        const errBody = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(errBody.error || `HTTP ${response.status}`);
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(getApiEnvelopeError(errBody, `HTTP ${response.status}`));
       }
 
-      const data = (await response.json()) as { data?: { resources?: StudyResource[] } };
-      const list = data.data?.resources ?? [];
+      const data = unwrapApiEnvelope<{ resources?: StudyResource[] }>(await response.json());
+      const list = data.resources ?? [];
       setResources(list);
       setSelectedId((previous) => {
         if (previous && list.some((resource) => resource.id === previous)) {
@@ -164,18 +165,18 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
       });
 
       if (!response.ok) {
-        const errBody = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(errBody.error || `HTTP ${response.status}`);
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(getApiEnvelopeError(errBody, `HTTP ${response.status}`));
       }
 
-      const data = (await response.json()) as {
+      const data = unwrapApiEnvelope<{
         answer?: string;
         citations?: Array<{
           page: number;
           highlightBox: { top: number; left: number; width: number; height: number };
         }>;
         citationsFallback?: boolean;
-      };
+      }>(await response.json());
 
       setAnswer(data.answer ?? null);
       setCitations(

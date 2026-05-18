@@ -17,6 +17,18 @@ import type {
   NIHCitation,
   ModelAnnotation,
 } from '@/types/anatomy-model';
+import {
+  NIH_HRA_LEFT_KIDNEY_MODEL,
+  NIH_HRA_LIVER_MODEL,
+  NIH_HRA_MAIN_BRONCHUS_MODEL,
+  NIH_HRA_PANCREAS_MODEL,
+  NIH_HRA_PROSTATE_MODEL,
+  NIH_HRA_SPINAL_CORD_MODEL,
+  NIH_HRA_SPLEEN_MODEL,
+  NIH_HUMAN_HEART_MODEL,
+  NIH_RIGHT_FEMUR_MODEL,
+  NIH_VISIBLE_HUMAN_HEART_LUNGS_MODEL,
+} from '@/lib/anatomy/nihAnatomyAssets';
 
 // Map database enum to type system
 export type AnatomySystem3D =
@@ -82,45 +94,15 @@ export interface ModelWithRelations extends Anatomy3DModelDB {
 
 // Sample fallback models for when database is empty or unavailable
 const FALLBACK_MODELS: Partial<Record<AnatomySystem, AnatomyModel[]>> = {
-  cardiovascular: [
-    {
-      id: 'heart-basic',
-      name: 'Human Heart - Basic Anatomy',
-      description:
-        'Detailed 3D model of the human heart showing all four chambers, valves, and major vessels.',
-      system: 'cardiovascular',
-      structures: [
-        'left atrium',
-        'right atrium',
-        'left ventricle',
-        'right ventricle',
-        'aorta',
-        'pulmonary artery',
-      ],
-      modelUrl: '/models/heart-basic.glb',
-      format: 'glb',
-      thumbnailUrl: '/thumbnails/heart-basic.png',
-      citation: {
-        source: 'NIH 3D Print Exchange',
-        modelId: '3DPX-001234',
-        title: 'Human Heart Model',
-        author: 'NIH 3D Print Exchange',
-        institution: 'National Institutes of Health',
-        license: 'Public Domain',
-        url: 'https://3d.nih.gov/entries/3DPX-001234',
-        dateAccessed: new Date().toISOString().split('T')[0] || '',
-        citationText:
-          'NIH 3D Print Exchange. Human Heart Model. https://3d.nih.gov/entries/3DPX-001234.',
-      },
-      clinicalRelevance: ['Coronary artery disease', 'Valve pathology', 'Cardiac surgery planning'],
-      relatedConditions: ['myocardial-infarction', 'heart-failure'],
-      scale: 1,
-      defaultRotation: [0, 0, 0],
-      highlightableStructures: ['left atrium', 'right atrium', 'left ventricle', 'right ventricle'],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ],
+  cardiovascular: [NIH_HUMAN_HEART_MODEL],
+  digestive: [NIH_HRA_LIVER_MODEL],
+  endocrine: [NIH_HRA_PANCREAS_MODEL],
+  lymphatic: [NIH_HRA_SPLEEN_MODEL],
+  musculoskeletal: [NIH_RIGHT_FEMUR_MODEL],
+  nervous: [NIH_HRA_SPINAL_CORD_MODEL],
+  reproductive: [NIH_HRA_PROSTATE_MODEL],
+  respiratory: [NIH_VISIBLE_HUMAN_HEART_LUNGS_MODEL, NIH_HRA_MAIN_BRONCHUS_MODEL],
+  urinary: [NIH_HRA_LEFT_KIDNEY_MODEL],
 };
 
 class AnatomyModelService {
@@ -245,6 +227,7 @@ class AnatomyModelService {
       modelUrl: dbModel.fileUrl,
       format: dbModel.format as 'glb' | 'gltf' | 'obj',
       thumbnailUrl: dbModel.thumbnailUrl,
+      assetSizeBytes: dbModel.fileSize,
       citation: {
         source: (dbModel.sourceName || 'NIH 3D Print Exchange') as
           | 'NIH 3D Print Exchange'

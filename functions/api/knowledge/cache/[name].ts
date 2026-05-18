@@ -23,7 +23,7 @@ export const onRequestDelete = aiEndpoint(
     const { env, auth, params } = context;
 
     if (!env.GEMINI_API_KEY) {
-      return { status: 500, error: 'GEMINI_API_KEY environment variable is not set' };
+      return { status: 500, error: 'Knowledge cache deletion is not configured' };
     }
 
     const rawName = params?.name;
@@ -42,24 +42,26 @@ export const onRequestDelete = aiEndpoint(
         return { status: 404, error: 'User not found' };
       }
 
-      const deleted = await prisma.knowledgeCache.deleteMany({
+      const record = await prisma.knowledgeCache.findFirst({
         where: { userId: user.id, geminiCacheName: name },
+        select: { id: true },
       });
-
-      if (deleted.count === 0) {
+      if (!record) {
         return { status: 404, error: 'Cache not found or already deleted' };
       }
 
-      // Clean up on Gemini side (best-effort)
       const delRes = await fetch(`${GEMINI_BASE}/v1beta/${name}?key=${env.GEMINI_API_KEY}`, {
         method: 'DELETE',
       });
       if (!delRes.ok && delRes.status !== 404) {
-        logger.warn('Gemini cache delete failed (DB already updated)', {
+        logger.warn('Gemini cache delete failed', {
           status: delRes.status,
           name,
         });
+        return { status: 502, error: 'Failed to delete external cache' };
       }
+
+      await prisma.knowledgeCache.delete({ where: { id: record.id } });
 
       logger.info('Knowledge cache deleted', { name, userId: user.id });
       return { data: { deleted: true, name } };

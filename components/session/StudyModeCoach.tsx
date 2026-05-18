@@ -140,8 +140,13 @@ export const GuidedFeedbackScaffold = memo(function GuidedFeedbackScaffold({
 }: GuidedFeedbackScaffoldProps) {
   const [showCheckReveal, setShowCheckReveal] = useState(false);
   const scaffold = useMemo(
-    () => buildScaffoldedExplanation(question, selectedAnswerIndex),
-    [question, selectedAnswerIndex]
+    () =>
+      buildScaffoldedExplanation(question, selectedAnswerIndex, {
+        guidanceLevel,
+        learnerReflection,
+        hintsViewed,
+      }),
+    [question, selectedAnswerIndex, guidanceLevel, learnerReflection, hintsViewed]
   );
   const isCorrect = selectedAnswerIndex === question.correctAnswerIndex;
 
@@ -182,7 +187,9 @@ export const GuidedFeedbackScaffold = memo(function GuidedFeedbackScaffold({
               {chunk.title === 'Repair the miss' || chunk.title === 'Why it holds' ? (
                 <CheckCircle2
                   className={`h-4 w-4 ${
-                    isCorrect ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)]'
+                    isCorrect
+                      ? 'text-[var(--color-data-pass)]'
+                      : 'text-[var(--color-data-provisional)]'
                   }`}
                   aria-hidden="true"
                 />

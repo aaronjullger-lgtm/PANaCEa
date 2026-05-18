@@ -58,18 +58,23 @@ export const onRequestDelete = authenticatedEndpoint(
         return fail(ErrorCode.NOT_FOUND, { message: 'Cache not found' });
       }
 
-      await prisma.knowledgeCache.delete({ where: { id: record.id } });
-
       if (env.GEMINI_API_KEY && record.expiresAt > new Date()) {
         const url = `${GEMINI_BASE}/v1beta/${record.geminiCacheName}?key=${env.GEMINI_API_KEY}`;
         const res = await fetch(url, { method: 'DELETE' });
-        if (!res.ok) {
+        if (!res.ok && res.status !== 404) {
           log.warn('Gemini cache delete failed (cache may already be expired)', {
             status: res.status,
             name: record.geminiCacheName,
           });
+          return fail(ErrorCode.UPSTREAM_ERROR, { message: 'Failed to delete external cache' });
         }
+      } else if (!env.GEMINI_API_KEY && record.expiresAt > new Date()) {
+        return fail(ErrorCode.ENV_MISCONFIGURED, {
+          message: 'Knowledge cache deletion is not configured',
+        });
       }
+
+      await prisma.knowledgeCache.delete({ where: { id: record.id } });
 
       return ok({ deleted: true, id: record.id });
     } catch (err) {

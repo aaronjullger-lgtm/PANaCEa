@@ -2,6 +2,13 @@
 
 Current grade: **C / 72**. Target grade: **B+ / 87** before launch.
 
+## Current Implementation Status
+
+- Phase A goals identity fix: complete with direct route coverage.
+- Phase B client envelope hardening: in progress. Core goals, session, calibration, study plan, analytics, drill, SRS variant, SOAP grading, condition-search, and smart condition clients now use the shared envelope helper.
+- Phase B guardrail: `scripts/audit-api-envelope-callers.mjs` now inventories remaining direct internal API JSON callers.
+- Verification blocker: dependency installation is currently incomplete; Vitest and full production typecheck are blocked until `node_modules` is restored.
+
 ## Phase A: Foundation Stabilization
 
 - Fix `functions/api/user/goals.ts` to use internal `User.id`.
@@ -12,6 +19,7 @@ Current grade: **C / 72**. Target grade: **B+ / 87** before launch.
 
 ## Phase B: API Contract Hardening
 
+- Continue `scripts/audit-api-envelope-callers.mjs` queue for admin, OSCE/specialty mode, reference/library, pearls/social/toolkit, and offline/sync callers.
 - Normalize `dashboard/stats`, `user/stats`, `admin/stats`, and `study-path/accept` response shapes.
 - Move endpoints toward `withEndpoint()` and shared schemas.
 - Document raw exceptions for streaming, proxy, binary, and webhook ACKs only.

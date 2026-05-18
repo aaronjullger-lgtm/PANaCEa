@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wrap Up"
+  short_description: "Close a session with issue capture, handoff, and optional shipping steps"
+  default_prompt: "Wrap up this session by capturing issues, outstanding work, verification, and a precise resume prompt."

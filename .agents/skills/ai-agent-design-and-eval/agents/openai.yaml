@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Agent Design And Eval"
+  short_description: "Design, implement, and evaluate task-specific AI agents"
+  default_prompt: "Design or improve this AI agent with clear scope, schemas, guardrails, evals, and verification."

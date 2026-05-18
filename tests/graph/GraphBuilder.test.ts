@@ -14,6 +14,9 @@ vi.mock('@/lib/prisma', () => ({
     anatomyStructure: {
       findMany: vi.fn(),
     },
+    condition: {
+      findMany: vi.fn(),
+    },
     drug: {
       findMany: vi.fn(),
     },
@@ -125,5 +128,31 @@ describe('GraphBuilder', () => {
     });
   });
 
-  // More tests can be added for other node builders and edge builders
+  describe('buildCoOccurrenceEdges', () => {
+    it('creates co-occurrence edges with the CO_OCCURRENCE edge type', async () => {
+      (prisma.condition.findMany as Mock).mockResolvedValue([
+        { id: 'cond1', system: 'Cardiovascular' },
+        { id: 'cond2', system: 'Cardiovascular' },
+      ]);
+      (prisma.graphEdge.upsert as Mock).mockResolvedValue({});
+
+      await (builder as any).buildCoOccurrenceEdges();
+
+      expect(prisma.graphEdge.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            sourceId_targetId_edgeType: {
+              sourceId: 'condition:cond1',
+              targetId: 'condition:cond2',
+              edgeType: GraphEdgeType.CO_OCCURRENCE,
+            },
+          },
+          create: expect.objectContaining({
+            edgeType: GraphEdgeType.CO_OCCURRENCE,
+            description: 'Same organ system co-occurrence',
+          }),
+        })
+      );
+    });
+  });
 });

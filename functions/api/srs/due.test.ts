@@ -84,6 +84,7 @@ function makeCardProgress(overrides: Record<string, any> = {}) {
   return {
     id: 'card-1',
     questionId: 'question-1',
+    questionIdentityId: 'identity-question-1',
     progressContext: 'READINESS',
     due: new Date('2026-04-01T00:00:00Z'),
     stability: 14,
@@ -118,9 +119,7 @@ describe('GET /api/srs/due', () => {
   });
 
   it('creates a placeholder user when the row is missing', async () => {
-    mockPrisma.user.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ id: 'user-1' });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'user-1' });
     mockPrisma.user.create.mockResolvedValue({ id: 'user-1' });
 
     const result = await captured.handler(makeContext());
@@ -201,9 +200,7 @@ describe('GET /api/srs/due', () => {
     expect(mockPrisma.userTopicProgress.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ take: 100 })
     );
-    expect(mockPrisma.card.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ take: 100 })
-    );
+    expect(mockPrisma.card.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 100 }));
     expect(mockPrisma.userProgress.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ take: 100 })
     );
@@ -217,9 +214,7 @@ describe('GET /api/srs/due', () => {
     expect(mockPrisma.userTopicProgress.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ take: 50 })
     );
-    expect(mockPrisma.card.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ take: 50 })
-    );
+    expect(mockPrisma.card.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 50 }));
     expect(mockPrisma.userProgress.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ take: 50 })
     );
@@ -268,14 +263,14 @@ describe('GET /api/srs/due', () => {
         progressContext: 'TARGETED',
         due: new Date('2026-04-01T12:00:00Z'),
         Question: {
-        conditionId: 'condition-1',
-        medicalContentId: 'condition-1',
-        system: 'Cardiovascular',
-        taskType: 'diagnosis',
-        lifecycleStatus: 'ACTIVE',
-        qaStatus: 'APPROVED',
-      },
-    }),
+          conditionId: 'condition-1',
+          medicalContentId: 'condition-1',
+          system: 'Cardiovascular',
+          taskType: 'diagnosis',
+          lifecycleStatus: 'ACTIVE',
+          qaStatus: 'APPROVED',
+        },
+      }),
     ]);
     mockPrisma.userTopicProgress.findMany.mockResolvedValue([
       makeTopicProgress({
@@ -315,7 +310,11 @@ describe('GET /api/srs/due', () => {
       expect.arrayContaining(['card-1', 'topic-kept', 'progress-kept'])
     );
     expect(result.data.items.map((item: any) => item.id)).not.toEqual(
-      expect.arrayContaining(['topic-duplicate', 'progress-duplicate-card', 'progress-duplicate-topic'])
+      expect.arrayContaining([
+        'topic-duplicate',
+        'progress-duplicate-card',
+        'progress-duplicate-topic',
+      ])
     );
     expect(result.data.totalDue).toBe(3);
     expect(result.data.suppressedDuplicates).toBe(3);
@@ -372,24 +371,15 @@ describe('GET /api/srs/due', () => {
     const cardCall = mockPrisma.card.findMany.mock.calls[0][0];
     expect(cardCall.where.userId).toBe('user-1');
     expect(cardCall.where.due.lte).toBeInstanceOf(Date);
-    expect(cardCall.orderBy).toEqual([
-      { due: 'asc' },
-      { difficulty: 'desc' },
-    ]);
+    expect(cardCall.orderBy).toEqual([{ due: 'asc' }, { difficulty: 'desc' }]);
     const topicCall = mockPrisma.userTopicProgress.findMany.mock.calls[0][0];
     expect(topicCall.where.userId).toBe('user-1');
     expect(topicCall.where.nextReviewDate.lte).toBeInstanceOf(Date);
-    expect(topicCall.orderBy).toEqual([
-      { nextReviewDate: 'asc' },
-      { difficulty: 'desc' },
-    ]);
+    expect(topicCall.orderBy).toEqual([{ nextReviewDate: 'asc' }, { difficulty: 'desc' }]);
     const conditionCall = mockPrisma.userProgress.findMany.mock.calls[0][0];
     expect(conditionCall.where.userId).toBe('user-1');
     expect(conditionCall.where.nextReviewAt.lte).toBeInstanceOf(Date);
-    expect(conditionCall.orderBy).toEqual([
-      { nextReviewAt: 'asc' },
-      { fsrsDifficulty: 'desc' },
-    ]);
+    expect(conditionCall.orderBy).toEqual([{ nextReviewAt: 'asc' }, { fsrsDifficulty: 'desc' }]);
   });
 
   it('includes due Card rows with question IDs for study-mode launchers', async () => {
@@ -405,6 +395,7 @@ describe('GET /api/srs/due', () => {
       expect.objectContaining({
         source: 'card',
         questionId: 'question-1',
+        questionIdentityId: 'identity-question-1',
         conditionId: 'medical-content-3',
         system: 'Cardiovascular',
       })

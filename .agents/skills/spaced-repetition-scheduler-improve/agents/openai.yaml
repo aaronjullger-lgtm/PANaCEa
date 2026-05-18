@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spaced Repetition Scheduler"
+  short_description: "Improve review queues, FSRS/SM-2 scheduling, retention, and readiness"
+  default_prompt: "Audit and improve this spaced-repetition scheduler with deterministic tests and safe migration planning."

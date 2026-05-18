@@ -198,6 +198,9 @@ export default {
         brand: '0 10px 40px -10px rgba(15, 23, 42, 0.5)',
         'brand-lg': '0 20px 50px -15px rgba(15, 23, 42, 0.55)',
         'glow-accent': '0 0 20px -2px rgba(14, 165, 233, 0.35)',
+        'atlas-glass': 'var(--atlas-shadow-glass)',
+        'atlas-deep': 'var(--atlas-shadow-deep)',
+        'atlas-focus': 'var(--atlas-focus-ring)',
         // --- Cinematic shadow system (Linear/Stripe/Vercel inspired) ---
         'cinematic': '0 0 0 1px rgba(59, 130, 246, 0.06), 0 8px 24px -4px rgba(0, 0, 0, 0.1)',
         'cinematic-hover': '0 0 0 1px rgba(59, 130, 246, 0.12), 0 16px 40px -8px rgba(0, 0, 0, 0.15)',
@@ -278,6 +281,25 @@ export default {
         'clinical-navy': '#0F172A', // Deep Royal Navy for dark mode backgrounds
         'clinical-white': '#F8FAFC', // Sanitarium White for light mode
         'clinical-blue': '#0284C7', // Cerulean Blue for primary actions
+        atlas: {
+          background: 'var(--atlas-bg)',
+          'background-soft': 'var(--atlas-bg-soft)',
+          surface: 'var(--atlas-surface)',
+          elevated: 'var(--atlas-surface-elevated)',
+          glass: 'var(--atlas-surface-glass)',
+          border: 'var(--atlas-border)',
+          'border-strong': 'var(--atlas-border-strong)',
+          'border-glow': 'var(--atlas-border-glow)',
+          cyan: 'var(--atlas-accent-cyan)',
+          blue: 'var(--atlas-accent-blue)',
+          violet: 'var(--atlas-accent-violet)',
+          pulse: 'var(--atlas-accent-pulse-pink)',
+          success: 'var(--atlas-success-green)',
+          warning: 'var(--atlas-warning-amber)',
+          muted: 'var(--atlas-text-muted)',
+          subtle: 'var(--atlas-text-subtle)',
+          white: 'var(--atlas-clinical-white)',
+        },
         // Circadian theme: slate-950 for night shift (Medical/Night Shift vibe)
         'slate-950': '#020617',
         // Semantic colors for clinical clarity

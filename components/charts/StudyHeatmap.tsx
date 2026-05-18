@@ -15,6 +15,7 @@
 
 import React, { useMemo } from 'react';
 import { ResponsiveCalendar } from '@nivo/calendar';
+import { color } from '@/lib/tokens';
 
 export interface StudyHeatmapDatum {
   /** ISO date string, e.g. '2026-01-15' */
@@ -50,6 +51,9 @@ function useIsDark(): boolean {
   return dark;
 }
 
+const mixColor = (foreground: string, foregroundAmount: number, background: string) =>
+  `color-mix(in srgb, ${foreground} ${foregroundAmount}%, ${background})`;
+
 export default function StudyHeatmap({
   data,
   from,
@@ -66,13 +70,23 @@ export default function StudyHeatmap({
   const colors = useMemo(
     () =>
       isDark
-        ? ['#1e293b', '#2a2520', '#6b5d3e', '#c4b78a']  // dark: slate-800 → gold ramp (cinematic)
-        : ['#DBEAFE', '#93C5FD', '#3B82F6', '#1D4ED8'],  // light: blue-100 → blue-700
-    [isDark],
+        ? [
+            color.atlas.surfaceElevated,
+            mixColor(color.atlas.blue, 34, color.atlas.surface),
+            mixColor(color.atlas.cyan, 58, color.atlas.surface),
+            color.atlas.warningAmber,
+          ]
+        : [
+            mixColor(color.accent.default, 14, color.bg.surface),
+            mixColor(color.accent.default, 34, color.bg.surface),
+            color.accent.default,
+            color.accent.secondary,
+          ],
+    [isDark]
   );
 
-  const emptyColor = isDark ? '#0a0e1a' : '#f1f5f9';
-  const textColor = isDark ? '#94a3b8' : '#64748b';
+  const emptyColor = isDark ? color.atlas.backgroundSoft : color.bg.secondary;
+  const textColor = color.text.secondary;
 
   return (
     <div className={className} style={{ height }}>
@@ -86,16 +100,16 @@ export default function StudyHeatmap({
         yearSpacing={40}
         monthBorderColor="transparent"
         dayBorderWidth={2}
-        dayBorderColor={isDark ? '#1e293b' : '#ffffff'}
+        dayBorderColor={isDark ? color.atlas.surfaceElevated : color.bg.surface}
         theme={{
           text: { fill: textColor, fontSize: 11 },
           tooltip: {
             container: {
-              background: isDark ? '#1e293b' : '#ffffff',
-              color: isDark ? '#f1f5f9' : '#0f172a',
+              background: color.bg.elevated,
+              color: color.text.primary,
               fontSize: 12,
               borderRadius: '8px',
-              boxShadow: '0 0 0 1px var(--color-glass-border), 0 8px 24px -4px var(--color-glass-shadow), 0 4px 8px -2px rgba(0,0,0,0.08)',
+              boxShadow: 'var(--atlas-shadow-glass, 0 8px 24px var(--color-shadow-soft))',
             },
           },
         }}

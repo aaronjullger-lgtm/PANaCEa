@@ -17,6 +17,7 @@
 // ─── Types ────────────────────────────────────────────────────────
 
 import { getEmbedding } from '../gemini';
+import { formatMemorySafetyFlags, sanitizeRetrievedContextText } from './memory/contextSanitizer';
 
 export type ContentType =
   | 'pathophysiology'
@@ -52,8 +53,8 @@ export interface RetrieveOptions {
 // ─── Constants ────────────────────────────────────────────────────
 
 const DEFAULT_LIMIT = 5;
-const DEFAULT_MIN_SIMILARITY = 0.30;
-const GROUNDING_THRESHOLD = 0.40;
+const DEFAULT_MIN_SIMILARITY = 0.3;
+const GROUNDING_THRESHOLD = 0.4;
 const TOKENS_PER_CHAR = 0.25;
 const DEFAULT_MAX_CONTEXT_TOKENS = 3000;
 
@@ -95,11 +96,7 @@ export async function retrieveContext(
   prisma: any,
   apiKey: string
 ): Promise<RAGContext> {
-  const {
-    limit = DEFAULT_LIMIT,
-    minSimilarity = DEFAULT_MIN_SIMILARITY,
-    system,
-  } = options;
+  const { limit = DEFAULT_LIMIT, minSimilarity = DEFAULT_MIN_SIMILARITY, system } = options;
 
   const embedding = await embedQuery(query, apiKey);
   const vectorStr = `[${embedding.join(',')}]`;
@@ -129,11 +126,19 @@ export async function retrieveContext(
   const records: ContentRecord[] = await prisma.medicalContent.findMany({
     where: { id: { in: ids }, ...(system ? { system } : {}) },
     select: {
-      id: true, condition: true, system: true,
-      overview: true, symptoms: true, pathophysiology: true,
-      treatment: true, diagnostics: true, clinical_pearls: true,
-      buzzwords: true, gold_standard_dx: true,
-      first_line_rx: true, best_initial_test: true,
+      id: true,
+      condition: true,
+      system: true,
+      overview: true,
+      symptoms: true,
+      pathophysiology: true,
+      treatment: true,
+      diagnostics: true,
+      clinical_pearls: true,
+      buzzwords: true,
+      gold_standard_dx: true,
+      first_line_rx: true,
+      best_initial_test: true,
     },
   });
 
@@ -169,7 +174,9 @@ export async function retrieveContext(
       record.gold_standard_dx ? `Gold Standard Dx: ${record.gold_standard_dx}` : '',
       record.first_line_rx ? `First-Line Rx: ${record.first_line_rx}` : '',
       record.best_initial_test ? `Best Initial Test: ${record.best_initial_test}` : '',
-    ].filter(Boolean).join('\n');
+    ]
+      .filter(Boolean)
+      .join('\n');
 
     if (anchors.length > 20) {
       chunks.push({
@@ -212,11 +219,14 @@ export function formatContextForPrompt(
   let currentChars = header.length;
 
   for (const chunk of context.chunks) {
-    const block = `[Source: ${chunk.condition} — ${chunk.contentType}] (relevance: ${chunk.similarity.toFixed(2)})\n${chunk.content}\n---\n\n`;
+    const sanitized = sanitizeRetrievedContextText(chunk.content);
+    const safetyFlags = formatMemorySafetyFlags(sanitized.flags);
+    const sourceLine = `[Source: ${chunk.condition} — ${chunk.contentType}] (relevance: ${chunk.similarity.toFixed(2)})`;
+    const block = `${sourceLine}\n${safetyFlags ? `${safetyFlags}\n` : ''}${sanitized.text}\n---\n\n`;
     if (currentChars + block.length > maxChars) {
       const remaining = maxChars - currentChars - 50;
       if (remaining > 100) {
-        result += `[Source: ${chunk.condition} — ${chunk.contentType}] (relevance: ${chunk.similarity.toFixed(2)})\n${chunk.content.slice(0, remaining)}...\n---\n\n`;
+        result += `${sourceLine}\n${safetyFlags ? `${safetyFlags}\n` : ''}${sanitized.text.slice(0, remaining)}...\n---\n\n`;
       }
       break;
     }
@@ -298,7 +308,10 @@ export function refineRetrievedContext(
 
   // Step 3: Log content gaps for knowledge base improvement
   if (cragResult.contentGap) {
-    logger.warn('RAG content gap', { scope: LOG_SCOPE, gap: formatGapForLogging(cragResult.contentGap) });
+    logger.warn('RAG content gap', {
+      scope: LOG_SCOPE,
+      gap: formatGapForLogging(cragResult.contentGap),
+    });
   }
 
   return {
@@ -348,11 +361,15 @@ export function assessRetrievalQuality(context: RAGContext): {
   if (context.chunks.length === 0) {
     return { grade: 'none', message: 'No relevant clinical content found. Content gap detected.' };
   }
-  const avgSim = context.retrievalScores.reduce((a, b) => a + b, 0) / context.retrievalScores.length;
+  const avgSim =
+    context.retrievalScores.reduce((a, b) => a + b, 0) / context.retrievalScores.length;
   const topSim = context.retrievalScores[0] ?? 0;
 
-  if (topSim >= 0.7 && avgSim >= 0.5) return { grade: 'excellent', message: 'Strong clinical grounding.' };
-  if (topSim >= 0.5 && avgSim >= 0.4) return { grade: 'good', message: 'Adequate clinical context.' };
-  if (topSim >= 0.35) return { grade: 'fair', message: 'Partial context. May need additional review.' };
+  if (topSim >= 0.7 && avgSim >= 0.5)
+    return { grade: 'excellent', message: 'Strong clinical grounding.' };
+  if (topSim >= 0.5 && avgSim >= 0.4)
+    return { grade: 'good', message: 'Adequate clinical context.' };
+  if (topSim >= 0.35)
+    return { grade: 'fair', message: 'Partial context. May need additional review.' };
   return { grade: 'poor', message: 'Low relevance retrieval. Flag for expert review.' };
 }

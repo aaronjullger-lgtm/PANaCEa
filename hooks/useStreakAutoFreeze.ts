@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export interface AutoFreezeResult {
   freezesApplied: number;
@@ -42,10 +43,7 @@ export function useStreakAutoFreeze() {
         });
 
         if (!response.ok) return;
-        const data = await response.json();
-        if (data?.data) {
-          setResult(data.data);
-        }
+        setResult(unwrapApiEnvelope<AutoFreezeResult>(await response.json()));
       } catch (error) {
         // Auto-freeze is non-critical — fail silently
         console.warn('[useStreakAutoFreeze] Failed:', error);

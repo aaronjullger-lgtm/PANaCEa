@@ -24,7 +24,9 @@ describe('staging question edge helper', () => {
   it('normalizes generated question payloads before staging', async () => {
     const prisma = {
       stagingQuestion: {
-        create: vi.fn().mockImplementation((args) => Promise.resolve({ id: args.data.id, ...args.data })),
+        create: vi
+          .fn()
+          .mockImplementation((args) => Promise.resolve({ id: args.data.id, ...args.data })),
       },
     };
 
@@ -121,11 +123,18 @@ describe('staging question edge helper', () => {
         update: vi.fn().mockResolvedValue({}),
       },
       preGeneratedQuestion: {
-        upsert: vi.fn().mockImplementation((args) =>
-          Promise.resolve({ id: args.create.id, ...args.create })
-        ),
+        upsert: vi
+          .fn()
+          .mockImplementation((args) => Promise.resolve({ id: args.create.id, ...args.create })),
       },
       question: {
+        upsert: vi.fn().mockResolvedValue({}),
+      },
+      questionAnswerChoice: {
+        deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+        upsert: vi.fn().mockResolvedValue({}),
+      },
+      questionExplanation: {
         upsert: vi.fn().mockResolvedValue({}),
       },
     };
@@ -174,6 +183,45 @@ describe('staging question edge helper', () => {
         medicalContentId: 'mc-1',
       }),
     });
+    expect(prisma.questionAnswerChoice.upsert).toHaveBeenCalledWith({
+      where: {
+        questionId_choiceKey: {
+          questionId: 'stg-1',
+          choiceKey: 'A',
+        },
+      },
+      create: expect.objectContaining({
+        questionId: 'stg-1',
+        choiceKey: 'A',
+        choiceText: 'Pulmonary embolism',
+        isCorrect: true,
+        displayOrder: 0,
+      }),
+      update: expect.objectContaining({
+        choiceText: 'Pulmonary embolism',
+        isCorrect: true,
+        displayOrder: 0,
+      }),
+    });
+    expect(prisma.questionExplanation.upsert).toHaveBeenCalledWith({
+      where: {
+        questionId_explanationType_version: {
+          questionId: 'stg-1',
+          explanationType: 'CORRECT_RATIONALE',
+          version: 1,
+        },
+      },
+      create: expect.objectContaining({
+        questionId: 'stg-1',
+        explanationType: 'CORRECT_RATIONALE',
+        body: 'A focused explanation.',
+        isActive: true,
+      }),
+      update: expect.objectContaining({
+        body: 'A focused explanation.',
+        isActive: true,
+      }),
+    });
   });
 
   it('rejects promotion before a staging question has passed adequacy review', async () => {
@@ -218,11 +266,18 @@ describe('staging question edge helper', () => {
         update: vi.fn().mockResolvedValue({}),
       },
       preGeneratedQuestion: {
-        upsert: vi.fn().mockImplementation((args) =>
-          Promise.resolve({ id: args.create.id, ...args.create })
-        ),
+        upsert: vi
+          .fn()
+          .mockImplementation((args) => Promise.resolve({ id: args.create.id, ...args.create })),
       },
       question: {
+        upsert: vi.fn().mockResolvedValue({}),
+      },
+      questionAnswerChoice: {
+        deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+        upsert: vi.fn().mockResolvedValue({}),
+      },
+      questionExplanation: {
         upsert: vi.fn().mockResolvedValue({}),
       },
     };
@@ -326,7 +381,8 @@ describe('staging question edge helper', () => {
         findUnique: vi.fn().mockResolvedValue({
           id: 'stg-1',
           correctAnswer: 'Not in options',
-          explanation: 'This explanation has enough words to exceed the basic adequacy length threshold for the local validation path.',
+          explanation:
+            'This explanation has enough words to exceed the basic adequacy length threshold for the local validation path.',
           options: ['A', 'B'],
         }),
         update: vi.fn().mockResolvedValue({}),
@@ -415,11 +471,7 @@ describe('staging question edge helper', () => {
       },
     };
 
-    const results = await processStagingQueueWithCritic(
-      prisma,
-      { GEMINI_API_KEY: 'test-key' },
-      1
-    );
+    const results = await processStagingQueueWithCritic(prisma, { GEMINI_API_KEY: 'test-key' }, 1);
 
     expect(results).toEqual([{ id: 'stg-bad', status: 'flagged_for_review', score: 95 }]);
     expect(prisma.preGeneratedQuestion.upsert).not.toHaveBeenCalled();

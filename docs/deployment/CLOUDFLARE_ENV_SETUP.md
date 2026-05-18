@@ -130,7 +130,6 @@ For a fully functional deployment, set these in Cloudflare Pages Environment Var
 
 - [ ] `VITE_CLERK_PUBLISHABLE_KEY` - Clerk authentication (client)
 - [ ] `VITE_API_URL` - API base URL for client requests (e.g. `https://studypanacea.com`); also in `wrangler.toml` [vars] for non-secret
-- [ ] `VITE_GEMINI_API_KEY` - If using Gemini from client (optional)
 - [ ] `VITE_SUPABASE_URL` - If using Supabase client (optional)
 - [ ] `VITE_SUPABASE_ANON_KEY` - If using Supabase client (optional)
 

@@ -12,6 +12,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export type AnomalyLevel = 'healthy' | 'warning' | 'critical';
 
@@ -64,13 +65,13 @@ export function useRatingAudit(windowDays: number = 90) {
       });
 
       if (!response.ok) {
-        throw new Error(`Rating audit fetch failed: ${response.status}`);
+        const errorPayload = await response.json().catch(() => ({}));
+        throw new Error(
+          getApiEnvelopeError(errorPayload, `Rating audit fetch failed: ${response.status}`)
+        );
       }
 
-      const json = await response.json();
-      if (json?.data) {
-        setData(json.data);
-      }
+      setData(unwrapApiEnvelope<RatingAuditData>(await response.json()));
     } catch (err) {
       console.warn('[useRatingAudit] Failed:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');

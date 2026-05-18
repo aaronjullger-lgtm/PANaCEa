@@ -1,0 +1,4 @@
+interface:
+  display_name: "Performance Audit"
+  short_description: "Optimize bundle, rendering, API, database, and route performance"
+  default_prompt: "Measure the performance bottleneck, apply a focused optimization, and verify the result."

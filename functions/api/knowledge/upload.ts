@@ -139,8 +139,9 @@ export const onRequestPost = aiEndpoint(
       return ok({ fileUri: result.fileUri, name: result.name, mimeType });
     } catch (err) {
       logger.error('Knowledge upload error', err);
-      const message = err instanceof Error ? err.message : 'Upload failed';
-      return fail(ErrorCode.UPSTREAM_ERROR, { message });
+      return fail(ErrorCode.UPSTREAM_ERROR, {
+        message: 'Failed to upload file to knowledge service',
+      });
     }
   },
   { source: 'query', requestsPerMinute: 20 }

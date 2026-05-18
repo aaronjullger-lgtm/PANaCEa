@@ -1,16 +1,21 @@
 /**
- * Pool Monitor Service - Tracks question pool levels and health
+ * Compatibility wrapper for AI content generation pool monitoring.
  *
- * Database-First Architecture: Monitors the staging question pool
- * and provides insights for content generation prioritization.
+ * The active learner-serving pool is `PreGeneratedQuestion`; staging questions
+ * are a review queue and should not drive refill decisions. Keep this module as
+ * the AI namespace entrypoint, but delegate counts to the core pool monitor.
  */
 
-import { prisma } from '../../lib/prisma';
+import {
+  checkPoolLevels as checkPreGeneratedPoolLevels,
+  getPoolHealthReport,
+} from '@/services/core/poolMonitorService';
 
 export interface PoolStatus {
   system: string;
   total: number;
   unused: number;
+  status: 'critical' | 'warning' | 'healthy';
   percentageUnused: number;
   needsGeneration: boolean;
 }
@@ -22,61 +27,15 @@ export interface PoolStatus {
  * @returns Array of pool status by organ system
  */
 export async function checkPoolLevels(threshold: number = 50): Promise<PoolStatus[]> {
-  try {
-    // Query the staging questions grouped by organ system
-    const stagingQuestions = await prisma.stagingQuestion.groupBy({
-      by: ['system'],
-      _count: {
-        id: true,
-      },
-      where: {
-        status: {
-          in: ['APPROVED', 'PENDING'],
-        },
-      },
-    });
+  const rows = await checkPreGeneratedPoolLevels();
 
-    // Query used questions (those that have been promoted)
-    const usedQuestions = await prisma.stagingQuestion.groupBy({
-      by: ['system'],
-      _count: {
-        id: true,
-      },
-      where: {
-        status: 'PROMOTED',
-      },
-    });
-
-    // Create a map of used counts
-    const usedMap = new Map<string, number>();
-    usedQuestions.forEach((row) => {
-      usedMap.set(row.system, row._count?.id ?? 0);
-    });
-
-    // Build pool status for each system
-    const poolStatuses: PoolStatus[] = stagingQuestions.map((row) => {
-      const total = row._count?.id ?? 0;
-      const used = usedMap.get(row.system) || 0;
-      const unused = Math.max(0, total - used);
-      const percentageUnused = total > 0 ? (unused / total) * 100 : 0;
-
-      return {
-        system: row.system,
-        total,
-        unused,
-        percentageUnused: Math.round(percentageUnused * 10) / 10,
-        needsGeneration: unused < threshold,
-      };
-    });
-
-    // Sort by unused count (ascending) to prioritize systems that need generation
-    return poolStatuses.sort((a, b) => a.unused - b.unused);
-  } catch (error) {
-    console.error('Error checking pool levels:', error);
-    throw new Error(
-      `Failed to check pool levels: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
-  }
+  return rows
+    .map((row) => ({
+      ...row,
+      percentageUnused: row.total > 0 ? Math.round((row.unused / row.total) * 1000) / 10 : 0,
+      needsGeneration: row.unused < threshold,
+    }))
+    .sort((a, b) => a.unused - b.unused);
 }
 
 /**
@@ -85,44 +44,16 @@ export async function checkPoolLevels(threshold: number = 50): Promise<PoolStatu
  * @returns Detailed pool statistics
  */
 export async function getPoolStatistics() {
-  try {
-    const totalQuestions = await prisma.stagingQuestion.count();
+  const rows = await checkPoolLevels();
 
-    const byStatus = await prisma.stagingQuestion.groupBy({
-      by: ['status'],
-      _count: {
-        id: true,
-      },
-    });
-
-    const bySystem = await prisma.stagingQuestion.groupBy({
-      by: ['system'],
-      _count: {
-        id: true,
-      },
-    });
-
-    const byDifficulty = await prisma.stagingQuestion.groupBy({
-      by: ['difficulty'],
-      _count: {
-        id: true,
-      },
-    });
-
-    return {
-      total: totalQuestions,
-      byStatus: Object.fromEntries(byStatus.map((row) => [row.status, row._count?.id ?? 0])),
-      bySystem: Object.fromEntries(bySystem.map((row) => [row.system, row._count?.id ?? 0])),
-      byDifficulty: Object.fromEntries(
-        byDifficulty.map((row) => [row.difficulty || 'UNSPECIFIED', row._count?.id ?? 0])
-      ),
-    };
-  } catch (error) {
-    console.error('Error getting pool statistics:', error);
-    throw new Error(
-      `Failed to get pool statistics: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
-  }
+  return {
+    total: rows.reduce((sum, row) => sum + row.total, 0),
+    byStatus: rows.reduce<Record<string, number>>((acc, row) => {
+      acc[row.status] = (acc[row.status] ?? 0) + 1;
+      return acc;
+    }, {}),
+    bySystem: Object.fromEntries(rows.map((row) => [row.system, row.total])),
+  };
 }
 
 /**
@@ -158,23 +89,11 @@ export async function systemNeedsGeneration(
  * @returns Health score where 100 is fully stocked, 0 is empty
  */
 export async function getPoolHealthScore(): Promise<number> {
-  try {
-    const poolLevels = await checkPoolLevels();
+  const report = await getPoolHealthReport();
+  if (report.systemBreakdown.length === 0) return 0;
 
-    if (poolLevels.length === 0) {
-      return 0;
-    }
+  const criticalPenalty = report.systemBreakdown.filter((row) => row.status === 'critical').length;
+  const warningPenalty = report.systemBreakdown.filter((row) => row.status === 'warning').length;
 
-    // Calculate average percentage unused across all systems
-    const avgPercentage =
-      poolLevels.reduce((sum, status) => sum + status.percentageUnused, 0) / poolLevels.length;
-
-    // Health score is based on how close we are to target (50+ unused = 100%)
-    const healthScore = Math.min(100, avgPercentage * 2);
-
-    return Math.round(healthScore);
-  } catch (error) {
-    console.error('Error calculating pool health score:', error);
-    return 0;
-  }
+  return Math.max(0, 100 - criticalPenalty * 20 - warningPenalty * 8);
 }

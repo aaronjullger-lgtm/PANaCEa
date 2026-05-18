@@ -16,8 +16,8 @@ import type {
   AVState,
 } from '../../types/patient-av-state-machine';
 
-// Gemini API configuration
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
+// Gemini API configuration. Keep this server-side; do not use a VITE_ key.
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = 'gemini-2.0-flash-exp'; // Latest preview model
 
 /**
@@ -132,8 +132,10 @@ Return ONLY valid JSON matching this structure (no markdown, no explanations):
       throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const data = (await response.json()) as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
 
     // Clean response
     const cleaned = text.replace(/```json|```/gi, '').trim();

@@ -63,7 +63,7 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 
 ### Prerequisites
 
-- **Node.js** v18 or higher
+- **Node.js** v22 or higher (`.node-version` and `.nvmrc` are set to `22`)
 - **PostgreSQL** database
 - **Google Gemini API** key ([Get one here](https://makersuite.google.com/app/apikey))
 - **Clerk Account** for authentication ([Sign up](https://clerk.com))
@@ -80,13 +80,13 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 2. **Install dependencies**
 
    ```bash
-   npm install
+   npm ci
    ```
 
 3. **Set up environment variables**
 
    ```bash
-   cp env.example .env
+   cp .env.example .env
    ```
 
    Edit `.env` and configure:
@@ -101,15 +101,17 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 
    # PostgreSQL Database (REQUIRED)
    DATABASE_URL=postgresql://user:password@host:5432/database
+   DIRECT_DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
    ```
 
    > ⚠️ **DATABASE_URL is REQUIRED** - PANaCEa uses a database-first architecture
+   > For local Express dev with a direct Postgres URL, `sslmode=require` is normalized to libpq-compatible SSL semantics at runtime. Use `sslmode=verify-full` plus a trusted CA when you need certificate verification locally.
 
 4. **Initialize the database**
 
    ```bash
    npm run db:generate
-   npm run migrate:production
+   npm run db:migrate:dev
    ```
 
 5. **Start the development servers**
@@ -118,7 +120,7 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 
    **Local dev** – choose one:
    - **`npm run dev:all`** – Express backend (port 3001) + Vite frontend (port 3000). Quick for local testing.
-   - **`npm run dev:wrangler`** – Cloudflare Pages Functions + Vite. Matches production (recommended before deploy).
+   - **`npm run dev:wrangler`** – Builds `dist` and serves Cloudflare Pages Functions. Matches production routing (recommended before deploy).
 
    ```bash
    npm run dev:all
@@ -153,12 +155,12 @@ For production deployment to Cloudflare Pages:
 
 1. Set production `DATABASE_URL` in Cloudflare environment variables
 2. Run database migrations: `npm run migrate:production`
-3. Follow the detailed guide: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+3. Follow the detailed guide: [docs/deployment/DEPLOYMENT_GUIDE.md](docs/deployment/DEPLOYMENT_GUIDE.md)
 
 📖 **Deployment Resources:**
 
-- [Deployment Guide](DEPLOYMENT_GUIDE.md)
-- [Environment Setup Guide](ENV_SETUP_GUIDE.md)
+- [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md)
+- [Environment Setup Guide](docs/deployment/ENV_SETUP_GUIDE.md)
 
 ---
 
@@ -167,15 +169,55 @@ For production deployment to Cloudflare Pages:
 | Command                      | Description                                                  |
 | ---------------------------- | ------------------------------------------------------------ |
 | `npm run dev:all`            | Express + Vite (local dev)                                   |
-| `npm run dev:wrangler`       | Cloudflare Functions + Vite (production parity, recommended) |
+| `npm run dev:wrangler`       | Build + Cloudflare Pages Functions (production parity)        |
 | `npm run dev:server`         | Express backend only                                         |
 | `npm run dev`                | Frontend only (proxies /api to Express if running)           |
 | `npm run build`              | Build frontend for production                                |
 | `npm run build:server`       | Build backend for production                                 |
 | `npm test`                   | Run test suite                                               |
+| `npm run verify:health`      | Verify public Cloudflare Pages `/api/health`                 |
+| `npm run test:e2e:production-smoke` | Run production-parity Playwright smoke tests          |
 | `npm run db:studio`          | Open Prisma Studio (database GUI)                            |
 | `npm run migrate:production` | Run database migrations                                      |
 | `npm run orchestrate:full`   | Run automated content pipeline                               |
+
+---
+
+### Production-Parity Smoke Tests
+
+Public route/API health smoke:
+
+```bash
+# Terminal 1
+npm run dev:wrangler
+
+# Terminal 2
+BASE_URL=http://localhost:8788 npm run verify:health
+```
+
+Authenticated core-study smoke uses `e2e/production-smoke/core-launch.spec.ts`.
+Set up a dedicated Clerk test user with MFA / Client Trust disabled, then set
+these local-only variables in `.env` or your shell:
+
+```env
+E2E_REQUIRE_AUTH=1
+E2E_CLERK_TEST_EMAIL=test-learner@example.com
+E2E_CLERK_TEST_PASSWORD=replace-with-local-test-password
+```
+
+Then run:
+
+```bash
+# Terminal 1
+npm run dev:wrangler
+
+# Terminal 2
+BASE_URL=http://localhost:8788 npm run test:e2e:production-smoke
+```
+
+Do not use production learner/admin accounts for smoke tests, and do not commit
+real E2E credentials. The `test:e2e:production-smoke` script loads `.env` when
+it exists.
 
 ---
 
@@ -229,8 +271,8 @@ PANaCEa/
 
 ## 📚 Documentation
 
-- [Deployment Guide](DEPLOYMENT_GUIDE.md) - Production deployment
-- [Environment Setup](ENV_SETUP_GUIDE.md) - Environment variables and configuration
+- [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md) - Production deployment
+- [Environment Setup](docs/deployment/ENV_SETUP_GUIDE.md) - Environment variables and configuration
 - [API Overview](docs/api/API_OVERVIEW.md) - Endpoint contracts
 - [Copilot Instructions](.github/copilot-instructions.md) - AI coding assistant guide
 - [Archived Documentation](docs/archive/INDEX.md) - Historical audit reports and status docs
@@ -279,7 +321,7 @@ npm run db:studio # Opens Prisma Studio - if this works, DB is accessible
 
 ````
 
-**Note:** The Vite dev server (port 3000) proxies `/api/*` and `/geminiProxy` requests to the Express backend (port 3001). Both servers must be running for the app to function properly.
+**Note:** The Vite dev server (port 3000) proxies `/api/*` and `/geminiProxy` requests to the legacy Express backend (port 3001) when using `npm run dev`/`dev:all`. Maintained Cloudflare Pages Function routes such as `/api/study/*` require `npm run dev:wrangler` or `npm run pages:serve` for production-parity testing.
 
 ### Database-First Architecture
 
@@ -288,7 +330,7 @@ PANaCEa uses a **strict database-first architecture** where PostgreSQL is the ON
 **Required Setup:**
 - Backend server must be running (`npm run dev:server` or deployed)
 - `DATABASE_URL` environment variable must be configured
-- Database schema must be applied (run `npm run migrate:production`)
+- Database schema must be applied (`npm run db:migrate:dev` locally, `npm run migrate:production` only for reviewed production migration work)
 
 **What happens without database:**
 - Condition content will be empty
@@ -296,7 +338,7 @@ PANaCEa uses a **strict database-first architecture** where PostgreSQL is the ON
 - Lab cases will show error state with retry option
 - Cram Mode will show error state
 
-For full functionality (AI question generation, user authentication, condition content, database features), both frontend and backend servers with database access are required.
+For full functionality (AI question generation, user authentication, condition content, database features), run the frontend with the appropriate backend target: Express for legacy local route smoke, or Wrangler/Pages Functions for maintained production API flows.
 
 ## 🧠 Hybrid Content Engine
 

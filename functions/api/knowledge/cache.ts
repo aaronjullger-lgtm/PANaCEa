@@ -62,9 +62,9 @@ export const onRequestPost = aiEndpoint(CreateCacheSchema, async (context) => {
       body: JSON.stringify(body),
     });
     if (!res.ok) {
-      const text = await res.text();
-      logger.warn('Gemini cache create failed', { status: res.status, text: text.slice(0, 200) });
-      return fail(ErrorCode.GEMINI_ERROR, { message: `Failed to create cache: ${res.status}` });
+      await res.text();
+      logger.warn('Gemini cache create failed', { status: res.status });
+      return fail(ErrorCode.GEMINI_ERROR, { message: 'Failed to create knowledge cache' });
     }
     const data = (await res.json()) as { name?: string; expireTime?: string };
     const geminiCacheName = data.name;
@@ -74,6 +74,7 @@ export const onRequestPost = aiEndpoint(CreateCacheSchema, async (context) => {
     }
     const cache = await prisma.knowledgeCache.create({
       data: {
+        id: crypto.randomUUID(),
         userId: user.id,
         displayName,
         geminiCacheName,

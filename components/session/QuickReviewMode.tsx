@@ -11,6 +11,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useAuth } from '@clerk/clerk-react';
 import type { Question } from '@/types';
 import type { QuizQuestion } from '@/types';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface QuickReviewModeProps {
   missedQuestions: Question[];
@@ -111,25 +112,30 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
         },
         body: JSON.stringify({ dueItems }),
       });
-      const json = (await res.json().catch(() => null)) as {
-        data?: {
-          results?: Array<{
-            question: {
-              id: string;
-              question: string;
-              vignette?: string;
-              options: string[];
-              correctAnswerIndex: number;
-              rationale: string;
-              system: string;
-              conditionId?: string;
-              condition?: string;
-            } | null;
-            dueConceptKey: { conditionId: string; taskType: string | null };
-          }>;
-        };
-      };
-      const results = json?.data?.results ?? [];
+      const jsonPayload = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(getApiEnvelopeError(jsonPayload, `HTTP ${res.status}`));
+      }
+      if (!jsonPayload) {
+        throw new Error('Invalid response from server');
+      }
+      const json = unwrapApiEnvelope<{
+        results?: Array<{
+          question: {
+            id: string;
+            question: string;
+            vignette?: string;
+            options: string[];
+            correctAnswerIndex: number;
+            rationale: string;
+            system: string;
+            conditionId?: string;
+            condition?: string;
+          } | null;
+          dueConceptKey: { conditionId: string; taskType: string | null };
+        }>;
+      }>(jsonPayload);
+      const results = json.results ?? [];
       const queue: QuizQuestion[] = results
         .filter((r): r is typeof r & { question: NonNullable<typeof r.question> } => r.question != null)
         .map((r) => {

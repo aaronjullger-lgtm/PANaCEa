@@ -32,7 +32,6 @@ CLERK_SECRET_KEY="sk_test_xxxxx"
 
 # Gemini AI
 GEMINI_API_KEY="your-key"
-VITE_GEMINI_API_KEY="your-key"
 
 # Server
 NODE_ENV="production"

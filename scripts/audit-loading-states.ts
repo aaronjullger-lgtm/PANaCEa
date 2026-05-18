@@ -24,17 +24,51 @@ interface AuditResult {
 }
 
 const COMPONENT_DIRS = ['components', 'pages'];
+const CANONICAL_LOADING_FILES = new Set([
+  'components/loading/index.tsx',
+  'components/ui/ClinicalInterface.tsx',
+]);
 
 // Patterns that indicate non-skeleton loading
 const LOADING_PATTERNS = {
-  textLoading: /['"]Loading\.\.\.['"]|Loading\.\.\./g,
-  genericSpinner: /className=.*\b(spinner|spin|animate-spin)\b/g,
-  conditionalLoading: /\{isLoading\s*\?\s*\(/g,
+  textLoading: /['"]Loading\.\.\.['"]|Loading\.\.\./,
+  genericSpinner: /className=.*\b(spinner|spin|animate-spin)\b/,
+  conditionalLoading: /\{isLoading\s*\?\s*\(/,
   loadingDiv: /<div.*loading/gi,
 };
 
-// Pattern that indicates proper skeleton usage
-const SKELETON_PATTERN = /<Skeleton(Loader|Text|Card)|SkeletonLoader/g;
+// Pattern that indicates proper structured loading usage
+const STRUCTURED_LOADING_PATTERN =
+  /<Skeleton(Loader|Text|Card)|SkeletonLoader|<ClinicalSkeleton|<QuestionSkeleton|<DrillLoadingState/;
+const INLINE_PENDING_PATTERN = /<Inline(Button)?Spinner|<Loader\b/;
+
+function normalizePath(filePath: string): string {
+  return filePath.split(path.sep).join('/');
+}
+
+function isBenignSpinnerLine(filePath: string, line: string): boolean {
+  const normalizedPath = normalizePath(filePath);
+
+  return (
+    CANONICAL_LOADING_FILES.has(normalizedPath) ||
+    line.includes('spin-button') ||
+    line.includes('<RefreshCw')
+  );
+}
+
+function hasStructuredConditionalLoading(
+  filePath: string,
+  lines: string[],
+  currentIndex: number
+): boolean {
+  const normalizedPath = normalizePath(filePath);
+  if (CANONICAL_LOADING_FILES.has(normalizedPath)) return true;
+
+  const candidateBlock = lines.slice(currentIndex, currentIndex + 20).join('\n');
+  return (
+    STRUCTURED_LOADING_PATTERN.test(candidateBlock) || INLINE_PENDING_PATTERN.test(candidateBlock)
+  );
+}
 
 function scanFile(filePath: string): {
   usesSkeletons: boolean;
@@ -45,7 +79,7 @@ function scanFile(filePath: string): {
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
   const result = {
-    usesSkeletons: SKELETON_PATTERN.test(content),
+    usesSkeletons: STRUCTURED_LOADING_PATTERN.test(content),
     loadingPatterns: [] as LoadingPattern[],
     spinnerPatterns: [] as LoadingPattern[],
     textLoadingPatterns: [] as LoadingPattern[],
@@ -63,7 +97,7 @@ function scanFile(filePath: string): {
     }
 
     // Check for spinner patterns
-    if (LOADING_PATTERNS.genericSpinner.test(line)) {
+    if (LOADING_PATTERNS.genericSpinner.test(line) && !isBenignSpinnerLine(filePath, line)) {
       result.spinnerPatterns.push({
         file: filePath,
         line: index + 1,
@@ -73,7 +107,10 @@ function scanFile(filePath: string): {
     }
 
     // Check for conditional loading without skeleton
-    if (LOADING_PATTERNS.conditionalLoading.test(line) && !line.includes('Skeleton')) {
+    if (
+      LOADING_PATTERNS.conditionalLoading.test(line) &&
+      !hasStructuredConditionalLoading(filePath, lines, index)
+    ) {
       result.loadingPatterns.push({
         file: filePath,
         line: index + 1,
@@ -142,8 +179,8 @@ console.log('🔍 Auditing loading state consistency...\n');
 const results = runAudit();
 
 console.log('📊 Audit Results:');
-console.log(`✅ Components using SkeletonLoader: ${results.skeletonLoaders.length}`);
-console.log(`⚠️  Components with spinner patterns: ${results.spinners.length}`);
+console.log(`✅ Components using structured loading primitives: ${results.skeletonLoaders.length}`);
+console.log(`⚠️  Components with content spinner patterns: ${results.spinners.length}`);
 console.log(`❌ Components with "Loading..." text: ${results.textLoading.length}`);
 console.log(`🔶 Conditional loading (review needed): ${results.conditionalLoading.length}`);
 
@@ -159,7 +196,7 @@ if (results.textLoading.length > 0) {
 }
 
 if (results.spinners.length > 0) {
-  console.log('\n⚠️  Components with spinners (consider SkeletonLoader for better CLS):');
+  console.log('\n⚠️  Components with content spinners (consider skeletons for better CLS):');
   const uniqueFiles = [...new Set(results.spinners.map((p) => p.file))];
   uniqueFiles.slice(0, 10).forEach((file) => {
     console.log(`  - ${file}`);
@@ -169,8 +206,18 @@ if (results.spinners.length > 0) {
   }
 }
 
+if (results.conditionalLoading.length > 0) {
+  console.log('\n🔶 Conditional loading branches needing review:');
+  results.conditionalLoading.slice(0, 15).forEach((pattern) => {
+    console.log(`  - ${pattern.file}:${pattern.line} ${pattern.snippet}`);
+  });
+  if (results.conditionalLoading.length > 15) {
+    console.log(`  ... and ${results.conditionalLoading.length - 15} more`);
+  }
+}
+
 if (results.skeletonLoaders.length > 0) {
-  console.log('\n✅ Components properly using SkeletonLoader:');
+  console.log('\n✅ Components properly using structured loading primitives:');
   results.skeletonLoaders.slice(0, 10).forEach((file) => {
     console.log(`  - ${file}`);
   });
@@ -180,7 +227,7 @@ if (results.skeletonLoaders.length > 0) {
 }
 
 console.log('\n💡 Recommendation:');
-console.log('Replace "Loading..." text and spinners with SkeletonLoader components');
+console.log('Replace "Loading..." text and content-loading spinners with skeleton components');
 console.log('for zero Cumulative Layout Shift (CLS) score.\n');
 
 console.log('Fix Pattern:');

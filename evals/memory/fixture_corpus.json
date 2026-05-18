@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "notes": "Offline seeded corpus for deterministic memory-eval gating. Uses public, synthetic, non-learner data.",
+  "documents": [
+    {
+      "id": "medical_content_stemi_management",
+      "source_type": "medical_content",
+      "title": "Acute STEMI management",
+      "text": "Acute myocardial infarction and STEMI management includes immediate reperfusion, aspirin, antiplatelet therapy, anticoagulation, nitrates when appropriate, and guideline-directed secondary prevention after acute coronary syndrome.",
+      "metadata": {
+        "condition": "myocardial infarction",
+        "system": "cardiovascular"
+      }
+    },
+    {
+      "id": "medical_content_pulmonary_embolism_workup",
+      "source_type": "medical_content",
+      "title": "Pulmonary embolism diagnostic workup",
+      "text": "Pulmonary embolism workup uses pretest probability. High pretest probability should proceed to CT pulmonary angiography when possible, while low probability can use D-dimer strategies.",
+      "metadata": {
+        "condition": "pulmonary embolism",
+        "system": "pulmonary"
+      }
+    },
+    {
+      "id": "medical_content_chest_pain_differential",
+      "source_type": "medical_content",
+      "title": "Dangerous chest pain differential",
+      "text": "Acute coronary syndrome, pulmonary embolism, and aortic dissection are high-risk causes of chest pain. Distinguish them by risk factors, exam, ECG, imaging, and hemodynamic instability.",
+      "metadata": {
+        "condition": "chest pain",
+        "system": "cardiovascular"
+      }
+    },
+    {
+      "id": "graph_edge_diabetes_complicates_nephropathy",
+      "source_type": "graph_edge",
+      "title": "Diabetes complication edge",
+      "text": "Diabetes mellitus COMPLICATES diabetic nephropathy, neuropathy, retinopathy, and cardiovascular disease.",
+      "metadata": {
+        "edge_type": "COMPLICATES",
+        "source_node": "diabetes mellitus",
+        "target_node": "diabetic nephropathy"
+      }
+    },
+    {
+      "id": "graph_node_diabetes",
+      "source_type": "graph_node",
+      "title": "Diabetes mellitus node",
+      "text": "Diabetes mellitus is a graph condition node connected to complications and associated endocrine findings.",
+      "metadata": {
+        "node_type": "CONDITION",
+        "label": "diabetes mellitus"
+      }
+    },
+    {
+      "id": "graph_edge_heart_failure_prerequisite",
+      "source_type": "graph_edge",
+      "title": "Heart failure prerequisite edge",
+      "text": "Cardiac output physiology PREREQUISITE relationship for understanding heart failure preload, afterload, contractility, and neurohormonal compensation.",
+      "metadata": {
+        "edge_type": "PREREQUISITE",
+        "source_node": "cardiac output physiology",
+        "target_node": "heart failure"
+      }
+    },
+    {
+      "id": "graph_edge_chest_pain_differential",
+      "source_type": "graph_edge",
+      "title": "Chest pain differential graph edge",
+      "text": "Chest pain DIFFERENTIAL includes acute coronary syndrome, pulmonary embolism, aortic dissection, pneumothorax, and esophageal rupture.",
+      "metadata": {
+        "edge_type": "DIFFERENTIAL",
+        "source_node": "chest pain",
+        "target_node": "acute coronary syndrome"
+      }
+    },
+    {
+      "id": "learner_state_cardiovascular_weak_area",
+      "source_type": "learner_state",
+      "title": "Synthetic cardiovascular learner-state aggregate",
+      "text": "Synthetic user aggregate from QuestionAttempt, ReviewLog, and UserProgress shows recent misses in cardiovascular chest pain triage, ACS versus PE, and aortic dissection differentiation.",
+      "metadata": {
+        "tables": ["QuestionAttempt", "ReviewLog", "UserProgress"],
+        "user_scope": "fixture-user"
+      }
+    }
+  ]
+}

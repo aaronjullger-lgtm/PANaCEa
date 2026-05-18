@@ -11,6 +11,7 @@ import {
   buildSessionModeLabel,
   buildSessionSettingsFromSnapshot,
 } from '@/lib/sessionGeneration';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface SessionRunnerProps {
   /** Callback to navigate back to the menu */
@@ -129,13 +130,9 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
       });
       if (!response.ok) {
         const body = await response.json().catch(() => null);
-        const message =
-          body?.error?.message ??
-          body?.message ??
-          `Failed to fetch session: ${response.status}`;
-        throw new Error(message);
+        throw new Error(getApiEnvelopeError(body, `Failed to fetch session: ${response.status}`));
       }
-      const json = await response.json();
+      const json = unwrapApiEnvelope<unknown>(await response.json());
       const { questions: questionList, session } = extractSessionPayload(json);
       const derivedGrowthAreas = deriveGrowthAreas(questionList);
       setQuestions(questionList);

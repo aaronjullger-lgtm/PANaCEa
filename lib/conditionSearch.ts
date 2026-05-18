@@ -1,4 +1,5 @@
 import type { SystemCode } from '@/types';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export interface ConditionSearchFilters {
   system?: SystemCode;
@@ -129,19 +130,6 @@ function fallbackSearch(query: string, limit?: number): ConditionSearchResult[] 
   return typeof limit === 'number' ? results.slice(0, limit) : results;
 }
 
-function unwrapApiData<T>(payload: unknown): T {
-  if (payload && typeof payload === 'object') {
-    const record = payload as { data?: unknown; success?: boolean; ok?: boolean };
-    if (('success' in record || 'ok' in record) && 'data' in record) {
-      return record.data as T;
-    }
-    if ('data' in record && Array.isArray(record.data)) {
-      return record.data as T;
-    }
-  }
-  return payload as T;
-}
-
 /**
  * Search conditions via API endpoint
  * Uses database-backed search with fuzzy matching
@@ -181,13 +169,17 @@ export async function searchConditions(
 
     // Call search API endpoint
     const response = await fetch(`/api/conditions/search?${params.toString()}`);
+    const responseJson = await response.json().catch(() => null);
 
     if (!response.ok) {
-      console.error('Search API error:', response.status, response.statusText);
+      console.error(
+        'Search API error:',
+        getApiEnvelopeError(responseJson, `${response.status} ${response.statusText}`)
+      );
       return [];
     }
 
-    const results = unwrapApiData<ConditionSearchResult[]>(await response.json());
+    const results = unwrapApiEnvelope<ConditionSearchResult[]>(responseJson);
     if (Array.isArray(results) && results.length > 0) {
       return results;
     }
@@ -204,12 +196,13 @@ export async function searchConditions(
 export async function getSystemOptions(): Promise<SystemCode[]> {
   try {
     const response = await fetch('/api/conditions?includeContent=false');
+    const responseJson = await response.json().catch(() => null);
     if (!response.ok) {
-      console.error('Failed to fetch systems');
+      console.error(getApiEnvelopeError(responseJson, 'Failed to fetch systems'));
       return [];
     }
 
-    const conditions = (await response.json()) as Array<{ system?: string }>;
+    const conditions = unwrapApiEnvelope<Array<{ system?: string }>>(responseJson);
     const systems = new Set<SystemCode>();
     conditions.forEach((c) => {
       if (c.system) systems.add(c.system as SystemCode);
@@ -232,12 +225,13 @@ export async function getSubcategoryOptions(system?: SystemCode): Promise<string
       : '/api/conditions?includeContent=false';
 
     const response = await fetch(url);
+    const responseJson = await response.json().catch(() => null);
     if (!response.ok) {
-      console.error('Failed to fetch subcategories');
+      console.error(getApiEnvelopeError(responseJson, 'Failed to fetch subcategories'));
       return [];
     }
 
-    const conditions = (await response.json()) as Array<{ subcategory?: string }>;
+    const conditions = unwrapApiEnvelope<Array<{ subcategory?: string }>>(responseJson);
     const subcategories = new Set<string>();
     conditions.forEach((c) => {
       if (c.subcategory) subcategories.add(c.subcategory);
@@ -256,11 +250,12 @@ export async function getSubcategoryOptions(system?: SystemCode): Promise<string
 export async function findConditionMetaById(id: string): Promise<any | undefined> {
   try {
     const response = await fetch(`/api/conditions/${id}`);
+    const responseJson = await response.json().catch(() => null);
     if (!response.ok) {
       return undefined;
     }
 
-    const condition = await response.json();
+    const condition = unwrapApiEnvelope(responseJson);
     return condition;
   } catch (error) {
     console.error('Error finding condition by ID:', error);

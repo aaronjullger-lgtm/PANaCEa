@@ -22,7 +22,7 @@
  * @module lib/services/conceptQuestionSelector
  */
 
-import type { PrismaClient } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import type { LearnerStage } from './learnerStageBlueprint';
 import { batchGetLeastSeenQuestions } from './batchVariantService';
 import { letterToIndex, ANSWER_LETTERS } from '../answerLetterMap';
@@ -788,7 +788,7 @@ export function banditRerankQuestions(
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const QUESTION_SELECT = {
+const QUESTION_SELECT: Prisma.QuestionSelect = {
   id: true,
   question: true,
   vignette: true,
@@ -801,33 +801,40 @@ const QUESTION_SELECT = {
   difficulty: true,
   conditionId: true,
   medicalContentId: true,
-} as const;
+  QuestionAnswerChoice: {
+    select: {
+      choiceKey: true,
+      choiceText: true,
+      isCorrect: true,
+      rationale: true,
+      displayOrder: true,
+    },
+  },
+  QuestionExplanation: {
+    where: { isActive: true },
+    select: {
+      explanationType: true,
+      title: true,
+      body: true,
+      sourceCitation: true,
+      version: true,
+    },
+  },
+};
 
 function normalizeQuestion(
   raw: any,
   source: 'due_review' | 'new_card'
 ): SelectedQuestion {
-  // Normalize options: DB stores as {"A":"...", "B":"..."} — convert to array
-  const rawOpts = raw.options;
-  const opts: string[] = Array.isArray(rawOpts)
-    ? rawOpts
-    : rawOpts && typeof rawOpts === 'object'
-      ? Object.values(rawOpts as Record<string, string>)
-      : [];
+  const normalizedChoices = normalizeAnswerChoices(raw.QuestionAnswerChoice);
+  const legacyOptions = normalizeLegacyOptions(raw.options);
+  const opts = normalizedChoices.length > 0
+    ? normalizedChoices.map((choice) => choice.choiceText)
+    : legacyOptions;
 
   // Derive correctAnswerIndex from letter key (A=0, B=1, ..., E=4) or string match
   // Uses canonical converter — returns null on invalid input instead of silently falling back to 0
-  let correctIdx: number | null = null;
-  if (typeof raw.correctAnswer === 'string') {
-    const letterIdx = letterToIndex(raw.correctAnswer);
-    if (letterIdx !== null && letterIdx < opts.length) {
-      correctIdx = letterIdx;
-    } else {
-      // Full-text match fallback
-      const textIdx = opts.findIndex((o) => o === raw.correctAnswer);
-      correctIdx = textIdx >= 0 ? textIdx : null;
-    }
-  }
+  let correctIdx = resolveCorrectAnswerIndex(raw.correctAnswer, opts, normalizedChoices);
 
   if (correctIdx === null) {
     // Log but don't crash — return with index -1 so callers can filter
@@ -842,14 +849,16 @@ function normalizeQuestion(
     correctIdx = -1;
   }
 
+  const explanation = normalizeQuestionExplanation(raw.QuestionExplanation, raw.explanation);
+
   return {
     id: raw.id,
     question: raw.question,
     vignette: raw.vignette ?? null,
     options: opts,
-    correctAnswer: raw.correctAnswer,
+    correctAnswer: opts[correctIdx] ?? raw.correctAnswer,
     correctAnswerIndex: correctIdx,
-    explanation: raw.explanation ?? null,
+    explanation,
     system: raw.system ?? null,
     category: raw.category ?? null,
     topic: raw.topic ?? null,
@@ -860,13 +869,120 @@ function normalizeQuestion(
   };
 }
 
+interface NormalizedAnswerChoice {
+  choiceKey: string | null;
+  choiceText: string;
+  isCorrect: boolean;
+  displayOrder: number;
+}
+
+function normalizeAnswerChoices(rawChoices: unknown): NormalizedAnswerChoice[] {
+  if (!Array.isArray(rawChoices)) return [];
+
+  return rawChoices
+    .map((choice) => {
+      if (!choice || typeof choice !== 'object') return null;
+      const record = choice as Record<string, unknown>;
+      const choiceText = normalizeString(record.choiceText);
+      if (!choiceText) return null;
+
+      return {
+        choiceKey: normalizeString(record.choiceKey),
+        choiceText,
+        isCorrect: record.isCorrect === true,
+        displayOrder: typeof record.displayOrder === 'number' ? record.displayOrder : Number.MAX_SAFE_INTEGER,
+      };
+    })
+    .filter((choice): choice is NormalizedAnswerChoice => choice !== null)
+    .sort((a, b) => {
+      if (a.displayOrder !== b.displayOrder) return a.displayOrder - b.displayOrder;
+      return (a.choiceKey ?? '').localeCompare(b.choiceKey ?? '');
+    });
+}
+
+function normalizeLegacyOptions(rawOptions: unknown): string[] {
+  if (Array.isArray(rawOptions)) {
+    return rawOptions
+      .map((option) => normalizeString(option))
+      .filter((option): option is string => option !== null);
+  }
+
+  if (rawOptions && typeof rawOptions === 'object') {
+    return Object.entries(rawOptions as Record<string, unknown>)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, option]) => normalizeString(option))
+      .filter((option): option is string => option !== null);
+  }
+
+  return [];
+}
+
+function resolveCorrectAnswerIndex(
+  rawCorrectAnswer: unknown,
+  options: string[],
+  choices: NormalizedAnswerChoice[]
+): number | null {
+  const choiceCorrectIndex = choices.findIndex((choice) => choice.isCorrect);
+  if (choiceCorrectIndex >= 0) return choiceCorrectIndex;
+
+  if (typeof rawCorrectAnswer !== 'string') return null;
+  const normalizedCorrectAnswer = rawCorrectAnswer.trim();
+  if (!normalizedCorrectAnswer) return null;
+
+  const choiceKeyIndex = choices.findIndex(
+    (choice) => choice.choiceKey?.toLowerCase() === normalizedCorrectAnswer.toLowerCase()
+  );
+  if (choiceKeyIndex >= 0) return choiceKeyIndex;
+
+  const letterIdx = letterToIndex(normalizedCorrectAnswer);
+  if (letterIdx !== null && letterIdx < options.length) return letterIdx;
+
+  const exactTextIndex = options.findIndex(
+    (option) => option.trim().toLowerCase() === normalizedCorrectAnswer.toLowerCase()
+  );
+  if (exactTextIndex >= 0) return exactTextIndex;
+
+  return null;
+}
+
+function normalizeQuestionExplanation(rawExplanations: unknown, legacyExplanation: unknown): string | null {
+  if (Array.isArray(rawExplanations)) {
+    const explanations = rawExplanations
+      .filter((explanation) => explanation && typeof explanation === 'object')
+      .map((explanation) => explanation as Record<string, unknown>)
+      .filter((explanation) => normalizeString(explanation.body) !== null)
+      .sort((a, b) => {
+        const aVersion = typeof a.version === 'number' ? a.version : 0;
+        const bVersion = typeof b.version === 'number' ? b.version : 0;
+        if (aVersion !== bVersion) return bVersion - aVersion;
+        return String(a.explanationType ?? '').localeCompare(String(b.explanationType ?? ''));
+      });
+
+    const correctRationale =
+      explanations.find((explanation) => explanation.explanationType === 'CORRECT_RATIONALE') ??
+      explanations.find((explanation) => explanation.explanationType === 'TEACHING_POINT') ??
+      explanations[0];
+
+    const body = normalizeString(correctRationale?.body);
+    if (body) return body;
+  }
+
+  return normalizeString(legacyExplanation);
+}
+
+function normalizeString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
+}
+
 function isUsableSelectedQuestion(question: SelectedQuestion): boolean {
   return (
     typeof question.question === 'string' &&
     question.question.trim().length > 0 &&
     question.options.length >= 2 &&
     question.correctAnswerIndex >= 0 &&
-    question.correctAnswerIndex < question.options.length
+    question.correctAnswerIndex < question.options.length &&
+    typeof question.explanation === 'string' &&
+    question.explanation.trim().length > 0
   );
 }
 

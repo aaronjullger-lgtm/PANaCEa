@@ -43,7 +43,7 @@ export const onRequestGet = aiEndpoint(
 
     const apiKey = env.GEMINI_API_KEY;
     if (!apiKey) {
-      return { status: 500, error: 'GEMINI_API_KEY not configured' };
+      return { status: 500, error: 'AI search service not configured' };
     }
 
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -117,7 +117,7 @@ export const onRequestGet = aiEndpoint(
       console.error('[library/search]', error);
       return {
         status: 500,
-        error: error instanceof Error ? error.message : 'Hybrid search failed',
+        error: 'Hybrid search failed',
       };
     } finally {
       await safePrismaDisconnect(prisma);

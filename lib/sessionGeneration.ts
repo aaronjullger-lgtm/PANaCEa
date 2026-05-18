@@ -22,6 +22,7 @@ export interface NormalizedSessionQuestion {
   canonicalQuestionId?: string | null;
   sourceQuestionId?: string | null;
   questionSource?: 'question' | 'pre_generated' | 'staging' | 'seed' | 'generated';
+  questionIdentityId?: string | null;
   vignette?: string | null;
   question: string;
   options: string[];
@@ -69,6 +70,7 @@ export interface PersistedStudySessionQuestionRecord {
   sessionId: string;
   questionId: string | null;
   preGeneratedQuestionId: string | null;
+  questionIdentityId?: string | null;
   sequenceIndex: number;
   source: string;
   metadata: Record<string, unknown>;
@@ -90,6 +92,7 @@ type SessionQuestionInput = {
   canonicalQuestionId?: string | null;
   sourceQuestionId?: string | null;
   questionSource?: string | null;
+  questionIdentityId?: string | null;
   vignette?: string | null;
   question?: string | null;
   options?: unknown;
@@ -148,15 +151,19 @@ export function buildLegacyPriorityBreakdown(
 export function normalizeSessionQuestion(input: SessionQuestionInput): NormalizedSessionQuestion {
   const conditionName = extractConditionName(input);
   const system = normalizeNullableString(input.system) ?? extractConditionSystem(input.condition);
-  const topic =
-    normalizeNullableString(input.topic) ??
-    conditionName ??
-    system ??
-    'General';
+  const topic = normalizeNullableString(input.topic) ?? conditionName ?? system ?? 'General';
   const options = normalizeOptions(input.options);
-  const correctAnswerIndex = deriveCorrectAnswerIndex(input.correctAnswerIndex, input.correctAnswer, options);
+  const correctAnswerIndex = deriveCorrectAnswerIndex(
+    input.correctAnswerIndex,
+    input.correctAnswer,
+    options
+  );
   const normalizedCorrectAnswer = normalizeNullableString(input.correctAnswer);
-  const questionSource = normalizeQuestionSource(input.questionSource, input.source, input.fromStaging);
+  const questionSource = normalizeQuestionSource(
+    input.questionSource,
+    input.source,
+    input.fromStaging
+  );
   const sourceQuestionId =
     normalizeNullableString(input.sourceQuestionId) ??
     normalizeNullableString(input.id) ??
@@ -164,7 +171,7 @@ export function normalizeSessionQuestion(input: SessionQuestionInput): Normalize
   const canonicalQuestionId =
     normalizeNullableString(input.canonicalQuestionId) ??
     (questionSource === 'question'
-      ? normalizeNullableString(input.questionId) ?? normalizeNullableString(input.id)
+      ? (normalizeNullableString(input.questionId) ?? normalizeNullableString(input.id))
       : null);
   const medicalContentId = normalizeNullableString(input.medicalContentId);
   const conditionId =
@@ -179,16 +186,12 @@ export function normalizeSessionQuestion(input: SessionQuestionInput): Normalize
     canonicalQuestionId,
     sourceQuestionId,
     questionSource,
+    questionIdentityId: normalizeNullableString(input.questionIdentityId),
     vignette: normalizeNullableString(input.vignette),
     question:
-      normalizeNullableString(input.question) ??
-      normalizeNullableString(input.vignette) ??
-      '',
+      normalizeNullableString(input.question) ?? normalizeNullableString(input.vignette) ?? '',
     options,
-    correctAnswer:
-      options[correctAnswerIndex] ??
-      normalizedCorrectAnswer ??
-      '',
+    correctAnswer: options[correctAnswerIndex] ?? normalizedCorrectAnswer ?? '',
     correctAnswerIndex,
     explanation: normalizeNullableString(input.explanation),
     rationale,
@@ -279,7 +282,10 @@ export function buildGeneratedStudySessionRecord(input: {
     | 'blueprintLabel'
     | 'sessionLane'
   >;
-  result: Pick<NormalizedSessionGenerateResult, 'sessionId' | 'questionIds' | 'questions' | 'metadata'>;
+  result: Pick<
+    NormalizedSessionGenerateResult,
+    'sessionId' | 'questionIds' | 'questions' | 'metadata'
+  >;
 }): PersistedStudySessionRecord {
   const systemsTargeted = deriveSystemsTargeted(
     input.request.systems,
@@ -312,11 +318,11 @@ export function buildStudySessionQuestionRecords(
     .map((question, sequenceIndex) => {
       const questionSource = question.questionSource ?? 'question';
       const sourceQuestionId =
-        normalizeNullableString(question.sourceQuestionId) ??
-        normalizeNullableString(question.id);
+        normalizeNullableString(question.sourceQuestionId) ?? normalizeNullableString(question.id);
       const canonicalQuestionId =
         normalizeNullableString(question.canonicalQuestionId) ??
         normalizeNullableString(question.questionId);
+      const questionIdentityId = normalizeNullableString(question.questionIdentityId);
       const questionId = canonicalQuestionId;
       const preGeneratedQuestionId = questionSource === 'pre_generated' ? sourceQuestionId : null;
 
@@ -324,9 +330,11 @@ export function buildStudySessionQuestionRecords(
         sessionId,
         questionId,
         preGeneratedQuestionId,
+        questionIdentityId,
         sequenceIndex,
         source: questionSource,
         metadata: compactRecord({
+          questionIdentityId,
           sourceQuestionId,
           canonicalQuestionId,
           questionSource,
@@ -349,10 +357,7 @@ export function buildSessionSettingsFromSnapshot(
   const focus =
     normalizeStoredFocus(snapshot?.focus) ??
     deriveStoredSessionFocus(normalizeNullableString(snapshot?.mode));
-  const systems = dedupeStrings([
-    ...(snapshot?.systemsTargeted ?? []),
-    ...fallbackSystems,
-  ]);
+  const systems = dedupeStrings([...(snapshot?.systemsTargeted ?? []), ...fallbackSystems]);
 
   return {
     mode: normalizeNullableString(snapshot?.mode) === 'review' ? 'review' : 'standard',
@@ -365,9 +370,7 @@ export function buildSessionSettingsFromSnapshot(
   };
 }
 
-export function buildSessionModeLabel(
-  snapshot: StudySessionSnapshot | null | undefined
-): string {
+export function buildSessionModeLabel(snapshot: StudySessionSnapshot | null | undefined): string {
   switch (normalizeNullableString(snapshot?.mode)) {
     case 'review':
       return 'Practice \u2192 Review Session';
@@ -431,7 +434,11 @@ function deriveCorrectAnswerIndex(
 ): number {
   const maxIndex = options.length > 0 ? options.length - 1 : 0;
 
-  if (typeof correctAnswerIndex === 'number' && Number.isFinite(correctAnswerIndex) && correctAnswerIndex >= 0) {
+  if (
+    typeof correctAnswerIndex === 'number' &&
+    Number.isFinite(correctAnswerIndex) &&
+    correctAnswerIndex >= 0
+  ) {
     return Math.min(Math.round(correctAnswerIndex), maxIndex);
   }
 
@@ -526,9 +533,7 @@ function extractConditionName(
   return normalizeNullableString(input.topic);
 }
 
-function extractConditionSystem(
-  condition: SessionQuestionInput['condition']
-): string | null {
+function extractConditionSystem(condition: SessionQuestionInput['condition']): string | null {
   if (condition && typeof condition === 'object') {
     return normalizeNullableString(condition.system);
   }
@@ -554,12 +559,18 @@ function deriveSystemsTargeted(
 
 function dedupeStrings(values: string[]): string[] {
   return Array.from(
-    new Set(values.filter((value): value is string => typeof value === 'string' && value.trim().length > 0))
+    new Set(
+      values.filter(
+        (value): value is string => typeof value === 'string' && value.trim().length > 0
+      )
+    )
   );
 }
 
 function normalizePositiveInteger(value: number | null | undefined): number | null {
-  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? Math.round(value) : null;
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.round(value)
+    : null;
 }
 
 function normalizeNullableString(value: unknown): string | null {
@@ -598,11 +609,13 @@ function compactRecord(record: Record<string, unknown>): Record<string, unknown>
 }
 
 function slugifyIdentifier(value: string): string {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'unknown';
+  return (
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'unknown'
+  );
 }
 
 function isNonEmptyString(value: unknown): value is string {

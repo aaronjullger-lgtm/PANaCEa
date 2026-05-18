@@ -2,7 +2,7 @@
  * POST /api/scribe/soap/extract
  *
  * Server-side SOAP note extraction for the Smart Scribe real-time dictation
- * engine. Replaces the browser-side call that used to ship VITE_GEMINI_API_KEY
+ * engine. Replaces the browser-side call that used to ship a Gemini API key
  * to the client and fetch generativelanguage.googleapis.com directly.
  *
  * Migration notes (Sprint 4 — AI Gateway):

@@ -37,6 +37,7 @@ import {
   Info,
 } from 'lucide-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import { UserStatsOverviewSkeleton } from '@/components/loading';
 import { getSpeedBenchmarkLabel } from '@/lib/speedBenchmarks';
 
@@ -480,7 +481,9 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
     setLoading(true);
     setError(null);
     try {
+      const token = await getToken();
       const response = await fetch(getApiEndpoint('/api/user/stats'), {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         credentials: 'include',
       });
 
@@ -493,11 +496,11 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
 
       let data: UserStatsResponse & { success?: boolean; error?: string; message?: string };
       try {
-        data = (await response.json()) as UserStatsResponse & {
+        data = unwrapApiEnvelope<UserStatsResponse & {
           success?: boolean;
           error?: string;
           message?: string;
-        };
+        }>(await response.json());
       } catch (err) {
         console.warn('[UserFriendlyStatsDisplay] Failed to parse analytics response', err);
         if (!response.ok) {
@@ -520,10 +523,9 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
       }
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch stats: ${response.statusText}`);
+        throw new Error(getApiEnvelopeError(data, `Failed to fetch stats: ${response.statusText}`));
       }
 
-      const data = await response.json();
       setUserStats(data);
     } catch (err) {
       console.error('Failed to load analytics:', err);

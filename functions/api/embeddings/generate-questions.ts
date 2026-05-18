@@ -17,7 +17,11 @@
  */
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, type AuthenticatedContext, type ValidatedContext } from '../_shared/middleware';
+import {
+  adminAuthenticatedEndpoint,
+  type AuthenticatedContext,
+  type ValidatedContext,
+} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 const EMBEDDING_MODEL = 'text-embedding-004';
@@ -62,10 +66,7 @@ function extractEmbeddableText(questionData: any): string {
 /**
  * Call Gemini embedContent API for a single text.
  */
-async function embedText(
-  text: string,
-  apiKey: string
-): Promise<number[]> {
+async function embedText(text: string, apiKey: string): Promise<number[]> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:embedContent?key=${apiKey}`;
 
   const response = await fetch(url, {
@@ -83,7 +84,7 @@ async function embedText(
     throw new Error(`Gemini embedding API error ${response.status}: ${errText}`);
   }
 
-  const data = await response.json() as { embedding?: { values?: number[] } };
+  const data = (await response.json()) as { embedding?: { values?: number[] } };
   const values = data?.embedding?.values;
 
   if (!values || values.length !== EMBEDDING_DIMENSIONS) {
@@ -101,7 +102,7 @@ export const onRequestPost = adminAuthenticatedEndpoint(
     const apiKey = context.env.GEMINI_API_KEY as string;
 
     if (!apiKey) {
-      return { status: 500, error: 'GEMINI_API_KEY not configured' };
+      return { status: 500, error: 'AI embedding service not configured' };
     }
 
     try {
@@ -116,7 +117,7 @@ export const onRequestPost = adminAuthenticatedEndpoint(
         SELECT "questionId" FROM "QuestionEmbedding"
         WHERE "questionId" = ANY(${questionIds})
       `;
-      const alreadyEmbedded = new Set(existing.map(e => e.questionId));
+      const alreadyEmbedded = new Set(existing.map((e) => e.questionId));
 
       let embedded = 0;
       let skipped = 0;

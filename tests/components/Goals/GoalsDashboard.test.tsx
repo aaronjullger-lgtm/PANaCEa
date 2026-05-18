@@ -42,7 +42,7 @@ describe('GoalsDashboard', () => {
 
     render(<GoalsDashboard />, { wrapper: createWrapper() });
 
-    expect(screen.getByText(/Loading goals/i)).toBeTruthy();
+    expect(screen.getByRole('status', { name: /Loading goals/i })).toBeTruthy();
     await screen.findByText(/No goals yet/i);
 
     expect(mockFetch).toHaveBeenCalledWith(

@@ -4,6 +4,31 @@ This directory contains specialized database maintenance and normalization scrip
 
 ## Scripts
 
+### `audit-learning-identity.ts`
+
+**Purpose:** Read-only rollout audit for study-question identity integrity.
+
+**Problem Solved:**
+
+- Confirms the normalized `question_identities` table and nullable `questionIdentityId` rollout columns are present
+- Samples attempts, review logs, saved questions, cards, and study-session question rows that still lack normalized identity links
+- Detects `QuestionIdentity` rows whose source-specific target no longer resolves
+- Runs inside a read-only transaction so it can be used before and after migration rollout without mutating data
+
+**Usage:**
+
+```bash
+npm run db:audit-learning-identity
+npm run db:audit-learning-identity -- --fail-on-issues
+```
+
+**Notes:**
+
+- Missing post-migration columns cause rollout probes to be skipped instead of crashing, while structural probes still report the missing table/column count.
+- Use this before tightening scheduler or analytics joins to require `questionIdentityId`.
+
+---
+
 ### `fix-optional-nulls.ts`
 
 **Purpose:** Normalize inconsistent "empty" states in JSONB columns.

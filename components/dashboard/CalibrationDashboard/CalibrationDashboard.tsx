@@ -39,6 +39,7 @@ import type {
 } from '@/lib/services/calibrationDashboardService';
 import ReliabilityDiagram from './ReliabilityDiagram';
 import CalibrationTrendChart from './CalibrationTrendChart';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -56,12 +57,11 @@ async function fetchCalibrationDashboard(
   if (token) (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch('/api/user/calibration-dashboard', { headers });
-  if (!res.ok) throw new Error(`Calibration fetch failed: ${res.status}`);
-  const json = await res.json() as { data?: CalibrationDashboardData } | CalibrationDashboardData;
-  const normalized = json && typeof json === 'object' && 'data' in json
-    ? json.data
-    : json;
-  return normalized as CalibrationDashboardData;
+  if (!res.ok) {
+    const errorPayload = await res.json().catch(() => ({}));
+    throw new Error(getApiEnvelopeError(errorPayload, `Calibration fetch failed: ${res.status}`));
+  }
+  return unwrapApiEnvelope<CalibrationDashboardData>(await res.json());
 }
 
 // ─── KPI Card ─────────────────────────────────────────────────────

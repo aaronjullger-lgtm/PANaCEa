@@ -1,0 +1,4 @@
+interface:
+  display_name: "Product Improvement Planner"
+  short_description: "Prioritize product improvements by journey, impact, effort, and risk"
+  default_prompt: "Analyze the product opportunity, rank improvements, and produce a focused execution plan with success metrics."

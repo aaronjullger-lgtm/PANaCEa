@@ -9,6 +9,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 import { recordDrillSession } from '@/services/analytics';
 import { logger } from '@/lib/logger';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 const LOG_SCOPE = 'VentilatorDrill';
 
@@ -104,12 +105,15 @@ export function useVentilatorDrill(): UseVentilatorDrillReturn {
 
     try {
       const response = await fetch('/api/questions?category=ventilator&limit=20');
+      const responseJson = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch questions: ${response.statusText}`);
+        throw new Error(
+          getApiEnvelopeError(responseJson, `Failed to fetch questions: ${response.statusText}`)
+        );
       }
 
-      const data = (await response.json()) as { questions?: Array<Record<string, unknown>> };
+      const data = unwrapApiEnvelope<{ questions?: Array<Record<string, unknown>> }>(responseJson);
 
       if (!data.questions || data.questions.length === 0) {
         throw new Error('No ventilator questions available. Please check back later or contact support.');

@@ -15,6 +15,7 @@ import type { SubmitReviewResponse } from '@/services/analytics';
 import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 import { resolveCorrectAnswerIndex } from '@/lib/answerLetterMap';
 import { logger } from '@/lib/logger';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export type ConditionDrillStatus =
   | 'landing'
@@ -293,12 +294,15 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
             subcategory: filters?.subcategory,
           }),
         });
+        const responseJson = await response.json().catch(() => null);
 
         if (!response.ok) {
-          throw new Error('Failed to fetch questions');
+          throw new Error(getApiEnvelopeError(responseJson, 'Failed to fetch questions'));
         }
 
-        const data = (await response.json()) as { success?: boolean; questions?: QuestionDTO[] };
+        const data = unwrapApiEnvelope<{ success?: boolean; questions?: QuestionDTO[] }>(
+          responseJson
+        );
 
         if (!data.success || !data.questions) {
           throw new Error('Invalid response from server');

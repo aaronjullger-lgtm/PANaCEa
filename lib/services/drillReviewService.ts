@@ -21,12 +21,27 @@ import { calculateParTime } from '../utils/questionComplexity';
 import { FSRS, Rating } from '../fsrs';
 import { updateUserProgressWithHistory } from './userProgressService';
 import type { ImplicitBehaviorMetrics } from '../implicit-metrics';
-import { deriveContinuousRating, assessTelemetryQuality, confidenceStabilityMultiplier, fluencyIllusionDampener, type UserBaseline, type CardBaseline } from '../implicit-metrics';
+import {
+  deriveContinuousRating,
+  assessTelemetryQuality,
+  confidenceStabilityMultiplier,
+  fluencyIllusionDampener,
+  type UserBaseline,
+  type CardBaseline,
+} from '../implicit-metrics';
 import { getMVRTThreshold, type TelemetryQuestionType } from '../../types/telemetry';
-import { buildCircadianContext, applyCircadianModifier, applyCircadianParTimeModifier } from '../circadian';
+import {
+  buildCircadianContext,
+  applyCircadianModifier,
+  applyCircadianParTimeModifier,
+} from '../circadian';
 import { propagateRecallToSiblings } from './semanticSiblingService';
 import { applyAttemptToUserStatistics, updateTimingAggregates } from './userStatisticsService';
-import { applyHonestRating, applyHonestRatingWithDetail, GHOST_GRADER_CONSTANTS } from '../srs/ghostGrader';
+import {
+  applyHonestRating,
+  applyHonestRatingWithDetail,
+  GHOST_GRADER_CONSTANTS,
+} from '../srs/ghostGrader';
 import { getRolling360Service } from './rolling360Service';
 import { applyEorClampIfNeeded } from '../fsrs/eorScheduler';
 import { getTaskTypeFromContent } from '../taskTypes';
@@ -45,20 +60,45 @@ import { resolveCorrectAnswerIndex as resolveAnswerIndexFromValue } from '../ans
 // Wave 1 behavioral signal services
 import { computeLapseSeverity } from './lapseSeverityService';
 import { computeRtTrajectory } from './rtTrajectoryService';
-import { recordOutcome as recordAccuracyOutcome, getConfidenceModifier as getAccuracySlopeModifier } from './sessionAccuracySlopeService';
+import {
+  recordOutcome as recordAccuracyOutcome,
+  getConfidenceModifier as getAccuracySlopeModifier,
+} from './sessionAccuracySlopeService';
 import { computeIntervalDeviation } from './intervalDeviationService';
 // Wave 2 behavioral signal services
-import { analyzeDistractorChronometry, type DistractorChronometryResult, type OptionInteractionRecord } from './distractorChronometryService';
+import {
+  analyzeDistractorChronometry,
+  type DistractorChronometryResult,
+  type OptionInteractionRecord,
+} from './distractorChronometryService';
 import { analyzeSwitchDirections, type SwitchDirectionResult } from './switchDirectionService';
 // Wave 3 behavioral signal services
-import { analyzeExplanationEngagement, type ExplanationEngagementResult } from './explanationEngagementService';
+import {
+  analyzeExplanationEngagement,
+  type ExplanationEngagementResult,
+} from './explanationEngagementService';
 import { computeSessionRegularity, type SessionRegularityResult } from './sessionRegularityService';
-import { computeRelearningSpeed, getOriginalLearningRt, type RelearningSpeedResult } from './relearningSpeedService';
+import {
+  computeRelearningSpeed,
+  getOriginalLearningRt,
+  type RelearningSpeedResult,
+} from './relearningSpeedService';
 // Behavioral analysis grade modulation coordinator (Phase 1 — Behavioral Analysis Audit)
-import { modulateGrade, type BehavioralContext, type GradeModulation } from './gradeModulationCoordinator';
-import { analyzeConfusionRecurrence, type ConfusionPairAction } from './confusionPairRecurrenceService';
+import {
+  modulateGrade,
+  type BehavioralContext,
+  type GradeModulation,
+} from './gradeModulationCoordinator';
+import {
+  analyzeConfusionRecurrence,
+  type ConfusionPairAction,
+} from './confusionPairRecurrenceService';
 // A/B test integration
-import { resolveAssignments, logABConversion, type ABAssignmentMap } from '../middleware/abTestMiddleware';
+import {
+  resolveAssignments,
+  logABConversion,
+  type ABAssignmentMap,
+} from '../middleware/abTestMiddleware';
 // Sprint 3.1 — shadow-mode scheduling telemetry
 import { writeCalibrationLog } from '../scheduling/calibrationLogger';
 // Sprint 3.4 — Wilson mastery (signal-only; does not affect scheduling)
@@ -70,13 +110,14 @@ import {
 // Sprint 3.5 — hypercorrection detection (extracted pure function)
 import { detectHypercorrection } from '../scheduling/hypercorrectionDetector';
 import { upsertCanonicalQuestionMirror } from '../../functions/api/_shared/canonical-question-mirror';
+import { resolveOrCreateQuestionIdentity } from '../study/questionIdentityPersistence';
 
 type DrillReviewPrismaClient = PrismaClient | Prisma.TransactionClient;
 
 /** Active A/B test experiment IDs wired into the review pipeline */
 const AB_EXPERIMENTS = [
-  'scheduling_retention_target',   // Variant config overrides request_retention (0.85, 0.90, 0.95)
-  'explanation_format',            // Variant config controls explanation rendering style
+  'scheduling_retention_target', // Variant config overrides request_retention (0.85, 0.90, 0.95)
+  'explanation_format', // Variant config controls explanation rendering style
 ] as const;
 
 /** Map lib/circadian phase to ReviewLog CircadianPhase enum */
@@ -208,7 +249,7 @@ export function resolveCorrectAnswer(qData: QuestionData): string | null {
     return options[correctIndex] ?? null;
   }
 
-  let correctAnswer: string | null =
+  const correctAnswer: string | null =
     qData.correctAnswer ?? qData.answer ?? qData.correct_option ?? qData.correctChoice ?? null;
 
   return correctAnswer;
@@ -271,7 +312,9 @@ async function ensureQuestionAttemptQuestionTarget(
         questionId: question.id,
         optionCount: getOptionLabels(qData).length,
         hasCorrectAnswer: Boolean(resolveCorrectAnswer(qData)),
-        hasPrompt: Boolean(String(qData.question ?? qData.stem ?? qData.text ?? qData.vignette ?? '').trim()),
+        hasPrompt: Boolean(
+          String(qData.question ?? qData.stem ?? qData.text ?? qData.vignette ?? '').trim()
+        ),
       });
       return false;
     }
@@ -411,6 +454,7 @@ async function linkStudySessionQuestionAttempt(
     canonicalQuestionId?: string | null;
     sourceQuestionId?: string | null;
     questionSource?: string | null;
+    questionIdentityId?: string | null;
   },
   logger?: DrillReviewLogger
 ): Promise<void> {
@@ -423,6 +467,9 @@ async function linkStudySessionQuestionAttempt(
   const sourceIds = dedupeIds([options.sourceQuestionId ?? options.questionId]);
   const clauses: Array<Record<string, unknown>> = [];
 
+  if (options.questionIdentityId) {
+    clauses.push({ questionIdentityId: options.questionIdentityId });
+  }
   if (options.questionSource === 'pre_generated') {
     for (const id of sourceIds) clauses.push({ preGeneratedQuestionId: id });
   } else if (options.questionSource === 'question') {
@@ -444,6 +491,7 @@ async function linkStudySessionQuestionAttempt(
       data: {
         attemptId: options.attemptId,
         answeredAt: new Date(),
+        ...(options.questionIdentityId ? { questionIdentityId: options.questionIdentityId } : {}),
       },
     });
   } catch (error) {
@@ -517,7 +565,8 @@ async function recordStudyPlanAttemptProgress(
     if (linkedAttemptIds.includes(options.attemptId)) return;
 
     const previousAnswered =
-      typeof task.actualQuestionsAnswered === 'number' && Number.isFinite(task.actualQuestionsAnswered)
+      typeof task.actualQuestionsAnswered === 'number' &&
+      Number.isFinite(task.actualQuestionsAnswered)
         ? Math.max(0, Math.round(task.actualQuestionsAnswered))
         : 0;
     const previousAccuracy =
@@ -527,21 +576,34 @@ async function recordStudyPlanAttemptProgress(
     const nextAnswered = previousAnswered + 1;
     const nextAccuracy =
       previousAccuracy === null
-        ? (options.isCorrect ? 1 : 0)
-        : ((previousAccuracy * previousAnswered) + (options.isCorrect ? 1 : 0)) / nextAnswered;
+        ? options.isCorrect
+          ? 1
+          : 0
+        : (previousAccuracy * previousAnswered + (options.isCorrect ? 1 : 0)) / nextAnswered;
     const now = new Date().toISOString();
+    const targetQuestions = coerceStudyPlanTargetQuestions(task);
+    const terminalStatus =
+      task.status === 'completed' || task.status === 'skipped' || task.status === 'rescheduled';
+    const nextStatus = terminalStatus
+      ? task.status
+      : targetQuestions > 0 && nextAnswered >= targetQuestions
+        ? 'completed'
+        : 'in_progress';
 
     tasks[taskIndex] = {
       ...task,
-      status:
-        task.status === 'completed' || task.status === 'skipped' || task.status === 'rescheduled'
-          ? task.status
-          : 'in_progress',
+      status: nextStatus,
       startedAt: typeof task.startedAt === 'string' ? task.startedAt : now,
+      completedAt:
+        nextStatus === 'completed'
+          ? typeof task.completedAt === 'string'
+            ? task.completedAt
+            : now
+          : task.completedAt,
       linkedSessionId:
         typeof task.linkedSessionId === 'string'
           ? task.linkedSessionId
-          : options.sessionId ?? undefined,
+          : (options.sessionId ?? undefined),
       linkedAttemptIds: [...linkedAttemptIds, options.attemptId].slice(-200),
       actualQuestionsAnswered: nextAnswered,
       actualAccuracy: nextAccuracy,
@@ -556,6 +618,11 @@ async function recordStudyPlanAttemptProgress(
         actualQuestionsAnswered: totals.questionsAnswered,
         actualDurationMinutes: totals.durationMinutes,
         actualAccuracy: totals.accuracy,
+        ...(totals.status === 'completed'
+          ? { completedAt: new Date() }
+          : row.completedAt
+            ? { completedAt: row.completedAt }
+            : {}),
         updatedAt: new Date(),
       },
     });
@@ -570,7 +637,9 @@ async function recordStudyPlanAttemptProgress(
 
 function dedupeIds(values: Array<string | null | undefined>): string[] {
   return Array.from(
-    new Set(values.filter((value): value is string => typeof value === 'string' && value.length > 0))
+    new Set(
+      values.filter((value): value is string => typeof value === 'string' && value.length > 0)
+    )
   );
 }
 
@@ -585,8 +654,8 @@ function summarizeStudyPlanTasks(tasks: unknown[]): {
   durationMinutes: number | null;
   accuracy: number | null;
 } {
-  const taskObjects = tasks.filter((task): task is Record<string, unknown> =>
-    Boolean(task) && typeof task === 'object'
+  const taskObjects = tasks.filter(
+    (task): task is Record<string, unknown> => Boolean(task) && typeof task === 'object'
   );
   const statuses = taskObjects.map((task) => task.status);
   const status =
@@ -594,7 +663,9 @@ function summarizeStudyPlanTasks(tasks: unknown[]): {
       ? 'completed'
       : taskObjects.length > 0 && statuses.every((value) => value === 'skipped')
         ? 'skipped'
-        : statuses.some((value) => value === 'in_progress' || value === 'completed' || value === 'skipped')
+        : statuses.some(
+              (value) => value === 'in_progress' || value === 'completed' || value === 'skipped'
+            )
           ? 'in_progress'
           : 'pending';
 
@@ -605,15 +676,23 @@ function summarizeStudyPlanTasks(tasks: unknown[]): {
 
   for (const task of taskObjects) {
     const answered =
-      typeof task.actualQuestionsAnswered === 'number' && Number.isFinite(task.actualQuestionsAnswered)
+      typeof task.actualQuestionsAnswered === 'number' &&
+      Number.isFinite(task.actualQuestionsAnswered)
         ? Math.max(0, Math.round(task.actualQuestionsAnswered))
         : 0;
     questionsAnswered += answered;
 
-    if (typeof task.actualDurationMinutes === 'number' && Number.isFinite(task.actualDurationMinutes)) {
+    if (
+      typeof task.actualDurationMinutes === 'number' &&
+      Number.isFinite(task.actualDurationMinutes)
+    ) {
       durationMinutes += Math.max(0, Math.round(task.actualDurationMinutes));
     }
-    if (typeof task.actualAccuracy === 'number' && Number.isFinite(task.actualAccuracy) && answered > 0) {
+    if (
+      typeof task.actualAccuracy === 'number' &&
+      Number.isFinite(task.actualAccuracy) &&
+      answered > 0
+    ) {
       weightedAccuracy += Math.max(0, Math.min(1, task.actualAccuracy)) * answered;
       accuracyWeight += answered;
     }
@@ -625,6 +704,30 @@ function summarizeStudyPlanTasks(tasks: unknown[]): {
     durationMinutes: durationMinutes > 0 ? durationMinutes : null,
     accuracy: accuracyWeight > 0 ? weightedAccuracy / accuracyWeight : null,
   };
+}
+
+function coerceStudyPlanTargetQuestions(task: Record<string, unknown>): number {
+  const launchSettings =
+    task.launchSettings &&
+    typeof task.launchSettings === 'object' &&
+    !Array.isArray(task.launchSettings)
+      ? (task.launchSettings as Record<string, unknown>)
+      : {};
+  const candidates = [
+    task.targetQuestions,
+    task.count,
+    launchSettings.questionCount,
+    launchSettings.count,
+  ];
+
+  for (const candidate of candidates) {
+    const parsed = Number(candidate);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return Math.round(parsed);
+    }
+  }
+
+  return 0;
 }
 
 // ─── Per-Card RT Baseline (CRPL z-score enrichment — tier1augment.md) ──────
@@ -760,7 +863,8 @@ export async function submitDrillReview(
       ? telemetry.session_id
       : undefined;
   const telemetryStudyPlanTaskId =
-    typeof telemetry?.study_plan_task_id === 'string' && telemetry.study_plan_task_id.trim().length > 0
+    typeof telemetry?.study_plan_task_id === 'string' &&
+    telemetry.study_plan_task_id.trim().length > 0
       ? telemetry.study_plan_task_id
       : null;
   const telemetryStudyPlanDate =
@@ -768,7 +872,8 @@ export async function submitDrillReview(
       ? telemetry.study_plan_date
       : null;
   const telemetryStudyPlanSource =
-    typeof telemetry?.study_plan_source === 'string' && telemetry.study_plan_source.trim().length > 0
+    typeof telemetry?.study_plan_source === 'string' &&
+    telemetry.study_plan_source.trim().length > 0
       ? telemetry.study_plan_source
       : null;
   const learningEventIdentity = {
@@ -782,6 +887,28 @@ export async function submitDrillReview(
     studyPlanSource: telemetryStudyPlanSource,
     sessionType: sessionType ?? 'main',
     progressContext,
+  };
+  let questionIdentityId: string | null = null;
+  let questionIdentityResolved = false;
+  const resolveQuestionIdentityId = async (): Promise<string | null> => {
+    if (questionIdentityResolved) return questionIdentityId;
+    questionIdentityResolved = true;
+    questionIdentityId = await resolveOrCreateQuestionIdentity(
+      prisma as any,
+      {
+        questionSource: learningEventIdentity.questionSource,
+        sourceQuestionId: learningEventIdentity.sourceQuestionId,
+        canonicalQuestionId: learningEventIdentity.canonicalQuestionId,
+        provenance: {
+          writer: 'drill-review-service',
+          sessionId: learningEventIdentity.sessionId,
+          sessionType: learningEventIdentity.sessionType,
+          progressContext,
+        },
+      },
+      logger
+    );
+    return questionIdentityId;
   };
 
   const resolveProgressConditionId = async (): Promise<string | null> => {
@@ -857,13 +984,21 @@ export async function submitDrillReview(
 
   // Fetch per-card RT baseline for CRPL z-score enrichment (tier1augment.md)
   // Runs concurrently with par time calculation — non-blocking, non-fatal
-  const cardBaselinePromise = getCardRtBaseline(prisma as PrismaClient, userId, questionId, question.conditionId);
+  const cardBaselinePromise = getCardRtBaseline(
+    prisma as PrismaClient,
+    userId,
+    questionId,
+    question.conditionId
+  );
 
-  const parTimeMs = calculateParTime({
-    ...qData,
-    stem: qData.stem || qData.question || qData.vignette || qData.text || '',
-    choices: qData.choices || qData.options || [],
-  }, userSpeedFactor);
+  const parTimeMs = calculateParTime(
+    {
+      ...qData,
+      stem: qData.stem || qData.question || qData.vignette || qData.text || '',
+      choices: qData.choices || qData.options || [],
+    },
+    userSpeedFactor
+  );
 
   const numericTime = typeof timeSpentMs === 'number' ? timeSpentMs : Number(timeSpentMs) || 0;
 
@@ -876,7 +1011,10 @@ export async function submitDrillReview(
   const questionNumber = (telemetry?.question_number as number | undefined) ?? null;
   const fatigueAdjustedParTimeMs = applyFatigueCorrection(parTimeMs, questionNumber);
 
-  const circadianAdjustedParTimeMs = applyCircadianParTimeModifier(fatigueAdjustedParTimeMs, circadianContext);
+  const circadianAdjustedParTimeMs = applyCircadianParTimeModifier(
+    fatigueAdjustedParTimeMs,
+    circadianContext
+  );
 
   const commitmentGapMs = (telemetry?.selection_drift_ms as number | undefined) ?? null;
   const cursorEntropy = telemetry?.cursor_entropy as number | undefined;
@@ -892,7 +1030,7 @@ export async function submitDrillReview(
   // as a more individualized rapid-guess filter. Fall back to fixed thresholds
   // when no baseline is available.
   const perUserMvrt = behavioralBaseline?.rtBaseline?.medianMs
-    ? Math.max(SERVER_MVRT_THRESHOLD_MS, behavioralBaseline.rtBaseline.medianMs * 0.10)
+    ? Math.max(SERVER_MVRT_THRESHOLD_MS, behavioralBaseline.rtBaseline.medianMs * 0.1)
     : null;
   const effectiveMvrt = Math.max(
     SERVER_MVRT_THRESHOLD_MS,
@@ -958,7 +1096,12 @@ export async function submitDrillReview(
 
     // Await per-card baseline (non-fatal — undefined on failure)
     const cardRtBaseline = await cardBaselinePromise;
-    const continuousResult = deriveContinuousRating(behaviorMetrics, undefined, userBaseline, cardRtBaseline);
+    const continuousResult = deriveContinuousRating(
+      behaviorMetrics,
+      undefined,
+      userBaseline,
+      cardRtBaseline
+    );
     rating = continuousResult.discreteRating;
     gradeContinuous = continuousResult.grade;
     implicitConfidence = continuousResult.confidence;
@@ -967,8 +1110,15 @@ export async function submitDrillReview(
     rtSignalQuality = continuousResult.rtSignalQuality ?? 1.0;
 
     // ── Wave 2: Distractor chronometry & switch direction (additive, backward-compatible) ──
-    const optionInteractionsRaw = telemetry?.option_interactions as OptionInteractionRecord[] | undefined;
-    if (correctAnswer && optionInteractionsRaw && Array.isArray(optionInteractionsRaw) && optionInteractionsRaw.length > 0) {
+    const optionInteractionsRaw = telemetry?.option_interactions as
+      | OptionInteractionRecord[]
+      | undefined;
+    if (
+      correctAnswer &&
+      optionInteractionsRaw &&
+      Array.isArray(optionInteractionsRaw) &&
+      optionInteractionsRaw.length > 0
+    ) {
       wave2Chronometry = analyzeDistractorChronometry(
         optionInteractionsRaw,
         correctAnswer,
@@ -976,10 +1126,7 @@ export async function submitDrillReview(
       );
       implicitConfidence *= wave2Chronometry.confidenceMultiplier;
 
-      wave2SwitchDirection = analyzeSwitchDirections(
-        optionInteractionsRaw,
-        correctAnswer
-      );
+      wave2SwitchDirection = analyzeSwitchDirections(optionInteractionsRaw, correctAnswer);
       implicitConfidence *= wave2SwitchDirection.confidenceMultiplier;
 
       logger?.debug?.('Wave 2 signals applied', {
@@ -1019,24 +1166,32 @@ export async function submitDrillReview(
     // subsequent changes approach guessing probability. RW is a strong negative signal.
     if (wave2SwitchDirection && wave2SwitchDirection.totalSwitches > 0) {
       // Apply direction-aware grade penalty from Wave 2 analysis
-      gradeContinuous = Math.max(1.0, Math.min(4.0,
-        gradeContinuous + wave2SwitchDirection.gradePenaltyRecommendation
-      ));
+      gradeContinuous = Math.max(
+        1.0,
+        Math.min(4.0, gradeContinuous + wave2SwitchDirection.gradePenaltyRecommendation)
+      );
       // Re-sync discrete rating with continuous grade after penalty.
       // Binary system: grade < 2.0 → Again, grade ≥ 2.0 → Good.
       // This prevents grade_continuous and discrete rating from diverging.
       if (gradeContinuous < 2.0 && rating > Rating.Again) {
         rating = Rating.Again;
-        logger?.info?.('Behavioral override: Again (grade dropped below 2.0 after switch-direction penalty)', {
-          questionId,
-          gradeContinuous,
-          firstSwitch: wave2SwitchDirection.firstSwitchDirection,
-          totalSwitches: wave2SwitchDirection.totalSwitches,
-          gradePenalty: wave2SwitchDirection.gradePenaltyRecommendation,
-        });
+        logger?.info?.(
+          'Behavioral override: Again (grade dropped below 2.0 after switch-direction penalty)',
+          {
+            questionId,
+            gradeContinuous,
+            firstSwitch: wave2SwitchDirection.firstSwitchDirection,
+            totalSwitches: wave2SwitchDirection.totalSwitches,
+            gradePenalty: wave2SwitchDirection.gradePenaltyRecommendation,
+          }
+        );
       }
       // RW first switch with multiple total switches = strong indecision → downgrade
-      if (wave2SwitchDirection.firstSwitchDirection === 'RW' && wave2SwitchDirection.totalSwitches > 1 && rating > Rating.Again) {
+      if (
+        wave2SwitchDirection.firstSwitchDirection === 'RW' &&
+        wave2SwitchDirection.totalSwitches > 1 &&
+        rating > Rating.Again
+      ) {
         rating = Rating.Again;
         logger?.info?.('Behavioral override: Again (right→wrong first switch + multiple changes)', {
           questionId,
@@ -1061,22 +1216,30 @@ export async function submitDrillReview(
     const vignetteRegressions = (telemetry?.vignette_regressions as number | undefined) ?? 0;
     const selectionDriftMs = telemetry?.selection_drift_ms as number | null | undefined;
     const tremorScore = (telemetry?.tremor_score as number | undefined) ?? 0;
-    const eliminationVelocity = (telemetry?.elimination_velocity as number | undefined) ?? undefined;
-    const latencyRatio = circadianAdjustedParTimeMs > 0
-      ? numericTime / circadianAdjustedParTimeMs
-      : undefined;
+    const eliminationVelocity =
+      (telemetry?.elimination_velocity as number | undefined) ?? undefined;
+    const latencyRatio =
+      circadianAdjustedParTimeMs > 0 ? numericTime / circadianAdjustedParTimeMs : undefined;
 
     // Sprint 7: Build Ghost Grader baseline from behavioral baseline for z-score normalization
     // Uses IQR-derived stddev estimates when direct stddev is unavailable:
     // stddev ≈ IQR / 1.35 (for normal-ish distributions)
-    const ghostBaseline = behavioralBaseline ? {
-      oscillationMedian: behavioralBaseline.hesitationBaseline.medianOscillations,
-      oscillationStdDev: Math.max(0.5, behavioralBaseline.hesitationBaseline.medianOscillations * 0.8),
-      tremorMedian: 0, // Tremor not yet in baseline — use 0 (falls back to absolute)
-      tremorStdDev: 0,
-      driftMedianMs: behavioralBaseline.hesitationBaseline.medianCommitmentGapMs,
-      driftStdDevMs: Math.max(500, behavioralBaseline.hesitationBaseline.medianCommitmentGapMs * 0.6),
-    } : null;
+    const ghostBaseline = behavioralBaseline
+      ? {
+          oscillationMedian: behavioralBaseline.hesitationBaseline.medianOscillations,
+          oscillationStdDev: Math.max(
+            0.5,
+            behavioralBaseline.hesitationBaseline.medianOscillations * 0.8
+          ),
+          tremorMedian: 0, // Tremor not yet in baseline — use 0 (falls back to absolute)
+          tremorStdDev: 0,
+          driftMedianMs: behavioralBaseline.hesitationBaseline.medianCommitmentGapMs,
+          driftStdDevMs: Math.max(
+            500,
+            behavioralBaseline.hesitationBaseline.medianCommitmentGapMs * 0.6
+          ),
+        }
+      : null;
 
     const ghostResult = applyHonestRatingWithDetail({
       userRating: rating,
@@ -1109,9 +1272,10 @@ export async function submitDrillReview(
       );
     } else if (ghostResult.gradeContinuousAdjustment !== 0) {
       // Confidence boost or elimination adjustment
-      gradeContinuous = Math.max(1.0, Math.min(4.0,
-        gradeContinuous + ghostResult.gradeContinuousAdjustment
-      ));
+      gradeContinuous = Math.max(
+        1.0,
+        Math.min(4.0, gradeContinuous + ghostResult.gradeContinuousAdjustment)
+      );
     }
   }
 
@@ -1191,15 +1355,18 @@ export async function submitDrillReview(
     if (existingAttempt) {
       finalAttemptId = existingAttempt.id;
       questionFkIdForRelations = question.id;
+      await resolveQuestionIdentityId();
       // Skip creation, we'll reuse the existing attempt
     } else {
       const targetReady = await ensureQuestionAttemptQuestionTarget(prisma, question, logger);
       if (targetReady) {
+        await resolveQuestionIdentityId();
         await prisma.questionAttempt.create({
           data: {
             id: finalAttemptId,
             userId,
             questionId,
+            ...(questionIdentityId ? { questionIdentityId } : {}),
             conditionId: question.conditionId ?? undefined,
             medicalContentId: question.medicalContentId ?? undefined,
             system: question.system ?? undefined,
@@ -1261,6 +1428,7 @@ export async function submitDrillReview(
     // Ensure attemptId variable used later matches the final attempt ID
     attemptId = finalAttemptId;
     const weCreatedAttempt = !existingAttempt;
+    await resolveQuestionIdentityId();
     if (questionFkIdForRelations) {
       await linkStudySessionQuestionAttempt(
         prisma,
@@ -1271,6 +1439,7 @@ export async function submitDrillReview(
           canonicalQuestionId: learningEventIdentity.canonicalQuestionId,
           sourceQuestionId: learningEventIdentity.sourceQuestionId,
           questionSource: questionSource ?? question.questionSource ?? null,
+          questionIdentityId,
         },
         logger
       );
@@ -1360,9 +1529,7 @@ export async function submitDrillReview(
   }
 
   // Helper function to create full telemetry object with server_computed key
-  const buildReviewLogTelemetry = (
-    currentCard?: Record<string, number | Date> | null
-  ) => ({
+  const buildReviewLogTelemetry = (currentCard?: Record<string, number | Date> | null) => ({
     ...(telemetry ?? {}),
     server_computed: {
       learning_event: learningEventIdentity,
@@ -1391,8 +1558,12 @@ export async function submitDrillReview(
 
   // DEV-001 FIX: Split rapid-guess ReviewLog from FSRS block
   if (question.conditionId && shouldLogReview) {
-    logger?.debug?.('Processing review', { conditionId: question.conditionId, countForFSRS, isRapidGuess });
-    
+    logger?.debug?.('Processing review', {
+      conditionId: question.conditionId,
+      countForFSRS,
+      isRapidGuess,
+    });
+
     // For rapid guesses: create ReviewLog with live card state, but skip FSRS update.
     // The card state is logged for analytics accuracy — zero values make it impossible
     // to reconstruct the card lifecycle from ReviewLog alone.
@@ -1409,7 +1580,11 @@ export async function submitDrillReview(
           undefined;
 
         // Read live card state so the log reflects the card's true position
-        let liveState = 0, liveStability = 0, liveDifficulty = 0, liveRetrievability = 0, liveElapsedDays = 0;
+        let liveState = 0,
+          liveStability = 0,
+          liveDifficulty = 0,
+          liveRetrievability = 0,
+          liveElapsedDays = 0;
         try {
           const existingProgress = await prisma.userProgress.findUnique({
             where: {
@@ -1431,9 +1606,15 @@ export async function submitDrillReview(
               liveRetrievability = fsrs.calculateRetrievability(liveElapsedDays, liveStability);
             }
           }
-        } catch { /* non-fatal: fall back to zeros */ }
+        } catch {
+          /* non-fatal: fall back to zeros */
+        }
 
-        logger?.debug?.('Creating rapid-guess ReviewLog', { userId, questionId, conditionId: question.conditionId });
+        logger?.debug?.('Creating rapid-guess ReviewLog', {
+          userId,
+          questionId,
+          conditionId: question.conditionId,
+        });
         await prisma.reviewLog.create({
           data: {
             userId,
@@ -1441,6 +1622,7 @@ export async function submitDrillReview(
             medicalContentId: question.medicalContentId ?? undefined,
             questionId,
             questionFkId: questionFkIdForRelations,
+            ...(questionIdentityId ? { questionIdentityId } : {}),
             questionType: 'pre_generated',
             grade: Rating.Again, // Force grade to 1 (Again) for rapid guesses
             grade_continuous: 1.0,
@@ -1466,11 +1648,18 @@ export async function submitDrillReview(
             vignette_regressions: vignetteRegressions,
             time_to_first_interaction: timeToFirstInteraction,
             circadian_phase: toCircadianPhaseEnum(circadianContext.circadianPhase),
-            telemetry: buildReviewLogTelemetry({ state: liveState, stability: liveStability, difficulty: liveDifficulty, elapsed_days: liveElapsedDays }),
+            telemetry: buildReviewLogTelemetry({
+              state: liveState,
+              stability: liveStability,
+              difficulty: liveDifficulty,
+              elapsed_days: liveElapsedDays,
+            }),
           },
         });
       } catch (reviewLogError) {
-        logger?.error?.('Rapid-guess ReviewLog creation failed', { error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError) });
+        logger?.error?.('Rapid-guess ReviewLog creation failed', {
+          error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
+        });
         logger?.warn?.('Failed to write rapid-guess ReviewLog (non-fatal)', {
           error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
         });
@@ -1479,7 +1668,11 @@ export async function submitDrillReview(
       // For normal reviews: run FSRS calculation, create ReviewLog, update UserProgress
       try {
         // Sprint 5: Use per-user/system optimized parameters when available
-        const optimizedParams = await getOptimizedParameters(prisma as PrismaClient, userId, question.system).catch(() => undefined);
+        const optimizedParams = await getOptimizedParameters(
+          prisma as PrismaClient,
+          userId,
+          question.system
+        ).catch(() => undefined);
 
         // A/B Test: override request_retention from experiment variant config
         const schedulingExp = abAssignments['scheduling_retention_target'];
@@ -1487,7 +1680,10 @@ export async function submitDrillReview(
         if (schedulingExp && typeof schedulingExp.config.request_retention === 'number') {
           const abRetention = schedulingExp.config.request_retention as number;
           if (abRetention >= 0.7 && abRetention <= 0.99) {
-            fsrsParams = { ...(fsrsParams || { request_retention: 0.9, maximum_interval: 36500, w: [] }), request_retention: abRetention };
+            fsrsParams = {
+              ...(fsrsParams || { request_retention: 0.9, maximum_interval: 36500, w: [] }),
+              request_retention: abRetention,
+            };
             logger?.debug?.('AB: scheduling_retention_target override applied', {
               variant: schedulingExp.variantName,
               request_retention: abRetention,
@@ -1511,7 +1707,8 @@ export async function submitDrillReview(
           stability: typeof fsrsCardData.stability === 'number' ? fsrsCardData.stability : 0,
           difficulty: typeof fsrsCardData.difficulty === 'number' ? fsrsCardData.difficulty : 0,
           state: typeof fsrsCardData.state === 'number' ? fsrsCardData.state : 0,
-          elapsed_days: typeof fsrsCardData.elapsed_days === 'number' ? fsrsCardData.elapsed_days : 0,
+          elapsed_days:
+            typeof fsrsCardData.elapsed_days === 'number' ? fsrsCardData.elapsed_days : 0,
           scheduled_days:
             typeof fsrsCardData.scheduled_days === 'number' ? fsrsCardData.scheduled_days : 0,
           reps: typeof fsrsCardData.reps === 'number' ? fsrsCardData.reps : 0,
@@ -1529,7 +1726,14 @@ export async function submitDrillReview(
         const { card: rawCard } = fsrs.next(currentCard, new Date(), rating);
 
         // ── Wave 1A: Lapse severity — amplify difficulty for severe lapses ──
-        let lapseSeverityResult: { severity: number; difficultyMultiplier: number; preLapseReps: number; preLapseStability: number } | undefined;
+        let lapseSeverityResult:
+          | {
+              severity: number;
+              difficultyMultiplier: number;
+              preLapseReps: number;
+              preLapseStability: number;
+            }
+          | undefined;
         if (!isCorrect && currentCard.state >= 2) {
           lapseSeverityResult = computeLapseSeverity(
             currentCard.reps,
@@ -1539,7 +1743,10 @@ export async function submitDrillReview(
           if (lapseSeverityResult.difficultyMultiplier > 1.0) {
             const baseDiffIncrease = rawCard.difficulty - currentCard.difficulty;
             const amplifiedIncrease = baseDiffIncrease * lapseSeverityResult.difficultyMultiplier;
-            rawCard.difficulty = Math.min(10, Math.max(1, currentCard.difficulty + amplifiedIncrease));
+            rawCard.difficulty = Math.min(
+              10,
+              Math.max(1, currentCard.difficulty + amplifiedIncrease)
+            );
           }
         }
 
@@ -1563,19 +1770,21 @@ export async function submitDrillReview(
           telemetryQuality?: TelemetryQuality;
         }>;
         const historicalReviews: HistoricalReview[] = reviewHistory
-          .filter((r): r is { confidence: number; wasCorrect: boolean; telemetryQuality?: TelemetryQuality } =>
-            typeof r.confidence === 'number' && typeof r.wasCorrect === 'boolean'
+          .filter(
+            (
+              r
+            ): r is {
+              confidence: number;
+              wasCorrect: boolean;
+              telemetryQuality?: TelemetryQuality;
+            } => typeof r.confidence === 'number' && typeof r.wasCorrect === 'boolean'
           )
-          .map(r => ({
+          .map((r) => ({
             confidence: r.confidence,
             wasCorrect: r.wasCorrect,
             telemetryQuality: (r.telemetryQuality as TelemetryQuality) ?? 'minimal',
           }));
-        const accumulated = accumulateConfidence(
-          implicitConfidence,
-          isCorrect,
-          historicalReviews
-        );
+        const accumulated = accumulateConfidence(implicitConfidence, isCorrect, historicalReviews);
 
         // Step 2: Metacognitive calibration — correct systematic over/under-confidence
         // (Dunlosky & Nelson, 1992; Koriat, 1997)
@@ -1593,8 +1802,14 @@ export async function submitDrillReview(
 
         // Step 4: Retrieval interference detection (Anderson & Neely, 1996)
         // Lookup confusion pairs from DB and build session history from ReviewLog
-        let interferenceResult: { discount: number; detected: boolean; details: { interferingCount: number; closestDistance: number | null; type: string } } = {
-          discount: 1.0, detected: false, details: { interferingCount: 0, closestDistance: null, type: 'none' },
+        let interferenceResult: {
+          discount: number;
+          detected: boolean;
+          details: { interferingCount: number; closestDistance: number | null; type: string };
+        } = {
+          discount: 1.0,
+          detected: false,
+          details: { interferingCount: 0, closestDistance: null, type: 'none' },
         };
         try {
           // Fetch known confusion pairs for this condition from the user's history
@@ -1609,11 +1824,13 @@ export async function submitDrillReview(
             select: { correctConditionId: true, selectedConditionId: true },
             take: 20, // Bounded to prevent unbounded scans
           });
-          const confusionPairIds = confusionPairs.map(p =>
-            p.correctConditionId === question.conditionId
-              ? p.selectedConditionId
-              : p.correctConditionId
-          ).filter((conditionId): conditionId is string => conditionId != null);
+          const confusionPairIds = confusionPairs
+            .map((p) =>
+              p.correctConditionId === question.conditionId
+                ? p.selectedConditionId
+                : p.correctConditionId
+            )
+            .filter((conditionId): conditionId is string => conditionId != null);
 
           // Build session review history from recent ReviewLogs in this session
           // Uses session_id from telemetry if available, otherwise last 30 min of reviews
@@ -1648,9 +1865,8 @@ export async function submitDrillReview(
         }
 
         // Step 5: Fluency illusion dampener (Kornell & Bjork, 2008)
-        const elapsedDays = typeof currentCard.elapsed_days === 'number'
-          ? currentCard.elapsed_days
-          : 0;
+        const elapsedDays =
+          typeof currentCard.elapsed_days === 'number' ? currentCard.elapsed_days : 0;
 
         // Combine all confidence adjustments: accumulated → calibrated → fatigue → accuracy_slope → interference → fluency
         let adjustedConfidence = accumulated.posterior;
@@ -1720,7 +1936,10 @@ export async function submitDrillReview(
               originalRt,
               currentCard.lapses
             );
-            if (wave3RelearningSpeed.hasSavings && wave3RelearningSpeed.postLapseStabilityBonus > 1.0) {
+            if (
+              wave3RelearningSpeed.hasSavings &&
+              wave3RelearningSpeed.postLapseStabilityBonus > 1.0
+            ) {
               modifiedStability *= wave3RelearningSpeed.postLapseStabilityBonus;
               logger?.debug?.('Relearning speed savings bonus applied', {
                 savingsRatio: wave3RelearningSpeed.savingsRatio,
@@ -1749,7 +1968,7 @@ export async function submitDrillReview(
 
         // Step 7: Cross-session trend detection (Bjork, 1999; Kornell et al., 2009)
         // Declining confidence trajectory across reviews → stability penalty
-        const confidenceValues = historicalReviews.map(r => r.confidence);
+        const confidenceValues = historicalReviews.map((r) => r.confidence);
         confidenceValues.push(adjustedConfidence); // include current
         const trend = detectConfidenceTrend(confidenceValues);
         if (trend.trendMultiplier !== 1.0 && trend.rSquared >= 0.3) {
@@ -1775,7 +1994,11 @@ export async function submitDrillReview(
         // If the model consistently overestimates retention for this system,
         // the correction factor < 1.0 → shorter intervals. Vice versa for underestimation.
         try {
-          const stabilityCorrectionFactor = await getStabilityCorrectionFactor(prisma as PrismaClient, userId, question.system);
+          const stabilityCorrectionFactor = await getStabilityCorrectionFactor(
+            prisma as PrismaClient,
+            userId,
+            question.system
+          );
           modifiedStability *= stabilityCorrectionFactor;
         } catch (calErr) {
           // Non-fatal: if calibration fails, proceed without correction
@@ -1788,10 +2011,15 @@ export async function submitDrillReview(
         // Modulate how aggressively difficulty shifts based on confidence.
         // Does not change FSRS core math — operates on the delta after FSRS computes.
         const baseDifficultyDelta = rawCard.difficulty - currentCard.difficulty;
-        const difficultyMod = modulateDifficultyDelta(baseDifficultyDelta, adjustedConfidence, isCorrect);
-        const modulatedDifficulty = Math.max(1, Math.min(10,
-          currentCard.difficulty + difficultyMod.modulatedDelta
-        ));
+        const difficultyMod = modulateDifficultyDelta(
+          baseDifficultyDelta,
+          adjustedConfidence,
+          isCorrect
+        );
+        const modulatedDifficulty = Math.max(
+          1,
+          Math.min(10, currentCard.difficulty + difficultyMod.modulatedDelta)
+        );
 
         const updatedCard = {
           ...rawCard,
@@ -1799,7 +2027,8 @@ export async function submitDrillReview(
           difficulty: modulatedDifficulty,
         };
         const recalculatedScheduledDays =
-          updatedCard.state === 2 && typeof (fsrs as any).calculateIntervalFromStability === 'function'
+          updatedCard.state === 2 &&
+          typeof (fsrs as any).calculateIntervalFromStability === 'function'
             ? (fsrs as any).calculateIntervalFromStability(updatedCard.stability)
             : updatedCard.scheduled_days;
         updatedCard.scheduled_days = recalculatedScheduledDays;
@@ -1835,7 +2064,9 @@ export async function submitDrillReview(
             if (srsConfig?.medianResponseTimeMs != null) {
               behavioralContext.userMedianRtMs = srsConfig.medianResponseTimeMs;
             }
-          } catch { /* non-fatal: use default median */ }
+          } catch {
+            /* non-fatal: use default median */
+          }
 
           gradeModulationResult = modulateGrade(behavioralContext);
           logger?.debug?.('Grade modulation computed', {
@@ -1880,7 +2111,11 @@ export async function submitDrillReview(
             timeToFirstClick ??
             undefined;
 
-          logger?.debug?.('About to create ReviewLog', { userId, questionId, conditionId: question.conditionId });
+          logger?.debug?.('About to create ReviewLog', {
+            userId,
+            questionId,
+            conditionId: question.conditionId,
+          });
           const createdLog = await prisma.reviewLog.create({
             select: { id: true },
             data: {
@@ -1889,6 +2124,7 @@ export async function submitDrillReview(
               medicalContentId: question.medicalContentId ?? undefined,
               questionId,
               questionFkId: questionFkIdForRelations,
+              ...(questionIdentityId ? { questionIdentityId } : {}),
               questionType: 'pre_generated',
               grade: rating,
               grade_continuous: gradeContinuous,
@@ -1900,7 +2136,10 @@ export async function submitDrillReview(
               state: currentCard.state,
               stability: currentCard.stability,
               difficulty: currentCard.difficulty,
-              retrievability: fsrs.calculateRetrievability(currentCard.elapsed_days, currentCard.stability),
+              retrievability: fsrs.calculateRetrievability(
+                currentCard.elapsed_days,
+                currentCard.stability
+              ),
               implicit_confidence: implicitConfidence,
               scheduledAt: new Date(
                 currentCard.last_review.getTime() + currentCard.scheduled_days * 86400000
@@ -1957,16 +2196,20 @@ export async function submitDrillReview(
                   switch_right_to_wrong: wave2SwitchDirection?.rightToWrong ?? null,
                   switch_wrong_to_wrong: wave2SwitchDirection?.wrongToWrong ?? null,
                   switch_net_value: wave2SwitchDirection?.netSwitchValue ?? null,
-                  switch_metacognitive_precision: wave2SwitchDirection?.metacognitivePrecision ?? null,
+                  switch_metacognitive_precision:
+                    wave2SwitchDirection?.metacognitivePrecision ?? null,
                   switch_direction_multiplier: wave2SwitchDirection?.confidenceMultiplier ?? null,
                   // Wave 3 behavioral signals
                   explanation_engagement_score: wave3ExplanationEngagement?.engagementScore ?? null,
-                  explanation_confidence_modifier: wave3ExplanationEngagement?.confidenceModifier ?? null,
-                  explanation_stability_modifier: wave3ExplanationEngagement?.stabilityModifier ?? null,
+                  explanation_confidence_modifier:
+                    wave3ExplanationEngagement?.confidenceModifier ?? null,
+                  explanation_stability_modifier:
+                    wave3ExplanationEngagement?.stabilityModifier ?? null,
                   session_regularity: wave3SessionRegularity?.regularity ?? null,
                   session_regularity_cv: wave3SessionRegularity?.intervalCV ?? null,
                   session_regularity_streak: wave3SessionRegularity?.streakDays ?? null,
-                  session_regularity_trust_multiplier: wave3SessionRegularity?.telemetryTrustMultiplier ?? null,
+                  session_regularity_trust_multiplier:
+                    wave3SessionRegularity?.telemetryTrustMultiplier ?? null,
                   relearning_savings_ratio: wave3RelearningSpeed?.savingsRatio ?? null,
                   relearning_stability_bonus: wave3RelearningSpeed?.postLapseStabilityBonus ?? null,
                   confusion_pair_count: wave3ConfusionAction?.pairCount ?? null,
@@ -1980,9 +2223,13 @@ export async function submitDrillReview(
           });
           createdReviewLogId = createdLog.id;
         } catch (reviewLogError) {
-          logger?.error?.('ReviewLog creation failed', { error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError) });
+          logger?.error?.('ReviewLog creation failed', {
+            error:
+              reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
+          });
           logger?.warn?.('Failed to write ReviewLog (non-fatal)', {
-            error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
+            error:
+              reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
           });
         }
 
@@ -2093,9 +2340,11 @@ export async function submitDrillReview(
         // diverged from the modifier chain here. Now only drillReviewService writes
         // FSRS state, ensuring UserProgress and UserTopicProgress stay consistent.
         try {
-          const qText = ((question.questionData as QuestionData)?.stem
-            ?? (question.questionData as QuestionData)?.question
-            ?? (question.questionData as QuestionData)?.text) || '';
+          const qText =
+            ((question.questionData as QuestionData)?.stem ??
+              (question.questionData as QuestionData)?.question ??
+              (question.questionData as QuestionData)?.text) ||
+            '';
           const taskType = getTaskTypeFromContent(qText) || 'diagnosis';
           await prisma.userTopicProgress.upsert({
             where: {
@@ -2135,7 +2384,10 @@ export async function submitDrillReview(
         } catch (topicProgressError) {
           // Non-fatal: UserTopicProgress sync failure should not break the main pipeline
           logger?.warn?.('UserTopicProgress sync failed (non-fatal)', {
-            error: topicProgressError instanceof Error ? topicProgressError.message : String(topicProgressError),
+            error:
+              topicProgressError instanceof Error
+                ? topicProgressError.message
+                : String(topicProgressError),
           });
         }
 
@@ -2155,6 +2407,7 @@ export async function submitDrillReview(
               id: `${userId}_${questionId}_${progressContext}`,
               userId,
               questionId,
+              ...(questionIdentityId ? { questionIdentityId } : {}),
               progressContext,
               due: clampedNextDue,
               stability: updatedCard.stability,
@@ -2169,6 +2422,7 @@ export async function submitDrillReview(
             },
             update: {
               due: clampedNextDue,
+              ...(questionIdentityId ? { questionIdentityId } : {}),
               stability: updatedCard.stability,
               difficulty: updatedCard.difficulty,
               elapsed_days: updatedCard.elapsed_days,
@@ -2201,7 +2455,9 @@ export async function submitDrillReview(
           });
         }
       } catch (progressError) {
-        logger?.error?.('Failed to update UserProgress', { error: progressError instanceof Error ? progressError.message : String(progressError) });
+        logger?.error?.('Failed to update UserProgress', {
+          error: progressError instanceof Error ? progressError.message : String(progressError),
+        });
         logger?.warn?.('Failed to update UserProgress', {
           error: progressError instanceof Error ? progressError.message : String(progressError),
         });
@@ -2350,7 +2606,8 @@ export async function submitDrillReview(
           stability: fsrsSchedule?.stability ?? 1,
         };
 
-        fireCredits = fireModule.computeCredits(reviewResult, prereqEdges)
+        fireCredits = fireModule
+          .computeCredits(reviewResult, prereqEdges)
           .map((c) => ({ conceptId: c.conceptId, stabilityMultiplier: c.stabilityMultiplier }));
       }
     } catch (fireErr) {
@@ -2440,7 +2697,7 @@ async function updateUserMedianRtAsync(
 
   const samples = recentReviews
     .filter((r): r is { responseTimeMs: number } => r.responseTimeMs != null)
-    .map(r => ({ responseTimeMs: r.responseTimeMs }));
+    .map((r) => ({ responseTimeMs: r.responseTimeMs }));
 
   const result = computeMedianRt(samples);
   if (!result) return; // Not enough valid data

@@ -2,10 +2,13 @@
  * Visualizer Page - Generate anatomy visuals and overlay segmentation masks.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ImageIcon, Layers3, Network, Sparkles } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Filter, ImageIcon, Layers3, Network, Sparkles } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
+import { AnatomyModelViewer } from '@/components/anatomy/AnatomyModelViewer';
+import { NIH_ANATOMY_MODELS } from '@/lib/anatomy/nihAnatomyAssets';
+import type { AnatomySystem } from '@/types/anatomy-model';
 import {
   WorkspaceEmptyState,
   WorkspaceHeroStrip,
@@ -40,6 +43,14 @@ interface EditResponse {
 }
 
 type VisualizerMode = 'generate' | 'edit';
+type AtlasSystemFilter = 'all' | AnatomySystem;
+const SUPPORTED_ATLAS_SYSTEM_COUNT = 10;
+
+const formatAssetSize = (bytes?: number): string => {
+  if (!bytes) return 'Size pending';
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { getToken } = useAuth();
@@ -52,6 +63,8 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<GenerateResponse['data'] | null>(null);
   const [hoveredLabel, setHoveredLabel] = useState<string | null>(null);
+  const [selectedAtlasModelId, setSelectedAtlasModelId] = useState(NIH_ANATOMY_MODELS[0]?.id ?? '');
+  const [atlasSystemFilter, setAtlasSystemFilter] = useState<AtlasSystemFilter>('all');
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -213,6 +226,41 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         ? `data:${result.imageMime};base64,${result.imageBase64}`
         : null;
 
+  const atlasSystems = useMemo(
+    () => Array.from(new Set(NIH_ANATOMY_MODELS.map((model) => model.system))),
+    []
+  );
+  const uncoveredAtlasSystems = Math.max(0, SUPPORTED_ATLAS_SYSTEM_COUNT - atlasSystems.length);
+
+  const visibleAtlasModels = useMemo(
+    () =>
+      atlasSystemFilter === 'all'
+        ? NIH_ANATOMY_MODELS
+        : NIH_ANATOMY_MODELS.filter((model) => model.system === atlasSystemFilter),
+    [atlasSystemFilter]
+  );
+
+  const selectedAtlasModel =
+    NIH_ANATOMY_MODELS.find((model) => model.id === selectedAtlasModelId) ??
+    NIH_ANATOMY_MODELS[0] ??
+    null;
+
+  const handleAtlasSystemFilter = useCallback(
+    (system: AtlasSystemFilter) => {
+      setAtlasSystemFilter(system);
+
+      const nextModels =
+        system === 'all'
+          ? NIH_ANATOMY_MODELS
+          : NIH_ANATOMY_MODELS.filter((model) => model.system === system);
+
+      if (!nextModels.some((model) => model.id === selectedAtlasModelId) && nextModels[0]) {
+        setSelectedAtlasModelId(nextModels[0].id);
+      }
+    },
+    [selectedAtlasModelId]
+  );
+
   return (
     <WorkspacePage density="wide">
       <WorkspaceReveal>
@@ -241,21 +289,21 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             label="Overlay"
             value="Segmented"
             detail="Applies region masks so structures can be reviewed visually."
-            accent="#728ba6"
+            accent="var(--atlas-accent-blue)"
             icon={Layers3}
           />
           <WorkspaceMetricCard
             label="Use case"
             value="Spatial recall"
             detail="Best when you need to reconnect a structure with where it lives."
-            accent="#9a7f9a"
+            accent="var(--atlas-accent-violet)"
             icon={Network}
           />
           <WorkspaceMetricCard
-            label="Output"
-            value="Image + labels"
-            detail="The visual stays paired with a reviewable set of structure names."
-            accent="#b39b6c"
+            label="3D atlas"
+            value={`${NIH_ANATOMY_MODELS.length} scenes`}
+            detail={`${atlasSystems.length} organ systems covered; WebGL still loads only when requested.`}
+            accent="var(--atlas-accent-cyan)"
             icon={ImageIcon}
           />
         </div>
@@ -294,11 +342,119 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
 
       <WorkspaceReveal delay={0.12}>
         <WorkspaceSection
+          title="3D anatomy atlas scenes"
+          subtitle="Inspect licensed NIH 3D models for spatial orientation. WebGL loads only after you request an interactive scene."
+        >
+          <WorkspaceSurface accent="var(--atlas-accent-cyan)" className="space-y-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-2xl space-y-2">
+                <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                  Licensed organ-system atlas library
+                </p>
+                <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                  Choose a system, inspect the source metadata, then load WebGL only when the model
+                  is worth interactive spatial review.
+                </p>
+                <p className="text-xs font-medium text-[var(--color-text-muted)]">
+                  {atlasSystems.length} of {SUPPORTED_ATLAS_SYSTEM_COUNT} supported systems have
+                  compact atlas coverage.{' '}
+                  {uncoveredAtlasSystems
+                    ? 'Integumentary remains deferred until a lighter licensed skin model is available.'
+                    : 'All supported systems have an on-demand scene.'}
+                </p>
+              </div>
+
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-label="Filter 3D anatomy atlas scenes by organ system"
+              >
+                <Button
+                  type="button"
+                  size="xs"
+                  variant={atlasSystemFilter === 'all' ? 'accent' : 'outline'}
+                  onClick={() => handleAtlasSystemFilter('all')}
+                  aria-pressed={atlasSystemFilter === 'all'}
+                  icon={Filter}
+                >
+                  All
+                </Button>
+
+                {atlasSystems.map((system) => (
+                  <Button
+                    key={system}
+                    type="button"
+                    size="xs"
+                    variant={atlasSystemFilter === system ? 'accent' : 'outline'}
+                    onClick={() => handleAtlasSystemFilter(system)}
+                    aria-pressed={atlasSystemFilter === system}
+                    className="capitalize"
+                  >
+                    {system}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div
+              className="grid gap-3 md:grid-cols-2 xl:grid-cols-3"
+              aria-label="Available 3D anatomy atlas scenes"
+            >
+              {visibleAtlasModels.map((model) => {
+                const isSelected = selectedAtlasModelId === model.id;
+
+                return (
+                  <button
+                    key={model.id}
+                    type="button"
+                    onClick={() => setSelectedAtlasModelId(model.id)}
+                    aria-pressed={isSelected}
+                    className={`rounded-[1rem] border p-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--atlas-accent-cyan)] ${
+                      isSelected
+                        ? 'border-[var(--atlas-border-glow)] bg-[var(--atlas-accent-cyan)]/12 shadow-[0_0_32px_color-mix(in_srgb,var(--atlas-accent-cyan)_12%,transparent)]'
+                        : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)]/40 hover:border-[var(--atlas-border-glow)] hover:bg-[var(--color-bg-tertiary)]/50'
+                    }`}
+                  >
+                    <span className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                      {model.system} atlas
+                    </span>
+                    <span className="mt-2 block text-sm font-semibold text-[var(--color-text-primary)]">
+                      {model.name.replace(' - NIH 3D Atlas Model', '')}
+                    </span>
+                    <span className="mt-2 block text-xs leading-5 text-[var(--color-text-secondary)]">
+                      {model.structures.length} structure labels ·{' '}
+                      {formatAssetSize(model.assetSizeBytes)} · {model.citation.license}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {selectedAtlasModel ? (
+              <AnatomyModelViewer
+                key={selectedAtlasModel.id}
+                model={selectedAtlasModel}
+                showStructureList
+                showCitation
+              />
+            ) : (
+              <WorkspaceEmptyState
+                icon={Network}
+                title="No anatomy atlas model selected"
+                description="Choose a licensed NIH 3D model to start spatial anatomy review."
+              />
+            )}
+          </WorkspaceSurface>
+        </WorkspaceSection>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.16}>
+        <WorkspaceSection
           title="Generation workspace"
           subtitle="Generate a visual, then review the output and structure labels inside the same study shell."
         >
           <WorkspaceSplit className="items-start">
-            <WorkspaceSurface accent="#728ba6" className="space-y-5">
+            <WorkspaceSurface accent="var(--atlas-accent-blue)" className="space-y-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="space-y-1">
                   <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
@@ -347,7 +503,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             </WorkspaceSurface>
 
             {result?.masks.length ? (
-              <WorkspaceSurface accent="#9a7f9a" className="space-y-5">
+              <WorkspaceSurface accent="var(--atlas-accent-violet)" className="space-y-5">
                 <div className="space-y-1">
                   <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                     Segmented regions

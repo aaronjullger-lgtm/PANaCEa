@@ -47,7 +47,7 @@ Critical user flows:
 - Fixed a compile-blocking duplicate JSX `style` prop in `components/pages/DailyChallengesHub.tsx`.
 - Fixed type-safe response envelope unwrapping for curated passages in:
   - `components/admin/CuratedPassageManager.tsx`
-  - `components/panels/ExplanationPanel.tsx`
+  - `components/questions/ExplanationPanel.tsx`
 - Added persistent study-submission idempotency for the launch-critical FSRS write path:
   - `SubmissionIdempotency` Prisma model and migration
   - durable idempotency helper for Pages Functions
@@ -69,7 +69,7 @@ Critical user flows:
 - Passed: `npm run typecheck`.
 - Passed: `npm run lint` with existing warnings only.
 - Passed: `npm run build:check-size`.
-- Passed for touched slice: `NODE_OPTIONS="--max-old-space-size=4096" npx tsc --noEmit --pretty false 2>&1 | rg "components/(admin/CuratedPassageManager|panels/ExplanationPanel|pages/DailyChallengesHub)|functions/api/(cron/osce-spbench-judge|osce/(evaluate|intent|patient))|hooks/game/use-photo-drill"` returned no matching errors.
+- Passed for touched slice: `NODE_OPTIONS="--max-old-space-size=4096" npx tsc --noEmit --pretty false 2>&1 | rg "components/(admin/CuratedPassageManager|questions/ExplanationPanel|pages/DailyChallengesHub)|functions/api/(cron/osce-spbench-judge|osce/(evaluate|intent|patient))|hooks/game/use-photo-drill"` returned no matching errors.
 - Current deploy-focused typecheck is clean through `npm run typecheck`; broad legacy strict typecheck remains a post-beta ratchet.
 
 ## Open Production Blockers

@@ -12,9 +12,11 @@ const _logger = vi.hoisted(() => ({
 
 const mockPrisma: any = {
   user: { findUnique: vi.fn(), create: vi.fn() },
+  userProgress: { findMany: vi.fn() },
   userQuestionSeen: { findMany: vi.fn() },
   preGeneratedQuestion: { findMany: vi.fn(), create: vi.fn() },
   question: { findMany: vi.fn(), createMany: vi.fn() },
+  questionIdentity: { upsert: vi.fn() },
   medicalContent: { findMany: vi.fn() },
   studySession: { upsert: vi.fn() },
   studySessionQuestion: { deleteMany: vi.fn(), createMany: vi.fn() },
@@ -53,7 +55,11 @@ vi.mock('../../../lib/nccpa-question-weighting', () => ({
 }));
 
 import { selectSessionQuestions } from '../../../lib/services/conceptQuestionSelector';
-import { failReservation, releaseReservation, reserveFromReservoir } from '../../../lib/services/reservoir';
+import {
+  failReservation,
+  releaseReservation,
+  reserveFromReservoir,
+} from '../../../lib/services/reservoir';
 import { safePrismaDisconnect } from '../_shared/prisma-edge';
 import './session/generate';
 
@@ -109,9 +115,13 @@ describe('POST /api/study/session/generate', () => {
       trainingPhase: null,
     });
     mockPrisma.user.create.mockResolvedValue({ id: 'user-db-1' });
+    mockPrisma.userProgress.findMany.mockResolvedValue([]);
     mockPrisma.userQuestionSeen.findMany.mockResolvedValue([]);
     mockPrisma.question.findMany.mockResolvedValue([]);
     mockPrisma.question.createMany.mockResolvedValue({ count: 2 });
+    mockPrisma.questionIdentity.upsert.mockImplementation(({ create }: any) =>
+      Promise.resolve({ id: `qi_${create.questionSource}_${create.sourceQuestionId}` })
+    );
     mockPrisma.preGeneratedQuestion.findMany.mockResolvedValue([
       makePregenerated('pg-1'),
       makePregenerated('pg-2', { correctAnswer: 'C' }),
@@ -139,17 +149,15 @@ describe('POST /api/study/session/generate', () => {
   });
 
   it('starts a session for a first-login user and fills from pre-generated questions', async () => {
-    mockPrisma.user.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({
-        id: 'user-db-1',
-        currentRotation: null,
-        eorTestDate: null,
-        rotationEndDate: null,
-        examDate: null,
-        yearInProgram: null,
-        trainingPhase: null,
-      });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({
+      id: 'user-db-1',
+      currentRotation: null,
+      eorTestDate: null,
+      rotationEndDate: null,
+      examDate: null,
+      yearInProgram: null,
+      trainingPhase: null,
+    });
 
     const response = await _capture.handler!(makeContext());
     const body = await readJson(response);
@@ -165,7 +173,13 @@ describe('POST /api/study/session/generate', () => {
         canonicalQuestionId: 'pg-1',
         sourceQuestionId: 'pg-1',
         questionSource: 'pre_generated',
+        questionIdentityId: 'qi_pre_generated_pg-1',
         medicalContentId: 'mc-1',
+      })
+    );
+    expect(body.data.questions[1]).toEqual(
+      expect.objectContaining({
+        questionIdentityId: 'qi_pre_generated_pg-2',
       })
     );
     expect(mockPrisma.user.create).toHaveBeenCalledWith(
@@ -174,7 +188,7 @@ describe('POST /api/study/session/generate', () => {
           clerkId: 'clerk_user_1',
           email: 'clerk_user_1@placeholder.panacea.app',
         }),
-      }),
+      })
     );
     expect(mockPrisma.studySession.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -183,7 +197,7 @@ describe('POST /api/study/session/generate', () => {
           totalQuestions: 2,
           questionIds: ['pg-1', 'pg-2'],
         }),
-      }),
+      })
     );
     expect(mockPrisma.question.createMany).toHaveBeenCalledWith({
       data: [
@@ -213,6 +227,7 @@ describe('POST /api/study/session/generate', () => {
           sessionId: 'ses_on_demand',
           questionId: 'pg-1',
           preGeneratedQuestionId: 'pg-1',
+          questionIdentityId: 'qi_pre_generated_pg-1',
           sequenceIndex: 0,
           source: 'pre_generated',
           metadata: expect.objectContaining({
@@ -225,12 +240,62 @@ describe('POST /api/study/session/generate', () => {
           sessionId: 'ses_on_demand',
           questionId: 'pg-2',
           preGeneratedQuestionId: 'pg-2',
+          questionIdentityId: 'qi_pre_generated_pg-2',
           sequenceIndex: 1,
           source: 'pre_generated',
         }),
       ],
       skipDuplicates: true,
     });
+  });
+
+  it('passes learner progress signals into on-demand question selection', async () => {
+    mockPrisma.userProgress.findMany.mockResolvedValue([
+      {
+        conditionId: 'mc-cardiology',
+        system: 'Cardiovascular',
+        totalAttempts: 20,
+        correctCount: 7,
+        accuracy: 0.35,
+        MedicalContent: {
+          conditionId: 'condition-cardiology',
+        },
+      },
+      {
+        conditionId: 'mc-pulmonary',
+        system: 'Pulmonary',
+        totalAttempts: 10,
+        correctCount: 8,
+        accuracy: 0.8,
+        MedicalContent: {
+          conditionId: 'condition-pulmonary',
+        },
+      },
+    ]);
+
+    const response = await _capture.handler!(makeContext());
+
+    expect(response.status).toBe(200);
+    expect(selectSessionQuestions).toHaveBeenCalledWith(
+      mockPrisma,
+      expect.objectContaining({
+        banditState: expect.objectContaining({
+          armParams: {},
+          totalSelections: 0,
+          cumulativeReward: 0,
+        }),
+        systemWeaknesses: expect.objectContaining({
+          Cardiovascular: 0.65,
+          Pulmonary: 0.2,
+        }),
+        topicMasteryMap: expect.objectContaining({
+          'mc-cardiology': 0.35,
+          'condition-cardiology': 0.35,
+          'mc-pulmonary': 0.8,
+          'condition-pulmonary': 0.8,
+        }),
+      })
+    );
   });
 
   it('filters bad question data instead of serving unscorable cards', async () => {
@@ -263,7 +328,7 @@ describe('POST /api/study/session/generate', () => {
           totalQuestions: 0,
           questionIds: [],
         }),
-      }),
+      })
     );
     expect(mockPrisma.studySessionQuestion.deleteMany).toHaveBeenCalledWith({
       where: { sessionId: 'ses_on_demand' },
@@ -297,12 +362,15 @@ describe('POST /api/study/session/generate', () => {
     ]);
 
     const response = await _capture.handler!(
-      makeContext({
-        mode: 'system',
-        system: 'Pulmonary',
-        size: 1,
-        blueprintWeights: { Pulmonary: 1 },
-      }, { GEMINI_API_KEY: 'test-gemini-key' })
+      makeContext(
+        {
+          mode: 'system',
+          system: 'Pulmonary',
+          size: 1,
+          blueprintWeights: { Pulmonary: 1 },
+        },
+        { GEMINI_API_KEY: 'test-gemini-key' }
+      )
     );
     const body = await readJson(response);
 
@@ -330,7 +398,7 @@ describe('POST /api/study/session/generate', () => {
           system: 'Pulmonary',
           validationStatus: 'approved',
         }),
-      }),
+      })
     );
   });
 
@@ -346,10 +414,7 @@ describe('POST /api/study/session/generate', () => {
     expect(mockPrisma.preGeneratedQuestion.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          OR: [
-            { conditionId: 'mc-1' },
-            { medicalContentId: 'mc-1' },
-          ],
+          OR: [{ conditionId: 'mc-1' }, { medicalContentId: 'mc-1' }],
           validationStatus: 'approved',
         }),
       })
@@ -411,11 +476,10 @@ describe('POST /api/study/session/generate', () => {
 
     expect(response.status).toBe(200);
     expect(body.data.questions.map((q: any) => q.id)).toEqual(['pg-1', 'pg-2']);
-    expect(failReservation).toHaveBeenCalledWith(
-      mockPrisma,
-      expect.any(String),
-      ['draft-question', 'pending-pregenerated']
-    );
+    expect(failReservation).toHaveBeenCalledWith(mockPrisma, expect.any(String), [
+      'draft-question',
+      'pending-pregenerated',
+    ]);
     expect(releaseReservation).not.toHaveBeenCalled();
     expect(selectSessionQuestions).toHaveBeenCalled();
   });
@@ -439,16 +503,12 @@ describe('POST /api/study/session/generate', () => {
 
     expect(response.status).toBe(200);
     expect(body.data.questions.map((q: any) => q.id)).toEqual(['pg-1', 'pg-2', 'pg-3']);
-    expect(failReservation).toHaveBeenCalledWith(
-      mockPrisma,
-      expect.any(String),
-      ['unsafe-reserved']
-    );
-    expect(releaseReservation).toHaveBeenCalledWith(
-      mockPrisma,
-      expect.any(String),
-      ['good-reserved']
-    );
+    expect(failReservation).toHaveBeenCalledWith(mockPrisma, expect.any(String), [
+      'unsafe-reserved',
+    ]);
+    expect(releaseReservation).toHaveBeenCalledWith(mockPrisma, expect.any(String), [
+      'good-reserved',
+    ]);
     expect(selectSessionQuestions).toHaveBeenCalled();
   });
 

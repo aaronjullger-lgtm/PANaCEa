@@ -443,7 +443,7 @@ export class GraphBuilder {
             id: `cooccur:condition:${limited[i]}->condition:${limited[j]}`,
             sourceId: `condition:${limited[i]}`,
             targetId: `condition:${limited[j]}`,
-            edgeType: GraphEdgeType.ASSOCIATED,
+            edgeType: GraphEdgeType.CO_OCCURRENCE,
             weight: 0.3,
             description: 'Same organ system co-occurrence',
             evidenceCount: 1,
@@ -460,13 +460,48 @@ export class GraphBuilder {
     const tasks = [
       this.buildAnatomyConditionEdges(),
       // Other link tables remain as placeholder calls
-      this.buildEdgesFromLinkTable('DrugConditionLink', 'drug', 'condition', GraphEdgeType.ASSOCIATED),
-      this.buildEdgesFromLinkTable('FindingConditionLink', 'finding', 'condition', GraphEdgeType.ASSOCIATED),
-      this.buildEdgesFromLinkTable('LabConditionLink', 'labTest', 'condition', GraphEdgeType.ASSOCIATED),
-      this.buildEdgesFromLinkTable('ImagingConditionLink', 'imaging', 'condition', GraphEdgeType.ASSOCIATED),
-      this.buildEdgesFromLinkTable('ProcedureConditionLink', 'procedure', 'condition', GraphEdgeType.ASSOCIATED),
-      this.buildEdgesFromLinkTable('VitalSignConditionLink', 'vitalSign', 'condition', GraphEdgeType.ASSOCIATED),
-      this.buildEdgesFromLinkTable('AntibioticConditionLink', 'antibiotic', 'condition', GraphEdgeType.ASSOCIATED),
+      this.buildEdgesFromLinkTable(
+        'DrugConditionLink',
+        'drug',
+        'condition',
+        GraphEdgeType.ASSOCIATED
+      ),
+      this.buildEdgesFromLinkTable(
+        'FindingConditionLink',
+        'finding',
+        'condition',
+        GraphEdgeType.ASSOCIATED
+      ),
+      this.buildEdgesFromLinkTable(
+        'LabConditionLink',
+        'labTest',
+        'condition',
+        GraphEdgeType.ASSOCIATED
+      ),
+      this.buildEdgesFromLinkTable(
+        'ImagingConditionLink',
+        'imaging',
+        'condition',
+        GraphEdgeType.ASSOCIATED
+      ),
+      this.buildEdgesFromLinkTable(
+        'ProcedureConditionLink',
+        'procedure',
+        'condition',
+        GraphEdgeType.ASSOCIATED
+      ),
+      this.buildEdgesFromLinkTable(
+        'VitalSignConditionLink',
+        'vitalSign',
+        'condition',
+        GraphEdgeType.ASSOCIATED
+      ),
+      this.buildEdgesFromLinkTable(
+        'AntibioticConditionLink',
+        'antibiotic',
+        'condition',
+        GraphEdgeType.ASSOCIATED
+      ),
     ];
 
     await Promise.all(tasks);
@@ -481,7 +516,7 @@ export class GraphBuilder {
       },
     });
 
-    const edges: GraphEdgeData[] = links.map(link => ({
+    const edges: GraphEdgeData[] = links.map((link) => ({
       id: `anatomy-condition:${link.anatomyId}-${link.conditionId}`,
       sourceId: `anatomy:${link.anatomyId}`,
       targetId: `condition:${link.conditionId}`,
@@ -498,23 +533,26 @@ export class GraphBuilder {
     modelName: string,
     sourcePrefix: string,
     targetPrefix: string,
-    edgeType: GraphEdgeType,
+    edgeType: GraphEdgeType
   ): Promise<void> {
     try {
       // Access prisma model dynamically — cast to any for dynamic key access
-      const model = (prisma as unknown as Record<
-        string,
-        { findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]> }
-      >)[
-        modelName.charAt(0).toLowerCase() + modelName.slice(1)
-      ] as
+      const model = (
+        prisma as unknown as Record<
+          string,
+          { findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]> }
+        >
+      )[modelName.charAt(0).toLowerCase() + modelName.slice(1)] as
         | { findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]> }
         | undefined;
       if (!model?.findMany) return;
 
       const sourceKey = `${sourcePrefix}Id`;
       const targetKey = `${targetPrefix}Id`;
-      const links = await model.findMany({ select: { [sourceKey]: true, [targetKey]: true }, take: 5000 });
+      const links = await model.findMany({
+        select: { [sourceKey]: true, [targetKey]: true },
+        take: 5000,
+      });
 
       const edges: GraphEdgeData[] = [];
       for (const link of links) {
@@ -541,7 +579,9 @@ export class GraphBuilder {
 
   // --- Database Operations ---
 
-  private toJsonValue(value: GraphNodeData['metadata'] | GraphEdgeData['metadata'] | undefined): Prisma.InputJsonValue | typeof Prisma.JsonNull {
+  private toJsonValue(
+    value: GraphNodeData['metadata'] | GraphEdgeData['metadata'] | undefined
+  ): Prisma.InputJsonValue | typeof Prisma.JsonNull {
     if (value === undefined) return Prisma.JsonNull;
     return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
   }
@@ -553,7 +593,9 @@ export class GraphBuilder {
       await prisma.$transaction(
         batch.map((node) =>
           prisma.graphNode.upsert({
-            where: { sourceType_sourceId: { sourceType: node.sourceType, sourceId: node.sourceId } },
+            where: {
+              sourceType_sourceId: { sourceType: node.sourceType, sourceId: node.sourceId },
+            },
             update: {
               nodeType: node.nodeType,
               label: node.label,
@@ -575,8 +617,8 @@ export class GraphBuilder {
               metadata: this.toJsonValue(node.metadata),
               updatedAt: new Date(),
             },
-          }),
-        ),
+          })
+        )
       );
     }
   }
@@ -613,8 +655,8 @@ export class GraphBuilder {
               metadata: this.toJsonValue(edge.metadata),
               updatedAt: new Date(),
             },
-          }),
-        ),
+          })
+        )
       );
     }
   }

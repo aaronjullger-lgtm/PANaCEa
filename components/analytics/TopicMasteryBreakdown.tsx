@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import {
   Stethoscope,
   Pill,
@@ -84,11 +85,11 @@ async function fetchTopicProgress(
   const response = await fetch(`/api/user/topic-progress/${conditionId}`, { headers });
 
   if (!response.ok) {
-    throw new Error('Failed to fetch topic progress');
+    const errorPayload = await response.json().catch(() => ({}));
+    throw new Error(getApiEnvelopeError(errorPayload, 'Failed to fetch topic progress'));
   }
 
-  const data = (await response.json()) as { data?: TopicProgressData };
-  return data.data as TopicProgressData;
+  return unwrapApiEnvelope<TopicProgressData>(await response.json());
 }
 
 export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgressProps) {

@@ -12,7 +12,10 @@ import { deriveContinuousRating } from '../lib/implicit-metrics';
 import { applyHonestRating, applyHonestRatingWithDetail } from '../lib/srs/ghostGrader';
 import { propagateRecallToSiblings } from '../lib/services/semanticSiblingService';
 import { updateUserProgressWithHistory } from '../lib/services/userProgressService';
-import { applyAttemptToUserStatistics, updateTimingAggregates } from '../lib/services/userStatisticsService';
+import {
+  applyAttemptToUserStatistics,
+  updateTimingAggregates,
+} from '../lib/services/userStatisticsService';
 import { applyDailyStudyPlanAction } from '../lib/services/studyPlanService';
 import { normalizeDashboardSignals } from '../components/dashboard/adaptive/engine/normalizeSignals';
 import type { DashboardAnalyticsModel } from '../lib/dashboard/realStudyAnalytics';
@@ -23,14 +26,20 @@ import type { PerformanceRecord } from '../types';
 vi.mock('@prisma/client', () => ({
   Prisma: { JsonNull: null },
   ProgressContext: { READINESS: 'READINESS', TARGETED: 'TARGETED' },
-  PrismaClient: vi.fn(function() {
+  PrismaClient: vi.fn(function () {
     const self: any = {
-      questionAttempt: { create: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
+      questionAttempt: {
+        create: vi.fn(),
+        findFirst: vi.fn(),
+        findMany: vi.fn(),
+        findUnique: vi.fn(),
+      },
       reviewLog: { create: vi.fn(), findMany: vi.fn() },
       userProgress: { findUnique: vi.fn(), update: vi.fn() },
       medicalContent: { findFirst: vi.fn() },
       confusionPair: { upsert: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
       preGeneratedQuestion: { update: vi.fn() },
+      questionIdentity: { upsert: vi.fn() },
       studySessionQuestion: { updateMany: vi.fn() },
       dailyStudyPlan: { findUnique: vi.fn(), update: vi.fn() },
       card: { upsert: vi.fn() },
@@ -42,7 +51,9 @@ vi.mock('@prisma/client', () => ({
       aBExperiment: { findMany: vi.fn().mockResolvedValue([]) },
       // User SRS config for grade modulation
       userSRSConfig: { findUnique: vi.fn() },
-      $transaction: vi.fn(function(fn: (tx: unknown) => unknown) { return fn(self); }),
+      $transaction: vi.fn(function (fn: (tx: unknown) => unknown) {
+        return fn(self);
+      }),
       $disconnect: vi.fn(),
     };
     return self;
@@ -79,7 +90,7 @@ describe('drillReviewService answer resolution', () => {
 let currentFsrsInstance: any;
 
 vi.mock('../lib/fsrs', () => ({
-  FSRS: vi.fn(function() {
+  FSRS: vi.fn(function () {
     currentFsrsInstance = {
       next: vi.fn().mockReturnValue({ card: { stability: 0, difficulty: 0, state: 0 } }),
       calculateRetrievability: vi.fn().mockReturnValue(0),
@@ -95,41 +106,57 @@ vi.mock('../lib/fsrs', () => ({
 }));
 
 vi.mock('../lib/circadian', () => ({
-  buildCircadianContext: vi.fn(function() {
+  buildCircadianContext: vi.fn(function () {
     return {
       circadianPhase: 'NEUTRAL',
       stabilityModifier: 1.0,
       localHour: 14,
     };
   }),
-  applyCircadianModifier: vi.fn(function(stability) { return stability; }),
-  applyCircadianParTimeModifier: vi.fn(function(parTimeMs) { return parTimeMs; }),
+  applyCircadianModifier: vi.fn(function (stability) {
+    return stability;
+  }),
+  applyCircadianParTimeModifier: vi.fn(function (parTimeMs) {
+    return parTimeMs;
+  }),
 }));
 
 vi.mock('../lib/implicit-metrics', () => ({
-  deriveContinuousRating: vi.fn(function() {
+  deriveContinuousRating: vi.fn(function () {
     return {
       grade: 3.42,
       confidence: 0.78,
       discreteRating: Rating.Good,
     };
   }),
-  applyStabilityModifierFromGrade: vi.fn(function() { return 1.0; }),
-  assessTelemetryQuality: vi.fn(function() { return 'full'; }),
-  confidenceStabilityMultiplier: vi.fn(function() { return 1.0; }),
-  fluencyIllusionDampener: vi.fn(function() { return 1.0; }),
+  applyStabilityModifierFromGrade: vi.fn(function () {
+    return 1.0;
+  }),
+  assessTelemetryQuality: vi.fn(function () {
+    return 'full';
+  }),
+  confidenceStabilityMultiplier: vi.fn(function () {
+    return 1.0;
+  }),
+  fluencyIllusionDampener: vi.fn(function () {
+    return 1.0;
+  }),
 }));
 
 vi.mock('../lib/srs/ghostGrader', () => ({
-  applyHonestRating: vi.fn(function({ userRating }) { return userRating; }),
-  applyHonestRatingWithDetail: vi.fn(function({ userRating }) {
+  applyHonestRating: vi.fn(function ({ userRating }) {
+    return userRating;
+  }),
+  applyHonestRatingWithDetail: vi.fn(function ({ userRating }) {
     return { rating: userRating, rule: 'none', gradeContinuousAdjustment: 0 };
   }),
   GHOST_GRADER_CONSTANTS: { INDECISION_GRADE_CAP: 1.5 },
 }));
 
 vi.mock('../lib/services/semanticSiblingService', () => ({
-  propagateRecallToSiblings: vi.fn(function() { return []; }),
+  propagateRecallToSiblings: vi.fn(function () {
+    return [];
+  }),
 }));
 
 vi.mock('../lib/services/userProgressService', () => ({
@@ -142,147 +169,243 @@ vi.mock('../lib/services/userStatisticsService', () => ({
 }));
 
 vi.mock('../lib/taskTypes', () => ({
-  getTaskTypeFromContent: vi.fn(function() { return 'diagnosis'; }),
+  getTaskTypeFromContent: vi.fn(function () {
+    return 'diagnosis';
+  }),
 }));
 
 vi.mock('../lib/services/userTimingProfileService', () => ({
-  getUserSpeedFactor: vi.fn(function() { return Promise.resolve(1.0); }),
-  getUserBehavioralBaseline: vi.fn(function() { return Promise.resolve(null); }),
-  getUserBehavioralContext: vi.fn(function() {
+  getUserSpeedFactor: vi.fn(function () {
+    return Promise.resolve(1.0);
+  }),
+  getUserBehavioralBaseline: vi.fn(function () {
+    return Promise.resolve(null);
+  }),
+  getUserBehavioralContext: vi.fn(function () {
     return Promise.resolve({ speedFactor: 1.0, behavioralBaseline: null });
   }),
 }));
 
 vi.mock('../lib/services/sessionFatigueService', () => ({
-  applyFatigueCorrection: vi.fn(function(parTimeMs) { return parTimeMs; }),
-  computeFatigueConfidenceDampener: vi.fn(function() { return 1.0; }),
+  applyFatigueCorrection: vi.fn(function (parTimeMs) {
+    return parTimeMs;
+  }),
+  computeFatigueConfidenceDampener: vi.fn(function () {
+    return 1.0;
+  }),
 }));
 
 vi.mock('../lib/services/rolling360Service', () => ({
-  getRolling360Service: vi.fn(function() {
+  getRolling360Service: vi.fn(function () {
     return { updateRolling360OnSubmit: vi.fn() };
   }),
 }));
 
 vi.mock('../lib/fsrs/eorScheduler', () => ({
-  applyEorClampIfNeeded: vi.fn(function(due) { return { due, clamped: false }; }),
+  applyEorClampIfNeeded: vi.fn(function (due) {
+    return { due, clamped: false };
+  }),
 }));
 
 // Mocks for services used by fsrsScheduleService (extracted helper)
 vi.mock('../lib/services/fsrsOptimizerService', () => ({
-  getOptimizedParameters: vi.fn(function() { return Promise.resolve(undefined); }),
+  getOptimizedParameters: vi.fn(function () {
+    return Promise.resolve(undefined);
+  }),
 }));
 
 vi.mock('../lib/services/calibrationService', () => ({
-  getUserCalibration: vi.fn(function() { return Promise.resolve({ dampenerFactor: 1.0 }); }),
+  getUserCalibration: vi.fn(function () {
+    return Promise.resolve({ dampenerFactor: 1.0 });
+  }),
 }));
 
 vi.mock('../lib/services/retrievabilityCalibrationService', () => ({
-  getStabilityCorrectionFactor: vi.fn(function() { return Promise.resolve(1.0); }),
+  getStabilityCorrectionFactor: vi.fn(function () {
+    return Promise.resolve(1.0);
+  }),
 }));
 
 vi.mock('../lib/services/sessionRegularityService', () => ({
-  computeSessionRegularity: vi.fn(function() { return Promise.resolve({ regularity: 'regular', intervalCV: 0.2, streakDays: 3, telemetryTrustMultiplier: 1.0 }); }),
+  computeSessionRegularity: vi.fn(function () {
+    return Promise.resolve({
+      regularity: 'regular',
+      intervalCV: 0.2,
+      streakDays: 3,
+      telemetryTrustMultiplier: 1.0,
+    });
+  }),
 }));
 
 vi.mock('../lib/services/relearningSpeedService', () => ({
-  getOriginalLearningRt: vi.fn(function() { return Promise.resolve(null); }),
-  computeRelearningSpeed: vi.fn(function() { return { hasSavings: false, savingsRatio: 0, postLapseStabilityBonus: 1.0 }; }),
+  getOriginalLearningRt: vi.fn(function () {
+    return Promise.resolve(null);
+  }),
+  computeRelearningSpeed: vi.fn(function () {
+    return { hasSavings: false, savingsRatio: 0, postLapseStabilityBonus: 1.0 };
+  }),
 }));
 
 vi.mock('../lib/services/lapseSeverityService', () => ({
-  computeLapseSeverity: vi.fn(function() { return { severity: 'minor', difficultyMultiplier: 1.0, preLapseReps: 0, preLapseStability: 0 }; }),
+  computeLapseSeverity: vi.fn(function () {
+    return { severity: 'minor', difficultyMultiplier: 1.0, preLapseReps: 0, preLapseStability: 0 };
+  }),
 }));
 
 vi.mock('../lib/services/rtTrajectoryService', () => ({
-  computeRtTrajectory: vi.fn(function() { return { hasHistory: false, rtChangeRatio: 0, stabilityMultiplier: 1.0 }; }),
+  computeRtTrajectory: vi.fn(function () {
+    return { hasHistory: false, rtChangeRatio: 0, stabilityMultiplier: 1.0 };
+  }),
 }));
 
 vi.mock('../lib/services/sessionAccuracySlopeService', () => ({
   recordOutcome: vi.fn(),
-  getConfidenceModifier: vi.fn(function() { return { slope: 0, confidenceMultiplier: 1.0, rollingAccuracy: 0.5 }; }),
+  getConfidenceModifier: vi.fn(function () {
+    return { slope: 0, confidenceMultiplier: 1.0, rollingAccuracy: 0.5 };
+  }),
 }));
 
 vi.mock('../lib/services/intervalDeviationService', () => ({
-  computeIntervalDeviation: vi.fn(function() { return { deviationRatio: 1.0, informationMultiplier: 1.0, classification: 'on_schedule' }; }),
+  computeIntervalDeviation: vi.fn(function () {
+    return { deviationRatio: 1.0, informationMultiplier: 1.0, classification: 'on_schedule' };
+  }),
 }));
 
 vi.mock('../lib/confidence/bayesianAccumulator', () => ({
-  accumulateConfidence: vi.fn(function() { return { posterior: 0.78, priorWeight: 0.5 }; }),
+  accumulateConfidence: vi.fn(function () {
+    return { posterior: 0.78, priorWeight: 0.5 };
+  }),
 }));
 
 vi.mock('../lib/confidence/desirableDifficultyBonus', () => ({
-  computeDesirableDifficultyBonus: vi.fn(function() { return { activated: false, multiplier: 1.0 }; }),
+  computeDesirableDifficultyBonus: vi.fn(function () {
+    return { activated: false, multiplier: 1.0 };
+  }),
 }));
 
 vi.mock('../lib/confidence/interferenceDetector', () => ({
-  detectInterference: vi.fn(function() { return { discount: 1.0, detected: false, details: { interferingCount: 0, closestDistance: null, type: 'none' } }; }),
+  detectInterference: vi.fn(function () {
+    return {
+      discount: 1.0,
+      detected: false,
+      details: { interferingCount: 0, closestDistance: null, type: 'none' },
+    };
+  }),
 }));
 
 vi.mock('../lib/confidence/trendDetector', () => ({
-  detectConfidenceTrend: vi.fn(function() { return { slope: 0, category: 'stable', trendMultiplier: 1.0, rSquared: 0 }; }),
+  detectConfidenceTrend: vi.fn(function () {
+    return { slope: 0, category: 'stable', trendMultiplier: 1.0, rSquared: 0 };
+  }),
 }));
 
 vi.mock('../lib/confidence/difficultyModulator', () => ({
-  modulateDifficultyDelta: vi.fn(function() { return { modulatedDelta: 0, modulationFactor: 1.0 }; }),
+  modulateDifficultyDelta: vi.fn(function () {
+    return { modulatedDelta: 0, modulationFactor: 1.0 };
+  }),
 }));
 
 vi.mock('../lib/utils/questionComplexity', () => ({
-  calculateParTime: vi.fn(function() { return 30000; }),
+  calculateParTime: vi.fn(function () {
+    return 30000;
+  }),
 }));
 
 vi.mock('../../types/telemetry', () => ({
-  getMVRTThreshold: vi.fn(function() { return 2000; }),
+  getMVRTThreshold: vi.fn(function () {
+    return 2000;
+  }),
 }));
 
 vi.mock('../lib/middleware/abTestMiddleware', () => ({
-  resolveAssignments: vi.fn(function() { return Promise.resolve({}); }),
+  resolveAssignments: vi.fn(function () {
+    return Promise.resolve({});
+  }),
   logABConversion: vi.fn(),
 }));
 
 vi.mock('../lib/services/gradeModulationCoordinator', () => ({
-  modulateGrade: vi.fn(function() {
-    return { rawGrade: 3, effectiveGrade: 3, discreteGrade: 3, deltas: {}, signals: { rtZone: 'normal', fatigueScore: 0 } };
+  modulateGrade: vi.fn(function () {
+    return {
+      rawGrade: 3,
+      effectiveGrade: 3,
+      discreteGrade: 3,
+      deltas: {},
+      signals: { rtZone: 'normal', fatigueScore: 0 },
+    };
   }),
 }));
 
 // Wave 2 behavioral signal services
 vi.mock('../lib/services/distractorChronometryService', () => ({
-  analyzeDistractorChronometry: vi.fn(function() {
+  analyzeDistractorChronometry: vi.fn(function () {
     return { confidenceMultiplier: 1.0, distractorEngagement: 0.5, correctOptionDwell: 500 };
   }),
 }));
 
 vi.mock('../lib/services/switchDirectionService', () => ({
-  analyzeSwitchDirections: vi.fn(function() {
+  analyzeSwitchDirections: vi.fn(function () {
     return { netSwitchValue: 0, metacognitivePrecision: 0.5, confidenceMultiplier: 1.0 };
   }),
 }));
 
 // Wave 3 behavioral signal services
 vi.mock('../lib/services/explanationEngagementService', () => ({
-  analyzeExplanationEngagement: vi.fn(function() {
+  analyzeExplanationEngagement: vi.fn(function () {
     return { engagementScore: 0.5, confidenceModifier: 1.0, stabilityModifier: 1.0 };
   }),
 }));
 
 vi.mock('../lib/services/confusionPairRecurrenceService', () => ({
-  analyzeConfusionRecurrence: vi.fn(function() {
-    return { pairCount: 0, escalate: false, difficultyBoost: 0, queueContrastiveDrill: false, generateDifferentiation: false };
+  analyzeConfusionRecurrence: vi.fn(function () {
+    return {
+      pairCount: 0,
+      escalate: false,
+      difficultyBoost: 0,
+      queueContrastiveDrill: false,
+      generateDifferentiation: false,
+    };
   }),
 }));
 
 // Shared FSRS scheduling helper (extracted from drillReviewService)
 vi.mock('../lib/services/fsrsScheduleService', () => ({
-  computeFSRSUpdate: vi.fn(function() {
+  computeFSRSUpdate: vi.fn(function () {
     const now = new Date();
     return Promise.resolve({
-      updatedCard: { stability: 15.0, difficulty: 0.28, state: 2, reps: 4, lapses: 0, elapsed_days: 5, scheduled_days: 10, last_review: now },
-      previousCard: { stability: 12.5, difficulty: 0.3, state: 2, reps: 3, lapses: 0, elapsed_days: 5, scheduled_days: 10, last_review: new Date(now.getTime() - 5 * 86400000) },
+      updatedCard: {
+        stability: 15.0,
+        difficulty: 0.28,
+        state: 2,
+        reps: 4,
+        lapses: 0,
+        elapsed_days: 5,
+        scheduled_days: 10,
+        last_review: now,
+      },
+      previousCard: {
+        stability: 12.5,
+        difficulty: 0.3,
+        state: 2,
+        reps: 3,
+        lapses: 0,
+        elapsed_days: 5,
+        scheduled_days: 10,
+        last_review: new Date(now.getTime() - 5 * 86400000),
+      },
       retrievability: 0.85,
       clampedNextDue: new Date(now.getTime() + 10 * 86400000),
-      fsrsSchedule: { intervalDays: 10, nextDueDate: new Date(now.getTime() + 10 * 86400000).toISOString(), stability: 15.0, difficulty: 0.28 },
-      fsrs: { calculateRetrievability: vi.fn(function() { return 0.85; }) },
+      fsrsSchedule: {
+        intervalDays: 10,
+        nextDueDate: new Date(now.getTime() + 10 * 86400000).toISOString(),
+        stability: 15.0,
+        difficulty: 0.28,
+      },
+      fsrs: {
+        calculateRetrievability: vi.fn(function () {
+          return 0.85;
+        }),
+      },
       confidenceTelemetry: {},
       reviewHistory: [],
     });
@@ -299,6 +422,9 @@ describe('submitDrillReview', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prisma = new PrismaClient();
+    ((prisma as any).questionIdentity.upsert as Mock).mockImplementation(({ create }: any) =>
+      Promise.resolve({ id: `qi_${create.questionSource}_${create.sourceQuestionId}` })
+    );
   });
 
   describe('Happy Path – Main Session with Condition ID', () => {
@@ -360,7 +486,9 @@ describe('submitDrillReview', () => {
         next: vi.fn(),
         calculateRetrievability: vi.fn(),
       };
-      vi.mocked(FSRS).mockImplementation(function() { return fsrsInstance; });
+      vi.mocked(FSRS).mockImplementation(function () {
+        return fsrsInstance;
+      });
       fsrsInstance.next.mockReturnValue({
         card: { ...fsrsCard, stability: 15.0, difficulty: 0.28 },
       });
@@ -387,6 +515,7 @@ describe('submitDrillReview', () => {
             retrievability: 0.85, // computed
             sessionId: 'study-session-123',
             questionFkId: questionId,
+            questionIdentityId: `qi_pre_generated_${questionId}`,
             telemetry: expect.objectContaining({
               server_computed: expect.objectContaining({
                 learning_event: expect.objectContaining({
@@ -421,6 +550,7 @@ describe('submitDrillReview', () => {
           },
           create: expect.objectContaining({
             id: `${userId}_${questionId}_TARGETED`,
+            questionIdentityId: `qi_pre_generated_${questionId}`,
             progressContext: 'TARGETED',
           }),
         })
@@ -497,12 +627,14 @@ describe('submitDrillReview', () => {
         }),
         calculateRetrievability: vi.fn().mockReturnValue(0.85),
       };
-      vi.mocked(FSRS).mockImplementation(function() { return fsrsInstance; });
+      vi.mocked(FSRS).mockImplementation(function () {
+        return fsrsInstance;
+      });
       (prisma.dailyStudyPlan.findUnique as Mock).mockResolvedValue({
         id: 'plan-1',
         planDate: new Date('2026-05-01T00:00:00Z'),
         status: 'in_progress',
-        targetQuestionsCount: 12,
+        targetQuestionsCount: 1,
         actualQuestionsAnswered: 0,
         actualDurationMinutes: null,
         actualAccuracy: null,
@@ -513,7 +645,7 @@ describe('submitDrillReview', () => {
             kind: 'targeted',
             status: 'in_progress',
             title: 'Due review block',
-            targetQuestions: 12,
+            targetQuestions: 1,
             estimatedMinutes: 18,
             reason: 'Protect due reviews.',
             conditionIds: [conditionId],
@@ -533,6 +665,7 @@ describe('submitDrillReview', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             questionId: canonicalQuestionId,
+            questionIdentityId: `qi_pre_generated_${sourceQuestionId}`,
             telemetryJson: expect.objectContaining({
               server_computed: expect.objectContaining({
                 learning_event: expect.objectContaining({
@@ -554,7 +687,10 @@ describe('submitDrillReview', () => {
         expect.objectContaining({
           where: {
             sessionId,
-            OR: [{ preGeneratedQuestionId: sourceQuestionId }],
+            OR: [
+              { questionIdentityId: `qi_pre_generated_${sourceQuestionId}` },
+              { preGeneratedQuestionId: sourceQuestionId },
+            ],
           },
           data: expect.objectContaining({
             attemptId: 'drill_review_user_123_q_pipeline_pipeline-proof',
@@ -566,13 +702,15 @@ describe('submitDrillReview', () => {
         expect.objectContaining({
           where: { id: 'plan-1' },
           data: expect.objectContaining({
-            status: 'in_progress',
+            status: 'completed',
             actualQuestionsAnswered: 1,
             actualAccuracy: 1,
+            completedAt: expect.any(Date),
             recommendedSessions: [
               expect.objectContaining({
                 id: taskId,
-                status: 'in_progress',
+                status: 'completed',
+                completedAt: expect.any(String),
                 actualQuestionsAnswered: 1,
                 actualAccuracy: 1,
                 linkedSessionId: sessionId,
@@ -587,6 +725,7 @@ describe('submitDrillReview', () => {
           data: expect.objectContaining({
             sessionId,
             questionFkId: canonicalQuestionId,
+            questionIdentityId: `qi_pre_generated_${sourceQuestionId}`,
             telemetry: expect.objectContaining({
               server_computed: expect.objectContaining({
                 learning_event: expect.objectContaining({
@@ -753,7 +892,7 @@ describe('submitDrillReview', () => {
       expect(ctx.reviewCoverage.coveredDanger).toBe(1);
       expect(ctx.today.reviewCount).toBe(1);
     });
-  
+
     describe('Peer validation statistics', () => {
       it('should increment timesServed and timesCorrect when answer is correct', async () => {
         // Arrange
@@ -770,7 +909,7 @@ describe('submitDrillReview', () => {
             rapid_guess: false,
           },
         };
-  
+
         const question = {
           id: questionId,
           conditionId,
@@ -784,7 +923,7 @@ describe('submitDrillReview', () => {
             correctAnswer: 'Correct Answer',
           },
         };
-  
+
         // Mock dependencies
         (prisma.userProgress.findUnique as Mock).mockResolvedValue({ fsrsCard: null });
         (prisma.medicalContent.findFirst as Mock).mockResolvedValue({ conditionId, system: 'CV' });
@@ -800,10 +939,10 @@ describe('submitDrillReview', () => {
           confidence: 0.78,
           discreteRating: Rating.Good,
         });
-  
+
         // Act
         await submitDrillReview(prisma, userId, input, question);
-  
+
         // Assert
         expect(prisma.preGeneratedQuestion.update).toHaveBeenCalledWith({
           where: { id: questionId },
@@ -813,7 +952,7 @@ describe('submitDrillReview', () => {
           },
         });
       });
-  
+
       it('should increment timesServed and timesIncorrect when answer is incorrect', async () => {
         const input: SubmitDrillReviewInput = {
           questionId,
@@ -828,7 +967,7 @@ describe('submitDrillReview', () => {
             rapid_guess: false,
           },
         };
-  
+
         const question = {
           id: questionId,
           conditionId,
@@ -842,7 +981,7 @@ describe('submitDrillReview', () => {
             correctAnswer: 'Correct Answer',
           },
         };
-  
+
         // Mock dependencies (same as above)
         (prisma.userProgress.findUnique as Mock).mockResolvedValue({ fsrsCard: null });
         (prisma.medicalContent.findFirst as Mock).mockResolvedValue({ conditionId, system: 'CV' });
@@ -858,9 +997,9 @@ describe('submitDrillReview', () => {
           confidence: 0.5,
           discreteRating: Rating.Again,
         });
-  
+
         await submitDrillReview(prisma, userId, input, question);
-  
+
         expect(prisma.preGeneratedQuestion.update).toHaveBeenCalledWith({
           where: { id: questionId },
           data: {
@@ -1042,7 +1181,9 @@ describe('submitDrillReview', () => {
         next: vi.fn(),
         calculateRetrievability: vi.fn(),
       };
-      vi.mocked(FSRS).mockImplementation(function() { return fsrsInstance; });
+      vi.mocked(FSRS).mockImplementation(function () {
+        return fsrsInstance;
+      });
       fsrsInstance.next.mockReturnValue({
         card: {
           stability: 10.0,
@@ -1143,7 +1284,9 @@ describe('submitDrillReview', () => {
         next: vi.fn(),
         calculateRetrievability: vi.fn(),
       };
-      vi.mocked(FSRS).mockImplementation(function() { return fsrsInstance; });
+      vi.mocked(FSRS).mockImplementation(function () {
+        return fsrsInstance;
+      });
       fsrsInstance.next.mockReturnValue({
         card: {
           stability: 0.01,
@@ -1183,9 +1326,7 @@ describe('submitDrillReview', () => {
       };
       const question = { id: questionId, conditionId, questionData: {} };
 
-      await expect(
-        submitDrillReview(prisma, userId, input, question)
-      ).resolves.not.toThrow();
+      await expect(submitDrillReview(prisma, userId, input, question)).resolves.not.toThrow();
 
       expect(prisma.questionAttempt.create).toHaveBeenCalled();
     });
@@ -1204,8 +1345,20 @@ describe('submitDrillReview', () => {
           correctAnswer: 'Correct Answer',
           condition: 'Hypertension',
           options: [
-            { value: 'Correct Answer', text: 'Correct', conditionId, condition: 'Hypertension', conditionName: 'Hypertension' },
-            { value: 'Wrong Answer', text: 'Wrong', conditionId: 'cond_888', condition: 'Hypotension', conditionName: 'Hypotension' },
+            {
+              value: 'Correct Answer',
+              text: 'Correct',
+              conditionId,
+              condition: 'Hypertension',
+              conditionName: 'Hypertension',
+            },
+            {
+              value: 'Wrong Answer',
+              text: 'Wrong',
+              conditionId: 'cond_888',
+              condition: 'Hypotension',
+              conditionName: 'Hypotension',
+            },
           ],
         },
       };
@@ -1213,7 +1366,11 @@ describe('submitDrillReview', () => {
       // Mock medicalContent finds for correct and selected conditions
       (prisma.medicalContent.findFirst as Mock)
         .mockResolvedValueOnce({ id: 'correctId', condition: 'Hypertension', conditionId })
-        .mockResolvedValueOnce({ id: 'selectedId', condition: 'Hypotension', conditionId: 'cond_888' });
+        .mockResolvedValueOnce({
+          id: 'selectedId',
+          condition: 'Hypotension',
+          conditionId: 'cond_888',
+        });
       // Mock userProgress for FSRS
       (prisma.userProgress.findUnique as Mock).mockResolvedValue({
         fsrsCard: {
@@ -1232,7 +1389,9 @@ describe('submitDrillReview', () => {
         next: vi.fn(),
         calculateRetrievability: vi.fn(),
       };
-      vi.mocked(FSRS).mockImplementation(function() { return fsrsInstance; });
+      vi.mocked(FSRS).mockImplementation(function () {
+        return fsrsInstance;
+      });
       fsrsInstance.next.mockReturnValue({
         card: {
           stability: 15.0,

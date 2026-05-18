@@ -21,6 +21,7 @@ import {
   ChevronUp,
   ShieldCheck,
 } from 'lucide-react';
+import { SkeletonText } from '@/components/loading';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -75,13 +76,29 @@ function qualityColor(score: number | null): string {
 function statusBadge(status: string): { bg: string; text: string; label: string } {
   switch (status) {
     case 'approved':
-      return { bg: 'bg-[var(--color-data-pass)]/15', text: 'text-[var(--color-data-pass)]', label: 'Approved' };
+      return {
+        bg: 'bg-[var(--color-data-pass)]/15',
+        text: 'text-[var(--color-data-pass)]',
+        label: 'Approved',
+      };
     case 'rejected':
-      return { bg: 'bg-[var(--color-data-fail)]/15', text: 'text-[var(--color-data-fail)]', label: 'Rejected' };
+      return {
+        bg: 'bg-[var(--color-data-fail)]/15',
+        text: 'text-[var(--color-data-fail)]',
+        label: 'Rejected',
+      };
     case 'needs_revision':
-      return { bg: 'bg-[var(--color-data-provisional)]/15', text: 'text-[var(--color-data-provisional)]', label: 'Needs Revision' };
+      return {
+        bg: 'bg-[var(--color-data-provisional)]/15',
+        text: 'text-[var(--color-data-provisional)]',
+        label: 'Needs Revision',
+      };
     default:
-      return { bg: 'bg-[var(--color-bg-tertiary)]/15', text: 'text-[var(--color-text-muted)]', label: 'Pending' };
+      return {
+        bg: 'bg-[var(--color-bg-tertiary)]/15',
+        text: 'text-[var(--color-text-muted)]',
+        label: 'Pending',
+      };
   }
 }
 
@@ -104,10 +121,9 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
   // ── Fetch queue stats ────────────────────────────────────────────────────
   const fetchStats = useCallback(async () => {
     try {
-      const res = await fetch(
-        `${baseUrl}/api/admin/question-review?action=stats`,
-        { credentials: 'include' }
-      );
+      const res = await fetch(`${baseUrl}/api/admin/question-review?action=stats`, {
+        credentials: 'include',
+      });
       if (!res.ok) return;
       const data = (await res.json()) as {
         data?: { stats?: unknown };
@@ -131,10 +147,9 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
       });
       if (systemFilter) params.set('system', systemFilter);
 
-      const res = await fetch(
-        `${baseUrl}/api/admin/question-review?${params}`,
-        { credentials: 'include' }
-      );
+      const res = await fetch(`${baseUrl}/api/admin/question-review?${params}`, {
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error(res.statusText || 'Failed to load');
       const data = (await res.json()) as {
         data?: { questions?: unknown };
@@ -238,7 +253,10 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
             Auto-Approve High Quality
           </button>
           <button
-            onClick={() => { fetchQuestions(); fetchStats(); }}
+            onClick={() => {
+              fetchQuestions();
+              fetchStats();
+            }}
             disabled={loading}
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] text-sm transition-colors"
           >
@@ -251,12 +269,18 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
       {/* Stats Bar */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {([
-            { label: 'Pending', value: stats.pending, color: 'text-[var(--color-text-muted)]' },
-            { label: 'Approved', value: stats.approved, color: 'text-[var(--color-data-pass)]' },
-            { label: 'Needs Revision', value: stats.needs_revision, color: 'text-[var(--color-data-provisional)]' },
-            { label: 'Rejected', value: stats.rejected, color: 'text-[var(--color-data-fail)]' },
-          ] as const).map(({ label, value, color }) => (
+          {(
+            [
+              { label: 'Pending', value: stats.pending, color: 'text-[var(--color-text-muted)]' },
+              { label: 'Approved', value: stats.approved, color: 'text-[var(--color-data-pass)]' },
+              {
+                label: 'Needs Revision',
+                value: stats.needs_revision,
+                color: 'text-[var(--color-data-provisional)]',
+              },
+              { label: 'Rejected', value: stats.rejected, color: 'text-[var(--color-data-fail)]' },
+            ] as const
+          ).map(({ label, value, color }) => (
             <div
               key={label}
               className="p-3 rounded-lg bg-[var(--color-bg-secondary)]/40 border border-[var(--color-border)]/30"
@@ -301,13 +325,31 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
           onClick={() => setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'))}
           className="p-1.5 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)]/50 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
         >
-          {sortOrder === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {sortOrder === 'asc' ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
         </button>
       </div>
 
       {/* Question List */}
       {loading ? (
-        <div className="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
+        <div
+          className="space-y-3"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading review queue"
+        >
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="rounded-xl border border-[var(--color-border)]/40 bg-[var(--color-bg-secondary)]/30 p-4"
+            >
+              <SkeletonText lines={2} />
+            </div>
+          ))}
+        </div>
       ) : questions.length === 0 ? (
         <div className="text-center py-12">
           <ShieldCheck className="w-12 h-12 mx-auto text-[var(--color-data-pass)]/50 mb-3" />
@@ -329,7 +371,10 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
               >
                 {/* Collapsed Row */}
                 <button
-                  onClick={() => { setExpandedId(isExpanded ? null : q.id); setReviewNote(''); }}
+                  onClick={() => {
+                    setExpandedId(isExpanded ? null : q.id);
+                    setReviewNote('');
+                  }}
                   className="w-full flex items-center gap-4 p-4 text-left hover:bg-[var(--color-bg-secondary)]/50 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
@@ -349,7 +394,9 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
                     <span className={`text-sm font-mono font-bold ${qualityColor(q.qualityScore)}`}>
                       {q.qualityScore !== null ? (q.qualityScore * 100).toFixed(0) + '%' : '—'}
                     </span>
-                    <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${badge.bg} ${badge.text}`}>
+                    <span
+                      className={`px-2 py-0.5 rounded-md text-xs font-medium ${badge.bg} ${badge.text}`}
+                    >
                       {badge.label}
                     </span>
                     {q.flagCount > 0 && (
@@ -357,7 +404,11 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
                         <AlertTriangle className="w-3 h-3" /> {q.flagCount}
                       </span>
                     )}
-                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    {isExpanded ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
                   </div>
                 </button>
 

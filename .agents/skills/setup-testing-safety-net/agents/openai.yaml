@@ -1,0 +1,4 @@
+interface:
+  display_name: "Testing Safety Net"
+  short_description: "Add focused unit, integration, and E2E coverage for critical flows"
+  default_prompt: "Build or improve the testing safety net for this workflow, prioritizing critical regression coverage."

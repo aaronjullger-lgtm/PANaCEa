@@ -18,15 +18,18 @@
  * will need it; it is currently unused by this file but kept in the module
  * graph for the (planned) Zod conversion sprint.
  */
-import {
-  gateway,
-  GatewayError,
-  GatewayContext,
-  toGatewayContext,
-} from '../../../lib/ai/aiGateway';
+import { gateway, GatewayError, GatewayContext, toGatewayContext } from '../../../lib/ai/aiGateway';
 import { GeneratedQuestionStrict } from './question-schema';
 import { validateGeneratedQuestion } from './question-validator';
-import { enrichWithPubMed, formatCitationsForPrompt, type PubMedCitation } from '../../../lib/services/question/pubmedEnricher';
+import {
+  enrichWithPubMed,
+  formatCitationsForPrompt,
+  type PubMedCitation,
+} from '../../../lib/services/question/pubmedEnricher';
+import {
+  formatMemorySafetyFlags,
+  sanitizeRetrievedContextText,
+} from '../../../lib/services/memory/contextSanitizer';
 
 /**
  * High-yield PANCE-specific anchors from MedicalContent.
@@ -132,8 +135,11 @@ async function fetchGroundingContext(
       // back to the raw shape so nothing regresses if metadata isn't exposed.
       if (chunks.length === 0) {
         const rawCandidates =
-          (result.raw as { candidates?: Array<{ groundingMetadata?: { groundingChunks?: typeof chunks } }> })
-            ?.candidates ?? [];
+          (
+            result.raw as {
+              candidates?: Array<{ groundingMetadata?: { groundingChunks?: typeof chunks } }>;
+            }
+          )?.candidates ?? [];
         chunks = rawCandidates[0]?.groundingMetadata?.groundingChunks ?? [];
       }
       for (const chunk of chunks) {
@@ -144,7 +150,9 @@ async function fetchGroundingContext(
           sources.push({ uri, title });
         }
       }
-    } catch { /* grounding metadata extraction is best-effort */ }
+    } catch {
+      /* grounding metadata extraction is best-effort */
+    }
 
     return { context: text, sources: sources.slice(0, 5) };
   } catch (error) {
@@ -244,6 +252,35 @@ Pertinent negatives: No immunosuppression, no recent antibiotics (no resistance 
 }
 `;
 
+export function formatTextbookContextForPrompt(
+  textbookContext?: { title: string; excerpts: string[] } | null
+): string {
+  if (!textbookContext || textbookContext.excerpts.length === 0) return '';
+
+  const sanitizedExcerpts = textbookContext.excerpts.map((excerpt, idx) => {
+    const sanitized = sanitizeRetrievedContextText(excerpt);
+    const safetyFlags = formatMemorySafetyFlags(sanitized.flags);
+    return `${idx + 1}. ${safetyFlags ? `${safetyFlags}\n` : ''}${sanitized.text}`;
+  });
+
+  return `
+    TEXTBOOK CONTEXT (use ONLY as supporting evidence):
+    Source: ${sanitizeRetrievedContextText(textbookContext.title).text}
+    Excerpts:
+    ${sanitizedExcerpts.join('\n')}
+    `;
+}
+
+function formatGroundingContextForPrompt(context: string): string {
+  if (!context) return '';
+  const sanitized = sanitizeRetrievedContextText(context);
+  const safetyFlags = formatMemorySafetyFlags(sanitized.flags);
+  return `
+    CURRENT CLINICAL EVIDENCE (from Google Search — use to verify accuracy):
+    ${safetyFlags ? `${safetyFlags}\n` : ''}${sanitized.text}
+    `;
+}
+
 export async function generateSingleQuestion(
   ctx: GatewayContext,
   condition: ConditionData,
@@ -267,15 +304,7 @@ export async function generateSingleQuestion(
   }
   const pubmedBlock = formatCitationsForPrompt(pubmedCitations);
 
-  const textbookBlock =
-    textbookContext && textbookContext.excerpts.length > 0
-      ? `
-    TEXTBOOK CONTEXT (use ONLY as supporting evidence):
-    Source: ${textbookContext.title}
-    Excerpts:
-    ${textbookContext.excerpts.map((excerpt, idx) => `${idx + 1}. ${excerpt}`).join('\n')}
-    `
-      : '';
+  const textbookBlock = formatTextbookContextForPrompt(textbookContext);
 
   // Pass findings-only for vignette-building; withhold condition/overview from vignette text
   const sections = (condition.sections || {}) as {
@@ -290,24 +319,22 @@ export async function generateSingleQuestion(
     sections.diagnostics
       ? `Lab/Imaging Patterns: ${String(sections.diagnostics).slice(0, 400)}`
       : '',
-    sections.treatment ? `Treatment (for answer accuracy only): ${String(sections.treatment).slice(0, 300)}` : '',
+    sections.treatment
+      ? `Treatment (for answer accuracy only): ${String(sections.treatment).slice(0, 300)}`
+      : '',
   ]
     .filter(Boolean)
     .join('\n');
 
-  const groundingBlock = grounding.context
-    ? `
-    CURRENT CLINICAL EVIDENCE (from Google Search — use to verify accuracy):
-    ${grounding.context}
-    `
-    : '';
+  const groundingBlock = formatGroundingContextForPrompt(grounding.context);
 
   // Inject curated PANCE anchor fields when available.
   // These are the highest-yield, most frequently tested aspects of the condition.
   // Use them to anchor the question and its distractors — do NOT reveal them verbatim.
   const anchors = condition.panceAnchors;
-  const panceBlock = anchors && Object.values(anchors).some(Boolean)
-    ? `
+  const panceBlock =
+    anchors && Object.values(anchors).some(Boolean)
+      ? `
     HIGH-YIELD PANCE ANCHORS (curated ground truth — anchor question accuracy here):
     ${anchors.classicPatient ? `Classic Patient Archetype: ${anchors.classicPatient}` : ''}
     ${anchors.classicTriad?.length ? `Classic Triad: ${anchors.classicTriad.join(', ')}` : ''}
@@ -316,7 +343,7 @@ export async function generateSingleQuestion(
     ${anchors.bestInitialTest ? `Best Initial Test: ${anchors.bestInitialTest}` : ''}
     IMPORTANT: Use these anchors to create distractors that are plausible alternatives (e.g., if gold standard is "punch biopsy", make "incisional biopsy" or "shave biopsy" credible wrong options that would be correct in other scenarios).
     `
-    : '';
+      : '';
 
   const prompt = `
     CONTEXT - Use these clinical findings to build the vignette. Do NOT include condition name or diagnosis in the vignette.

@@ -30,7 +30,7 @@ import type {
   PatientAllergy,
   OrderCategory,
 } from '@/types/osce-enhanced';
-import { InlineSpinner } from '@/components/loading';
+import { SkeletonText } from '@/components/loading';
 
 interface OrderPanelProps {
   isOpen: boolean;
@@ -355,9 +355,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                   <div
                     key={idx}
                     className={`flex items-start gap-2 text-sm ${
-                      alert.severity === 'critical'
-                        ? 'text-data-fail'
-                        : 'text-data-provisional'
+                      alert.severity === 'critical' ? 'text-data-fail' : 'text-data-provisional'
                     }`}
                   >
                     {alert.severity === 'critical' ? (
@@ -447,8 +445,13 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
 
               {/* Items List */}
               {isLoading ? (
-                <div role="status" aria-live="polite" aria-label="Loading items" className="flex items-center justify-center py-12">
-                  <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
+                <div
+                  role="status"
+                  aria-live="polite"
+                  aria-label="Loading items"
+                  className="space-y-3 py-6"
+                >
+                  <SkeletonText lines={5} />
                 </div>
               ) : orderableItems.length === 0 ? (
                 <div className="text-center py-12 text-[var(--color-text-muted)]">
@@ -486,7 +489,9 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                             : 'border-[var(--color-border)]'
                         }`}
                         >
-                          {isSelected && <CheckCircle className="w-3 h-3 text-[var(--color-text-inverse)]" />}
+                          {isSelected && (
+                            <CheckCircle className="w-3 h-3 text-[var(--color-text-inverse)]" />
+                          )}
                         </div>
 
                         {/* Item info */}

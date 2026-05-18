@@ -40,11 +40,13 @@ import {
 } from '../../../../lib/services/reservoir';
 import { inferLearnerPhase } from '../../../../lib/nccpa-question-weighting';
 import { resolveCorrectAnswerIndex } from '../../../../lib/answerLetterMap';
+import { initBanditState } from '../../../../lib/services/contextualBanditService';
 import {
   buildGeneratedStudySessionRecord,
   buildStudySessionQuestionRecords,
   normalizeSessionGenerateResult,
 } from '../../../../lib/sessionGeneration';
+import { resolveOrCreateQuestionIdentity } from '../../../../lib/study/questionIdentityPersistence';
 import { resolveOrCreateUserRecord } from '../../_shared/user-resolver';
 import {
   withProductionPregeneratedSafety,
@@ -81,10 +83,14 @@ export const onRequestPost = authenticatedEndpoint(
         return fail(ErrorCode.VALIDATION_FAILED, { message: 'system is required for system mode' });
       }
       if (body.mode === 'subcategory' && (!body.system || !body.subcategory)) {
-        return fail(ErrorCode.VALIDATION_FAILED, { message: 'system and subcategory are required for subcategory mode' });
+        return fail(ErrorCode.VALIDATION_FAILED, {
+          message: 'system and subcategory are required for subcategory mode',
+        });
       }
       if (body.mode === 'condition' && !body.conditionId) {
-        return fail(ErrorCode.VALIDATION_FAILED, { message: 'conditionId is required for condition mode' });
+        return fail(ErrorCode.VALIDATION_FAILED, {
+          message: 'conditionId is required for condition mode',
+        });
       }
 
       // Clerk auth can succeed before the webhook-created User row exists.
@@ -101,6 +107,7 @@ export const onRequestPost = authenticatedEndpoint(
 
       // Infer learner phase from profile (didactic / clinical / pance_prep)
       const learnerPhase = inferLearnerPhase(user);
+      const personalizationContext = await buildSelectionPersonalizationContext(prisma, user.id);
 
       const scope = deriveScope(body.mode, {
         system: body.system,
@@ -118,15 +125,17 @@ export const onRequestPost = authenticatedEndpoint(
       let result: any;
 
       try {
-        const reserved = await reserveFromReservoir(
-          prisma, user.id, scope, body.size, sessionId
-        );
+        const reserved = await reserveFromReservoir(prisma, user.id, scope, body.size, sessionId);
         reservedQuestions = reserved;
         reservoirCount = reserved.length;
 
         if (reserved.length > 0) {
-          const questions = filterUsableQuestions(await hydrateReservoirQuestions(prisma, reserved));
-          usableReservedQuestionIds = questions.map((question: any) => question.sourceQuestionId ?? question.id);
+          const questions = filterUsableQuestions(
+            await hydrateReservoirQuestions(prisma, reserved)
+          );
+          usableReservedQuestionIds = questions.map(
+            (question: any) => question.sourceQuestionId ?? question.id
+          );
 
           if (reserved.length >= body.size && questions.length >= body.size) {
             // Happy path: full session from reservoir
@@ -171,11 +180,12 @@ export const onRequestPost = authenticatedEndpoint(
       if (!result) {
         if (reservedQuestions.length > 0) {
           const unusableIds = new Set(unusableReservedQuestionIds);
-          const releasableQuestionIds = usableReservedQuestionIds.length > 0
-            ? usableReservedQuestionIds.filter((questionId) => !unusableIds.has(questionId))
-            : reservedQuestions
-                .map((item) => item.questionId)
-                .filter((questionId) => !unusableIds.has(questionId));
+          const releasableQuestionIds =
+            usableReservedQuestionIds.length > 0
+              ? usableReservedQuestionIds.filter((questionId) => !unusableIds.has(questionId))
+              : reservedQuestions
+                  .map((item) => item.questionId)
+                  .filter((questionId) => !unusableIds.has(questionId));
 
           if (unusableReservedQuestionIds.length > 0) {
             try {
@@ -214,6 +224,7 @@ export const onRequestPost = authenticatedEndpoint(
           blueprintStage: body.blueprintStage as any,
           urgencyMultiplier: body.urgencyMultiplier,
           gatedSystems: body.gatedSystems,
+          ...(personalizationContext ?? {}),
         });
 
         const safeQuestions = filterUsableQuestions(onDemandResult.questions);
@@ -231,13 +242,16 @@ export const onRequestPost = authenticatedEndpoint(
             : [];
         const questions = [...safeQuestions, ...fallbackQuestions].slice(0, body.size);
         if (questions.length < body.size) {
-          logger.warn('Study session question pool shortage; refusing learner-facing dynamic generation', {
-            requestedSize: body.size,
-            availableSafeQuestions: questions.length,
-            mode: body.mode,
-            system: body.system,
-            conditionId: body.conditionId,
-          });
+          logger.warn(
+            'Study session question pool shortage; refusing learner-facing dynamic generation',
+            {
+              requestedSize: body.size,
+              availableSafeQuestions: questions.length,
+              mode: body.mode,
+              system: body.system,
+              conditionId: body.conditionId,
+            }
+          );
         }
         const dynamicQuestions: any[] = [];
         const completedQuestions = [...questions, ...dynamicQuestions].slice(0, body.size);
@@ -252,13 +266,14 @@ export const onRequestPost = authenticatedEndpoint(
             systemDistribution: countSystems(completedQuestions),
             estimatedMinutes: Math.ceil((completedQuestions.length * 90) / 60),
             learnerPhase,
-            source: dynamicQuestions.length > 0
-              ? 'on_demand'
-              : fallbackQuestions.length > 0
-              ? 'pregenerated_fallback'
-              : reservoirCount > 0
-                ? 'mixed'
-                : 'on_demand',
+            source:
+              dynamicQuestions.length > 0
+                ? 'on_demand'
+                : fallbackQuestions.length > 0
+                  ? 'pregenerated_fallback'
+                  : reservoirCount > 0
+                    ? 'mixed'
+                    : 'on_demand',
           },
         };
       }
@@ -266,8 +281,11 @@ export const onRequestPost = authenticatedEndpoint(
       // ── Step 3: Trigger background refill (fire-and-forget) ──
       if (context.waitUntil) {
         context.waitUntil(
-          Promise.resolve(requestRefill(prisma, user.id, scope, 'post_session', learnerPhase))
-            .catch((err: any) => logger.info('Background refill request failed', { error: err.message }))
+          Promise.resolve(
+            requestRefill(prisma, user.id, scope, 'post_session', learnerPhase)
+          ).catch((err: any) =>
+            logger.info('Background refill request failed', { error: err.message })
+          )
         );
       }
 
@@ -280,7 +298,10 @@ export const onRequestPost = authenticatedEndpoint(
       if (canonicalizedPregeneratedIds.size > 0) {
         normalizedResult.questions = normalizedResult.questions.map((question) => {
           const sourceQuestionId = question.sourceQuestionId ?? question.id;
-          if (question.questionSource !== 'pre_generated' || !canonicalizedPregeneratedIds.has(sourceQuestionId)) {
+          if (
+            question.questionSource !== 'pre_generated' ||
+            !canonicalizedPregeneratedIds.has(sourceQuestionId)
+          ) {
             return question;
           }
 
@@ -337,7 +358,7 @@ export const onRequestPost = authenticatedEndpoint(
           updatedAt: new Date(),
         },
       });
-      await persistStudySessionQuestionLinks(
+      normalizedResult.questions = await persistStudySessionQuestionLinks(
         prisma,
         normalizedResult.sessionId,
         normalizedResult.questions,
@@ -374,6 +395,92 @@ export const onRequestPost = authenticatedEndpoint(
 
 // ─── Reservoir Helpers ──────────────────────────────────────────────────────
 
+type SelectionPersonalizationContext = {
+  banditState: ReturnType<typeof initBanditState>;
+  systemWeaknesses: Record<string, number>;
+  topicMasteryMap: Record<string, number>;
+};
+
+async function buildSelectionPersonalizationContext(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  userId: string
+): Promise<SelectionPersonalizationContext | null> {
+  const progressRows = await prisma.userProgress.findMany({
+    where: {
+      userId,
+      totalAttempts: { gt: 0 },
+    },
+    select: {
+      conditionId: true,
+      system: true,
+      totalAttempts: true,
+      correctCount: true,
+      accuracy: true,
+      MedicalContent: {
+        select: {
+          conditionId: true,
+        },
+      },
+    },
+    take: 500,
+  });
+
+  const topicMasteryMap: Record<string, number> = {};
+  const systemStats = new Map<string, { attempts: number; correct: number }>();
+
+  for (const row of progressRows) {
+    const attempts = Math.max(0, row.totalAttempts ?? 0);
+    if (attempts === 0) continue;
+
+    const correct = Math.max(0, row.correctCount ?? 0);
+    const mastery = roundMetric(
+      clamp01(
+        typeof row.accuracy === 'number' && Number.isFinite(row.accuracy)
+          ? row.accuracy
+          : correct / attempts
+      )
+    );
+
+    topicMasteryMap[row.conditionId] = mastery;
+    if (row.MedicalContent?.conditionId) {
+      topicMasteryMap[row.MedicalContent.conditionId] = mastery;
+    }
+
+    if (row.system) {
+      const existing = systemStats.get(row.system) ?? { attempts: 0, correct: 0 };
+      existing.attempts += attempts;
+      existing.correct += correct;
+      systemStats.set(row.system, existing);
+    }
+  }
+
+  const systemWeaknesses: Record<string, number> = {};
+  for (const [system, stats] of systemStats.entries()) {
+    if (stats.attempts > 0) {
+      systemWeaknesses[system] = roundMetric(clamp01(1 - stats.correct / stats.attempts));
+    }
+  }
+
+  if (Object.keys(topicMasteryMap).length === 0 && Object.keys(systemWeaknesses).length === 0) {
+    return null;
+  }
+
+  return {
+    banditState: initBanditState(),
+    systemWeaknesses,
+    topicMasteryMap,
+  };
+}
+
+function clamp01(value: number): number {
+  if (!Number.isFinite(value)) return 0.5;
+  return Math.max(0, Math.min(1, value));
+}
+
+function roundMetric(value: number): number {
+  return Math.round(value * 1000) / 1000;
+}
+
 async function ensureCanonicalQuestionTargetsForPregenerated(
   prisma: ReturnType<typeof createEdgePrismaClient>,
   questions: ReturnType<typeof normalizeSessionGenerateResult>['questions'],
@@ -406,10 +513,13 @@ async function ensureCanonicalQuestionTargetsForPregenerated(
       source: 'pre_generated_approved',
     });
   } catch (error) {
-    logger.warn('Failed to pre-canonicalize pre-generated session questions; submit path will retain FK fallback', {
-      count: mirrorInputs.length,
-      error: error instanceof Error ? error.message : String(error),
-    });
+    logger.warn(
+      'Failed to pre-canonicalize pre-generated session questions; submit path will retain FK fallback',
+      {
+        count: mirrorInputs.length,
+        error: error instanceof Error ? error.message : String(error),
+      }
+    );
     return new Set();
   }
 }
@@ -419,16 +529,44 @@ async function persistStudySessionQuestionLinks(
   sessionId: string,
   questions: ReturnType<typeof normalizeSessionGenerateResult>['questions'],
   logger: ReturnType<typeof createEndpointLogger>
-): Promise<void> {
+): Promise<ReturnType<typeof normalizeSessionGenerateResult>['questions']> {
   const delegate = (prisma as any).studySessionQuestion;
   if (!delegate?.deleteMany || !delegate?.createMany) {
-    logger.info('StudySessionQuestion delegate unavailable; session questionIds remain the resume source', {
-      sessionId,
-    });
-    return;
+    logger.info(
+      'StudySessionQuestion delegate unavailable; session questionIds remain the resume source',
+      {
+        sessionId,
+      }
+    );
+    return questions;
   }
 
-  const records = buildStudySessionQuestionRecords(sessionId, questions);
+  const questionsWithIdentity = await Promise.all(
+    questions.map(async (question) => {
+      if (question.questionIdentityId) return question;
+
+      const sourceQuestionId = question.sourceQuestionId ?? question.id;
+      const questionIdentityId = await resolveOrCreateQuestionIdentity(
+        prisma as any,
+        {
+          questionSource: question.questionSource,
+          sourceQuestionId,
+          canonicalQuestionId: question.canonicalQuestionId ?? question.questionId ?? null,
+          provenance: {
+            writer: 'study-session-generate',
+            sessionId,
+          },
+        },
+        logger
+      );
+
+      return {
+        ...question,
+        questionIdentityId,
+      };
+    })
+  );
+  const records = buildStudySessionQuestionRecords(sessionId, questionsWithIdentity);
   try {
     await delegate.deleteMany({ where: { sessionId } });
     if (records.length > 0) {
@@ -438,12 +576,17 @@ async function persistStudySessionQuestionLinks(
       });
     }
   } catch (error: unknown) {
-    logger.warn('StudySessionQuestion link persistence failed; session questionIds remain the fallback source', {
-      sessionId,
-      recordCount: records.length,
-      error: error instanceof Error ? error.message : String(error),
-    });
+    logger.warn(
+      'StudySessionQuestion link persistence failed; session questionIds remain the fallback source',
+      {
+        sessionId,
+        recordCount: records.length,
+        error: error instanceof Error ? error.message : String(error),
+      }
+    );
   }
+
+  return questionsWithIdentity;
 }
 
 function normalizeOptions(raw: unknown): string[] {
@@ -512,15 +655,13 @@ async function fetchFallbackPregeneratedQuestions(
     ...options.excludeQuestionIds,
     ...recentSeen.map((row: any) => row.questionId),
   ]);
-  const systemCandidates = Object.keys(options.blueprintWeights ?? {})
-    .filter((system) => !options.gatedSystems.includes(system));
+  const systemCandidates = Object.keys(options.blueprintWeights ?? {}).filter(
+    (system) => !options.gatedSystems.includes(system)
+  );
 
   const where: any = withProductionPregeneratedSafety({});
   if (options.conditionId) {
-    where.OR = [
-      { conditionId: options.conditionId },
-      { medicalContentId: options.conditionId },
-    ];
+    where.OR = [{ conditionId: options.conditionId }, { medicalContentId: options.conditionId }];
   } else if (options.system) {
     where.system = options.system;
   } else if (systemCandidates.length > 0) {
@@ -542,9 +683,10 @@ async function fetchFallbackPregeneratedQuestions(
   });
 
   const firstPass = rows.filter((row: any) => !excluded.has(row.id));
-  const pool = firstPass.length > 0
-    ? firstPass
-    : rows.filter((row: any) => !options.excludeQuestionIds.includes(row.id));
+  const pool =
+    firstPass.length > 0
+      ? firstPass
+      : rows.filter((row: any) => !options.excludeQuestionIds.includes(row.id));
   const questions: any[] = [];
 
   for (const row of pool) {
@@ -553,7 +695,8 @@ async function fetchFallbackPregeneratedQuestions(
     const data = row.questionData as any;
     const opts = normalizeOptions(data?.options ?? data?.answers ?? data?.choices);
     const rawAns = data?.correctAnswer ?? data?.answer ?? data?.correct_option ?? '';
-    const providedIdx = typeof data?.correctAnswerIndex === 'number' ? data.correctAnswerIndex : null;
+    const providedIdx =
+      typeof data?.correctAnswerIndex === 'number' ? data.correctAnswerIndex : null;
     const resolvedIdx =
       providedIdx !== null && providedIdx >= 0 && providedIdx < opts.length
         ? providedIdx
@@ -654,7 +797,8 @@ async function hydrateReservoirQuestions(
     // server-provided index; if missing/invalid, resolve from the correctAnswer
     // string; otherwise emit -1 so the client normalizer surfaces the data bug.
     let idx: number;
-    const providedIdx = typeof data?.correctAnswerIndex === 'number' ? data.correctAnswerIndex : null;
+    const providedIdx =
+      typeof data?.correctAnswerIndex === 'number' ? data.correctAnswerIndex : null;
     if (providedIdx !== null && providedIdx >= 0 && providedIdx < opts.length) {
       idx = providedIdx;
     } else {

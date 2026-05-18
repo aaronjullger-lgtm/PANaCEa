@@ -24,6 +24,7 @@ import {
 } from '@/components/workspace';
 import { usePreferences } from '@/hooks/usePreferences';
 import { API_ENDPOINTS, buildApiUrl, getApiEndpoint } from '@/lib/utils/apiConfig';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import { callGeminiTextStreaming } from '@/services/ai/geminiService';
 import type { StreamHistoryTurn } from '@/lib/utils/streamingClient';
 
@@ -93,9 +94,9 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
         setProfileLoadFailed(true);
         return;
       }
-      const data = (await response.json()) as { data?: { tutorContext?: string } };
+      const data = unwrapApiEnvelope<{ tutorContext?: string }>(await response.json());
       setTutorContext(
-        data.data?.tutorContext ??
+        data.tutorContext ??
           'Student Weaknesses: None identified. Proceed with standard Socratic dialogue.'
       );
     } catch {
@@ -128,8 +129,8 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
         body: JSON.stringify({ body: { sessionType: 'mixed', systemsTargeted: [] } }),
       });
       if (!response.ok) return null;
-      const data = (await response.json()) as { data?: { session?: { id: string } } };
-      const id = data?.data?.session?.id ?? null;
+      const data = unwrapApiEnvelope<{ session?: { id: string } }>(await response.json());
+      const id = data?.session?.id ?? null;
       if (id) setSessionId(id);
       return id;
     } catch {

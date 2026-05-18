@@ -61,11 +61,11 @@ export const onRequestPost = authenticatedEndpoint(
     const { nodeIds, depth, edgeTypes, includeOriginalNodes } = validated;
 
     // Generate deterministic cache key
-    const cacheKey = `graph:expand:${
-      [...nodeIds].sort().join(',')
-    }:${depth}:${
-      [...(edgeTypes || [])].sort().join(',')
-    }:${includeOriginalNodes}`;
+    const cacheKey = `graph:expand:${[...nodeIds].sort().join(',')}:${depth}:${[
+      ...(edgeTypes || []),
+    ]
+      .sort()
+      .join(',')}:${includeOriginalNodes}`;
 
     try {
       const graphData = await getOrSet<GraphExpandResponse>(
@@ -77,6 +77,7 @@ export const onRequestPost = authenticatedEndpoint(
             // Step 1: Collect nodes and edges via BFS
             const visitedNodeIds = new Set<string>();
             const visitedEdgeIds = new Set<string>();
+            const queuedNodeIds = new Set<string>(nodeIds);
             const nodes: GraphNodeResponse[] = [];
             const edges: GraphEdgeResponse[] = [];
 
@@ -117,6 +118,18 @@ export const onRequestPost = authenticatedEndpoint(
                 if (visitedEdgeIds.has(edge.id)) continue;
                 visitedEdgeIds.add(edge.id);
 
+                const frontierNodeId = currentFrontier.includes(edge.sourceId)
+                  ? edge.sourceId
+                  : currentFrontier.includes(edge.targetId)
+                    ? edge.targetId
+                    : undefined;
+                const neighborId =
+                  frontierNodeId && edge.sourceId !== edge.targetId
+                    ? frontierNodeId === edge.sourceId
+                      ? edge.targetId
+                      : edge.sourceId
+                    : undefined;
+
                 edges.push({
                   id: edge.id,
                   sourceId: edge.sourceId,
@@ -140,9 +153,8 @@ export const onRequestPost = authenticatedEndpoint(
                 }
 
                 // Add neighbor to next frontier if not already visited and not in original frontier
-                const neighborId = edge.sourceId === edge.targetId ? undefined :
-                  (edge.sourceId === edge.source.id ? edge.targetId : edge.sourceId);
-                if (neighborId && !visitedNodeIds.has(neighborId) && !currentFrontier.includes(neighborId)) {
+                if (neighborId && !queuedNodeIds.has(neighborId)) {
+                  queuedNodeIds.add(neighborId);
                   nextFrontier.push(neighborId);
                 }
               }
@@ -154,7 +166,7 @@ export const onRequestPost = authenticatedEndpoint(
             // If includeOriginalNodes is false, filter out nodes that are not in the original list
             let finalNodes = nodes;
             if (!includeOriginalNodes) {
-              finalNodes = nodes.filter(node => !nodeIds.includes(node.id));
+              finalNodes = nodes.filter((node) => !nodeIds.includes(node.id));
             }
 
             return {

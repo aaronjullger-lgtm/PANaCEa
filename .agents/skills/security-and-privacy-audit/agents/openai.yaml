@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security Privacy Audit"
+  short_description: "Review auth, authorization, secrets, privacy, payments, and sensitive logging"
+  default_prompt: "Audit this security or privacy risk, fix high-impact issues, add denial tests, and document residual risk."

@@ -10,30 +10,34 @@ describe('canonical question mirror helper', () => {
   it('normalizes pre-generated question payloads into active approved Question rows', () => {
     const generatedAt = new Date('2026-05-01T12:00:00.000Z');
 
-    const data = buildCanonicalQuestionMirrorData({
-      id: 'pgq-1',
-      system: 'Pulmonary',
-      difficulty: 'medium',
-      conditionId: 'cond-1',
-      medicalContentId: 'mc-1',
-      generatedAt,
-      questionData: {
-        stem: 'What test confirms PE in a stable high-risk patient?',
-        options: ['D-dimer', 'CT pulmonary angiography', 'Chest x-ray', 'Spirometry'],
-        correctAnswer: 'B',
-        rationale: { rationale: 'CTPA confirms pulmonary embolism in stable patients.' },
-        subcategory: 'Vascular',
-        conditionName: 'Pulmonary embolism',
+    const data = buildCanonicalQuestionMirrorData(
+      {
+        id: 'pgq-1',
+        system: 'Pulmonary',
+        difficulty: 'medium',
+        conditionId: 'cond-1',
+        medicalContentId: 'mc-1',
+        generatedAt,
+        questionData: {
+          stem: 'What test confirms PE in a stable high-risk patient?',
+          options: ['D-dimer', 'CT pulmonary angiography', 'Chest x-ray', 'Spirometry'],
+          correctAnswer: 'B',
+          rationale: { rationale: 'CTPA confirms pulmonary embolism in stable patients.' },
+          subcategory: 'Vascular',
+          conditionName: 'Pulmonary embolism',
+        },
       },
-    }, {
-      source: 'test_source',
-    });
+      {
+        source: 'test_source',
+      }
+    );
 
     expect(data).toEqual(
       expect.objectContaining({
         id: 'pgq-1',
         question: 'What test confirms PE in a stable high-risk patient?',
         correctAnswer: 'CT pulmonary angiography',
+        correctAnswerIndex: 1,
         source: 'test_source',
         conditionId: 'cond-1',
         medicalContentId: 'mc-1',
@@ -78,6 +82,13 @@ describe('canonical question mirror helper', () => {
         upsert: vi.fn().mockResolvedValue({}),
         createMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
+      questionAnswerChoice: {
+        deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+        upsert: vi.fn().mockResolvedValue({}),
+      },
+      questionExplanation: {
+        upsert: vi.fn().mockResolvedValue({}),
+      },
     };
 
     const input = {
@@ -86,6 +97,7 @@ describe('canonical question mirror helper', () => {
         question: 'Which option is correct?',
         options: ['A answer', 'B answer'],
         correctAnswerIndex: 0,
+        rationale: 'A answer is correct.',
       },
     };
 
@@ -95,11 +107,99 @@ describe('canonical question mirror helper', () => {
       create: expect.objectContaining({ id: 'pgq-3' }),
       update: expect.not.objectContaining({ id: expect.anything() }),
     });
+    expect(prisma.question.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.not.objectContaining({ correctAnswerIndex: expect.anything() }),
+        update: expect.not.objectContaining({ correctAnswerIndex: expect.anything() }),
+      })
+    );
+    expect(prisma.questionAnswerChoice.deleteMany).toHaveBeenCalledWith({
+      where: {
+        questionId: 'pgq-3',
+        choiceKey: { notIn: ['A', 'B'] },
+      },
+    });
+    expect(prisma.questionAnswerChoice.upsert).toHaveBeenCalledWith({
+      where: {
+        questionId_choiceKey: {
+          questionId: 'pgq-3',
+          choiceKey: 'A',
+        },
+      },
+      create: expect.objectContaining({
+        questionId: 'pgq-3',
+        choiceKey: 'A',
+        choiceText: 'A answer',
+        isCorrect: true,
+        displayOrder: 0,
+      }),
+      update: expect.objectContaining({
+        choiceText: 'A answer',
+        isCorrect: true,
+        displayOrder: 0,
+      }),
+    });
+    expect(prisma.questionExplanation.upsert).toHaveBeenCalledWith({
+      where: {
+        questionId_explanationType_version: {
+          questionId: 'pgq-3',
+          explanationType: 'CORRECT_RATIONALE',
+          version: 1,
+        },
+      },
+      create: expect.objectContaining({
+        questionId: 'pgq-3',
+        explanationType: 'CORRECT_RATIONALE',
+        body: 'A answer is correct.',
+        isActive: true,
+      }),
+      update: expect.objectContaining({
+        body: 'A answer is correct.',
+        isActive: true,
+      }),
+    });
 
-    await expect(createCanonicalQuestionMirrors(prisma, [input])).resolves.toEqual(new Set(['pgq-3']));
+    vi.clearAllMocks();
+
+    await expect(createCanonicalQuestionMirrors(prisma, [input])).resolves.toEqual(
+      new Set(['pgq-3'])
+    );
     expect(prisma.question.createMany).toHaveBeenCalledWith({
       data: [expect.objectContaining({ id: 'pgq-3' })],
       skipDuplicates: true,
     });
+    expect(prisma.questionAnswerChoice.upsert).toHaveBeenCalledTimes(2);
+    expect(prisma.questionExplanation.upsert).toHaveBeenCalledOnce();
+  });
+
+  it('marks only the first matching duplicate answer choice as correct', async () => {
+    const prisma = {
+      question: {
+        upsert: vi.fn().mockResolvedValue({}),
+      },
+      questionAnswerChoice: {
+        deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+        upsert: vi.fn().mockResolvedValue({}),
+      },
+    };
+
+    await expect(
+      upsertCanonicalQuestionMirror(prisma, {
+        id: 'pgq-duplicate',
+        questionData: {
+          question: 'Which duplicate option is keyed correct?',
+          options: ['Same answer', 'Same answer', 'Different answer'],
+          correctAnswerIndex: 1,
+        },
+      })
+    ).resolves.toBe('pgq-duplicate');
+
+    const choiceCreates = prisma.questionAnswerChoice.upsert.mock.calls.map(
+      ([args]) => (args as { create: { choiceKey: string; isCorrect: boolean } }).create
+    );
+
+    expect(
+      choiceCreates.filter((choice) => choice.isCorrect).map((choice) => choice.choiceKey)
+    ).toEqual(['B']);
   });
 });

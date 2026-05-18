@@ -8,9 +8,41 @@
 import { Router, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { requireAuth, AuthenticatedRequest } from '../lib/middleware/clerkAuth';
+import { resolveOrCreateQuestionIdentity } from '../lib/study/questionIdentityPersistence';
 import crypto from 'crypto';
 
 const router = Router();
+
+function optionalString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
+}
+
+async function resolveSavedQuestionIdentityId(
+  tx: unknown,
+  savedQuestion: any
+): Promise<string | null> {
+  const questionId = optionalString(savedQuestion?.questionId);
+  if (!questionId) return null;
+
+  const questionSource = optionalString(savedQuestion?.questionSource) ?? 'question';
+  const sourceQuestionId = optionalString(savedQuestion?.sourceQuestionId) ?? questionId;
+  const canonicalQuestionId =
+    optionalString(savedQuestion?.canonicalQuestionId) ??
+    (questionSource === 'question' ? questionId : null);
+
+  return resolveOrCreateQuestionIdentity(tx, {
+    questionSource,
+    sourceQuestionId,
+    canonicalQuestionId,
+    medicalContentId: optionalString(savedQuestion?.medicalContentId),
+    system: optionalString(savedQuestion?.system),
+    conditionId: optionalString(savedQuestion?.conditionId),
+    provenance: {
+      writer: 'express-sync',
+      type: optionalString(savedQuestion?.type),
+    },
+  });
+}
 
 // API sync endpoint with authentication
 // GET: Fetch user data (PerformanceRecords, SRSItems, SavedQuestions)
@@ -181,6 +213,8 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response): 
       if (savedQuestions && Array.isArray(savedQuestions)) {
         for (const sq of savedQuestions) {
           const now = new Date();
+          const questionIdentityId = await resolveSavedQuestionIdentityId(tx, sq);
+          const identityData = questionIdentityId ? { questionIdentityId } : {};
           await tx.savedQuestion.upsert({
             where: {
               userId_questionId_type: {
@@ -198,6 +232,7 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response): 
               userNote: sq.userNote,
               repetitionLevel: sq.repetitionLevel,
               nextReviewDate: sq.nextReviewDate,
+              ...identityData,
               updatedAt: now,
             },
             create: {
@@ -213,6 +248,7 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response): 
               userNote: sq.userNote,
               repetitionLevel: sq.repetitionLevel,
               nextReviewDate: sq.nextReviewDate,
+              ...identityData,
               updatedAt: now,
             },
           });

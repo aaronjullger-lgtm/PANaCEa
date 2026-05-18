@@ -37,7 +37,7 @@ export const onRequestPost = adminAuthenticatedEndpoint(IngestSchema, async (con
   const logger = createEndpointLogger('/api/admin/knowledge/ingest');
 
   if (!env.GEMINI_API_KEY) {
-    return fail(ErrorCode.ENV_MISCONFIGURED, { message: 'GEMINI_API_KEY not configured' });
+    return fail(ErrorCode.ENV_MISCONFIGURED, { message: 'AI cache service not configured' });
   }
 
   const { content, fileUri, category, displayName, ttlSeconds } = validated.body;
@@ -45,7 +45,9 @@ export const onRequestPost = adminAuthenticatedEndpoint(IngestSchema, async (con
   const hasFile = fileUri != null && fileUri.trim().length > 0;
 
   if (!hasContent && !hasFile) {
-    return fail(ErrorCode.VALIDATION_FAILED, { message: 'Provide content (text) or fileUri (Gemini file)' });
+    return fail(ErrorCode.VALIDATION_FAILED, {
+      message: 'Provide content (text) or fileUri (Gemini file)',
+    });
   }
 
   const ttl = ttlSeconds ?? TTL_24H;
@@ -83,11 +85,10 @@ export const onRequestPost = adminAuthenticatedEndpoint(IngestSchema, async (con
     });
 
     if (!res.ok) {
-      const text = await res.text();
-      logger.warn('Gemini cache create failed', { status: res.status, text: text.slice(0, 300) });
+      await res.text();
+      logger.warn('Gemini cache create failed', { status: res.status });
       return fail(ErrorCode.GEMINI_ERROR, {
-        message: `Failed to create cache: ${res.status}`,
-        details: text.slice(0, 500),
+        message: 'Failed to create knowledge cache',
       });
     }
 

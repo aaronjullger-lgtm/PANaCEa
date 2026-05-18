@@ -1,0 +1,4 @@
+interface:
+  display_name: "Supabase"
+  short_description: "Handle Supabase auth, RLS, storage, realtime, vectors, CLI, and Postgres work"
+  default_prompt: "Handle this Supabase task using safe server/client boundaries, RLS awareness, and verified configuration."

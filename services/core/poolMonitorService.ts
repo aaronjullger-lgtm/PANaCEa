@@ -5,7 +5,6 @@
  * when pool drops below threshold to ensure users never run out of questions.
  */
 
-import { PrismaClient } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 // Thresholds for triggering batch generation
@@ -16,7 +15,7 @@ const THRESHOLDS = {
   BATCH_SIZE: 25, // Questions to generate per batch
 };
 
-interface PoolStatus {
+export interface PoolStatus {
   system: string;
   total: number;
   unused: number;

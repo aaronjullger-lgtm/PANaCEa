@@ -1,0 +1,26 @@
+{
+  "id": "right-femur",
+  "title": "Femur Right_Human Skeleton",
+  "sourceEntry": "3DPX-016822",
+  "source": "NIH 3D",
+  "sourceUrl": "https://3d.nih.gov/entries/3DPX-016822",
+  "downloadUrl": "https://3d.nih.gov/api/download?submissionId=22650&fileIds=497792",
+  "thumbnailUrl": "https://3d.nih.gov/api/submissions/22650/runs/f65164bb-4c93-4b26-927c-b0d565111dcc/output-files/497798",
+  "license": "CC-BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "author": "My Segmenter",
+  "institution": "National Institutes of Health",
+  "entryDescription": "Right human femur anatomy model distributed through NIH 3D.",
+  "modelFile": "/models/nih/right-femur-3dpx-016822.glb",
+  "thumbnailFile": "/thumbnails/nih/right-femur-3dpx-016822.png",
+  "modelBytes": 5136244,
+  "thumbnailBytes": 30478,
+  "modelSha256": "dbba662e58aea5f53a87161f71684ec8ab1398e169898eec9c3e1cbe2d5b5b56",
+  "thumbnailSha256": "750e5bbc2385969cc75fd31fcee2a8fedfe0a238babbd11a48ba82499c882782",
+  "accessedDate": "2026-05-16",
+  "safeUse": [
+    "Use for educational musculoskeletal spatial anatomy review only.",
+    "Do not present as patient-specific anatomy, diagnostic evidence, treatment guidance, or a clinical decision aid.",
+    "Maintain CC-BY attribution whenever this model is displayed or redistributed."
+  ]
+}

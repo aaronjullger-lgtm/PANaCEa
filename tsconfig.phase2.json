@@ -11,7 +11,7 @@
     "hooks/useRelevantTrials.ts",
     "components/library/EnrichmentFailureBadge.tsx",
     "components/library/EnrichmentFailureBadge.test.tsx",
-    "components/panels/ExplanationPanel.tsx",
+    "components/questions/ExplanationPanel.tsx",
     "lib/constants/content-freshness.ts",
     "lib/constants/content-freshness.test.ts",
     "components/library/LastReviewedBadge.tsx",

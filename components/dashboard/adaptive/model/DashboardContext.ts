@@ -14,6 +14,7 @@ export type DashboardActions = {
   onOpenReview?: () => void;
   onOpenPractice?: () => void;
   onStartSession?: (settings?: SessionSettings) => void;
+  onOpenSettings?: () => void;
 };
 
 export type DashboardGoal = {

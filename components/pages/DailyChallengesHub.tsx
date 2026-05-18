@@ -153,7 +153,7 @@ function ChallengeCard({
               {challenge.error
                 ? 'Needs refresh'
                 : challenge.loading
-                  ? 'Loading...'
+                  ? 'Syncing status'
                   : challenge.completed
                     ? 'Completed today'
                     : 'Ready to start'}
@@ -199,11 +199,7 @@ export function DailyChallengesHub() {
     fetchDailyPuzzle,
   } = useDiagnosticPuzzle();
 
-  const {
-    status: wordleStatus,
-    loading: wordleLoading,
-    error: wordleError,
-  } = useWordleGame();
+  const { status: wordleStatus, loading: wordleLoading, error: wordleError } = useWordleGame();
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -328,7 +324,8 @@ export function DailyChallengesHub() {
             onBack: () => navigate(ROUTES.STUDY),
             primaryAction: {
               label: completedCount === challenges.length ? 'Open Practice' : 'Resume challenges',
-              onClick: () => navigate(completedCount === challenges.length ? ROUTES.PRACTICE : ROUTES.STUDY),
+              onClick: () =>
+                navigate(completedCount === challenges.length ? ROUTES.PRACTICE : ROUTES.STUDY),
             },
           }}
         />
@@ -444,7 +441,12 @@ export function DailyChallengesHub() {
                 first rep before moving into practice or your command center recommendations.
               </p>
             </div>
-            <Button type="button" size="sm" variant="outline" onClick={() => navigate(ROUTES.PRACTICE)}>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(ROUTES.PRACTICE)}
+            >
               Open Practice
             </Button>
           </div>

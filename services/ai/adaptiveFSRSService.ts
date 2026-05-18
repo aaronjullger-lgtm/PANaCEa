@@ -233,11 +233,11 @@ export async function fetchUserReviewHistory(
     const reviews = data.reviews ?? data.data?.reviews ?? [];
 
     return reviews.map((r: Record<string, unknown>) => ({
-      rating: r.wasCorrect ? 3 : 1,
-      elapsed_days: 0,
-      scheduled_days: 0,
-      review: new Date(r.createdAt as string),
-      state: 0,
+      rating: Number(r.rating ?? (r.wasCorrect ? 3 : 1)),
+      elapsed_days: Number(r.elapsedDays ?? 0),
+      scheduled_days: Number(r.scheduledDays ?? 0),
+      review: new Date(String(r.reviewedAt ?? r.createdAt ?? new Date().toISOString())),
+      state: Number(r.state ?? 0),
     }));
   } catch {
     return [];

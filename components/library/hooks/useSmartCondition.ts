@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export interface ConfusedWithItem {
   id: string;
@@ -158,18 +159,18 @@ export function useSmartCondition(conditionId: string | null | undefined): UseSm
           'Content-Type': 'application/json',
         },
       });
-      const json = (await res.json()) as { data?: Record<string, unknown>; error?: string };
+      const json = await res.json().catch(() => null);
       if (!res.ok) {
         const safeMsg = res.status === 404
           ? 'Condition information not found.'
           : res.status === 401
             ? 'Your session has expired. Please sign in again.'
             : 'Unable to load condition summary. Please try again.';
-        setErrorSummary(safeMsg);
+        setErrorSummary(getApiEnvelopeError(json, safeMsg));
         setSummary(null);
         return;
       }
-      const data = json?.data ?? json;
+      const data = unwrapApiEnvelope<Record<string, unknown>>(json);
       if (data && typeof data === 'object' && 'error' in data) {
         setErrorSummary('Unable to load condition summary. Please try again.');
         setSummary(null);
@@ -197,18 +198,18 @@ export function useSmartCondition(conditionId: string | null | undefined): UseSm
           'Content-Type': 'application/json',
         },
       });
-      const json = (await res.json()) as { data?: Record<string, unknown>; error?: string };
+      const json = await res.json().catch(() => null);
       if (!res.ok) {
         const safeMsg = res.status === 404
           ? 'Condition details not found.'
           : res.status === 401
             ? 'Your session has expired. Please sign in again.'
             : 'Unable to load full condition details. Please try again.';
-        setErrorDetails(safeMsg);
+        setErrorDetails(getApiEnvelopeError(json, safeMsg));
         setDetails(null);
         return;
       }
-      const data = json?.data ?? json;
+      const data = unwrapApiEnvelope<Record<string, unknown>>(json);
       if (data && typeof data === 'object' && 'error' in data) {
         setErrorDetails('Unable to load full condition details. Please try again.');
         setDetails(null);

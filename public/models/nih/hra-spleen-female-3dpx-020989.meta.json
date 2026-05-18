@@ -1,0 +1,26 @@
+{
+  "id": "hra-spleen-female",
+  "title": "3D Reference Organ for Spleen, Female v1.2",
+  "sourceEntry": "3DPX-020989",
+  "source": "NIH 3D",
+  "sourceUrl": "https://3d.nih.gov/entries/3DPX-020989",
+  "downloadUrl": "https://3d.nih.gov/api/download?submissionId=29125&fileIds=741998",
+  "thumbnailUrl": "https://3d.nih.gov/api/submissions/29125/runs/7296c99f-7160-4427-bae9-5d36375b4dc4/output-files/742000",
+  "license": "CC-BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "author": "Human Reference Atlas",
+  "institution": "Human Reference Atlas / National Institutes of Health",
+  "entryDescription": "Reference organ for the spleen created using Visible Human Dataset source data and distributed through NIH 3D.",
+  "modelFile": "/models/nih/hra-spleen-female-3dpx-020989.glb",
+  "thumbnailFile": "/thumbnails/nih/hra-spleen-female-3dpx-020989.png",
+  "modelBytes": 276712,
+  "thumbnailBytes": 23394,
+  "modelSha256": "e9ce0e379f86747c2d12ff56ea71a8389d97b7e1135c4e9ad1f6b4c32cf369d4",
+  "thumbnailSha256": "b843356051e2286cfbd61ff1344f512815799cfe0462e4f154f2f88f0838d5fc",
+  "accessedDate": "2026-05-16",
+  "safeUse": [
+    "Use for educational lymphatic and hematology spatial anatomy review only.",
+    "Do not present as patient-specific anatomy, diagnostic evidence, treatment guidance, or a clinical decision aid.",
+    "Maintain CC-BY attribution whenever this model is displayed or redistributed."
+  ]
+}

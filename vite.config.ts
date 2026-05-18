@@ -218,7 +218,15 @@ export default defineConfig(({ mode }) => {
         workbox: {
           maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, // 8MB — covers 6MB+ clinical training images; JS vendor is ~1.8MB after bundle splitting
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
-          globIgnores: ['**/geminiService-*.js', '**/vendor-ai-*.js'],
+          globIgnores: [
+            '**/geminiService-*.js',
+            '**/vendor-ai-*.js',
+            '**/AnatomyModelCanvas-*.js',
+            '**/GLTFLoader-*.js',
+            '**/OrbitControls-*.js',
+            '**/three.module-*.js',
+            '**/models/**/*.glb',
+          ],
           // PROMPT UPDATE STRATEGY - Let user decide when to update (prevents mid-session disruption)
           // skipWaiting and clientsClaim are handled by the SWUpdatePrompt component
           // when the user clicks "Update now"
@@ -394,10 +402,16 @@ export default defineConfig(({ mode }) => {
         '@src': path.resolve(__dirname, './src'),
         // Force ESM build of lucide-react
         'lucide-react': 'lucide-react/dist/esm/lucide-react.js',
-        // Always alias jsx-dev-runtime to a shim that re-exports jsx as jsxDEV.
-        // Fixes "jsxDEV is not a function" in dev, preview, and production builds.
-        'react/jsx-dev-runtime': JSX_DEV_SHIM_PATH,
-        'react/jsx-dev-runtime.js': JSX_DEV_SHIM_PATH,
+        // Production builds occasionally evaluate dev-compiled dependencies that
+        // reference jsxDEV. In dev, use React's real jsx-dev-runtime so static
+        // JSX children keep proper dev metadata and do not produce false key
+        // warnings.
+        ...(isProduction
+          ? {
+              'react/jsx-dev-runtime': JSX_DEV_SHIM_PATH,
+              'react/jsx-dev-runtime.js': JSX_DEV_SHIM_PATH,
+            }
+          : {}),
       },
     },
     build: {
@@ -422,6 +436,14 @@ export default defineConfig(({ mode }) => {
           manualChunks(id) {
             // Vendor chunks
             if (id.includes('node_modules')) {
+              // 3D/WebGL dependencies are only needed by lazy scanner/anatomy
+              // scenes. Keep them out of the default vendor chunk so mobile
+              // and first paint do not pay for WebGL.
+              if (
+                id.includes('/three/')
+              ) {
+                return undefined;
+              }
               // React core — MUST be its own chunk so it loads before anything
               // that calls React.forwardRef / React.createElement at module eval time
               if (
