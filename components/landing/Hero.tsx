@@ -130,6 +130,10 @@ function ScannerStatusRail() {
       <div
         className="h-2 overflow-hidden rounded-full bg-atlas-glass"
         aria-label="Study prescription completion is 68 percent"
+        aria-valuemax={100}
+        aria-valuemin={0}
+        aria-valuenow={68}
+        role="progressbar"
       >
         <div className="h-full w-[68%] rounded-full bg-atlas-cyan" />
       </div>

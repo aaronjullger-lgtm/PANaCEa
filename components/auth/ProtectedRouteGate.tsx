@@ -21,7 +21,7 @@ export function ProtectedRouteGate({ pathname, authLoading = false }: ProtectedR
   const AuthComponent = authMode === 'sign-in' ? SignIn : SignUp;
 
   return (
-    <main className="min-h-screen bg-[var(--color-canvas,#F8FAFC)] text-[var(--color-text-primary)]">
+    <main className="theme-diagnostic-atlas min-h-screen bg-atlas-background text-[var(--color-text-primary)]">
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
         <Link
           to="/"
