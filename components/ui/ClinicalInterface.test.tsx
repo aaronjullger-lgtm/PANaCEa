@@ -23,7 +23,7 @@ describe('Clinical interface primitives', () => {
       </div>,
     );
 
-    expect(screen.getByRole('button', { name: 'Start block' }).className).toContain('bg-[var(--color-gold-dark)]');
+    expect(screen.getByRole('button', { name: 'Start block' }).className).toContain('bg-[var(--color-accent)]');
     expect(screen.getByRole('button', { name: 'Quiet action' }).className).toContain('bg-[var(--color-surface)]');
     expect(screen.getByRole('button', { name: 'Skip' }).className).toContain('bg-transparent');
     expect(screen.getByRole('button', { name: 'Delete' }).className).toContain('bg-[var(--color-danger)]');
