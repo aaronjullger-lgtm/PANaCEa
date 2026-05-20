@@ -301,6 +301,36 @@ CREATE TABLE IF NOT EXISTS "study_session_questions" (
   CONSTRAINT "study_session_questions_sequenceIndex_check" CHECK ("sequenceIndex" >= 0)
 );
 
+CREATE TABLE IF NOT EXISTS "CalibrationLog" (
+  "id" TEXT NOT NULL,
+  "userId" TEXT NOT NULL,
+  "questionId" TEXT,
+  "conditionId" TEXT,
+  "reviewLogId" TEXT,
+  "outcomeReviewLogId" TEXT,
+  "predictedRetrievability" DOUBLE PRECISION NOT NULL,
+  "stabilityAtPrediction" DOUBLE PRECISION NOT NULL,
+  "difficultyAtPrediction" DOUBLE PRECISION NOT NULL,
+  "intervalDaysAtPrediction" DOUBLE PRECISION NOT NULL,
+  "ratingFed" INTEGER NOT NULL,
+  "elapsedDaysAtOutcome" DOUBLE PRECISION NOT NULL,
+  "actualOutcome" BOOLEAN NOT NULL,
+  "implicitConfidence" DOUBLE PRECISION,
+  "rapidGuess" BOOLEAN NOT NULL DEFAULT false,
+  "ghostGraderRule" TEXT,
+  "telemetryQuality" TEXT,
+  "wilsonLower" DOUBLE PRECISION,
+  "isMastered" BOOLEAN,
+  "hypercorrectionEligible" BOOLEAN NOT NULL DEFAULT false,
+  "sessionType" "SessionType" NOT NULL DEFAULT 'MAIN',
+  "fsrsVersion" TEXT NOT NULL DEFAULT '6.0',
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT "CalibrationLog_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "CalibrationLog_userId_fkey"
+    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 ALTER TABLE "DailyStudyPlan" ADD COLUMN IF NOT EXISTS "studyPlanId" TEXT;
 ALTER TABLE "StudySession" ADD COLUMN IF NOT EXISTS "studyPlanItemId" TEXT;
 
@@ -308,13 +338,21 @@ ALTER TABLE "StudySession" ADD COLUMN IF NOT EXISTS "studyPlanItemId" TEXT;
 -- the scalar column must be nullable for that referential action to succeed.
 ALTER TABLE "QuestionSeed" ALTER COLUMN "conditionId" DROP NOT NULL;
 
-ALTER TABLE "DailyStudyPlan"
-  ADD CONSTRAINT "DailyStudyPlan_studyPlanId_fkey"
-  FOREIGN KEY ("studyPlanId") REFERENCES "study_plans"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$
+BEGIN
+  ALTER TABLE "DailyStudyPlan"
+    ADD CONSTRAINT "DailyStudyPlan_studyPlanId_fkey"
+    FOREIGN KEY ("studyPlanId") REFERENCES "study_plans"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-ALTER TABLE "StudySession"
-  ADD CONSTRAINT "StudySession_studyPlanItemId_fkey"
-  FOREIGN KEY ("studyPlanItemId") REFERENCES "study_plan_items"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$
+BEGIN
+  ALTER TABLE "StudySession"
+    ADD CONSTRAINT "StudySession_studyPlanItemId_fkey"
+    FOREIGN KEY ("studyPlanItemId") REFERENCES "study_plan_items"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Harden existing scheduler/audit soft references before adding FKs.
 UPDATE "ReviewLog" rl
@@ -332,17 +370,29 @@ SET "outcomeReviewLogId" = NULL
 WHERE cl."outcomeReviewLogId" IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM "ReviewLog" rl WHERE rl.id = cl."outcomeReviewLogId");
 
-ALTER TABLE "ReviewLog"
-  ADD CONSTRAINT "ReviewLog_attemptId_fkey"
-  FOREIGN KEY ("attemptId") REFERENCES "QuestionAttempt"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$
+BEGIN
+  ALTER TABLE "ReviewLog"
+    ADD CONSTRAINT "ReviewLog_attemptId_fkey"
+    FOREIGN KEY ("attemptId") REFERENCES "QuestionAttempt"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-ALTER TABLE "CalibrationLog"
-  ADD CONSTRAINT "CalibrationLog_reviewLogId_fkey"
-  FOREIGN KEY ("reviewLogId") REFERENCES "ReviewLog"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$
+BEGIN
+  ALTER TABLE "CalibrationLog"
+    ADD CONSTRAINT "CalibrationLog_reviewLogId_fkey"
+    FOREIGN KEY ("reviewLogId") REFERENCES "ReviewLog"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-ALTER TABLE "CalibrationLog"
-  ADD CONSTRAINT "CalibrationLog_outcomeReviewLogId_fkey"
-  FOREIGN KEY ("outcomeReviewLogId") REFERENCES "ReviewLog"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$
+BEGIN
+  ALTER TABLE "CalibrationLog"
+    ADD CONSTRAINT "CalibrationLog_outcomeReviewLogId_fkey"
+    FOREIGN KEY ("outcomeReviewLogId") REFERENCES "ReviewLog"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE UNIQUE INDEX IF NOT EXISTS "courses_code_key" ON "courses"("code");
 CREATE INDEX IF NOT EXISTS "courses_phase_idx" ON "courses"("phase");
@@ -419,8 +469,12 @@ CREATE INDEX IF NOT EXISTS "ReviewLog_userId_sessionType_review_type_reviewedAt_
 CREATE INDEX IF NOT EXISTS "ReviewLog_userId_system_sessionType_reviewedAt_idx"
   ON "ReviewLog"("userId", "system", "sessionType", "reviewedAt" DESC);
 
+CREATE INDEX IF NOT EXISTS "CalibrationLog_conditionId_createdAt_idx" ON "CalibrationLog"("conditionId", "createdAt");
+CREATE INDEX IF NOT EXISTS "CalibrationLog_hypercorrectionEligible_createdAt_idx" ON "CalibrationLog"("hypercorrectionEligible", "createdAt");
 CREATE INDEX IF NOT EXISTS "CalibrationLog_outcomeReviewLogId_idx" ON "CalibrationLog"("outcomeReviewLogId");
 CREATE INDEX IF NOT EXISTS "CalibrationLog_reviewLogId_idx" ON "CalibrationLog"("reviewLogId");
+CREATE INDEX IF NOT EXISTS "CalibrationLog_userId_createdAt_idx" ON "CalibrationLog"("userId", "createdAt");
+CREATE INDEX IF NOT EXISTS "CalibrationLog_userId_questionId_idx" ON "CalibrationLog"("userId", "questionId");
 
 CREATE INDEX IF NOT EXISTS "UserProgress_userId_progressContext_system_nextReviewAt_idx"
   ON "UserProgress"("userId", "progressContext", "system", "nextReviewAt");

@@ -21,8 +21,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:4173';
-
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Wait for the app shell to be visible before running axe. */
@@ -50,7 +48,7 @@ async function runAxe(page: import('@playwright/test').Page) {
 
 test.describe('A11y Regression — Landing Page', () => {
   test('no critical a11y violations', async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto('/');
     await waitForApp(page);
 
     const { critical } = await runAxe(page);
@@ -58,7 +56,7 @@ test.describe('A11y Regression — Landing Page', () => {
   });
 
   test('no serious a11y violations', async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto('/');
     await waitForApp(page);
 
     const { serious } = await runAxe(page);
@@ -70,7 +68,7 @@ test.describe('A11y Regression — Landing Page', () => {
 
 test.describe('A11y Regression — Study Hub', () => {
   test('no critical a11y violations on /study', async ({ page }) => {
-    await page.goto(`${BASE_URL}/study`);
+    await page.goto('/study');
     await waitForApp(page);
 
     const { critical } = await runAxe(page);
@@ -78,7 +76,7 @@ test.describe('A11y Regression — Study Hub', () => {
   });
 
   test('no serious a11y violations on /study', async ({ page }) => {
-    await page.goto(`${BASE_URL}/study`);
+    await page.goto('/study');
     await waitForApp(page);
 
     const { serious } = await runAxe(page);
@@ -90,7 +88,7 @@ test.describe('A11y Regression — Study Hub', () => {
 
 test.describe('A11y Regression — Core Adaptive (Quiz)', () => {
   test('no critical a11y violations on /core-adaptive', async ({ page }) => {
-    await page.goto(`${BASE_URL}/core-adaptive`);
+    await page.goto('/core-adaptive');
     await waitForApp(page);
 
     const { critical } = await runAxe(page);
@@ -102,7 +100,7 @@ test.describe('A11y Regression — Core Adaptive (Quiz)', () => {
 
 test.describe('A11y Regression — Practice Modes', () => {
   test('no critical a11y violations on /practice', async ({ page }) => {
-    await page.goto(`${BASE_URL}/practice`);
+    await page.goto('/practice');
     await waitForApp(page);
 
     const { critical } = await runAxe(page);
@@ -121,7 +119,7 @@ test.describe('A11y Regression — Drill Pages', () => {
 
   for (const drillPath of drillPaths) {
     test(`no critical a11y violations on ${drillPath}`, async ({ page }) => {
-      await page.goto(`${BASE_URL}${drillPath}`);
+      await page.goto(drillPath);
       await waitForApp(page);
 
       const { critical } = await runAxe(page);
@@ -134,7 +132,7 @@ test.describe('A11y Regression — Drill Pages', () => {
 
 test.describe('A11y Regression — OSCE Patient Encounter', () => {
   test('no critical a11y violations on /modes/patient-encounter', async ({ page }) => {
-    await page.goto(`${BASE_URL}/modes/patient-encounter`);
+    await page.goto('/modes/patient-encounter');
     await waitForApp(page);
 
     const { critical } = await runAxe(page);
@@ -146,7 +144,7 @@ test.describe('A11y Regression — OSCE Patient Encounter', () => {
 
 test.describe('A11y Regression — Progress Dashboard', () => {
   test('no critical a11y violations on /progress', async ({ page }) => {
-    await page.goto(`${BASE_URL}/progress`);
+    await page.goto('/progress');
     await waitForApp(page);
 
     const { critical } = await runAxe(page);
@@ -154,7 +152,7 @@ test.describe('A11y Regression — Progress Dashboard', () => {
   });
 
   test('no serious a11y violations on /progress', async ({ page }) => {
-    await page.goto(`${BASE_URL}/progress`);
+    await page.goto('/progress');
     await waitForApp(page);
 
     const { serious } = await runAxe(page);

@@ -53,6 +53,21 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
+      - name: Recover normalized study schema migration retry
+        run: |
+          set +e
+          npx prisma migrate resolve --rolled-back 20260502000000_normalized_study_schema
+          RESOLVE_EXIT=$?
+          set -e
+
+          if [ "$RESOLVE_EXIT" -eq 0 ]; then
+            echo "Marked failed 20260502000000_normalized_study_schema migration as rolled back for retry."
+          else
+            echo "No failed 20260502000000_normalized_study_schema migration needed rollback resolution."
+          fi
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
       - name: Run database migrations
         run: npx prisma migrate deploy
         env:
