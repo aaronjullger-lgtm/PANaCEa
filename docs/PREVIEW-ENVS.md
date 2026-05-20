@@ -35,18 +35,19 @@ Partial. Here's what's wired and what isn't.
   Cloudflare Pages Preview environment.
 - **Neon DB branch-per-PR** — `.github/workflows/neon_workflow.yml` creates a
   preview branch on PR open and deletes it on PR close. 2-week TTL.
-- **Preview binding scaffold in `wrangler.toml`.** `[env.preview]` now exists
-  with separate `RATE_LIMIT_KV` and `CACHE` bindings. The IDs are placeholders
-  until the operator creates and pastes the real preview namespace IDs.
+- **Preview environment scaffold in `wrangler.toml`.** `[env.preview]` now
+  exists, but preview KV bindings are intentionally omitted until the operator
+  creates real namespace IDs. Do not commit placeholder IDs; Wrangler validates
+  every environment block during production deploy.
 - **Backend env contract check.** `npm run env:check:backend` verifies required
-  backend secret documentation plus production and preview KV binding presence,
-  and warns while placeholder preview IDs remain.
+  backend secret documentation plus production KV binding presence, rejects
+  invalid KV namespace IDs, and warns while preview KV bindings are not wired.
 
 ### Not wired
 
-- **Preview operator wiring.** `wrangler.toml` has placeholders, but the real
-  preview KV namespace IDs and Cloudflare Pages Preview secrets still need to
-  be set before beta users touch preview.
+- **Preview operator wiring.** The real preview KV namespace IDs and
+  Cloudflare Pages Preview secrets still need to be set before beta users touch
+  preview.
 - **Neon branch DATABASE_URL is not piped to the preview deployment.** The
   Neon branch exists but nothing reads from it; the commented-out step in
   `neon_workflow.yml` would need to run migrations and export the
@@ -64,8 +65,8 @@ Three coordinated changes.
 
 ### 1. Add `[env.preview]` to `wrangler.toml`
 
-Status: scaffolded on 2026-04-26. Replace the placeholder IDs before preview
-smoke testing.
+Status: scaffolded on 2026-05-20. Add the preview KV binding blocks only after
+real namespace IDs exist.
 
 ```toml
 # ─────────────────────────────────────────────────────────────────────────
@@ -81,11 +82,11 @@ vars = { NODE_VERSION = "22" }
 
 [[env.preview.kv_namespaces]]
 binding = "RATE_LIMIT_KV"
-id = "<preview-rate-limit-kv-id>"
+id = "<real-preview-rate-limit-kv-id>"
 
 [[env.preview.kv_namespaces]]
 binding = "CACHE"
-id = "<preview-cache-kv-id>"
+id = "<real-preview-cache-kv-id>"
 ```
 
 Then in Cloudflare Dashboard → **Pages** → **panacea** → **Settings** →

@@ -32,22 +32,21 @@ VITE_API_URL = "https://studypanacea.com"
 VITE_SENTRY_DSN = "https://bc6b64356dcc893fa25429c1a9666565@o4510664011087872.ingest.us.sentry.io/4510664023212032"
 
 # Preview/private-beta staging must not share production state.
-# Replace these placeholder IDs after creating preview namespaces:
+# Do not commit placeholder KV IDs: Wrangler validates every environment block
+# during production deploy and rejects fake namespace IDs. After creating preview
+# namespaces, add [[env.preview.kv_namespaces]] entries with the real hex IDs:
 #   npx wrangler kv:namespace create RATE_LIMIT_KV --preview
 #   npx wrangler kv:namespace create CACHE --preview
 [env.preview]
 
 [env.preview.vars]
 NODE_VERSION = "22"
+VITE_CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuc3R1ZHlwYW5hY2VhLmNvbSQ"
+VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmVzY2RycGV6empoZ3Zlb3R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNTgxNzYsImV4cCI6MjA4MDczNDE3Nn0.iIb2xtAPWLGtN_g75YGESf7WyN6W9pfhA0dCxNx2GaQ"
+VITE_SUPABASE_URL = "https://lzfescdrpezzjhgveotz.supabase.co"
+VITE_API_URL = "https://studypanacea.com"
+VITE_SENTRY_DSN = "https://bc6b64356dcc893fa25429c1a9666565@o4510664011087872.ingest.us.sentry.io/4510664023212032"
 VITE_PRIVATE_BETA_LAUNCH = "true"
-
-[[env.preview.kv_namespaces]]
-binding = "RATE_LIMIT_KV"
-id = "REPLACE_WITH_PREVIEW_RATE_LIMIT_KV_ID"
-
-[[env.preview.kv_namespaces]]
-binding = "CACHE"
-id = "REPLACE_WITH_PREVIEW_CACHE_KV_ID"
 
 # CRITICAL: Add these secrets via Cloudflare Dashboard
 # Cloudflare Dashboard > Workers & Pages > [your project] > Settings > Environment Variables

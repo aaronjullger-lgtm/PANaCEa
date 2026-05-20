@@ -29,13 +29,16 @@ const missingPreviewBindings = requiredBindings.filter(
 const previewPlaceholders = [...wrangler.matchAll(/id\s*=\s*["'](REPLACE_WITH_[^"']+)["']/g)].map(
   (match) => match[1]
 );
+const invalidKvNamespaceIds = [...wrangler.matchAll(/id\s*=\s*["']([^"']+)["']/g)]
+  .map((match) => match[1])
+  .filter((id) => !/^[a-f0-9]{32}$/i.test(id));
 
 const runtimeStrict = process.argv.includes('--runtime');
 const missingRuntime = runtimeStrict
   ? requiredSecrets.filter((key) => !process.env[key] || String(process.env[key]).trim() === '')
   : [];
 
-if (missingDocs.length || missingBindings.length || missingRuntime.length || !hasPreviewEnv || missingPreviewBindings.length) {
+if (missingDocs.length || missingBindings.length || missingRuntime.length || !hasPreviewEnv || invalidKvNamespaceIds.length) {
   if (missingDocs.length) {
     console.error(`Missing required keys in .env.example: ${missingDocs.join(', ')}`);
   }
@@ -48,15 +51,21 @@ if (missingDocs.length || missingBindings.length || missingRuntime.length || !ha
   if (!hasPreviewEnv) {
     console.error('Missing [env.preview] block in wrangler.toml');
   }
-  if (missingPreviewBindings.length) {
-    console.error(`Missing Preview Cloudflare bindings in wrangler.toml: ${missingPreviewBindings.join(', ')}`);
+  if (invalidKvNamespaceIds.length) {
+    console.error(`Invalid Cloudflare KV namespace IDs in wrangler.toml: ${invalidKvNamespaceIds.join(', ')}`);
   }
   process.exit(1);
 }
 
 if (previewPlaceholders.length) {
   console.warn(
-    `Preview environment placeholders still need operator wiring: ${previewPlaceholders.join(', ')}`
+    `Preview environment placeholders are not deployable: ${previewPlaceholders.join(', ')}`
+  );
+}
+
+if (missingPreviewBindings.length) {
+  console.warn(
+    `Preview Cloudflare bindings are not wired yet: ${missingPreviewBindings.join(', ')}`
   );
 }
 
