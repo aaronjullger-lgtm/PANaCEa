@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import GoalsDashboard from '@/components/goals/GoalsDashboard';
+import GoalsDashboard from '@/components/Goals/GoalsDashboard';
 
 const mockGetToken = vi.fn().mockResolvedValue('mock-token');
 
