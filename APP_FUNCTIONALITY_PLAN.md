@@ -1,6 +1,6 @@
 # APP FUNCTIONALITY PLAN
 
-Last updated: 2026-05-17
+Last updated: 2026-05-19
 
 ## 1. Current Understanding Of The App
 
@@ -50,7 +50,7 @@ Functional means:
 
 | Classification | Priority | Status | Issue | Evidence | Next Action |
 | --- | --- | --- | --- | --- | --- |
-| Auth/security issue | MUST FIX | Open | Full authenticated adaptive session is blocked by Clerk E2E auth setup. | Local production build with the test Clerk key reached Clerk sign-in, but the available test user previously returned `needs_second_factor`; current `.env` has no `E2E_CLERK_TEST_EMAIL` / `E2E_CLERK_TEST_PASSWORD`. Session generation/submission contracts pass in tests, and `.env.example` / README now document the required safe E2E variables. | Configure a safe E2E Clerk test user/session without second factor, set `E2E_CLERK_TEST_EMAIL` and `E2E_CLERK_TEST_PASSWORD`, then rerun authenticated production smoke. |
+| Auth/security issue | MUST FIX | Open | Full authenticated adaptive session is blocked by Clerk E2E auth setup. | Local production build with the test Clerk key reached Clerk sign-in, but the available test user previously returned `needs_second_factor`; current repo auth setup uses a custom password helper, and `@clerk/testing` is not installed. Session generation/submission contracts pass in tests. | Prefer Clerk's official Playwright helper path next: install `@clerk/testing`, use a dedicated Clerk dev/test user, set local `CLERK_SECRET_KEY` and `E2E_CLERK_USER_EMAIL`, and rerun authenticated `/study` -> session -> answer/review smoke. |
 | Build/setup blocker | MUST FIX | Closed | `npm run dev:wrangler` was broken with the installed Wrangler command shape. | Previous script mixed a Pages build output directory with a proxy command, and Wrangler rejected it with "Specify either a directory OR a proxy command, not both." | Fixed `dev:wrangler` to run the existing `pages:dev` build-and-serve flow; `BASE_URL=http://localhost:8788 npm run verify:health` passes against it. |
 | Configuration issue | MUST FIX | Closed | Local Express API could not connect to the configured direct Postgres URL because TLS certificate verification rejected the managed/self-signed chain. | `DIRECT_DATABASE_URL` uses `sslmode=require`; `pg-connection-string` currently treats that like `verify-full` unless `uselibpqcompat=true` is set. | Fixed for local/test PG-adapter connections; `/health`, `/api/content/all`, and `/api/drugs/all` now return healthy/200 through Express. |
 | Configuration issue | SHOULD FIX | Documented | Production build on localhost gets Clerk 400s when built with the live custom-domain Clerk key from `wrangler.toml`. | `http://localhost:8788/study` renders the auth gate, but live-key/custom-domain Clerk endpoints return 400 locally. Rebuilding with the test key from `.env` avoids the custom-domain 400 and reaches sign-in. | Use a local/test Clerk publishable key for local auth smoke; keep live/custom-domain key behavior documented as a production-parity limitation on localhost. |
@@ -72,7 +72,11 @@ Functional means:
 | Poor UX | SHOULD FIX | Closed | Several active learning/admin surfaces still used literal `"Loading..."` text, content-spinner patterns, or layout-level conditional loading branches instead of structured loading affordances. | `npm run audit:loading` reported 7 `"Loading..."` entries across `CoreAdaptiveSession`, `QuestionReviewQueue`, `GrandRoundsMode`, and `DailyChallengesHub`; it also counted benign refresh/canonical spinner implementation details as content spinners and flagged 13 conditional loading branches. | Replaced the core session placeholder label, review queue text-only state, Grand Rounds leaderboard/review labels, Daily Challenges status copy, protected-route auth gate spinner, and layout-level loaders for goals, DDx matrix, external medical search, flag feedback, and OSCE order catalog. Tightened the audit to ignore canonical primitives, refresh-icon animations, browser `spin-button` CSS, and structured loading branches. `npm run audit:loading` now reports 0 `"Loading..."` entries, 0 content-spinner patterns, and 0 conditional-loading review candidates. |
 | Data/API issue | SHOULD FIX | Closed | Core offline/sync replay parsed internal API JSON manually instead of using shared API envelope helpers. | `node scripts/audit-api-envelope-callers.mjs --fail-on-findings` flagged `lib/services/sync/syncManager.ts` and `lib/services/offlineSyncService.ts`; these drain offline answers/reviews into `/api/questions/attempt`, `/api/drills/submit-reviews`, and legacy queued-operation endpoints. | Added `unwrapApiEnvelope` / `getApiEnvelopeError` handling for attempt IDs, batch review results, sync error payloads, and conflict payloads; added a conflict-envelope regression test. The audit no longer lists the core sync files, though lower-priority UI/admin/toolkit callers remain. |
 | Developer workflow gap | SHOULD FIX | Closed | `AGENTS.md` is untracked and local skill docs had stale text saying no `AGENTS.md` exists. | `AGENTS.md` exists in the working tree; `.agents/skills/panacea-navigator/SKILL.md` said the repo did not currently have one. | Fixed `panacea-navigator` to point at `AGENTS.md`; removed empty placeholder skill directories; skill audit passes. |
-| Testing gap | SHOULD FIX | Open | `/practice` private-beta mode discoverability has test coverage, but route-level browser smoke is still blocked by auth. | `tests/privateBetaVisibility.test.ts` and `tests/training-modes.test.ts` pass; `/practice` is wrapped in `AuthenticatedRoute`, so browser verification needs the same non-2FA Clerk test session as the core flow. | Run `/practice` browser smoke after the Clerk E2E auth blocker is resolved. |
+| Testing gap | SHOULD FIX | Documented | Authenticated route-level browser smoke still depends on a safe Clerk E2E session, but local guest-mode visual smoke is no longer blocked. | Final guest-mode screenshot QA covered `/study`, `/study/review`, `/practice`, `/study/path`, `/study/knowledge`, `/study/utilities`, `/clinical-profile`, `/gap-analysis`, `/clinical-eye`, `/progress`, `/medical-database`, and `/study?modal=settings` across five desktop widths with 60 captures, no auth wall, no private-beta gate, and no document-level horizontal overflow. | Use the official `@clerk/testing/playwright` path documented in `docs/ui-redesign/AUTH_QA_LIMITATION.md` for authenticated Playwright QA. |
+| UX issue | SHOULD FIX | Closed | Local guest/API-failure visual QA still exposed placeholder-like Study Path, Clinical Profile, and Weak Areas pages. | Screenshots showed single-card unavailable states for `/study/path`, `/clinical-profile`, and `/gap-analysis` when no live authenticated payload was available. | Added guest-safe console preview data and route surfaces that keep useful planning/profile/gap-analysis structure visible without disabling auth or writing fake progress. |
+| UX issue | SHOULD FIX | Closed | Settings/profile nav target rendered the modal beneath app chrome. | `/study?modal=settings` screenshot showed the sidebar/topbar layered above the modal. | Raised the settings modal overlay stack and widened/restyled the modal as a dark control-center surface; final screenshot metadata shows no overflow. |
+| UX/routing issue | SHOULD FIX | Closed | Existing guest mode opened the app shell but protected route wrappers still redirected guest users back to `/study`. | UI redesign visual QA in local guest mode showed `/practice`, `/study/path`, `/study/knowledge`, and `/progress` collapsing to the dashboard. | `AuthenticatedRoute` now allows the existing local guest mode through route rendering while server/API authorization remains Clerk-token based. |
+| UX/runtime issue | SHOULD FIX | Closed | `/progress` could render an empty content frame when analytics returned no usable data and no surfaced error. | Local Vite/guest smoke with no Express API backend rendered the shell and a blank main frame for `/progress`. | Added a structured analytics-unavailable state with retry and practice actions. |
 | Refactor/maintainability issue | SHOULD FIX | Closed | Duplicate Daily Triad client services disagreed on the production API envelope. | `components/dashboard/DailyTriad.tsx` imports `@/services/domain`, while `functions/api/dashboard/daily-triad.ts` returns `{ success, data }`; the domain service previously parsed a raw object and the core service had a separate partial parser. | Domain Daily Triad service is now canonical and unwraps the shared API envelope; the core service re-exports it for compatibility. |
 | Refactor/maintainability issue | SHOULD FIX | Closed | Question pool monitor refill decisions were split between staging and learner-serving pools. | `services/ai/batchGeneratorService.ts` writes `PreGeneratedQuestion`, while `services/ai/poolMonitorService.ts` counted `stagingQuestion`. | AI pool monitor now delegates to the core `PreGeneratedQuestion` monitor so thresholds inspect the same pool that batch generation refills. |
 | Refactor/maintainability issue | SHOULD FIX | Closed | Dead post-answer explanation panel duplicated the active rationale component. | Active answer feedback imports `components/questions/ExplanationPanel.tsx`; `rg` found no code consumers of `components/panels/ExplanationPanel.tsx` beyond its stale barrel export. | Deleted the old panel copy, removed the barrel export, and updated the stale ClinicalTrials reference. |
@@ -233,6 +237,9 @@ Verified:
 14. `/api/srs/due` and `/api/srs/next` preserve normalized question identity fields for due-card study launchers and submit paths
 15. approved generated-question promotion now mirrors normalized answer choices and the active correct-rationale explanation for learner-facing canonical questions
 16. guided post-answer explanations now adapt their chunk framing and knowledge checks to the learner's support level, first-clue reflection, and hint usage
+17. Clinical Study Console shell renders in guest-mode visual QA across `/study`, `/study/review`, `/practice`, `/study/path`, `/study/knowledge`, `/study/utilities`, `/clinical-profile`, `/gap-analysis`, `/clinical-eye`, `/progress`, `/medical-database`, and `/study?modal=settings`
+18. `/progress` no-data/no-error analytics state renders a visible page header and recovery action instead of a blank frame
+19. Study Path, Clinical Profile, and Gap Analysis render guest-safe clinical preview workspaces when live authenticated data is unavailable
 
 Not verified:
 
@@ -315,10 +322,29 @@ The remaining browser-level functional blocker is external: a safe Clerk E2E use
 
 Latest consolidation pass is complete for the current multi-chat change set. The repo now has one retained visual dependency direction (`motion` plus on-demand raw `three`), one lightweight AI Gateway URL helper for URL-only tests, stale repo-audit output removed, and final validation passing across typecheck, lint, critical tests, full Vitest, memory verification, anatomy asset verification, and production build.
 
+Latest UI/UX redesign continuation is in place. The authenticated app foundation now uses a dark Clinical Study Console shell with one persistent navigation rail, a restrained top command bar, expanded product navigation, tightened workspace primitives, and route-level framing for dashboard, practice, study plan, knowledge, review, clinical images, and progress. The pass also fixed flawed route/runtime behaviors found during visual QA: guest mode can render protected route pages instead of being redirected back to `/study`, `/progress` renders a structured analytics-unavailable state, `/study/review` is now a real Review workspace, `DrillViewRouter` no longer injects private-beta placeholders into non-drill views, `/clinical-eye` renders the real Clinical Eye workspace from the primary nav, and Toolkit calculator cards no longer use nested interactive button markup.
+
 ## 9. Completed Tasks
 
 Codex-made changes in this recovery pass:
 
+- `docs/ui-redesign/AUTONOMOUS_UI_AUDIT.md`: documents the discovered UI stack, route map, design defects, implementation route, and verification plan for the Clinical Study Console redesign.
+- `docs/ui-redesign/DESIGN_SYSTEM_IMPLEMENTATION.md`: documents the new dark clinical shell, shared primitives, runtime guardrails, and demo/fallback data locations.
+- `docs/ui-redesign/AUTONOMOUS_REDESIGN_SUMMARY.md`: summarizes pages rebuilt, foundation decisions, verification notes, and remaining limitations.
+- `docs/ui-redesign/CURRENT_BRANCH_AUDIT.md`, `ROUTE_CONSISTENCY_AUDIT.md`, `VISUAL_COMPLETION_ISSUES.md`, `DESIGN_SYSTEM_HARDENING.md`, `AUTH_QA_LIMITATION.md`, `LINT_WARNING_TRIAGE.md`, `BUILD_CHUNK_TRIAGE.md`, `ACCESSIBILITY_PASS.md`, and `AUTONOMOUS_COMPLETION_SUMMARY.md`: document the autonomous completion audit, screenshot QA, route fixes, Clerk limitation, verification results, and merge-readiness recommendation.
+- `docs/ui-redesign/screenshots/final/`: contains final guest-mode screenshots and `qa-results.json` for 12 route targets across 5 desktop widths.
+- `components/clinical-console/studyDemoData.ts`: centralizes shell-level fallback study context used by the app chrome.
+- `pages/ReviewPage.tsx`: adds the dedicated Review workspace for due queue and memory triage.
+- `components/layout/AppLayout.tsx` and `components/layout/NavRail.tsx`: rebuilt the authenticated shell as a persistent clinical navigation rail plus sticky command bar.
+- `config/navigation.ts`: expanded global navigation into study, clinical, knowledge, plan, and system sections.
+- `index.css`, `lib/tokens/workspacePalette.ts`, `components/workspace/WorkspacePrimitives.tsx`, `components/ui/button.tsx`, `components/studypanacea/MedicalGlassCard.tsx`, and `components/studypanacea/PremiumCTAButton.tsx`: retuned the visual foundation around the dark clinical console palette and tighter route surfaces.
+- `components/dashboard/adaptive/page/DashboardShell.tsx` and `components/dashboard/adaptive/page/DashboardShellSections.tsx`: removed the competing dashboard sidebar, reframed the dashboard as today's study prescription, and fixed the top-bar breakpoint so copy is not squeezed at 1440px.
+- `pages/PracticePage.tsx`, `pages/ProgressPage.tsx`, `components/dashboard/StudyPathDashboard/index.tsx`, and `components/knowledge/KnowledgeBaseHub.tsx`: reframed major routes around route-specific clinical actions and fallback states.
+- `components/auth/AuthenticatedRoute.tsx`: preserves signed-out protection while honoring the existing local guest mode for route rendering.
+- `components/layout/DrillViewRouter.tsx`: only renders drill-owned view IDs, preventing private-beta placeholders from appearing on unrelated routes.
+- `components/toolkit/ToolkitHub.tsx`: removes nested button markup from calculator/tool cards while preserving keyboard activation and pin controls.
+- `config/routes.ts`, `config/routeRegistry.ts`, `config/lazyComponents.tsx`, and `config/AppRoutes.tsx`: register the new `/study/review` route and lazy Review page.
+- `lib/modes/privateBetaVisibility.ts`: allows the primary Clinical Images route to render the existing Clinical Eye workspace.
 - `APP_FUNCTIONALITY_PLAN.md`: created and updated as the recovery plan.
 - `README.md`: aligned prerequisites with Node 22, changed setup command to `npm ci`, fixed `.env.example` copy command, changed local migration command to `npm run db:migrate:dev`, and fixed deployment/env doc links.
 - `README.md`: clarified Express vs Wrangler local API targets for maintained `/api/study/*` routes.
@@ -702,6 +728,16 @@ Passed:
 - 2026-05-17 consolidation: `npm run test`: passed, 517 files / 9648 tests, 1 skipped.
 - 2026-05-17 consolidation: `npm run lint`: passed with 0 errors and 297 warnings under the configured `--max-warnings 2000` threshold. Warnings are existing raw design-token hex warnings plus one unused eslint-disable warning.
 - 2026-05-17 consolidation: `npm run build`: passed. Build still emits the known >700 kB chunk warning; Three is isolated as its own lazy chunk.
+- 2026-05-19 UI redesign: `npm run typecheck`: passed.
+- 2026-05-19 UI redesign: `npm run build`: passed. Build still emits the known >700 kB chunk warnings.
+- 2026-05-19 UI redesign: `npm run lint`: passed with 0 errors and 270 warnings under the configured `--max-warnings 2000` threshold after the guest-mode continuation cleanup.
+- 2026-05-19 UI redesign: `npm run test:critical`: passed, 6 files / 143 tests.
+- 2026-05-19 UI redesign: `git diff --check`: passed.
+- 2026-05-19 UI redesign: Browser plugin smoke opened local `/study`; local guest-mode Playwright QA completed the broader route matrix.
+- 2026-05-19 UI redesign: existing dev auto-login was attempted; Clerk returned the known second-factor / Client Trust blocker.
+- 2026-05-19 UI redesign: Playwright guest-mode visual QA covered `/study`, `/study/review`, `/practice`, `/study/path`, `/study/knowledge`, `/study/utilities`, `/clinical-profile`, `/gap-analysis`, `/clinical-eye`, `/progress`, `/medical-database`, and `/study?modal=settings` at `1280x800`, `1440x900`, `1512x982`, `1728x1117`, and `1920x1080`; 60 screenshots were generated with no document-level horizontal overflow, no auth wall, and no private-beta gate.
+- 2026-05-19 UI redesign continuation: after guest-mode Knowledge/API/banner cleanup, the refreshed final screenshot matrix reports 60 captures, 0 failures, 0 overflow, 0 auth walls, 0 private-beta gates, 0 alert/status banners, 0 console-error captures, and 0 bad-response captures.
+- 2026-05-19 UI redesign continuation: final verification rerun passed `npm run typecheck`, `npm run build`, `npm run lint`, `npm run test:critical`, and `git diff --check`.
 
 Failed or warnings:
 
@@ -717,6 +753,7 @@ Failed or warnings:
 - 2026-05-17 continuation: earlier default full-suite Vitest runs had worker timeout/scheduling issues. This is superseded by the later consolidation run where default `npm run test` passed, 517 files / 9648 tests, 1 skipped.
 - 2026-05-17 continuation: after core sync envelope hardening, `node scripts/audit-api-envelope-callers.mjs --fail-on-findings` still fails with 55 lower-priority unaudited internal API JSON callers across admin, toolkit, graph/explorer, and mode surfaces. The core sync services are no longer listed.
 - A direct one-file `tsc routes/sync.ts ...` attempt could not resolve the repo `@/*` path alias without a temporary tsconfig; `eslint`, production typecheck, and a `tsx` import smoke were used instead.
+- 2026-05-19 UI redesign: Vite-only browser QA does not provide the full backend/API surface. Guest-mode visual routes now avoid unnecessary backend/external calls, but production-parity API smoke still requires Wrangler or the local Express server.
 
 Not run:
 
@@ -727,9 +764,10 @@ Not run:
 
 ## 11. Backlog
 
-- Configure a safe Clerk E2E user/session without second factor and rerun authenticated `/study` -> adaptive session generation -> answer submission smoke.
+- Configure a safe Clerk E2E user/session through Clerk's official Playwright helper and rerun authenticated `/study` -> adaptive session generation -> answer submission smoke.
 - Keep live custom-domain Clerk 400s documented as a localhost production-parity limitation unless production/preview auth is affected.
 - Browser-smoke `/practice` after private-beta tests if route-level UI confidence is needed.
+- Continue replacing route-specific empty/loading/error states that still feel generic after the shell redesign, prioritizing Study Plan no-data and dashboard below-fold skeleton density.
 - Express-only sync/drill/session compatibility identity audit is closed for now: `routes/sync.ts` writes saved-question identities and has route-level regression coverage, and the remaining Express question/drill paths do not create attempt/review/session-link rows.
 - Continue reducing `scripts/audit-api-envelope-callers.mjs --fail-on-findings` findings in priority order: learner-facing modes and session-adjacent components first, then admin/toolkit/reference surfaces. Core sync/offline replay is closed.
 - Keep monitoring bundle size and lazy 3D/anatomy loading.
@@ -739,11 +777,11 @@ Not run:
 
 Resolve the remaining external auth blocker and rerun browser-level core-flow smoke when safe Clerk E2E credentials are available:
 
-1. Configure a safe Clerk E2E user/session without second factor.
-2. Set `E2E_CLERK_TEST_EMAIL` and `E2E_CLERK_TEST_PASSWORD` locally without printing secrets.
-3. Run `npm run dev:wrangler`.
-4. Run `E2E_REQUIRE_AUTH=1 BASE_URL=http://localhost:8788 npm run test:e2e:production-smoke`.
-5. If auth completes, verify `/study` adaptive session generation/submission and `/practice` private-beta route smoke.
+1. Install and wire `@clerk/testing` for Playwright auth setup.
+2. Configure a dedicated Clerk dev/test user.
+3. Set `CLERK_SECRET_KEY` and `E2E_CLERK_USER_EMAIL` locally without printing secrets.
+4. Run `npm run dev:wrangler`.
+5. Run authenticated Playwright smoke for `/study`, `/practice`, `/study/review`, answer submission, review submission, and progress updates.
 6. If auth still fails, document the exact Clerk response and choose the next unblocked local backlog item.
 
 If Clerk E2E credentials are still unavailable, the next unblocked local task is to continue reducing unaudited API-envelope callers in learner-facing mode/session-adjacent components.

@@ -4,11 +4,10 @@
  */
 
 import React, { useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { CalendarClock, Search, Settings, Shield, UserCircle } from 'lucide-react';
-import { AppBrand } from './AppBrand';
+import { Activity, Bell, BrainCircuit, CalendarClock, Search, Settings, Shield, UserCircle } from 'lucide-react';
 import { NavRail } from './NavRail';
 import { ROUTES } from '@/config/routes';
 import { useUser } from '@clerk/clerk-react';
@@ -17,6 +16,7 @@ import { OfflineSyncIndicator } from '@/components/offline/OfflineSyncIndicator'
 import { useStreakAutoFreeze } from '@/hooks/useStreakAutoFreeze';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { toast } from '@/lib/toast';
+import { clinicalConsoleDemoData } from '@/components/clinical-console/studyDemoData';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -39,18 +39,18 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   contentClassName,
 }) => {
   const prefersReducedMotion = useReducedMotion();
-  const navigate = useNavigate();
   const { user } = useUser();
   const { profile } = useUserProfile();
   const settingsButtonRef = React.useRef<HTMLButtonElement>(null);
-  const chromeSurface = 'color-mix(in srgb, var(--color-bg-secondary) 94%, var(--color-bg-primary) 6%)';
-  const chromeBorder = 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)';
+  const chromeSurface =
+    'linear-gradient(180deg, color-mix(in srgb, var(--color-bg-secondary) 92%, var(--color-bg-primary) 8%), color-mix(in srgb, var(--color-bg-secondary) 82%, transparent))';
+  const chromeBorder = 'color-mix(in srgb, var(--color-text-primary) 10%, transparent)';
   const chromeShadow =
-    'inset 0 -1px 0 color-mix(in srgb, var(--color-text-primary) 4%, transparent)';
+    'inset 0 -1px 0 color-mix(in srgb, var(--color-accent) 14%, transparent), 0 16px 48px -44px rgba(0,0,0,0.9)';
   const appCanvasBackground =
-    'linear-gradient(180deg, color-mix(in srgb, var(--color-bg-primary) 98%, var(--color-bg-secondary) 2%) 0%, var(--color-bg-primary) 58%, color-mix(in srgb, var(--color-bg-primary) 96%, var(--color-accent) 4%) 100%)';
+    'radial-gradient(circle at 8% 8%, color-mix(in srgb, var(--color-accent) 9%, transparent), transparent 28%), radial-gradient(circle at 84% 0%, rgba(167,139,250,0.08), transparent 30%), linear-gradient(180deg, var(--color-bg-primary) 0%, color-mix(in srgb, var(--color-bg-primary) 95%, var(--color-bg-secondary) 5%) 100%)';
   const headerActionClass =
-    'flex min-h-[40px] min-w-[40px] items-center justify-center rounded-[10px] border p-2 text-[var(--color-text-muted)] transition-all duration-200 ease-premium hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]';
+    'flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg border p-2 text-[var(--color-text-muted)] transition-all duration-200 ease-premium hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]';
   const openSearch = () => {
     if (onSearchClick) {
       onSearchClick();
@@ -114,37 +114,51 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             top: 0,
             zIndex: 50,
             height: 'var(--header-height, 4rem)',
+            marginLeft: showNavRail ? 'var(--nav-rail-width, 248px)' : '0',
+            width: showNavRail ? 'calc(100% - var(--nav-rail-width, 248px))' : '100%',
             background: chromeSurface,
             borderBottom: `1px solid ${chromeBorder}`,
             boxShadow: chromeShadow,
           }}
         >
           <div
-            className="h-full w-full max-w-[100vw] items-center gap-3 px-3 sm:px-4"
+            className="h-full w-full max-w-[100vw] items-center gap-3 px-3 sm:px-4 lg:px-6"
             style={{
               height: '100%',
               width: '100%',
               display: 'grid',
-              gridTemplateColumns: 'auto minmax(10rem, 34rem) auto',
+              gridTemplateColumns: 'minmax(12rem, 1fr) minmax(12rem, 34rem) auto',
               alignItems: 'center',
             }}
           >
-            <AppBrand
-              size="sm"
-              asLink
-              className="min-w-0"
-              onClick={() => {
-                navigate(ROUTES.STUDY);
-              }}
-            />
+            <div className="hidden min-w-0 items-center gap-3 md:flex">
+              <div
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--color-accent) 26%, transparent)',
+                  background: 'color-mix(in srgb, var(--color-accent) 11%, transparent)',
+                }}
+                aria-hidden="true"
+              >
+                <Activity className="h-4 w-4 text-[var(--color-accent)]" />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
+                  Clinical Study Console
+                </p>
+                <p className="truncate text-xs text-[var(--color-text-muted)]">
+                  {clinicalConsoleDemoData.student.goal}
+                </p>
+              </div>
+            </div>
             <button
               type="button"
               onClick={openSearch}
-              className="hidden min-h-[40px] min-w-0 items-center gap-2 rounded-[12px] border px-3 text-left text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] sm:flex"
+              className="hidden min-h-[42px] min-w-0 items-center gap-2 rounded-lg border px-3 text-left text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] sm:flex"
               style={{
                 borderColor: chromeBorder,
                 background:
-                  'color-mix(in srgb, var(--color-bg-primary) 58%, var(--color-bg-secondary) 42%)',
+                  'color-mix(in srgb, var(--color-bg-primary) 50%, var(--color-bg-secondary) 50%)',
               }}
               aria-label="Search conditions, drugs, labs, procedures"
             >
@@ -166,7 +180,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 <Search className="h-4 w-4" />
               </button>
               <div
-                className="hidden min-h-[40px] items-center gap-2 rounded-[10px] border px-3 text-xs font-medium text-[var(--color-text-secondary)] lg:flex"
+                className="hidden min-h-[40px] items-center gap-2 rounded-lg border px-3 text-xs font-medium text-[var(--color-text-secondary)] lg:flex"
                 style={{
                   borderColor: chromeBorder,
                   background:
@@ -177,6 +191,26 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 <CalendarClock className="h-4 w-4 text-[var(--color-accent)]" aria-hidden />
                 <span>{examCountdown}</span>
               </div>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event('panacea:open-command-palette'))}
+                className="hidden min-h-[40px] items-center gap-2 rounded-lg border px-3 text-xs font-semibold text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)]/10 md:flex"
+                style={{ borderColor: 'color-mix(in srgb, var(--color-accent) 24%, transparent)' }}
+                aria-label="Open tutor"
+                title="Tutor"
+              >
+                <BrainCircuit className="h-4 w-4" aria-hidden />
+                <span>Tutor</span>
+              </button>
+              <button
+                type="button"
+                className={headerActionClass}
+                style={{ borderColor: chromeBorder }}
+                aria-label="Notifications"
+                title="Notifications"
+              >
+                <Bell className="h-4 w-4" />
+              </button>
               <OfflineSyncIndicator />
               {(user?.publicMetadata?.role === 'admin' || user?.publicMetadata?.role === 'superadmin') && (
                 <Link
@@ -208,7 +242,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 type="button"
                 onClick={onSettingsClick}
                 disabled={!onSettingsClick}
-                className="hidden min-h-[40px] items-center gap-2 rounded-[999px] border px-2.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-secondary)] md:flex"
+                className="hidden min-h-[40px] items-center gap-2 rounded-lg border px-2.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-secondary)] md:flex"
                 style={{ borderColor: chromeBorder }}
                 aria-label={`Profile: ${profileName}`}
                 title={profileName}

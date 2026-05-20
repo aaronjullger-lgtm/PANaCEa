@@ -60,6 +60,13 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState<'search' | 'results' | 'health'>('search');
 
+  useEffect(() => {
+    if (activeTab !== 'health' || databaseHealth.length > 0) return;
+    void checkDatabaseHealth().catch(() => {
+      // The hook exposes the error state; avoid duplicate console noise.
+    });
+  }, [activeTab, checkDatabaseHealth, databaseHealth.length]);
+
   // Perform initial search if there's an initial query
   useEffect(() => {
     if (initialQuery.trim()) {

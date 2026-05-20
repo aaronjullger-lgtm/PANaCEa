@@ -9,7 +9,6 @@ import { DashboardSlot } from './DashboardSlot';
 import {
   AdaptiveSignalStack,
   DashboardCommandBrief,
-  DashboardSidebar,
   DashboardTopBar,
   DeferredDashboardWidget,
   MobileDashboardNav,
@@ -137,9 +136,7 @@ export function DashboardShell({ viewModel }: { viewModel: DashboardViewModel })
 
       <div className="mx-auto max-w-[96rem] space-y-4">
         <MobileDashboardNav onOpenSettings={context.actions.onOpenSettings} />
-        <div className="grid gap-5 xl:grid-cols-[14.5rem_minmax(0,1fr)_21rem]">
-          <DashboardSidebar onOpenSettings={context.actions.onOpenSettings} />
-
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_21rem]">
           <section className="min-w-0 space-y-6" aria-label="StudyPanacea command center">
             <DashboardTopBar context={context} onOpenTutor={() => openTutor()} />
 

@@ -11,14 +11,12 @@ import {
   ChevronRight,
   Clock,
   RefreshCw,
-  Target,
   TrendingUp,
   Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { InlineSpinner } from '@/components/loading';
 import {
-  WorkspaceEmptyState,
   WorkspaceHeroStrip,
   WorkspaceMetricCard,
   WorkspacePage,
@@ -33,6 +31,8 @@ import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope'
 import type { RecommendationResponse, StudyPlan } from '@/types';
 import { useToast } from '@/contexts/ToastContext';
 import { ROUTES } from '@/config/routes';
+import { clinicalConsoleDemoData } from '@/components/clinical-console/studyDemoData';
+import { workspaceAccent } from '@/lib/tokens';
 import ProgressProjectionChart from './ProgressProjectionChart';
 import PlanAlternativesModal from './PlanAlternativesModal';
 import FatigueAlertBanner from './FatigueAlertBanner';
@@ -220,6 +220,192 @@ const StudyPathDashboard = () => {
     }
   };
 
+  const renderFallbackStudyPath = ({
+    title,
+    subtitle,
+    reason,
+    tone,
+  }: {
+    title: string;
+    subtitle: string;
+    reason: string;
+    tone: 'warning' | 'empty';
+  }) => {
+    const preview = clinicalConsoleDemoData.studyPathPreview;
+    const reasonTone = tone === 'warning' ? workspaceAccent.rose : workspaceAccent.amber;
+
+    return (
+      <WorkspacePage density="wide" mode="analytics">
+        <WorkspaceReveal>
+          <WorkspacePageHeader
+            meta={{
+              badge: 'Study Architect',
+              badgeTone: 'amber',
+              title,
+              subtitle,
+              status: 'Guest-safe preview',
+              backLabel: 'Back to Study',
+              onBack: () => navigate(ROUTES.STUDY),
+              primaryAction: {
+                label: 'Retry optimizer',
+                onClick: () => mutate(),
+                icon: RefreshCw,
+              },
+              secondaryActions: [
+                {
+                  label: 'Open Practice',
+                  onClick: () => navigate(ROUTES.PRACTICE),
+                },
+              ],
+            }}
+          />
+        </WorkspaceReveal>
+
+        <WorkspaceReveal delay={0.04}>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <WorkspaceMetricCard
+              label="Preview workload"
+              value={preview.totalStudyTime}
+              detail={`${preview.cadence} with review work sequenced before new content.`}
+              icon={Clock}
+              accent={workspaceAccent.amber}
+            />
+            <WorkspaceMetricCard
+              label="Retention target"
+              value={preview.retentionLift}
+              detail="Expected lift pattern once a live optimizer can use authenticated performance data."
+              icon={TrendingUp}
+              accent={workspaceAccent.sage}
+            />
+            <WorkspaceMetricCard
+              label="Fatigue load"
+              value={preview.fatigueRisk}
+              detail="Keeps timed blocks away from the densest repair sessions."
+              icon={Zap}
+              accent={workspaceAccent.rose}
+            />
+            <WorkspaceMetricCard
+              label="Blueprint lane"
+              value={preview.coverage}
+              detail="High-yield systems represented in the current console preview."
+              icon={Calendar}
+              accent={workspaceAccent.steel}
+            />
+          </div>
+        </WorkspaceReveal>
+
+        <WorkspaceReveal delay={0.08}>
+          <WorkspaceHeroStrip accent={workspaceAccent.amber}>
+            <WorkspaceSplit className="items-start">
+              <div className="space-y-4">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
+                  Route architecture preview
+                </p>
+                <h2 className="heading-fluid-lg max-w-3xl font-semibold text-[var(--color-text-primary)]">
+                  Repair first, then transfer under timing pressure.
+                </h2>
+                <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                  {preview.rationale}
+                </p>
+              </div>
+
+              <WorkspaceSurface accent={reasonTone} role={tone === 'warning' ? 'alert' : 'reference'}>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                  <div className="workspace-icon-tile flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-[var(--color-text-primary)]">
+                    <AlertTriangle className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                      Live plan status
+                    </p>
+                    <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                      {reason}
+                    </p>
+                    <p className="text-xs leading-6 text-[var(--color-text-muted)]">
+                      This preview is not accepted or written to your account. Retry when the
+                      authenticated optimizer is available, or start Practice from the same signal set.
+                    </p>
+                  </div>
+                </div>
+              </WorkspaceSurface>
+            </WorkspaceSplit>
+          </WorkspaceHeroStrip>
+        </WorkspaceReveal>
+
+        <WorkspaceReveal delay={0.12}>
+          <WorkspaceSection
+            title="Route map"
+            subtitle="A representative weekly structure for the current medical console direction."
+            action={
+              <Button type="button" size="sm" onClick={() => navigate(ROUTES.PRACTICE)}>
+                Start practice
+              </Button>
+            }
+          >
+            <div className="grid gap-4 lg:grid-cols-2">
+              {preview.sessions.map((session) => (
+                <WorkspaceSurface key={`${session.day}-${session.label}`} accent={workspaceAccent.steel}>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="workspace-chip rounded-full px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+                          {session.day}
+                        </span>
+                        <span className="text-xs font-medium text-[var(--color-accent-secondary)]">
+                          {session.duration}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">
+                        {session.label}
+                      </h3>
+                      <p className="text-sm text-[var(--color-text-secondary)]">{session.action}</p>
+                    </div>
+                    <ChevronRight className="hidden h-5 w-5 shrink-0 text-[var(--color-text-muted)] sm:block" />
+                  </div>
+                  <div className="mt-4 grid gap-2">
+                    {session.topics.map((topic) => (
+                      <div
+                        key={topic}
+                        className="workspace-subsurface-soft rounded-lg px-3.5 py-2.5 text-sm text-[var(--color-text-secondary)]"
+                      >
+                        {topic}
+                      </div>
+                    ))}
+                  </div>
+                </WorkspaceSurface>
+              ))}
+            </div>
+          </WorkspaceSection>
+        </WorkspaceReveal>
+
+        <WorkspaceReveal delay={0.16}>
+          <WorkspaceSurface accent={workspaceAccent.plum} role="reference">
+            <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+              <div className="space-y-2">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                  Safety guardrails
+                </p>
+                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">
+                  The plan should change behavior, not just fill a calendar.
+                </h2>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                {preview.guardrails.map((guardrail) => (
+                  <div
+                    key={guardrail}
+                    className="workspace-subsurface-soft rounded-lg p-4 text-sm leading-6 text-[var(--color-text-secondary)]"
+                  >
+                    {guardrail}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </WorkspaceSurface>
+        </WorkspaceReveal>
+      </WorkspacePage>
+    );
+  };
+
   if (isLoading) {
     return (
       <WorkspacePage density="wide" mode="error">
@@ -264,89 +450,24 @@ const StudyPathDashboard = () => {
         ? error.message
         : 'Unable to load your study plan. Please try again.';
 
-    return (
-      <WorkspacePage density="wide" mode="error">
-        <WorkspaceReveal>
-          <WorkspacePageHeader
-            meta={{
-              badge: 'Study Path',
-              badgeTone: 'amber',
-              title: 'Your study route is unavailable right now.',
-              subtitle:
-                'The optimizer could not return a safe recommendation, so the plan is falling back instead of guessing.',
-              backLabel: 'Back to Study',
-              onBack: () => navigate(ROUTES.STUDY),
-              primaryAction: {
-                label: 'Try again',
-                onClick: () => mutate(),
-              },
-              secondaryActions: [
-                {
-                  label: 'Open Practice instead',
-                  onClick: () => navigate(ROUTES.PRACTICE),
-                },
-              ],
-            }}
-          />
-        </WorkspaceReveal>
-        <WorkspaceReveal delay={0.05}>
-          <WorkspaceSurface accent="#a67f7f" role="alert">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--color-data-fail)]/25 bg-[var(--color-data-fail)]/10">
-                <AlertTriangle className="h-5 w-5 text-[var(--color-data-fail)]" aria-hidden="true" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">
-                  Study plan unavailable
-                </h2>
-                <p className="text-sm leading-7 text-[var(--color-text-secondary)]">
-                  {safeMessage}
-                </p>
-                <p className="text-sm leading-7 text-[var(--color-text-muted)]">
-                  This usually means the optimizer lacked a safe enough signal or the request failed mid-flight. Retry above, or jump into Practice while the plan recalculates.
-                </p>
-              </div>
-            </div>
-          </WorkspaceSurface>
-        </WorkspaceReveal>
-      </WorkspacePage>
-    );
+    return renderFallbackStudyPath({
+      title: 'Study path console is running in fallback mode.',
+      subtitle:
+        'The authenticated optimizer could not return a live plan, so this route shows the same planning model without pretending it has been saved.',
+      reason: safeMessage,
+      tone: 'warning',
+    });
   }
 
   if (!plan) {
-    return (
-      <WorkspacePage density="wide" mode="error">
-        <WorkspaceReveal>
-          <WorkspacePageHeader
-            meta={{
-              badge: 'Study Path',
-              badgeTone: 'amber',
-              title: 'No study path has been generated yet.',
-              subtitle:
-                'The optimizer needs another pass before it can turn your current signals into a plan.',
-              backLabel: 'Back to Study',
-              onBack: () => navigate(ROUTES.STUDY),
-              primaryAction: {
-                label: 'Generate plan',
-                onClick: () => mutate(),
-              },
-            }}
-          />
-        </WorkspaceReveal>
-        <WorkspaceReveal delay={0.05}>
-          <WorkspaceEmptyState
-            icon={Target}
-            title="No study plan generated"
-            description="We couldn't generate a study plan from the current data. Try again in a moment."
-            action={
-              <Button type="button" size="sm" onClick={() => mutate()}>
-                Generate plan
-              </Button>
-            }
-          />
-        </WorkspaceReveal>
-      </WorkspacePage>
-    );
+    return renderFallbackStudyPath({
+      title: 'Build a route from the next useful study signal.',
+      subtitle:
+        'No persisted study path is available in this session yet, but the workspace still shows the expected structure and next actions.',
+      reason:
+        'No live plan was returned for the current session. Generate a plan after authenticated performance data is available, or start Practice to create fresh signals.',
+      tone: 'empty',
+    });
   }
 
   return (
@@ -354,11 +475,11 @@ const StudyPathDashboard = () => {
       <WorkspaceReveal>
         <WorkspacePageHeader
           meta={{
-            badge: 'Study Path',
+            badge: 'Study Architect',
             badgeTone: 'amber',
-            title: 'A study route that shows its tradeoffs.',
+            title: 'A study plan that shows the tradeoffs.',
             subtitle:
-              'Review the recommended path, see how hard it pushes, and compare alternatives before you commit your next week of study time.',
+              'Convert weak areas, due reviews, question blocks, and clinical case work into a realistic weekly route.',
             status: formatFatigueLabel(fatigueRisk),
             backLabel: 'Back to Study',
             onBack: () => navigate(ROUTES.STUDY),
@@ -426,10 +547,10 @@ const StudyPathDashboard = () => {
           <WorkspaceSplit className="items-start">
             <div className="space-y-4">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
-                Plan summary
+                Study prescription architecture
               </p>
               <h2 className="heading-fluid-lg max-w-3xl font-semibold text-[var(--color-text-primary)]">
-                This route balances coverage, retention, and fatigue instead of optimizing for only one.
+                This route balances coverage, retention, and fatigue instead of optimizing for only one metric.
               </h2>
               <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
                 {rationale ||

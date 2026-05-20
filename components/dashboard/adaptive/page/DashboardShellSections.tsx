@@ -37,12 +37,12 @@ type DashboardNavItem = {
 };
 
 const dashboardNavItems: DashboardNavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', href: ROUTES.STUDY, icon: LayoutDashboard },
+  { id: 'dashboard', label: 'Console', href: ROUTES.STUDY, icon: LayoutDashboard },
   { id: 'practice', label: 'Practice', href: ROUTES.PRACTICE, icon: Stethoscope },
-  { id: 'clinical-images', label: 'Clinical Images', href: ROUTES.CLINICAL_EYE, icon: Microscope },
+  { id: 'clinical-images', label: 'Images', href: ROUTES.CLINICAL_EYE, icon: Microscope },
   { id: 'weak-areas', label: 'Weak Areas', href: '/gap-analysis', icon: Target },
   { id: 'study-plan', label: 'Study Plan', href: ROUTES.STUDY_PATH, icon: CalendarDays },
-  { id: 'review', label: 'Review', href: `${ROUTES.STUDY}?mode=review`, icon: RotateCcw },
+  { id: 'review', label: 'Review', href: ROUTES.STUDY_REVIEW, icon: RotateCcw },
   { id: 'analytics', label: 'Analytics', href: ROUTES.PROGRESS, icon: BarChart3 },
   { id: 'settings', label: 'Settings', action: 'settings', icon: Settings },
 ];
@@ -339,17 +339,17 @@ export function DashboardTopBar({
   const profileInitial = profileName.charAt(0).toUpperCase();
 
   return (
-    <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]" aria-labelledby="dashboard-title">
+    <section className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_auto]" aria-labelledby="dashboard-title">
       <div>
-        <div className="inline-flex items-center gap-2 rounded-full border border-atlas-border bg-atlas-glass px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-atlas-cyan">
+        <div className="inline-flex items-center gap-2 rounded-lg border border-atlas-border bg-atlas-glass px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-atlas-cyan">
           <Activity className="h-3.5 w-3.5" aria-hidden />
-          Diagnostic Atlas OS
+          Clinical Study Console
         </div>
-        <h1 id="dashboard-title" className="mt-3 text-3xl font-semibold tracking-[-0.01em] text-atlas-white sm:text-4xl">
-          PANCE readiness command center
+        <h1 id="dashboard-title" className="mt-3 text-3xl font-semibold text-atlas-white sm:text-4xl">
+          Today&apos;s study prescription
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-atlas-muted sm:text-base">
-          StudyPanacea turns your practice history, weak systems, reviews, and clinical image training into a focused study prescription.
+          Your weak systems, due reviews, clinical cases, and exam timeline resolve into one next action.
         </p>
       </div>
 
@@ -357,7 +357,7 @@ export function DashboardTopBar({
         <button
           type="button"
           onClick={openCommandPalette}
-          className="atlas-focus-ring inline-flex min-h-11 w-full items-center gap-2 rounded-xl border border-atlas-border bg-atlas-glass px-3 text-left text-sm text-atlas-muted transition-colors hover:border-atlas-border-glow hover:text-atlas-white sm:w-auto sm:min-w-[15rem]"
+          className="atlas-focus-ring inline-flex min-h-11 w-full items-center gap-2 rounded-lg border border-atlas-border bg-atlas-glass px-3 text-left text-sm text-atlas-muted transition-colors hover:border-atlas-border-glow hover:text-atlas-white sm:w-auto sm:min-w-[15rem]"
           aria-label="Search or open command palette"
         >
           <Search className="h-4 w-4" aria-hidden />
@@ -367,7 +367,7 @@ export function DashboardTopBar({
           </span>
         </button>
         <div
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-atlas-border bg-atlas-glass px-3 text-xs text-atlas-muted"
+          className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-atlas-border bg-atlas-glass px-3 text-xs text-atlas-muted"
           role="group"
           aria-label={`Readiness indicator: ${readinessValue}`}
         >
@@ -375,7 +375,7 @@ export function DashboardTopBar({
           <span className="font-mono text-atlas-white">{readinessValue}</span>
         </div>
         <div
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-atlas-border bg-atlas-glass px-3 text-xs text-atlas-muted"
+          className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-atlas-border bg-atlas-glass px-3 text-xs text-atlas-muted"
           role="group"
           aria-label={`Study streak: ${overview?.currentStreak ?? 0} days`}
         >
@@ -385,13 +385,13 @@ export function DashboardTopBar({
         <button
           type="button"
           onClick={onOpenTutor}
-          className="atlas-focus-ring inline-flex min-h-11 items-center gap-2 rounded-xl border border-atlas-border-glow bg-[color-mix(in_srgb,var(--atlas-accent-cyan)_10%,transparent)] px-3 text-sm font-semibold text-atlas-cyan transition-colors hover:bg-[color-mix(in_srgb,var(--atlas-accent-cyan)_15%,transparent)]"
+          className="atlas-focus-ring inline-flex min-h-11 items-center gap-2 rounded-lg border border-atlas-border-glow bg-[color-mix(in_srgb,var(--atlas-accent-cyan)_10%,transparent)] px-3 text-sm font-semibold text-atlas-cyan transition-colors hover:bg-[color-mix(in_srgb,var(--atlas-accent-cyan)_15%,transparent)]"
         >
           <BrainCircuit className="h-4 w-4" aria-hidden />
           AI Tutor
         </button>
         <div
-          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-atlas-border bg-atlas-glass px-2.5 text-sm text-atlas-muted"
+          className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-atlas-border bg-atlas-glass px-2.5 text-sm text-atlas-muted"
           role="group"
           aria-label={`Profile: ${profileName}`}
         >

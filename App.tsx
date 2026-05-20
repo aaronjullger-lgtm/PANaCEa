@@ -307,9 +307,10 @@ const App: React.FC = () => {
 
   // ---- Preload large data files in background for better performance ----
   useEffect(() => {
-    if ((!authLoaded || !isSignedIn) && !isGuestMode) return;
+    if (!authLoaded || !isSignedIn || isGuestMode) return;
 
-    // Start preloading data once the user has an app execution context.
+    // Start DB-backed preloading only for authenticated users. Guest routes use
+    // route-level previews/fallbacks and should not spam local API proxies.
     preloadData();
   }, [authLoaded, isGuestMode, isSignedIn]);
 
@@ -323,8 +324,6 @@ const App: React.FC = () => {
       if (import.meta.env.DEV) {
         if (report.score < 70) {
           console.warn('[Performance] Initial load needs improvement:', report);
-        } else {
-          console.log('[Performance] Initial load optimized:', report);
         }
       }
     }, 5000);
@@ -1142,17 +1141,16 @@ const App: React.FC = () => {
     <AppProviders>
       <div className="min-h-screen bg-[var(--color-canvas,#F8FAFC)] dark:bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
         {/*
-          System status ribbon — stays mounted at the top of every page so users
-          see the heads-up regardless of route. Renders nothing while healthy;
-          shows a dismissible warning when /api/health reports degraded or the
-          backend is unreachable. Mounted above the guest banner so an outage
-          message takes the top slot when both apply.
+          System status ribbon — stays mounted at the top of every authenticated
+          page so users see the heads-up regardless of route. Guest mode owns
+          the degraded-mode top slot, so suppress the duplicate health ribbon
+          during guest visual QA and limited-access browsing.
         */}
-        <IncidentBanner />
+        <IncidentBanner suppress={showGuestModeBanner} offsetForNavRail />
 
         {/* Guest mode banner */}
         {showGuestModeBanner && (
-          <div className="bg-[var(--color-data-provisional)]/10 border-b border-[var(--color-data-provisional)]/30">
+          <div className="border-b border-[var(--color-data-provisional)]/30 bg-[var(--color-data-provisional)]/10 md:pl-[var(--nav-rail-width)]">
             <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <User className="w-4 h-4 text-[var(--color-data-provisional)]" />
@@ -1269,8 +1267,6 @@ const App: React.FC = () => {
           delay={15000}
           minSessionDuration={30000}
           showOfflineFeatures={true}
-          onInstall={() => import.meta.env.DEV && console.log('PWA installed successfully')}
-          onDismiss={() => import.meta.env.DEV && console.log('PWA prompt dismissed')}
         />
       </div>
     </AppProviders>

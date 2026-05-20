@@ -21,7 +21,7 @@ function getInitialTheme(): Theme {
   if (typeof globalThis.window === 'undefined') return 'dark';
   const stored = globalThis.localStorage.getItem('pance-ai-theme') as Theme | null;
   if (stored === 'light' || stored === 'dark') return stored;
-  return globalThis.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return 'dark';
 }
 
 function getInitialHighContrastData(): boolean {

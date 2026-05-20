@@ -1,5 +1,6 @@
 import { LucideIcon } from 'lucide-react';
 import { CANONICAL_PATHS as REGISTRY_CANONICAL_PATHS } from './routeRegistry';
+import { ROUTES } from './routes';
 import {
   LayoutDashboard,
   LineChart,
@@ -26,6 +27,11 @@ import {
   Calculator,
   Calendar,
   RotateCcw,
+  ClipboardList,
+  Crosshair,
+  Images,
+  LibraryBig,
+  Settings2,
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -65,6 +71,11 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   Calculator,
   Calendar,
   RotateCcw,
+  ClipboardList,
+  Crosshair,
+  Images,
+  LibraryBig,
+  Settings2,
 };
 
 /**
@@ -76,7 +87,7 @@ export interface NavRailItem {
   label: string;
   path: string;
   icon: LucideIcon;
-  section: 'study' | 'knowledge' | 'plan';
+  section: 'study' | 'clinical' | 'knowledge' | 'plan' | 'system';
   showInBottomBar: boolean;
 }
 
@@ -88,15 +99,23 @@ export interface NavRailItem {
 export const NAV_RAIL_ITEMS: NavRailItem[] = [
   {
     id: 'home',
-    label: 'Study',
+    label: 'Dashboard',
     path: '/study',
     icon: Home,
     section: 'study',
     showInBottomBar: true,
   },
   {
+    id: 'study_path',
+    label: 'Study Plan',
+    path: '/study/path',
+    icon: Calendar,
+    section: 'study',
+    showInBottomBar: false,
+  },
+  {
     id: 'practice',
-    label: 'Practice',
+    label: 'Practice / Qbank',
     path: '/practice',
     icon: Dumbbell,
     section: 'study',
@@ -105,7 +124,7 @@ export const NAV_RAIL_ITEMS: NavRailItem[] = [
   {
     id: 'review',
     label: 'Review',
-    path: '/study?mode=review',
+    path: ROUTES.STUDY_REVIEW,
     icon: RotateCcw,
     section: 'study',
     showInBottomBar: true,
@@ -119,6 +138,30 @@ export const NAV_RAIL_ITEMS: NavRailItem[] = [
     showInBottomBar: true,
   },
   {
+    id: 'clinical_cases',
+    label: 'Clinical Profile',
+    path: '/clinical-profile',
+    icon: ClipboardList,
+    section: 'clinical',
+    showInBottomBar: false,
+  },
+  {
+    id: 'weak_areas',
+    label: 'Weak Areas',
+    path: '/gap-analysis',
+    icon: Crosshair,
+    section: 'clinical',
+    showInBottomBar: false,
+  },
+  {
+    id: 'clinical_images',
+    label: 'Clinical Images',
+    path: '/clinical-eye',
+    icon: Images,
+    section: 'clinical',
+    showInBottomBar: false,
+  },
+  {
     id: 'progress',
     label: 'Progress',
     path: '/progress',
@@ -127,11 +170,19 @@ export const NAV_RAIL_ITEMS: NavRailItem[] = [
     showInBottomBar: true,
   },
   {
-    id: 'study_path',
-    label: 'Plan',
-    path: '/study/path',
-    icon: TrendingUp,
-    section: 'plan',
+    id: 'resources',
+    label: 'Resources',
+    path: '/study/utilities',
+    icon: LibraryBig,
+    section: 'knowledge',
+    showInBottomBar: false,
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    path: '/study?modal=settings',
+    icon: Settings2,
+    section: 'system',
     showInBottomBar: false,
   },
 ];

@@ -75,6 +75,46 @@ interface DrillViewRouterProps {
   missedQuestions: QuizQuestion[];
 }
 
+const DRILL_ROUTER_VIEWS = new Set<View>([
+  'photo_drill',
+  'ecg_drill',
+  'derm_drill',
+  'imaging_drill',
+  'rapid_recall',
+  'ddx_compare',
+  'mini_lab',
+  'pharmacology',
+  'first_line_treatment',
+  'condition_drill',
+  'system_drill',
+  'subcategory_drill',
+  'guideline_drill',
+  'ventilator_hero',
+  'physiology_drill',
+  'anatomy_review',
+  'fluid_electrolyte',
+  'antibiotic_mode',
+  'patient_encounter',
+  'integrations',
+  'panre_la',
+  'pance_simulator',
+  'code_blue_speed',
+  'grand_rounds',
+  'contrastive_drill',
+  'reasoning_tutor',
+  'cram_mode',
+  'polypharmacy_puzzle',
+  'commuter_mode',
+  'medical_wordle',
+  'diagnostic_puzzle',
+  'full_sit_down_test',
+  'core_adaptive',
+  'elaboration_drill',
+  'icd_coding_drill',
+  'teach_back_drill',
+  'admin_media',
+]);
+
 export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
   view,
   setView,
@@ -125,6 +165,10 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
     removeFlaggedQuestion,
     updateQuestionNote,
   };
+
+  if (!DRILL_ROUTER_VIEWS.has(view)) {
+    return null;
+  }
 
   if (!isPrivateBetaModeVisible(view)) {
     return (

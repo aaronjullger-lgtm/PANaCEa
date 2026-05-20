@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
+import { isGuestModeActive } from '@/services/auth/guestAuth';
 
 export interface ClinicalProfileData {
   overall: { accuracy: number; totalQuestions: number; avgTimeMs: number | null };
@@ -25,10 +26,15 @@ interface State {
 }
 
 export function useClinicalProfile() {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const [state, setState] = useState<State>({ data: null, isLoading: true, error: null });
 
   const fetchProfile = useCallback(async () => {
+    if (!isLoaded || !isSignedIn || (typeof window !== 'undefined' && isGuestModeActive())) {
+      setState({ data: null, isLoading: false, error: null });
+      return;
+    }
+
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
       const token = await getToken();
@@ -64,7 +70,7 @@ export function useClinicalProfile() {
         error: isSafe ? msg : 'Unable to load your clinical profile. Please try again.',
       });
     }
-  }, [getToken]);
+  }, [getToken, isLoaded, isSignedIn]);
 
   useEffect(() => {
     fetchProfile();

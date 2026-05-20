@@ -20,6 +20,7 @@ export const ROUTES = {
   PROGRESS: '/progress',
   STUDY_KNOWLEDGE: '/study/knowledge',
   STUDY_UTILITIES: '/study/utilities',
+  STUDY_REVIEW: '/study/review',
   STUDY_PATH: '/study/path',
   STUDY_MAIN_SESSION: '/study/main-session',
   DAILY_CHALLENGES: '/daily-challenges',

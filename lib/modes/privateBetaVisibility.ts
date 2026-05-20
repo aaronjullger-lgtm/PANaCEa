@@ -28,7 +28,6 @@ const PRIVATE_BETA_HIDDEN_ROUTES = new Set([
   '/daily-challenges',
   '/live-collaboration',
   '/explorer',
-  '/clinical-eye',
   '/visualizer',
   '/lecture-converter',
   '/technique-check',

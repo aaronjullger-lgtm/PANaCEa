@@ -6,6 +6,7 @@
  */
 
 import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -34,6 +35,9 @@ import {
   WorkspaceSplit,
   WorkspaceSurface,
 } from '@/components/workspace';
+import { clinicalConsoleDemoData } from '@/components/clinical-console/studyDemoData';
+import { isGuestModeActive } from '@/services/auth/guestAuth';
+import { workspaceAccent } from '@/lib/tokens';
 
 // Lazy-load ClinicalReferenceLibrary to break circular chunk initialization (TDZ crash)
 const ClinicalReferenceLibrary = lazy(() =>
@@ -89,10 +93,10 @@ const NAV_TABS: NavTab[] = [
 ];
 
 const TAB_ACCENTS: Record<TabId, string> = {
-  conditions: '#728ba6',
-  pharmacopeia: '#c4b78a',
-  labs: '#7a8f6e',
-  reference: '#9a7f9a',
+  conditions: workspaceAccent.steel,
+  pharmacopeia: workspaceAccent.gold,
+  labs: workspaceAccent.sage,
+  reference: workspaceAccent.plum,
 };
 
 const LAB_SUB_TABS: Array<{
@@ -195,11 +199,147 @@ function LabSubButton({
   );
 }
 
+function KnowledgePreviewPanel({
+  tabId,
+  query,
+  accent,
+}: {
+  tabId: TabId;
+  query: string;
+  accent: string;
+}) {
+  const previewItems = clinicalConsoleDemoData.knowledgePreview[tabId];
+  const trimmedQuery = query.trim().toLowerCase();
+  const filteredItems = trimmedQuery
+    ? previewItems.filter((item) => {
+        const haystack = [
+          item.title,
+          item.label,
+          item.detail,
+          ...item.bullets,
+        ].join(' ').toLowerCase();
+        return haystack.includes(trimmedQuery);
+      })
+    : previewItems;
+  const visibleItems = filteredItems.length > 0 ? filteredItems : previewItems;
+
+  return (
+    <WorkspaceSurface accent={accent} role="reference">
+      <div className="grid gap-5 xl:grid-cols-[0.72fr_1.28fr]">
+        <div className="space-y-4">
+          <div
+            className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]"
+            style={{
+              borderColor: `color-mix(in srgb, ${accent} 32%, transparent)`,
+              background: `color-mix(in srgb, ${accent} 12%, var(--color-bg-secondary))`,
+              color: accent,
+            }}
+          >
+            <Stethoscope className="h-3.5 w-3.5" aria-hidden="true" />
+            Guest atlas preview
+          </div>
+          <div className="space-y-3">
+            <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
+              Curated clinical intelligence without live library calls.
+            </h3>
+            <p className="text-sm leading-7 text-[var(--color-text-secondary)]">
+              The authenticated reference index stays protected behind Clerk. Guest mode keeps this
+              lane visually complete with representative PANCE repair cards and next-action cues.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+            {[
+              ['Scope', currentTabLabel(tabId)],
+              ['Status', 'Guest-safe'],
+              ['Next action', 'Return to practice'],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="rounded-2xl border p-3"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                  background:
+                    'color-mix(in srgb, var(--color-bg-secondary) 76%, var(--color-bg-primary) 24%)',
+                }}
+              >
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+                  {label}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-[var(--color-text-primary)]">{value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+          {visibleItems.map((item) => (
+            <article
+              key={item.title}
+              className="rounded-[1.25rem] border p-4"
+              style={{
+                borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                background:
+                  'linear-gradient(180deg, color-mix(in srgb, var(--color-bg-secondary) 86%, transparent), color-mix(in srgb, var(--color-bg-primary) 92%, transparent))',
+              }}
+            >
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p
+                      className="text-[0.68rem] font-semibold uppercase tracking-[0.16em]"
+                      style={{ color: accent }}
+                    >
+                      {item.label}
+                    </p>
+                    <h4 className="mt-1 text-base font-semibold tracking-[-0.02em] text-[var(--color-text-primary)]">
+                      {item.title}
+                    </h4>
+                  </div>
+                  <div
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border"
+                    style={{
+                      borderColor: `color-mix(in srgb, ${accent} 24%, transparent)`,
+                      background: `color-mix(in srgb, ${accent} 12%, var(--color-bg-secondary))`,
+                    }}
+                  >
+                    <Sparkles className="h-4 w-4" style={{ color: accent }} aria-hidden="true" />
+                  </div>
+                </div>
+                <p className="text-sm leading-6 text-[var(--color-text-secondary)]">{item.detail}</p>
+                <ul className="space-y-2">
+                  {item.bullets.map((bullet) => (
+                    <li key={bullet} className="flex gap-2 text-xs leading-5 text-[var(--color-text-muted)]">
+                      <span
+                        className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
+                        style={{ background: accent }}
+                        aria-hidden="true"
+                      />
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </WorkspaceSurface>
+  );
+}
+
+function currentTabLabel(tabId: TabId): string {
+  return NAV_TABS.find((tab) => tab.id === tabId)?.label ?? 'Knowledge';
+}
+
 export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) => {
+  const { isLoaded, isSignedIn } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as TabId | null;
   const labSubFromUrl = searchParams.get('labSub') as LabSubTab | null;
   const queryFromUrl = searchParams.get('q') ?? '';
+  const [guestModeActive, setGuestModeActive] = useState(() =>
+    typeof window !== 'undefined' ? isGuestModeActive() : false
+  );
   const [activeTab, setActiveTab] = useState<TabId>(
     tabFromUrl && VALID_TAB_IDS.includes(tabFromUrl) ? tabFromUrl : 'conditions'
   );
@@ -225,6 +365,10 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
   useEffect(() => {
     setWorkspaceSearch(queryFromUrl);
   }, [queryFromUrl]);
+
+  useEffect(() => {
+    setGuestModeActive(isGuestModeActive());
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -300,6 +444,7 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
     return null;
   }
   const currentAccent = TAB_ACCENTS[currentTab.id];
+  const shouldUseGuestPreview = guestModeActive || (isLoaded && !isSignedIn);
   const quickSwitchTabs = NAV_TABS.filter((tab) => tab.id !== currentTab.id).slice(0, 2);
   const quickSwitchTabA = quickSwitchTabs[0];
   const quickSwitchTabB = quickSwitchTabs[1];
@@ -309,11 +454,11 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
       <WorkspaceReveal>
         <WorkspacePageHeader
           meta={{
-            badge: 'Clinical Knowledge Workspace',
+            badge: 'Knowledge Atlas',
             badgeTone: 'steel',
-            title: 'Clinical Knowledge Workspace',
+            title: 'Clinical topic library',
             subtitle:
-              'Search conditions, drugs, labs, procedures, and imaging without leaving the study flow.',
+              'Search conditions, drugs, labs, procedures, and imaging with mastery states tied back to study decisions.',
             status: currentTab.label,
             actionPosition: 'under-title',
             backLabel: 'Back to Study',
@@ -482,7 +627,18 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
               : currentTab.description
           }
           action={
-            activeTab === 'labs' ? (
+            shouldUseGuestPreview ? (
+              <span
+                className="rounded-full border px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]"
+                style={{
+                  borderColor: `color-mix(in srgb, ${currentAccent} 28%, transparent)`,
+                  background:
+                    'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
+                }}
+              >
+                Guest-safe preview
+              </span>
+            ) : activeTab === 'labs' ? (
               <span
                 className="rounded-full border px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]"
                 style={{
@@ -508,14 +664,20 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
           }
         >
           <AnimatePresence mode="wait">
-            {activeTab === 'conditions' ? (
-              <motion.div
-                key="conditions"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              >
+            <motion.div
+              key={`${activeTab}-${activeTab === 'labs' ? labSubTab : 'main'}-${shouldUseGuestPreview ? 'preview' : 'live'}`}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {shouldUseGuestPreview ? (
+                <KnowledgePreviewPanel
+                  tabId={activeTab}
+                  query={workspaceSearch}
+                  accent={currentAccent}
+                />
+              ) : activeTab === 'conditions' ? (
                 <Suspense
                   fallback={
                     <WorkspaceSurface accent={currentAccent}>
@@ -527,48 +689,18 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
                 >
                   <ClinicalReferenceLibrary onExit={onClose} />
                 </Suspense>
-              </motion.div>
-            ) : null}
-
-            {activeTab === 'pharmacopeia' ? (
-              <motion.div
-                key="pharmacopeia"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              >
+              ) : activeTab === 'pharmacopeia' ? (
                 <WorkspaceSurface accent={currentAccent}>
                   <PharmacopeiaView />
                 </WorkspaceSurface>
-              </motion.div>
-            ) : null}
-
-            {activeTab === 'labs' ? (
-              <motion.div
-                key={`labs-${labSubTab}`}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              >
+              ) : activeTab === 'labs' ? (
                 <WorkspaceSurface accent={currentAccent}>
                   {labSubTab === 'tests' ? <LabReferenceView /> : <NormalLabsLibraryView />}
                 </WorkspaceSurface>
-              </motion.div>
-            ) : null}
-
-            {activeTab === 'reference' ? (
-              <motion.div
-                key="reference"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              >
+              ) : activeTab === 'reference' ? (
                 <ReferenceHub />
-              </motion.div>
-            ) : null}
+              ) : null}
+            </motion.div>
           </AnimatePresence>
         </WorkspaceSection>
       </WorkspaceReveal>
@@ -587,7 +719,7 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
             label="Study posture"
             value="Reference first"
             detail="Use this surface to anchor context, compare options, and then return to practice with a cleaner mental model."
-            accent="#b39b6c"
+            accent={workspaceAccent.gold}
             icon={Sparkles}
             variant="guidance"
           />
@@ -595,7 +727,7 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
       </WorkspaceReveal>
 
       <WorkspaceReveal delay={0.2}>
-        <WorkspaceSurface accent="#728ba6" role="subtle">
+        <WorkspaceSurface accent={workspaceAccent.steel} role="subtle">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1.5">
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">Daily use</p>

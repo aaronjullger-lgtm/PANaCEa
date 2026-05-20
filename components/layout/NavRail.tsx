@@ -15,13 +15,18 @@ import { springs } from '@/config/appViews';
 import {
   ChevronLeft,
   ChevronRight,
+  CircleDot,
+  Clock3,
   PanelLeftClose,
   PanelLeftOpen,
   LucideIcon,
 } from 'lucide-react';
+import { useUser } from '@clerk/clerk-react';
 import { NAV_RAIL_ITEMS } from '@/config/navigation';
+import { AppBrand } from '@/components/layout/AppBrand';
 import { SidebarItem } from '@/components/layout/SidebarItem';
 import { InfoTooltipWrapper } from '@/components/shared/TooltipWrapper';
+import { clinicalConsoleDemoData } from '@/components/clinical-console/studyDemoData';
 
 export interface QuickActionItem {
   id: string;
@@ -50,8 +55,8 @@ const DEFAULT_QUICK_ACTIONS: QuickActionItem[] = NAV_RAIL_ITEMS.map((item) => ({
   showInBottomBar: item.showInBottomBar,
 }));
 
-const RAIL_WIDTH_COLLAPSED = 56;
-const RAIL_WIDTH_EXPANDED = 184;
+const RAIL_WIDTH_COLLAPSED = 68;
+const RAIL_WIDTH_EXPANDED = 248;
 
 function isPathActive(href: string, pathname: string, search: string): boolean {
   const fullPath = pathname + search;
@@ -201,16 +206,23 @@ export const NavRail: React.FC<NavRailProps> = ({
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const isMobile = useIsMobile();
+  const { user } = useUser();
   const [collapsed, setCollapsed] = useState(false);
   const [hidden, setHidden] = useState(false);
   const location = useLocation();
   const { pathname, search } = location;
-  const chromeSurface = 'color-mix(in srgb, var(--color-bg-secondary) 96%, var(--color-bg-primary) 4%)';
-  const chromeBorder = 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)';
+  const chromeSurface = 'linear-gradient(180deg, color-mix(in srgb, var(--color-bg-secondary) 92%, var(--color-bg-primary) 8%), color-mix(in srgb, var(--color-bg-primary) 86%, var(--color-accent) 2%))';
+  const chromeBorder = 'color-mix(in srgb, var(--color-text-primary) 10%, transparent)';
   const railShadow =
-    'inset -1px 0 0 color-mix(in srgb, var(--color-text-primary) 6%, transparent)';
+    'inset -1px 0 0 color-mix(in srgb, var(--color-accent) 18%, transparent), 18px 0 56px -42px rgba(0,0,0,0.85)';
   const railControlClass =
     'rounded-lg border p-1.5 text-[var(--color-text-muted)] transition-all duration-200 hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]';
+  const profileName =
+    user?.firstName ||
+    user?.fullName ||
+    user?.primaryEmailAddress?.emailAddress?.split('@')[0] ||
+    clinicalConsoleDemoData.student.fallbackName;
+  const profileInitial = profileName.charAt(0).toUpperCase();
 
   // Keyboard shortcut: [ to toggle sidebar
   useEffect(() => {
@@ -266,11 +278,13 @@ export const NavRail: React.FC<NavRailProps> = ({
   }
 
   const studyItems = quickActions.filter((i) => i.section === 'study' || !i.section);
+  const clinicalItems = quickActions.filter((i) => i.section === 'clinical');
   const knowledgeItems = quickActions.filter((i) => i.section === 'knowledge');
   const planItems = quickActions.filter((i) => i.section === 'plan');
+  const systemItems = quickActions.filter((i) => i.section === 'system');
 
   const baseClass =
-    'group relative flex w-full h-12 items-center rounded-xl px-2 transition-[padding,background-color] duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98] ' +
+    'group relative flex w-full min-h-[44px] items-center rounded-lg px-2 transition-[padding,background-color] duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98] ' +
     (collapsed ? 'justify-center px-0' : '');
 
   const renderItem = (item: QuickActionItem) => {
@@ -327,7 +341,7 @@ export const NavRail: React.FC<NavRailProps> = ({
               <>
                 <motion.div
                   layoutId={prefersReducedMotion ? undefined : "active-nav-pill"}
-                  className="absolute inset-0 rounded-xl z-0"
+                  className="absolute inset-0 z-0 rounded-lg"
                   style={{
                     background:
                       'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-secondary))',
@@ -349,7 +363,7 @@ export const NavRail: React.FC<NavRailProps> = ({
               </>
             )}
             <span
-              className={`relative z-10 flex h-12 items-center justify-center transition-[width] duration-200 ease-out ${collapsed ? 'w-10 shrink-0' : 'w-full'}`}
+              className={`relative z-10 flex min-h-[44px] items-center justify-center transition-[width] duration-200 ease-out ${collapsed ? 'w-11 shrink-0' : 'w-full'}`}
             >
               {wrappedItem}
             </span>
@@ -361,18 +375,18 @@ export const NavRail: React.FC<NavRailProps> = ({
     return <li key={item.id}>{wrappedItem}</li>;
   };
 
-  const renderSection = (label: string, items: QuickActionItem[]) => (
+  const renderSection = (label: string, items: QuickActionItem[]) => {
+    if (items.length === 0) return null;
+    return (
     <div key={label} className="mb-2 first:mt-0">
       {!collapsed && (
-        <div className="px-3 py-1.5">
+        <div className="px-3 pb-1 pt-3">
           <span
             className="font-medium uppercase"
             style={{
               fontSize: '0.625rem',
-              letterSpacing: '0.12em',
+              letterSpacing: '0.1em',
               color: 'var(--color-text-muted)',
-              borderLeft: '2px solid color-mix(in srgb, var(--color-accent) 26%, transparent)',
-              paddingLeft: '8px',
             }}
           >
             {label}
@@ -381,7 +395,8 @@ export const NavRail: React.FC<NavRailProps> = ({
       )}
       <ul className="list-none m-0 p-0 space-y-0.5" style={{ listStyle: 'none', margin: 0, padding: 0 }}>{items.map(renderItem)}</ul>
     </div>
-  );
+    );
+  };
 
   return (
     <motion.aside
@@ -395,8 +410,8 @@ export const NavRail: React.FC<NavRailProps> = ({
         zIndex: 40,
         display: 'flex',
         flexDirection: 'column',
-        top: 'var(--header-height, 4rem)',
-        height: 'calc(100vh - var(--header-height, 4rem))',
+        top: 0,
+        height: '100vh',
         overflowY: 'auto',
         overflowX: 'hidden',
         background: chromeSurface,
@@ -405,9 +420,51 @@ export const NavRail: React.FC<NavRailProps> = ({
       }}
       aria-label="Main navigation"
     >
+      <div className={collapsed ? 'px-2 py-3' : 'px-4 py-4'}>
+        {collapsed ? (
+          <div
+            className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg border text-sm font-semibold text-[var(--color-accent)]"
+            style={{
+              borderColor: chromeBorder,
+              background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
+            }}
+            aria-hidden="true"
+          >
+            P
+          </div>
+        ) : (
+          <AppBrand size="sm" />
+        )}
+      </div>
+
+      {!collapsed && (
+        <div className="px-3 pb-3">
+          <div
+            className="rounded-lg border p-3"
+            style={{
+              borderColor: 'color-mix(in srgb, var(--color-accent) 22%, transparent)',
+              background:
+                'linear-gradient(145deg, color-mix(in srgb, var(--color-accent) 10%, transparent), color-mix(in srgb, var(--color-bg-secondary) 82%, transparent))',
+            }}
+          >
+            <div className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--color-accent)]">
+              <CircleDot className="h-3.5 w-3.5" aria-hidden />
+              Current focus
+            </div>
+            <p className="mt-2 text-sm font-semibold leading-5 text-[var(--color-text-primary)]">
+              {clinicalConsoleDemoData.todayPrescription.focus}
+            </p>
+            <div className="mt-3 flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+              <Clock3 className="h-3.5 w-3.5" aria-hidden />
+              <span>{clinicalConsoleDemoData.todayPrescription.durationLabel}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header with collapse/hide controls. */}
       <div
-        className={`flex h-10 shrink-0 items-center ${collapsed ? 'justify-center px-1' : 'justify-between px-2'}`}
+        className={`flex h-10 shrink-0 items-center ${collapsed ? 'justify-center px-1' : 'justify-between px-3'}`}
       >
         {!collapsed && (
           <button
@@ -434,13 +491,39 @@ export const NavRail: React.FC<NavRailProps> = ({
       </div>
 
       <nav
-        className="flex-1 overflow-y-auto overflow-x-hidden px-1.5 pt-2 pb-4"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-2 pt-1 pb-4"
         aria-label="App sections"
       >
         {renderSection('Study', studyItems)}
+        {clinicalItems.length > 0 && renderSection('Clinical', clinicalItems)}
         {knowledgeItems.length > 0 && renderSection('Knowledge', knowledgeItems)}
         {planItems.length > 0 && renderSection('Plan', planItems)}
+        {systemItems.length > 0 && renderSection('System', systemItems)}
       </nav>
+
+      <div className={collapsed ? 'px-2 pb-3' : 'px-3 pb-4'}>
+        <div
+          className={`flex items-center gap-3 rounded-lg border p-2 ${collapsed ? 'justify-center' : ''}`}
+          style={{
+            borderColor: chromeBorder,
+            background: 'color-mix(in srgb, var(--color-bg-secondary) 76%, var(--color-bg-primary) 24%)',
+          }}
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] text-sm font-semibold text-[var(--primary-foreground)]">
+            {profileInitial}
+          </span>
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
+                {profileName}
+              </p>
+              <p className="truncate text-xs text-[var(--color-text-muted)]">
+                {clinicalConsoleDemoData.student.role}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
     </motion.aside>
   );
 };

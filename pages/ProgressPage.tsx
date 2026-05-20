@@ -202,7 +202,49 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
   }
 
   const analytics = data;
-  if (!analytics) return null;
+  if (!analytics) {
+    return (
+      <WorkspacePage density="wide" mode="analytics">
+        <WorkspaceReveal>
+          <WorkspacePageHeader
+            meta={{
+              badge: 'Analytics Workspace',
+              badgeTone: 'steel',
+              title: 'Progress intelligence that points to the next intervention.',
+              subtitle:
+                'Readiness, retention, weak systems, and study load are ranked by what should change your next study decision.',
+              status: 'Awaiting analytics',
+              actionPosition: 'under-title',
+              backLabel: 'Back to Study',
+              onBack: () => navigate(ROUTES.STUDY),
+              primaryAction: {
+                label: 'Retry analytics',
+                onClick: () => refetch(),
+              },
+              secondaryActions: [
+                {
+                  label: 'Open Practice',
+                  onClick: () => navigate(ROUTES.PRACTICE),
+                },
+              ],
+            }}
+          />
+        </WorkspaceReveal>
+        <WorkspaceReveal delay={0.05}>
+          <WorkspaceEmptyState
+            icon={BarChart3}
+            title="Progress data unavailable"
+            description="The analytics service did not return a usable payload. Keep studying from the console or retry when the backend is available."
+            action={
+              <Button type="button" onClick={() => refetch()}>
+                Retry analytics
+              </Button>
+            }
+          />
+        </WorkspaceReveal>
+      </WorkspacePage>
+    );
+  }
 
   if (!analytics.hasMeaningfulData) {
     return (
@@ -257,9 +299,9 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
           meta={{
             badge: 'Analytics Workspace',
             badgeTone: 'steel',
-            title: 'Useful study signals, grounded in your actual work.',
+            title: 'Progress intelligence that points to the next intervention.',
             subtitle:
-              'This page stays focused on what you have done, where performance is drifting, and what needs attention next.',
+              'Readiness, retention, weak systems, and study load are ranked by what should change your next study decision.',
             status:
               analytics.overview.overdueReviews > 0
                 ? `${analytics.overview.overdueReviews} overdue review${analytics.overview.overdueReviews === 1 ? '' : 's'}`
@@ -271,7 +313,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
             onBack: () => navigate(ROUTES.STUDY),
             primaryAction: {
               label: 'Start review',
-              onClick: () => navigate(`${ROUTES.STUDY}?mode=review`),
+              onClick: () => navigate(ROUTES.STUDY_REVIEW),
             },
             secondaryActions: [
               {
@@ -405,7 +447,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
       <WorkspaceReveal delay={0.1}>
         <WorkspaceSection
           title="Today's adaptive plan"
-          subtitle="Daily tasks combine due FSRS reviews, blueprint gaps, and your available workload."
+          subtitle="Daily tasks combine due reviews, blueprint gaps, weak topics, and realistic workload."
         >
           <WorkspaceSurface accent={workspaceAccent.plum}>
             {isStudyPlanLoading && !studyPlan ? (
@@ -640,7 +682,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                   <Button
                     type="button"
                     size="sm"
-                    onClick={() => navigate(`${ROUTES.STUDY}?mode=review`)}
+                    onClick={() => navigate(ROUTES.STUDY_REVIEW)}
                   >
                     <ListChecks className="mr-2 h-4 w-4" />
                     Start review
@@ -718,7 +760,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
       <WorkspaceReveal delay={0.16}>
         <WorkspaceSection
           title="Weak systems and coverage gaps"
-          subtitle="Accuracy problems and under-studied systems are ranked together so you do not overreact to tiny sample sizes."
+          subtitle="Accuracy problems and under-studied systems are ranked together with a recommended intervention."
         >
           <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
             <WorkspaceSurface accent={workspaceAccent.gold}>

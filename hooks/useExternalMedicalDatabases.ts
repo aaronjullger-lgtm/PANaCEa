@@ -11,7 +11,12 @@ import {
   ClinicalTrialResult,
 } from '@/services/externalMedicalDatabaseService';
 
-export function useExternalMedicalDatabases() {
+interface UseExternalMedicalDatabasesOptions {
+  autoCheckHealth?: boolean;
+}
+
+export function useExternalMedicalDatabases(options: UseExternalMedicalDatabasesOptions = {}) {
+  const { autoCheckHealth = false } = options;
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<MedicalDatabaseResult[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -174,10 +179,10 @@ export function useExternalMedicalDatabases() {
     return databaseHealth.filter((db) => db.status !== 'healthy');
   }, [databaseHealth]);
 
-  // Initial health check on mount
   useEffect(() => {
-    checkDatabaseHealth();
-  }, [checkDatabaseHealth]);
+    if (!autoCheckHealth) return;
+    void checkDatabaseHealth();
+  }, [autoCheckHealth, checkDatabaseHealth]);
 
   return {
     // State

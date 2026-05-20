@@ -241,7 +241,7 @@ a,
 .card-cinematic {
   background: var(--color-card-bg, var(--color-bg-secondary));
   border: 1px solid var(--color-glass-border, var(--color-border));
-  border-radius: 16px;
+  border-radius: 8px;
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--color-accent) 5%, transparent),
     0 2px 8px -2px rgba(15, 23, 42, 0.08),
@@ -256,7 +256,7 @@ a,
     0 0 0 1px color-mix(in srgb, var(--color-accent) 12%, transparent),
     0 8px 24px -6px rgba(15, 23, 42, 0.12),
     0 16px 40px -12px rgba(15, 23, 42, 0.08);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 .dark .card-cinematic {
   border-color: rgba(71, 85, 105, 0.5);
@@ -744,7 +744,7 @@ a,
       linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 42%),
       var(--atlas-surface-glass);
     border: 1px solid var(--atlas-border);
-    border-radius: 18px;
+    border-radius: 12px;
     box-shadow: var(--atlas-shadow-glass);
     backdrop-filter: blur(18px) saturate(140%);
     -webkit-backdrop-filter: blur(18px) saturate(140%);
@@ -1047,8 +1047,8 @@ a,
   --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 
   /* Layout dimensions - header fixed height (h-16) so NavRail can sit below it */
-  --header-height: 4rem; /* 64px = h-16 */
-  --nav-rail-width: 56px;
+  --header-height: 4.25rem;
+  --nav-rail-width: 248px;
   
   /* Content max-width - consistent across main content pages */
   --content-max-width: 72rem; /* 1152px = max-w-6xl */
@@ -1057,11 +1057,11 @@ a,
   /* Dark-first medical command-center foundation for the redesign. These
      additive tokens do not replace the existing light/dark app theme until a
      page opts in with .theme-diagnostic-atlas or individual atlas utilities. */
-  --atlas-bg: #030b16;
-  --atlas-bg-soft: #071322;
-  --atlas-surface: #0a1626;
-  --atlas-surface-elevated: #0f2033;
-  --atlas-surface-glass: rgba(12, 30, 48, 0.72);
+  --atlas-bg: #020711;
+  --atlas-bg-soft: #06111f;
+  --atlas-surface: #091729;
+  --atlas-surface-elevated: #10223a;
+  --atlas-surface-glass: rgba(10, 28, 48, 0.76);
   --atlas-border: rgba(178, 224, 255, 0.14);
   --atlas-border-strong: rgba(178, 224, 255, 0.24);
   --atlas-border-glow: rgba(103, 232, 249, 0.34);
@@ -1089,8 +1089,8 @@ a,
   --atlas-glow-blue: rgba(96, 165, 250, 0.14);
   --atlas-glow-violet: rgba(167, 139, 250, 0.13);
   --atlas-noise-texture: var(--noise-texture);
-  --atlas-noise-opacity: 0.035;
-  --atlas-scan-duration: 8s;
+  --atlas-noise-opacity: 0.028;
+  --atlas-scan-duration: 11s;
   --atlas-motion-duration-fast: 160ms;
   --atlas-motion-duration-normal: 240ms;
   --atlas-motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -1416,12 +1416,12 @@ a,
 
   /* ===== SEMANTIC DESIGN SYSTEM - DARK MODE ===== */
 
-  /* Main backgrounds - ink-navy elevation ladder */
-  --color-background: #08111f;
-  --color-surface: #0f1b2d;
-  --color-surface-elevated: #16243a;
-  --color-surface-muted: #111f33;
-  --color-border-strong: rgba(199, 208, 223, 0.26);
+  /* Main backgrounds - clinical console elevation ladder */
+  --color-background: #020711;
+  --color-surface: #091729;
+  --color-surface-elevated: #10223a;
+  --color-surface-muted: #06111f;
+  --color-border-strong: rgba(190, 230, 255, 0.24);
 
   --background: var(--color-background);
   --foreground: #f4f7fb;
@@ -1435,35 +1435,35 @@ a,
   --primary-foreground: #07111f;
 
   /* Muted/Secondary */
-  --muted: #132034;
+  --muted: #06111f;
   --muted-foreground: #9aa8bc;
 
   /* Border */
-  --border: rgba(199, 208, 223, 0.16);
+  --border: rgba(190, 230, 255, 0.15);
 
   /* ===== shadcn/ui SEMANTIC TOKENS (dark mode) ===== */
-  --secondary: #132034;
+  --secondary: #0d1d31;
   --secondary-foreground: #f4f7fb;
-  --accent: #102635;
+  --accent: #0f2b3a;
   --accent-foreground: #d8f4f8;
   --destructive: #ff8a80;
   --destructive-foreground: #3c0b07;
   --popover: var(--color-surface-elevated);
   --popover-foreground: #f4f7fb;
-  --input: rgba(199, 208, 223, 0.2);
+  --input: rgba(190, 230, 255, 0.2);
   --ring: #8fd0dc;
   --chart-1: #6bb6c4;
   --chart-2: #63d297;
   --chart-3: #f0b35a;
   --chart-4: #9fb1c5;
   --chart-5: #ff8a80;
-  --sidebar-background: #0b1525;
+  --sidebar-background: #050d1a;
   --sidebar-foreground: #f4f7fb;
   --sidebar-primary: #6bb6c4;
   --sidebar-primary-foreground: #07111f;
-  --sidebar-accent: #132034;
+  --sidebar-accent: #0d1d31;
   --sidebar-accent-foreground: #f4f7fb;
-  --sidebar-border: rgba(199, 208, 223, 0.16);
+  --sidebar-border: rgba(190, 230, 255, 0.15);
   --sidebar-ring: #8fd0dc;
 
   /* Legacy theme-aware variables (elevation 0-3) */
@@ -1471,11 +1471,11 @@ a,
   --color-bg-secondary: var(--color-surface);
   --color-bg-tertiary: var(--color-surface-muted);
   --color-text-primary: #f4f7fb;
-  --color-text-secondary: #c7d0df;
-  --color-text-muted: #9aa8bc;
+  --color-text-secondary: #c9d7e8;
+  --color-text-muted: #93a7bf;
   --color-border: var(--border);
-  --color-border-light: rgba(199, 208, 223, 0.1);
-  --chart-grid-stroke: rgba(199, 208, 223, 0.14);
+  --color-border-light: rgba(190, 230, 255, 0.08);
+  --chart-grid-stroke: rgba(190, 230, 255, 0.12);
   --color-accent: var(--color-action-primary);
   --color-accent-hover: var(--color-action-primary-hover);
   --color-accent-button: #2f7f8d;
@@ -1490,8 +1490,8 @@ a,
   --color-focus-ring: #8fd0dc;
 
   --color-modal-bg: rgba(8, 17, 31, 0.94);
-  --color-glass-bg: rgba(15, 27, 45, 0.72);
-  --color-glass-border: rgba(199, 208, 223, 0.12);
+  --color-glass-bg: rgba(10, 28, 48, 0.76);
+  --color-glass-border: rgba(190, 230, 255, 0.13);
   --color-glass-shadow: rgba(0, 0, 0, 0.48);
   --color-card-bg: var(--color-surface);
 
@@ -1664,19 +1664,19 @@ a,
   box-shadow: 0 0 0 1px var(--color-glass-border), 0 4px 12px -2px rgba(0, 0, 0, 0.5) !important;
 }
 .dark .shadow-lg {
-  box-shadow: 0 0 0 1px var(--color-glass-border), 0 8px 24px -4px rgba(0, 0, 0, 0.5), 0 0 12px -2px rgba(196, 183, 138, 0.04) !important;
+  box-shadow: 0 0 0 1px var(--color-glass-border), 0 8px 24px -4px rgba(0, 0, 0, 0.5), 0 0 12px -2px rgba(103, 232, 249, 0.05) !important;
 }
 .dark .hover\:shadow-sm:hover {
   box-shadow: 0 0 0 1px var(--color-glass-border), 0 4px 12px -2px rgba(0, 0, 0, 0.4) !important;
 }
 .dark .hover\:shadow-md:hover {
-  box-shadow: 0 0 0 1px var(--color-glass-border), 0 8px 24px -4px rgba(0, 0, 0, 0.45), 0 0 16px -4px rgba(196, 183, 138, 0.06) !important;
+  box-shadow: 0 0 0 1px var(--color-glass-border), 0 8px 24px -4px rgba(0, 0, 0, 0.45), 0 0 16px -4px rgba(103, 232, 249, 0.08) !important;
 }
 .dark .hover\:shadow-lg:hover {
-  box-shadow: 0 0 0 1px var(--color-glass-border), 0 12px 32px -6px rgba(0, 0, 0, 0.5), 0 0 20px -4px rgba(196, 183, 138, 0.08) !important;
+  box-shadow: 0 0 0 1px var(--color-glass-border), 0 12px 32px -6px rgba(0, 0, 0, 0.5), 0 0 20px -4px rgba(103, 232, 249, 0.1) !important;
 }
 .dark .hover\:shadow-xl:hover {
-  box-shadow: 0 0 0 1px var(--color-glass-border), 0 16px 48px -8px rgba(0, 0, 0, 0.6), 0 0 24px -4px rgba(196, 183, 138, 0.10) !important;
+  box-shadow: 0 0 0 1px var(--color-glass-border), 0 16px 48px -8px rgba(0, 0, 0, 0.6), 0 0 24px -4px rgba(103, 232, 249, 0.12) !important;
 }
 
 /* ===== SEMANTIC ELEVATION UTILITIES ===== */
@@ -1721,13 +1721,13 @@ a,
   box-shadow:
     0 0 0 1px var(--color-glass-border),
     0 8px 24px -4px rgba(0, 0, 0, 0.55),
-    0 0 16px -4px rgba(196, 183, 138, 0.06);
+    0 0 16px -4px rgba(103, 232, 249, 0.08);
 }
 .dark .elevation-4 {
   box-shadow:
     0 0 0 1px var(--color-glass-border),
     0 16px 40px -8px rgba(0, 0, 0, 0.6),
-    0 0 24px -4px rgba(196, 183, 138, 0.10);
+    0 0 24px -4px rgba(103, 232, 249, 0.12);
 }
 
 /* ===== COMMUTER MODE / VOICE-FIRST ACCESSIBILITY ===== */

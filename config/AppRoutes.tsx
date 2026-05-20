@@ -45,6 +45,7 @@ import {
   LiveCollaborationWorkspacePage,
   PracticePage,
   ProgressPage,
+  ReviewPage,
   DailyChallengesHub,
   StudyPathDashboard,
   LectureConverterPage,
@@ -361,6 +362,20 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                     performanceData={heatmapPerformance}
                     dueCount={dueQuestionsCount}
                   />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/study/review"
+        element={
+          <AuthenticatedRoute>
+            <AppLayout contentMaxWidth="80rem">
+              <Suspense fallback={<Loader message="Loading review workspace..." />}>
+                <ErrorBoundary variant="page">
+                  <ReviewPage />
                 </ErrorBoundary>
               </Suspense>
             </AppLayout>
@@ -891,7 +906,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                               onNavigateToCustomStudy={handleNavigateToCustomStudy}
                               onNavigateToTutorChat={() => setView('tutor_chat')}
                               onNavigateToStudyCompanion={() => setView('study_companion')}
-                              onNavigateToSrsReview={() => setView('srs_review')}
+                              onNavigateToSrsReview={() => navigate(ROUTES.STUDY_REVIEW)}
                               onNavigateToPearlDeck={() => setView('pearl_deck')}
                               onNavigateToStudyPathDashboard={handleNavigateToStudyPathDashboard}
                               growthAreas={growthAreas}
@@ -1112,7 +1127,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                                     onNavigateToStudyCompanion={() =>
                                       setView('study_companion')
                                     }
-                                    onNavigateToSrsReview={() => setView('srs_review')}
+                                    onNavigateToSrsReview={() => navigate(ROUTES.STUDY_REVIEW)}
                                     onOpenSettings={() => setIsSettingsModalOpen(true)}
                                     onBack={() => setView('command_center')}
                                   />

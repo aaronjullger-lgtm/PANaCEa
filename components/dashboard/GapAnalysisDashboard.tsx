@@ -23,7 +23,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { InlineSpinner } from '@/components/loading';
 import {
-  WorkspaceEmptyState,
   WorkspaceHeroStrip,
   WorkspaceMetricCard,
   WorkspacePage,
@@ -38,13 +37,15 @@ import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import ChartContainer from '@/components/shared/ChartContainer';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { clinicalConsoleDemoData } from '@/components/clinical-console/studyDemoData';
+import { workspaceAccent } from '@/lib/tokens';
 
 const CHART_COLORS = {
-  weakness: '#f59e0b',
-  average: '#3b82f6',
-  strength: '#10b981',
-  muted: '#6b7280',
-  chartMuted: '#9ca3af',
+  weakness: 'var(--color-data-provisional)',
+  average: 'var(--color-accent)',
+  strength: 'var(--color-data-pass)',
+  muted: 'var(--color-text-muted)',
+  chartMuted: 'var(--color-text-muted)',
 } as const;
 
 interface SystemData {
@@ -114,13 +115,13 @@ function systemAccent(status: SystemData['status']) {
   switch (status) {
     case 'critical':
     case 'weakness':
-      return '#b39b6c';
+      return workspaceAccent.gold;
     case 'strength':
-      return '#7a8f6e';
+      return workspaceAccent.sage;
     case 'average':
-      return '#728ba6';
+      return workspaceAccent.steel;
     default:
-      return '#9a7f9a';
+      return workspaceAccent.plum;
   }
 }
 
@@ -145,7 +146,7 @@ function HighYieldFocus({
   onStudyClick: (systemName: string) => void;
 }) {
   return (
-    <WorkspaceSurface accent="#b39b6c" className="h-full">
+    <WorkspaceSurface accent={workspaceAccent.gold} className="h-full">
       <div className="space-y-4">
         <div className="space-y-1.5">
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
@@ -269,7 +270,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
 
         const token = await getToken();
         if (!token) {
-          setError('Please sign in to view your analytics.');
+          setError('Live analytics require an authenticated study profile.');
           setIsLoading(false);
           return;
         }
@@ -333,15 +334,19 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
     navigate(ROUTES.STUDY);
   };
 
+  const displayData =
+    data ?? (clinicalConsoleDemoData.gapAnalysisPreview as PerformanceDeltasResponse['data']);
+  const isPreview = !data;
+
   const systemsSorted = useMemo(
     () =>
-      [...(data?.systems ?? [])].sort((left, right) => {
+      [...displayData.systems].sort((left, right) => {
         if (right.topPerformerGap !== left.topPerformerGap) {
           return right.topPerformerGap - left.topPerformerGap;
         }
         return right.yieldScore - left.yieldScore;
       }),
-    [data?.systems]
+    [displayData.systems]
   );
 
   const topSystems = useMemo(
@@ -372,7 +377,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
           />
         </WorkspaceReveal>
         <WorkspaceReveal delay={0.05}>
-          <WorkspaceSurface accent="#728ba6">
+          <WorkspaceSurface accent={workspaceAccent.steel}>
             <div
               className="flex min-h-[16rem] flex-col items-center justify-center gap-4 text-center"
               role="status"
@@ -389,45 +394,6 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
     );
   }
 
-  if (error && !data) {
-    return (
-      <WorkspacePage density="wide">
-        <WorkspaceReveal>
-          <WorkspacePageHeader
-            meta={{
-              badge: 'Gap Analysis',
-              badgeTone: 'steel',
-              title: 'Gap analysis is unavailable right now.',
-              subtitle:
-                'We could not safely load the analytics needed to compare your current performance against cohort benchmarks.',
-              backLabel: 'Back to Progress',
-              onBack: () => navigate(ROUTES.PROGRESS),
-            }}
-          />
-        </WorkspaceReveal>
-        <WorkspaceReveal delay={0.05}>
-          <WorkspaceEmptyState
-            icon={AlertCircle}
-            title="Unable to load analysis"
-            description={error}
-            action={
-              <div className="flex gap-3">
-                <Button type="button" size="sm" onClick={() => setRetryCount((value) => value + 1)}>
-                  Retry
-                </Button>
-                <Button type="button" size="sm" variant="outline" onClick={() => navigate(ROUTES.PROGRESS)}>
-                  Back to Progress
-                </Button>
-              </div>
-            }
-          />
-        </WorkspaceReveal>
-      </WorkspacePage>
-    );
-  }
-
-  if (!data) return null;
-
   return (
     <WorkspacePage density="wide">
       <WorkspaceReveal>
@@ -435,10 +401,15 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
           meta={{
             badge: 'Gap Analysis',
             badgeTone: 'steel',
-            title: 'See where the real performance distance still lives.',
-            subtitle:
-              'This view compares your system performance against the cohort and top-decile anchors so you can study where the climb is still worth it.',
-            status: `${data.userTotalAttempts} recorded attempts`,
+            title: isPreview
+              ? 'Weak-area console preview.'
+              : 'See where the real performance distance still lives.',
+            subtitle: isPreview
+              ? 'Live cohort comparison data is unavailable in this session, so guest mode shows the same decision model with representative system gaps.'
+              : 'This view compares your system performance against the cohort and top-decile anchors so you can study where the climb is still worth it.',
+            status: isPreview
+              ? 'Guest-safe gap preview'
+              : `${displayData.userTotalAttempts} recorded attempts`,
             backLabel: 'Back to Progress',
             onBack: () => navigate(ROUTES.PROGRESS),
             primaryAction: topSystem
@@ -461,29 +432,33 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <WorkspaceMetricCard
             label="Overall percentile"
-            value={`${data.overallPercentile}%`}
-            detail="Your approximate standing relative to the current cohort comparison set."
+            value={`${displayData.overallPercentile}%`}
+            detail={
+              isPreview
+                ? 'Representative standing used to verify the weak-area console layout.'
+                : 'Your approximate standing relative to the current cohort comparison set.'
+            }
             icon={Trophy}
           />
           <WorkspaceMetricCard
             label="Systems analyzed"
             value={systemsSorted.length}
             detail="Distinct systems with enough question history to compare."
-            accent="#728ba6"
+            accent={workspaceAccent.steel}
             icon={Target}
           />
           <WorkspaceMetricCard
             label="High-priority gaps"
             value={criticalCount}
             detail="Systems marked critical or weak based on top-performer distance."
-            accent="#b39b6c"
+            accent={workspaceAccent.gold}
             icon={AlertCircle}
           />
           <WorkspaceMetricCard
             label="Current strengths"
             value={strengthCount}
             detail="Systems already tracking above the cohort with stronger performance."
-            accent="#7a8f6e"
+            accent={workspaceAccent.sage}
             icon={TrendingUp}
           />
         </div>
@@ -508,11 +483,12 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
 
             <div className="workspace-subsurface space-y-3 rounded-[1.25rem] p-5">
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">
-                Priority rule of thumb
+                {isPreview ? 'Live analytics status' : 'Priority rule of thumb'}
               </p>
               <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
-                Study the systems with both a large top-performer gap and meaningful question
-                volume first. Low-volume noise is less urgent than a consistent miss pattern.
+                {isPreview
+                  ? 'This preview keeps the route visually complete without bypassing Clerk or fabricating saved analytics.'
+                  : 'Study the systems with both a large top-performer gap and meaningful question volume first. Low-volume noise is less urgent than a consistent miss pattern.'}
               </p>
               {error ? (
                 <div
@@ -527,6 +503,17 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
                   {error}
                 </div>
               ) : null}
+              {isPreview ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setRetryCount((value) => value + 1)}
+                  icon={<AlertCircle className="h-4 w-4" aria-hidden="true" />}
+                >
+                  Retry live analysis
+                </Button>
+              ) : null}
             </div>
           </WorkspaceSplit>
         </WorkspaceHeroStrip>
@@ -538,7 +525,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
           subtitle="Sorted by improvement opportunity so the biggest remaining lifts stay near the top."
         >
           <WorkspaceSplit className="items-start">
-            <WorkspaceSurface accent="#728ba6" className="xl:col-span-1">
+            <WorkspaceSurface accent={workspaceAccent.steel} className="xl:col-span-1">
               <div className="space-y-5">
                 <div>
                   <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
@@ -630,7 +617,9 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
                     <span>Cohort average</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <StarShape cx={6} cy={6} fill={CHART_COLORS.weakness} />
+                    <svg className="h-4 w-4" viewBox="0 0 16 16" aria-hidden="true">
+                      <StarShape cx={8} cy={8} fill={CHART_COLORS.weakness} />
+                    </svg>
                     <span className="ml-2">Top 10%</span>
                   </div>
                 </div>

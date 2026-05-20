@@ -189,6 +189,7 @@ export const AdvancedLearningProfileDashboard = productionDeferred('Advanced lea
 export const UserFriendlyStatsDisplay = productionDeferred('Experimental stats display');
 export const PracticePage = lazy(() => import('../pages/PracticePage').then((m) => ({ default: m.PracticePage })));
 export const ProgressPage = lazy(() => import('../pages/ProgressPage').then((m) => ({ default: m.ProgressPage })));
+export const ReviewPage = lazy(() => import('../pages/ReviewPage').then((m) => ({ default: m.ReviewPage })));
 export const ElaborationDrill = productionDeferred('Elaboration drill');
 export const ICDCodingDrill = productionDeferred('ICD coding drill');
 export const TeachBackDrill = productionDeferred('Teach-back drill');

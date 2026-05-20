@@ -395,14 +395,14 @@ export const PracticePage: React.FC<PracticePageProps> = ({
         <WorkspacePageHeader
           meta={{
             badge: 'Mode Library',
-            badgeTone: 'gold',
-            title: 'Practice that adapts to your cognitive load.',
+            badgeTone: 'steel',
+            title: 'Practice / Qbank workspace',
             subtitle:
-              'Search by workload and launch a verified beta practice path without another dashboard detour.',
+              'Choose a targeted block, mixed exam set, tutor mode, or review path from the same clinical console.',
             status:
               weakestSystem && hasResidencyData
                 ? `Weakest live signal: ${weakestSystem}`
-                : 'Search and launch by workload',
+                : 'Choose by system, mode, and workload',
             actionPosition: 'under-title',
             backLabel: 'Back to Study',
             onBack: () => navigate(ROUTES.STUDY),
@@ -412,14 +412,14 @@ export const PracticePage: React.FC<PracticePageProps> = ({
                   onClick: () => onNavigateToDrillWithSystem('system_drill', weakestSystem),
                 }
               : {
-                  label: 'Start adaptive session',
+                  label: 'Start mixed block',
                   onClick: () => onNavigateToDrillMode('core_adaptive'),
                 },
             secondaryActions: [
               ...(isPrivateBetaModeVisible('rapid_recall')
                 ? [
                     {
-                      label: 'Rapid Recall',
+                  label: 'Rapid Recall',
                       onClick: () => onNavigateToDrillMode('rapid_recall'),
                     },
                   ]
@@ -598,8 +598,8 @@ export const PracticePage: React.FC<PracticePageProps> = ({
                 >
                   <p className="text-sm font-medium text-[var(--color-text-primary)]">Quick wins</p>
                   <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                  Use 10-minute recall or focused question drills when you need momentum between
-                  classes or on rotation.
+                  Use short recall or focused question drills when you need momentum between
+                  classes, commuting, or clinical rotation downtime.
                   </p>
                 </div>
                 <div
@@ -615,7 +615,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
                   </p>
                   <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
                     Use adaptive, system, or pharmacology blocks when you have enough time to work
-                    through clinical reasoning.
+                    through clinical reasoning, missed distractors, and management steps.
                   </p>
                 </div>
                 <div

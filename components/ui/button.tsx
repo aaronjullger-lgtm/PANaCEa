@@ -6,7 +6,7 @@
  * for composition with Radix primitives (Tooltip triggers, Dialog triggers, etc.).
  *
  * Theming via CSS custom properties:
- * - Primary: muted brass with high-contrast foreground
+ * - Primary: cyan clinical action with high-contrast foreground
  * - Secondary: quiet surface/outline treatment
  * - Ghost: minimal chrome
  * - Destructive: reserved for destructive actions only
@@ -26,7 +26,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          'border border-[var(--color-gold-dark)] bg-[var(--color-gold-dark)] text-[var(--color-gold-text)] shadow-[var(--shadow-surface)] hover:bg-[var(--color-gold-dark-hover)] hover:border-[var(--color-gold-dark-hover)]',
+          'border border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--primary-foreground)] shadow-[var(--shadow-surface)] hover:bg-[var(--color-accent-hover)] hover:border-[var(--color-accent-hover)]',
         secondary:
           'border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[var(--shadow-surface)] hover:bg-[var(--color-bg-tertiary)]',
         destructive:

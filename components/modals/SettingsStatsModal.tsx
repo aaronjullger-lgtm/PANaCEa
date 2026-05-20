@@ -1029,7 +1029,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         initial={false}
         animate={{}}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center z-[40] p-2 sm:p-4"
+        className="fixed inset-0 z-[120] flex items-center justify-center bg-[var(--color-overlay)] p-2 backdrop-blur-md sm:p-4"
         onClick={onClose}
       >
         <motion.div
@@ -1040,13 +1040,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
           initial={{ scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="flex flex-col bg-[var(--color-bg-primary)] backdrop-blur-md rounded-xl sm:rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] w-full max-w-2xl max-h-[90vh] overflow-hidden border border-[var(--color-border)]"
+          className="card-cinematic flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 shadow-[0_28px_80px_-44px_rgba(0,0,0,0.9)] backdrop-blur-md"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header: title (left) and close (right) — close is modal chrome, not a tab */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <div className="p-1.5 sm:p-2 bg-[var(--color-accent)]/10 rounded-xl flex-shrink-0">
+          <div className="flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/80 px-4 py-3 sm:px-6 sm:py-4">
+            <div className="min-w-0 space-y-1">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                <div className="flex-shrink-0 rounded-lg bg-[var(--color-accent)]/10 p-1.5 sm:p-2">
                 {activeTab === 'stats' ? (
                   <BarChart3
                     className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]"
@@ -1068,19 +1069,23 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     strokeWidth={1.5}
                   />
                 )}
+                </div>
+                <h2
+                  id="settings-modal-title"
+                  className="truncate text-lg font-semibold tracking-[-0.03em] text-[var(--color-text-primary)] sm:text-xl"
+                >
+                  {activeTab === 'stats'
+                    ? 'Statistics'
+                    : activeTab === 'preferences'
+                      ? 'Dashboard Preferences'
+                      : activeTab === 'activity'
+                        ? 'Activity'
+                        : 'Account'}
+                </h2>
               </div>
-              <h2
-                id="settings-modal-title"
-                className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] truncate"
-              >
-                {activeTab === 'stats'
-                  ? 'Statistics'
-                  : activeTab === 'preferences'
-                    ? 'Dashboard Preferences'
-                    : activeTab === 'activity'
-                      ? 'Activity'
-                      : 'Account'}
-              </h2>
+              <p className="hidden text-xs font-medium uppercase tracking-[0.16em] text-[var(--color-text-muted)] sm:block">
+                StudyPANaCEa control center
+              </p>
             </div>
             <Button
               variant="ghost"
@@ -1096,7 +1101,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
           {/* Tab Switcher - Desktop: top tabs (internal navigation; X above closes entire modal) */}
           <div
-            className="hidden md:flex border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50"
+            className="hidden border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/70 md:flex"
             role="tablist"
             aria-label="Modal sections"
           >
@@ -1161,7 +1166,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
           </div>
 
           {/* Content - extra bottom padding on mobile for bottom bar */}
-          <div role="tabpanel" aria-label={activeTab === 'stats' ? 'Stats' : 'Settings'} className="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 md:pb-6 scrollable-area">
+          <div role="tabpanel" aria-label={activeTab === 'stats' ? 'Stats' : 'Settings'} className="scrollable-area flex-1 overflow-y-auto p-4 pb-20 sm:p-6 md:pb-6 lg:p-7">
             {activeTab === 'stats' ? (
               <div className="space-y-4 sm:space-y-6">
                 {/* Motivational Message - Low Stakes Approach */}
@@ -2963,8 +2968,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
           </div>
 
           {/* Fixed Footer - Version (outside scroll, always visible) */}
-          <div className="flex-shrink-0 border-t border-[var(--color-border)] px-4 py-2 text-center text-xs text-[var(--color-text-muted)]">
-            PANaCEa v1.0.0 • Built for PANCE Success
+          <div className="flex-shrink-0 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 px-4 py-2 text-center text-xs text-[var(--color-text-muted)]">
+            StudyPANaCEa v1.0.0 / PANCE readiness console
           </div>
         </motion.div>
       </motion.div>

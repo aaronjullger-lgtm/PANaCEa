@@ -56,9 +56,9 @@ export interface WorkspacePageMeta {
 
 
 const SUPPORTING_TEXT_COLOR =
-  'color-mix(in srgb, var(--color-text-primary) 74%, var(--color-text-secondary))';
+  'color-mix(in srgb, var(--color-text-secondary) 86%, var(--color-text-muted))';
 const MUTED_TEXT_COLOR =
-  'color-mix(in srgb, var(--color-text-primary) 56%, var(--color-text-secondary))';
+  'color-mix(in srgb, var(--color-text-muted) 88%, var(--color-text-secondary))';
 
 function resolveDensityClass(density: WorkspacePageMeta['density']) {
   switch (density) {
@@ -81,15 +81,15 @@ function resolveSurfaceStyles(role: WorkspaceSurfaceRole, accent: string): CSSPr
       return {
         ...base,
         background:
-          'linear-gradient(145deg, color-mix(in srgb, var(--color-bg-secondary) 78%, var(--workspace-accent) 8%), color-mix(in srgb, var(--color-bg-primary) 84%, var(--workspace-accent) 16%))',
+          'linear-gradient(145deg, color-mix(in srgb, var(--color-bg-secondary) 86%, var(--workspace-accent) 8%), color-mix(in srgb, var(--color-bg-primary) 90%, var(--workspace-accent) 10%))',
         boxShadow:
-          '0 28px 80px -48px rgba(15,23,42,0.72), inset 0 1px 0 color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+          '0 22px 64px -42px rgba(0,0,0,0.82), inset 0 1px 0 color-mix(in srgb, var(--color-text-primary) 7%, transparent)',
       };
     case 'action':
       return {
         ...base,
         background:
-          'linear-gradient(145deg, color-mix(in srgb, var(--workspace-accent) 14%, var(--color-bg-secondary)), color-mix(in srgb, var(--color-bg-primary) 88%, var(--workspace-accent) 12%))',
+          'linear-gradient(145deg, color-mix(in srgb, var(--workspace-accent) 10%, var(--color-bg-secondary)), color-mix(in srgb, var(--color-bg-primary) 92%, var(--workspace-accent) 8%))',
         boxShadow:
           '0 24px 70px -46px color-mix(in srgb, var(--workspace-accent) 48%, transparent)',
       };
@@ -97,13 +97,13 @@ function resolveSurfaceStyles(role: WorkspaceSurfaceRole, accent: string): CSSPr
       return {
         ...base,
         background:
-          'linear-gradient(145deg, color-mix(in srgb, var(--color-bg-secondary) 84%, var(--workspace-accent) 5%), color-mix(in srgb, var(--color-bg-primary) 90%, var(--workspace-accent) 10%))',
+          'linear-gradient(145deg, color-mix(in srgb, var(--color-bg-secondary) 88%, var(--workspace-accent) 5%), color-mix(in srgb, var(--color-bg-primary) 94%, var(--workspace-accent) 6%))',
       };
     case 'alert':
       return {
         ...base,
         background:
-          'linear-gradient(145deg, color-mix(in srgb, var(--color-bg-secondary) 74%, var(--workspace-accent) 14%), color-mix(in srgb, var(--color-bg-primary) 88%, var(--workspace-accent) 12%))',
+          'linear-gradient(145deg, color-mix(in srgb, var(--color-bg-secondary) 80%, var(--workspace-accent) 12%), color-mix(in srgb, var(--color-bg-primary) 90%, var(--workspace-accent) 10%))',
         boxShadow:
           '0 24px 70px -52px color-mix(in srgb, var(--workspace-accent) 56%, transparent)',
       };
@@ -123,7 +123,7 @@ function resolveSurfaceStyles(role: WorkspaceSurfaceRole, accent: string): CSSPr
       return {
         ...base,
         background:
-          'linear-gradient(145deg, color-mix(in srgb, var(--color-bg-secondary) 82%, var(--workspace-accent) 6%), color-mix(in srgb, var(--color-bg-primary) 92%, var(--workspace-accent) 8%))',
+          'linear-gradient(145deg, color-mix(in srgb, var(--color-bg-secondary) 88%, var(--workspace-accent) 4%), color-mix(in srgb, var(--color-bg-primary) 94%, var(--workspace-accent) 6%))',
       };
   }
 }
@@ -192,7 +192,7 @@ export function WorkspacePage({
     <div className={cn('relative isolate', resolveDensityClass(density), className)}>
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[2rem]"
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-xl"
       >
         <div
           className="absolute inset-0"
@@ -239,7 +239,7 @@ export function WorkspacePageHeader({
             <button
               type="button"
               onClick={meta.onBack}
-              className="inline-flex min-h-[40px] items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-300 hover:border-[var(--color-accent)]/30 hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+              className="inline-flex min-h-[40px] items-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-300 hover:border-[var(--color-accent)]/30 hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
               style={{
                 borderColor: chromeBorder,
                 background: chromeFill,
@@ -251,7 +251,7 @@ export function WorkspacePageHeader({
           ) : null}
           {meta.badge ? (
             <span
-              className="inline-flex min-h-[34px] items-center rounded-full border px-3.5 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.16em]"
+              className="inline-flex min-h-[34px] items-center rounded-lg border px-3.5 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.16em]"
               style={{
                 background: tone.bg,
                 color: tone.text,
@@ -263,7 +263,7 @@ export function WorkspacePageHeader({
           ) : null}
           {meta.status ? (
             <span
-              className="inline-flex min-h-[34px] items-center rounded-full border px-3.5 py-1.5 text-sm font-medium text-[var(--color-text-secondary)]"
+              className="inline-flex min-h-[34px] items-center rounded-lg border px-3.5 py-1.5 text-sm font-medium text-[var(--color-text-secondary)]"
               style={{
                 borderColor: chromeBorder,
                 background: chromeFill,
@@ -274,7 +274,7 @@ export function WorkspacePageHeader({
           ) : null}
         </div>
         <div className="space-y-3">
-          <h1 className="max-w-3xl text-3xl font-semibold tracking-[-0.05em] text-[var(--color-text-primary)] sm:text-4xl lg:text-[3.25rem] lg:leading-[1.02]">
+          <h1 className="max-w-3xl text-3xl font-semibold text-[var(--color-text-primary)] sm:text-4xl lg:text-[2.65rem] lg:leading-[1.08]">
             {meta.title}
           </h1>
           {meta.subtitle ? (
@@ -314,9 +314,9 @@ export function WorkspaceHeroStrip({
     <WorkspaceSurface
       role="hero"
       accent={resolvedAccent}
-      className={cn('rounded-[1.85rem] p-6 sm:p-7', className)}
+      className={cn('rounded-lg p-6 sm:p-7', className)}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(196,183,138,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(114,139,166,0.12),transparent_30%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(103,232,249,0.10),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(167,139,250,0.10),transparent_30%)]" />
       <div
         className="absolute inset-0 opacity-[0.18]"
         style={{ backgroundImage: 'var(--noise-texture)' }}
@@ -347,7 +347,7 @@ export function WorkspaceSurface({
   return (
     <section
       className={cn(
-        'card-cinematic relative overflow-hidden rounded-[1.5rem] border',
+        'card-cinematic relative overflow-hidden rounded-lg border',
         padded ? 'p-5 sm:p-6' : '',
         className
       )}

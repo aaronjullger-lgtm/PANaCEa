@@ -48,6 +48,7 @@ export const ROUTE_REGISTRY: RouteDefinition[] = [
   // Note: 8 routes migrated to React Router in Sprint 4 — now isRouterRoute: true, view: null
   { path: '/study/knowledge', view: null, label: 'Knowledge Base', isRouterRoute: true, includeIn404Check: true, parentPath: '/study' },
   { path: '/study/utilities', view: null, label: 'Tools', isRouterRoute: true, includeIn404Check: true, parentPath: '/study' },
+  { path: '/study/review', view: null, label: 'Review', isRouterRoute: true, includeIn404Check: true, parentPath: '/study' },
   { path: '/study/path', view: null, label: 'Study Path', isRouterRoute: true, includeIn404Check: true, parentPath: '/study' },
   { path: '/gap-analysis', view: null, label: 'Gap Analysis', isRouterRoute: true, includeIn404Check: true },
   { path: '/clinical-profile', view: null, label: 'Clinical Profile', isRouterRoute: true, includeIn404Check: true },

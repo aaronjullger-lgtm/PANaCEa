@@ -59,7 +59,7 @@ export const MedicalGlassCard = React.forwardRef<HTMLDivElement, MedicalGlassCar
           isInteractive && typeof resolvedPressed === 'boolean' ? resolvedPressed : undefined
         }
         className={cn(
-          'atlas-glass-card atlas-reduced-motion-safe rounded-2xl p-5 text-atlas-white',
+          'atlas-glass-card atlas-reduced-motion-safe rounded-lg p-5 text-atlas-white',
           'transition-[border-color,box-shadow,transform,background-color] duration-200',
           active && 'atlas-border-glow',
           scannerAccent && 'atlas-scanner-line',

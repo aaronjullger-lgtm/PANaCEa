@@ -47,10 +47,18 @@ function markDismissed(): void {
 export interface IncidentBannerProps {
   /** Override for testing: force visibility regardless of real status. */
   forceVisible?: boolean;
+  /** Suppress the advisory health ribbon when another degraded-mode banner owns the top slot. */
+  suppress?: boolean;
+  /** Offset the top-level banner so fixed desktop navigation does not cover it. */
+  offsetForNavRail?: boolean;
 }
 
-export const IncidentBanner: React.FC<IncidentBannerProps> = ({ forceVisible = false }) => {
-  const { status, message } = useSystemStatus();
+export const IncidentBanner: React.FC<IncidentBannerProps> = ({
+  forceVisible = false,
+  suppress = false,
+  offsetForNavRail = false,
+}) => {
+  const { status, message } = useSystemStatus({ pollOnMount: !suppress });
   const [dismissed, setDismissed] = useState(() => wasRecentlyDismissed());
 
   // If the status flips from degraded -> healthy, drop the dismissal so the
@@ -68,7 +76,7 @@ export const IncidentBanner: React.FC<IncidentBannerProps> = ({ forceVisible = f
 
   const shouldShow =
     forceVisible ||
-    (!dismissed && (status === 'unhealthy' || status === 'unreachable'));
+    (!suppress && !dismissed && (status === 'unhealthy' || status === 'unreachable'));
 
   if (!shouldShow) return null;
 
@@ -92,7 +100,9 @@ export const IncidentBanner: React.FC<IncidentBannerProps> = ({ forceVisible = f
     <div
       role="status"
       aria-live="polite"
-      className="w-full border-b border-[var(--color-data-provisional)]/40 bg-[var(--color-data-provisional)]/15 text-[var(--color-text-primary)]"
+      className={`w-full border-b border-[var(--color-data-provisional)]/40 bg-[var(--color-data-provisional)]/15 text-[var(--color-text-primary)] ${
+        offsetForNavRail ? 'md:pl-[var(--nav-rail-width)]' : ''
+      }`}
     >
       <div className="max-w-7xl mx-auto px-4 py-2 flex items-start gap-3">
         <Icon

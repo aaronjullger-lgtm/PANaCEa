@@ -31,7 +31,7 @@ export const PremiumCTAButton = React.forwardRef<HTMLButtonElement, PremiumCTABu
         ref={ref}
         variant={isPrimary ? 'primary' : 'secondary'}
         className={cn(
-          'atlas-focus-ring atlas-reduced-motion-safe relative overflow-hidden rounded-xl border px-5 py-3',
+          'atlas-focus-ring atlas-reduced-motion-safe relative overflow-hidden rounded-lg border px-5 py-3',
           'transition-[border-color,box-shadow,transform,background-color,color] duration-200',
           isPrimary
             ? 'border-atlas-cyan bg-atlas-cyan text-atlas-background shadow-[0_0_28px_-14px_var(--atlas-accent-cyan)] hover:bg-atlas-white hover:border-atlas-white'

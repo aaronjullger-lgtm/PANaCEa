@@ -16,6 +16,7 @@ import React from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { Navigate } from 'react-router-dom';
 import { ROUTES } from '@/config/routes';
+import { isGuestModeActive } from '@/services/auth/guestAuth';
 
 interface AuthenticatedRouteProps {
   children: React.ReactNode;
@@ -26,9 +27,11 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
 }) => {
   const { isSignedIn } = useAuth();
   const { isLoaded: isUserLoaded } = useUser();
+  const isGuestMode = typeof window !== 'undefined' && isGuestModeActive();
 
-  // Still loading auth state — show nothing to avoid flash of protected content
-  if (!isUserLoaded) {
+  // Guest mode is a local, limited preview context. API/server security still
+  // relies on real Clerk tokens, but route rendering should not collapse to /study.
+  if (!isUserLoaded && !isGuestMode) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-pulse text-[var(--color-text-tertiary)]">
@@ -38,8 +41,7 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
     );
   }
 
-  // Not signed in — redirect to /study (App.tsx gate renders LandingPage for unauth)
-  if (!isSignedIn) {
+  if (!isSignedIn && !isGuestMode) {
     return <Navigate to={ROUTES.STUDY} replace />;
   }
 

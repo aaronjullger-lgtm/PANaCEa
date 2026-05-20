@@ -161,7 +161,7 @@ export class ExternalMedicalDatabaseService {
   ): Promise<MedicalDatabaseResult[]> {
     try {
       const { query, limit = 10 } = params;
-      const searchUrl = `https://clinicaltrials.gov/api/v2/studies?query=${encodeURIComponent(query)}&limit=${limit}`;
+      const searchUrl = `https://clinicaltrials.gov/api/v2/studies?query.term=${encodeURIComponent(query)}&pageSize=${limit}`;
 
       const response = await fetch(searchUrl);
       if (!response.ok) {
@@ -310,7 +310,7 @@ export class ExternalMedicalDatabaseService {
             );
             break;
           case 'clinicaltrials':
-            await fetch('https://clinicaltrials.gov/api/v2/studies?query=test&limit=1');
+            await fetch('https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=1');
             break;
         }
 

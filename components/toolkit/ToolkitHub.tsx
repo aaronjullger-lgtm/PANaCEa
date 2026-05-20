@@ -267,6 +267,15 @@ function matchesSearch(query: string, values: string[]) {
   return values.some((value) => value.toLowerCase().includes(lowered));
 }
 
+function activateCardFromKeyboard(
+  event: React.KeyboardEvent<HTMLElement>,
+  onSelect: () => void
+) {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  onSelect();
+}
+
 function ToolkitTabButton({
   tab,
   active,
@@ -338,12 +347,14 @@ function CalculatorCard({
   const accent = getCategoryAccent(calc.category);
 
   return (
-    <motion.button
-      type="button"
+    <motion.div
+      role="button"
+      tabIndex={0}
       whileHover={{ y: -2, scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
       onClick={onSelect}
-      className="group h-full w-full text-left"
+      onKeyDown={(event) => activateCardFromKeyboard(event, onSelect)}
+      className="group h-full w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
     >
       <WorkspaceSurface accent={accent} className="h-full">
         <div className="flex h-full flex-col gap-4">
@@ -357,6 +368,7 @@ function CalculatorCard({
               <button
                 type="button"
                 onClick={onTogglePin}
+                onKeyDown={(event) => event.stopPropagation()}
                 className={`rounded-lg p-1.5 transition-all ${
                   isPinned
                     ? 'text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/10'
@@ -402,7 +414,7 @@ function CalculatorCard({
           </div>
         </div>
       </WorkspaceSurface>
-    </motion.button>
+    </motion.div>
   );
 }
 
@@ -416,12 +428,14 @@ function ToolSelectionCard<TId extends string>({
   const Icon = tool.icon;
 
   return (
-    <motion.button
-      type="button"
+    <motion.div
+      role="button"
+      tabIndex={0}
       whileHover={{ y: -2, scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
       onClick={onSelect}
-      className="h-full w-full text-left"
+      onKeyDown={(event) => activateCardFromKeyboard(event, onSelect)}
+      className="group h-full w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
     >
       <WorkspaceSurface accent={tool.accent} className="h-full">
         <div className="flex h-full flex-col gap-4">
@@ -459,7 +473,7 @@ function ToolSelectionCard<TId extends string>({
           </div>
         </div>
       </WorkspaceSurface>
-    </motion.button>
+    </motion.div>
   );
 }
 
