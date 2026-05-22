@@ -1,25 +1,27 @@
 # Current Mission
 
-**Last Updated:** 2026-05-22 16:22 EDT
+**Last Updated:** 2026-05-22 17:47 EDT
 **Coordinator:** panacea-syncytium-coordinator
 
 ## Active Priority
 
-**Task:** Workflow optimization — execute docs/plans/2026-05-22-workflow-optimization.md
-**Assigned To:** Clawde Code (main agent)
-**Status:** In progress — "Do First" items being applied
+**Task:** First specialist agent dispatch — PANaCEa code work
+**Assigned To:** TBD (selecting agent based on backlog priority)
+**Status:** Ready to dispatch
 
 ## Priority Queue
 
-1. Complete workflow optimization "Do First" items (AGENTS.md, SOUL.md, TOOLS.md, cron fix)
-2. Update panacea-coding skill stats
-3. Set up morning/evening crons
+1. Dispatch first specialist agent for highest-value backlog item
+2. Clean up 13 uncommitted working tree changes (commit or revert)
+3. Fix PANaCEa Daily Test Health cron delivery error
 4. PatientEncounterMode decomposition (3,413→target 1,500)
+5. Authenticated E2E smoke (blocked on Clerk 2FA — needs Aaron)
 
 ## Blockers
 
-- None active. P0 production blockers (source identity migration, smoke tests) need Aaron.
+- **P0:** Clerk E2E auth (no safe non-2FA test user) — blocks browser-level core-flow smoke
+- **P1:** 13 uncommitted changes in working tree — need review
 
 ## Next Action
 
-Finish applying Do First items, then move to cron setup.
+Pick highest-value backlog task from APP_FUNCTIONALITY_PLAN, dispatch appropriate specialist.
