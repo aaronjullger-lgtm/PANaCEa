@@ -32,6 +32,7 @@ import {
   RefreshCw,
   BookOpen,
   Map,
+  Bot,
 } from 'lucide-react';
 import { InlineSpinner } from '@/components/loading';
 import { useAuth } from '../../hooks/useAuth';
@@ -531,6 +532,22 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)]">
                         Triage drafts, media, and questions
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate(ROUTES.ADMIN_AGENTS)}
+                    className="flex items-center gap-3 p-4 bg-[var(--color-data-green)]/10 border border-[var(--color-data-green)]/30 rounded-lg hover:bg-[var(--color-data-green)]/20 transition-colors text-left"
+                  >
+                    <Bot className="w-5 h-5 text-[var(--color-data-green)]" />
+                    <div>
+                      <div className="font-medium text-[var(--color-text-primary)]">
+                        Agent Control
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)]">
+                        Run production agents for quality, coverage &amp; health audits
                       </div>
                     </div>
                   </button>
