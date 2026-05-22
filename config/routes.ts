@@ -9,6 +9,7 @@ export const ROUTES = {
   ADMIN: '/admin',
   ADMIN_CURATION: '/admin/curation',
   ADMIN_REFINERY: '/admin/refinery',
+  ADMIN_AGENTS: '/admin/agents',
   CLINICAL_EYE: '/clinical-eye',
   VISUALIZER: '/visualizer',
   LECTURE_CONVERTER: '/lecture-converter',

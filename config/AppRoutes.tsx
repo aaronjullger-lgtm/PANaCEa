@@ -35,6 +35,7 @@ import {
   TaxonomiesPage,
   SystemMappingsPage,
   QuestionGeneratorPage,
+  AgentControlPage,
   RefineryPage,
   QuestionCurationPanel,
   MyPearlsPanel,
@@ -630,6 +631,18 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
             <Suspense fallback={<Loader message="Loading question generator…" />}>
               <ErrorBoundary variant="page">
                 <QuestionGeneratorPage />
+              </ErrorBoundary>
+            </Suspense>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/agents"
+        element={
+          <AdminRoute>
+            <Suspense fallback={<Loader message="Loading agent control panel…" />}>
+              <ErrorBoundary variant="page">
+                <AgentControlPage />
               </ErrorBoundary>
             </Suspense>
           </AdminRoute>

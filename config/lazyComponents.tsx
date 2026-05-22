@@ -173,6 +173,9 @@ export const QuestionGeneratorPage = lazy(() =>
 export const RefineryPage = lazy(() =>
   import('../pages/admin/RefineryPage').then((m) => ({ default: m.RefineryPage }))
 );
+export const AgentControlPage = lazy(() =>
+  import('../pages/admin/AgentControlPage').then((m) => ({ default: m.AgentControlPage }))
+);
 export const MyPearlsPanel = lazy(() => import('../components/pearls/MyPearlsPanel'));
 export const ClinicalEyePage = lazy(() => import('../pages/ClinicalEyePage'));
 export const VisualizerPage = lazy(() => import('../pages/VisualizerPage'));
