@@ -30,6 +30,17 @@ Use this guide when deciding which `.agents/skills` workflow should drive a Stud
 | "Audit auth, secrets, privacy, or cross-user access" | `security-and-privacy-audit` | `panacea-edge-endpoints`, `panacea-prisma-data-integrity` |
 | "Prepare to ship" | `release-readiness` | `panacea-verify`, `optimize-ci-cd`, `security-and-privacy-audit` |
 | "Monitor after launch or handle an incident" | `post-launch-monitoring-and-response` | `debug-reproduce-isolate`, affected `panacea-*` skill |
+| "Coordinate multi-agent sprint or sequencing" | `panacea-syncytium-coordinator` | `panacea-navigator`, `panacea-verify`, affected `panacea-*` skill |
+| "Resolve file ownership conflicts" | `panacea-syncytium-coordinator` | `panacea-navigator` |
+| "Determine next priority / what to work on" | `panacea-syncytium-coordinator` | `product-improvement-planner` |
+| "Audit clinical/medical content correctness" | `panacea-clinical-content-auditor` | `panacea-content-refinery`, `panacea-prisma-data-integrity` |
+| "Work on AI question generation pipeline" | `panacea-question-generation` | `panacea-content-refinery`, `panacea-edge-endpoints`, `panacea-verify` |
+| "Write regression tests or hunt regressions" | `panacea-regression-guard` | `panacea-verify`, affected `panacea-*` skill, `setup-testing-safety-net` |
+| "Deploy or configure Cloudflare/Wrangler" | `panacea-deployment-guard` | `release-readiness`, `security-and-privacy-audit`, `panacea-verify` |
+| "Design or run identity/schema migration" | `panacea-identity-migration` | `panacea-prisma-data-integrity`, `panacea-verify` |
+| "Clean up dead code or repo debt" | `panacea-repo-hygiene` | `repo-operating-system`, `panacea-verify` |
+| "Audit Clerk auth/RBAC/token security" | `panacea-auth-guard` | `security-and-privacy-audit`, `panacea-edge-endpoints` |
+| "Fix study plan generation or V2 consolidation" | `panacea-study-plan` | `panacea-fsrs-guardrails`, `panacea-dashboard-analytics`, `panacea-session-pipeline` |
 
 ## Prompt Engineering Defaults
 

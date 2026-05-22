@@ -12,7 +12,10 @@ StudyPANaCEa exposes these skills through the repo-local `.agents/skills` direct
 | `debug-reproduce-isolate` | `.agents/skills/debug-reproduce-isolate` | Reproduce bugs, isolate root causes, implement minimal fixes, and add regression tests. |
 | `setup-testing-safety-net` | `.agents/skills/setup-testing-safety-net` | Build or improve unit, integration, and E2E test coverage for critical flows. |
 | `panacea-verify` | `.agents/skills/panacea-verify` | Choose and run StudyPANaCEa-specific verification commands and summarize check results. |
+| `panacea-regression-guard` | `.agents/skills/panacea-regression-guard` | Write PANaCEa regression tests, hunt for regressions, fill test coverage gaps, and add browser/route smoke tests. |
+| `panacea-repo-hygiene` | `.agents/skills/panacea-repo-hygiene` | Find and remove dead code, duplicate pathways, deprecated shells, stale docs, and unused dependencies. |
 | `think` | `.agents/skills/think` | Support strategic decision-making and priority reasoning outside direct repo execution. |
+| `panacea-syncytium-coordinator` | `.agents/skills/panacea-syncytium-coordinator` | Sequence multi-agent work, prevent conflicting edits, assign ownership, and maintain the living development plan. |
 | `wrap-up` | `.agents/skills/wrap-up` | Close a session with issue capture, handoff notes, and optional shipping steps. |
 
 ## StudyPANaCEa Product Skills
@@ -29,6 +32,10 @@ StudyPANaCEa exposes these skills through the repo-local `.agents/skills` direct
 | `panacea-offline-sync` | `.agents/skills/panacea-offline-sync` | Work on offline-first behavior, PWA cache, sync queues, retries, idempotency, and progress-loss bugs. |
 | `panacea-osce-simulation` | `.agents/skills/panacea-osce-simulation` | Work on OSCE, virtual patient, SOAP note, grading rubric, station flow, and AI-mediated encounters. |
 | `panacea-prisma-data-integrity` | `.agents/skills/panacea-prisma-data-integrity` | Work on Prisma schema, migrations, Supabase/Postgres integrity, model relationships, indexes, and production-like data scripts. |
+| `panacea-identity-migration` | `.agents/skills/panacea-identity-migration` | Design and implement canonical question/source/concept identity migrations, backfill scripts, database probes, and identity contract rollout. |
+| `panacea-question-generation` | `.agents/skills/panacea-question-generation` | Own the AI question generation pipeline: primary, RAG, enhanced, deep-context, batch, staging, and canonical schema. |
+| `panacea-study-plan` | `.agents/skills/panacea-study-plan` | Work on study plan generation, daily planning, StudyPlanTask V2 consolidation, progress tracking, and task completion. |
+| `panacea-clinical-content-auditor` | `.agents/skills/panacea-clinical-content-auditor` | Audit medical accuracy, clinical correctness, drug data, condition descriptions, and medical database integrity. |
 
 ## Memory And Retrieval Skills
 
@@ -55,6 +62,8 @@ Memory workflow scripts:
 | `api-database-audit-and-fix` | `.agents/skills/api-database-audit-and-fix` | Audit and fix API endpoints, database connections, environment config, authorization rules, and RLS policies. |
 | `optimize-ci-cd` | `.agents/skills/optimize-ci-cd` | Audit, fix, and optimize CI/CD workflows, caching, environment variables, secrets, and deployment steps. |
 | `security-and-privacy-audit` | `.agents/skills/security-and-privacy-audit` | Identify and fix high-risk authentication, authorization, secrets, API, database, payment, and logging issues. |
+| `panacea-auth-guard` | `.agents/skills/panacea-auth-guard` | Audit PANaCEa-specific Clerk integration, RBAC, token handling, route protection, and authorization consistency. |
+| `panacea-deployment-guard` | `.agents/skills/panacea-deployment-guard` | Work on Cloudflare Pages deployment, Wrangler config, KV namespaces, CSP headers, redirects, and deployment smoke. |
 | `performance-audit-optimise` | `.agents/skills/performance-audit-optimise` | Audit and optimize route performance, bundle size, rendering, images, 3D components, API calls, and database queries. |
 | `spaced-repetition-scheduler-improve` | `.agents/skills/spaced-repetition-scheduler-improve` | Improve spaced repetition, review queues, study scheduling, retention, due dates, and readiness scheduling. |
 | `ai-agent-design-and-eval` | `.agents/skills/ai-agent-design-and-eval` | Design, implement, evaluate, and improve task-specific AI agents, tutors, schedulers, generators, and explainers. |
