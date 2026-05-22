@@ -11,9 +11,11 @@ import {
 } from 'recharts';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import useSWR from 'swr';
+import { TrendingUp, BarChart3 } from 'lucide-react';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import { InlineSpinner } from '@/components/loading';
+import { WorkspaceEmptyState } from '@/components/workspace';
 import type { ProgressResponse } from '@/types';
 
 // ============================================================================
@@ -99,12 +101,11 @@ const ProgressProjectionChart: React.FC<ProgressProjectionChartProps> = ({
 
   if (error) {
     return (
-      <div className="rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 text-center">
-        <p className="text-[var(--color-text-primary)] font-medium mb-2">Progress projection unavailable</p>
-        <p className="text-sm text-[var(--color-text-secondary)]">
-          Unable to load progress data. Please try again later.
-        </p>
-      </div>
+      <WorkspaceEmptyState
+        icon={BarChart3}
+        title="Progress projection unavailable"
+        description="Unable to load progress data. The study optimizer may still be running — try again in a moment."
+      />
     );
   }
 
@@ -113,12 +114,11 @@ const ProgressProjectionChart: React.FC<ProgressProjectionChartProps> = ({
 
   if (projections.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 bg-[var(--color-bg-secondary)] rounded-xl">
-        <p className="text-[var(--color-text-muted)] mb-2">No projection data available</p>
-        <p className="text-sm text-[var(--color-text-secondary)]">
-          Complete a study session to see progress projections.
-        </p>
-      </div>
+      <WorkspaceEmptyState
+        icon={TrendingUp}
+        title="No projection data available"
+        description="Complete a study session to see how the optimizer projects your retention, accuracy, and blueprint coverage will improve over time."
+      />
     );
   }
 

@@ -106,7 +106,7 @@ export const IncidentBanner: React.FC<IncidentBannerProps> = ({
     >
       <div className="max-w-7xl mx-auto px-4 py-2 flex items-start gap-3">
         <Icon
-          className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--color-data-provisional)]"
+          className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--color-data-provisional)] animate-pulse"
           aria-hidden="true"
         />
         <div className="flex-1 min-w-0">
