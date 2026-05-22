@@ -39,7 +39,7 @@ vi.mock('../content/contentService', () => ({
   })),
 }));
 
-import { SessionService } from './sessionService';
+import { SessionService, parseRationaleFromExplanation } from './sessionService';
 
 function makePregeneratedQuestion(overrides: Record<string, unknown> = {}) {
   return {
@@ -130,5 +130,80 @@ describe('SessionService production serving contract', () => {
     expect(mockPrisma.questionSeed.findMany).not.toHaveBeenCalled();
     expect(mockPrisma.medicalContent.findMany).not.toHaveBeenCalled();
     expect(mockPrisma.preGeneratedQuestion.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('parseRationaleFromExplanation', () => {
+  it('returns empty string for null/undefined/empty input', () => {
+    expect(parseRationaleFromExplanation(null)).toBe('');
+    expect(parseRationaleFromExplanation(undefined)).toBe('');
+    expect(parseRationaleFromExplanation('')).toBe('');
+    expect(parseRationaleFromExplanation('  ')).toBe('');
+  });
+
+  it('returns plain string for non-JSON input', () => {
+    expect(parseRationaleFromExplanation('The correct answer is B because...')).toBe(
+      'The correct answer is B because...'
+    );
+  });
+
+  it('returns plain string for JSON that is not structured rationale', () => {
+    expect(parseRationaleFromExplanation('{"foo": "bar"}')).toBe('{"foo": "bar"}');
+    expect(parseRationaleFromExplanation('["array"]')).toBe('["array"]');
+  });
+
+  it('parses JSON-structured rationale with whyCorrect into EnrichedRationale', () => {
+    const json = JSON.stringify({
+      bottomLine: 'The diagnosis is MI.',
+      whyCorrect: 'ST elevation on ECG with elevated troponin confirms MI.',
+      whyIncorrectA: 'A is incorrect, consistent with pericarditis.',
+      whyIncorrectB: 'B is incorrect, consistent with PE.',
+      whyIncorrectC: 'C is incorrect, consistent with aortic dissection.',
+      whyIncorrectD: 'D is incorrect, consistent with costochondritis.',
+      clinicalPearl: 'Remember: Always check posterior leads for isolated posterior MI.',
+    });
+
+    const result = parseRationaleFromExplanation(json);
+    expect(result).not.toBeTypeOf('string');
+    expect(typeof result).toBe('object');
+    const obj = result as Record<string, unknown>;
+    expect(obj.bottomLine).toBe('The diagnosis is MI.');
+    expect(obj.whyCorrect).toBe('ST elevation on ECG with elevated troponin confirms MI.');
+    expect(obj.clinicalPearl).toBe(
+      'Remember: Always check posterior leads for isolated posterior MI.'
+    );
+  });
+
+  it('returns plain string for malformed JSON', () => {
+    expect(parseRationaleFromExplanation('{broken json')).toBe('{broken json');
+  });
+
+  it('returns empty string for non-string input types', () => {
+    expect(parseRationaleFromExplanation(42)).toBe('');
+    expect(parseRationaleFromExplanation(true)).toBe('');
+    expect(parseRationaleFromExplanation({ whyCorrect: 'x' })).toBe('');
+  });
+
+  it('round-trips: JSON string → parse → EnrichedRationale', () => {
+    const json = JSON.stringify({
+      bottomLine: 'Pneumonia confirmed.',
+      whyCorrect: 'CXR shows consolidation. Fever + cough + crackles.',
+      whyIncorrectA: 'A: Bronchitis — no consolidation on CXR.',
+      whyIncorrectB: 'B: CHF — no pulmonary edema or JVD.',
+      whyIncorrectC: 'C: PE — no risk factors, no S1Q3T3.',
+      whyIncorrectD: 'D: Pleural effusion — blunted costophrenic angle, not consolidation.',
+      clinicalPearl: 'CURB-65 score determines inpatient vs outpatient management.',
+      highYieldImageOrTable: 'CXR showing lobar consolidation',
+    });
+
+    const result = parseRationaleFromExplanation(json);
+    expect(typeof result).toBe('object');
+    const r = result as Record<string, unknown>;
+    expect(r.whyCorrect).toContain('CXR');
+    expect(r.whyIncorrectA).toContain('Bronchitis');
+    expect(r.whyIncorrectB).toContain('CHF');
+    expect(r.whyIncorrectC).toContain('PE');
+    expect(r.whyIncorrectD).toContain('Pleural effusion');
+    expect(r.highYieldImageOrTable).toBe('CXR showing lobar consolidation');
   });
 });

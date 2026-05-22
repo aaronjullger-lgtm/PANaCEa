@@ -66,6 +66,35 @@ export interface EnrichedRationale {
   commonPitfalls?: string[];
 }
 
+/**
+ * Parse a legacy explanation string into structured rationale if it's stored as JSON.
+ * The question-generator V2+ stores rationale as JSON.stringify() in the explanation column.
+ * Older generators store flat strings. This function detects both.
+ * Falls back to the raw string if parsing fails or the result isn't structured.
+ */
+export function parseRationaleFromExplanation(
+  raw: unknown
+): string | EnrichedRationale {
+  if (typeof raw !== 'string' || !raw.trim()) return '';
+  const trimmed = raw.trim();
+  // Fast check: only attempt JSON parse if it looks like a JSON object
+  if (!trimmed.startsWith('{')) return trimmed;
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      !Array.isArray(parsed) &&
+      'whyCorrect' in parsed
+    ) {
+      return parsed as EnrichedRationale;
+    }
+    return trimmed;
+  } catch {
+    return trimmed;
+  }
+}
+
 export interface EnrichedQuestion {
   id: string;
   question: string;
@@ -581,12 +610,15 @@ export class SessionService {
       }
 
       // Preserve structured rationale when present; fallback to string
+      // parseRationaleFromExplanation handles JSON-stored structured rationales
+      const rawRationale = data.rationale || data.explanation;
       const rationale =
-        typeof data.rationale === 'object' &&
-        data.rationale !== null &&
-        'whyCorrect' in (data.rationale as object)
-          ? (data.rationale as EnrichedRationale)
-          : ((data.rationale || data.explanation || '') as string);
+        typeof rawRationale === 'object' &&
+        rawRationale !== null &&
+        !Array.isArray(rawRationale) &&
+        'whyCorrect' in rawRationale
+          ? (rawRationale as EnrichedRationale)
+          : parseRationaleFromExplanation(rawRationale);
 
       questions.push({
         id: q.id,
@@ -689,7 +721,7 @@ export class SessionService {
         question,
         options: shuffledOptions,
         correctAnswerIndex: correctIndex,
-        rationale: seed.explanation,
+        rationale: parseRationaleFromExplanation(seed.explanation),
         system: seed.system || 'General',
         conditionId: seed.conditionId,
         condition: seed.Condition?.name,
@@ -794,7 +826,7 @@ export class SessionService {
         vignette: q.vignette || undefined,
         options,
         correctAnswerIndex: correctIndex,
-        rationale: q.explanation,
+        rationale: parseRationaleFromExplanation(q.explanation),
         system: q.system,
         conditionId: q.conditionId || undefined,
         condition: q.Condition?.name,

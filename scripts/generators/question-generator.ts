@@ -12,12 +12,26 @@ import * as crypto from 'crypto';
 const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
+/** Structured rationale matching ExplanationPanel + generationService standard */
+interface StructuredRationale {
+  bottomLine: string;
+  whyCorrect: string;
+  whyIncorrectA?: string;
+  whyIncorrectB?: string;
+  whyIncorrectC?: string;
+  whyIncorrectD?: string;
+  whyIncorrectE?: string;
+  clinicalPearl: string;
+  highYieldImageOrTable?: string;
+}
+
 interface QuestionData {
   vignette: string;
   question: string;
   options: { A: string; B: string; C: string; D: string; E?: string };
   correctAnswer: string;
-  explanation: string;
+  rationale: StructuredRationale;
+  explanation?: string; // Legacy flat string — deprecated in favor of rationale
   system: string;
   tags: string[];
 }
@@ -104,12 +118,12 @@ Difficulty: PANCE-level - typical board exam difficulty, moderate complexity, cl
 ${conditionContext}
 
 Requirements:
-1. Write a realistic clinical vignette (2-4 sentences) with patient demographics, history, and findings
-2. Include relevant vital signs, physical exam findings, or lab values when appropriate
+1. Write a realistic clinical vignette (2-4 sentences) with patient demographics, history, and findings. NEVER state the diagnosis in the vignette — raw patient data only.
+2. Include relevant vital signs, physical exam findings, or lab values when appropriate. Include ≥2 pertinent negatives that rule out top differentials.
 3. Ask about diagnosis, next best step, treatment, or mechanism
-4. Provide 4-5 answer options (A-E) that are plausible
+4. Provide exactly 5 answer options (A-E) that are plausible, distinct, and PANCE-style
 5. One clearly correct answer
-6. Detailed explanation covering why the answer is correct AND why each distractor is wrong
+6. STRUCTURED RATIONALE (5-section object): "rationale" MUST be an object with bottomLine, whyCorrect, whyIncorrectA/B/C/D/E, and clinicalPearl. Do NOT use flat "explanation" string. Each whyIncorrect MUST explain what the distractor IS correct for (different scenario) and why it fails for THIS patient.
 
 Return valid JSON:
 {
@@ -123,7 +137,17 @@ Return valid JSON:
     "E": "Fifth option"
   },
   "correctAnswer": "B",
-  "explanation": "The correct answer is B because... Option A is incorrect because... Option C is incorrect because...",
+  "rationale": {
+    "bottomLine": "The diagnosis is X, and the key discriminator is Y.",
+    "whyCorrect": "Walk through vignette steps that lead to the diagnosis, referencing specific findings.",
+    "whyIncorrectA": "Incorrect because [specific reason]. This would be correct for [different clinical scenario].",
+    "whyIncorrectB": "Incorrect because [specific reason]. This would be correct for [different clinical scenario].",
+    "whyIncorrectC": "Incorrect because [specific reason]. This would be correct for [different clinical scenario].",
+    "whyIncorrectD": "Incorrect because [specific reason]. This would be correct for [different clinical scenario].",
+    "whyIncorrectE": "Incorrect because [specific reason]. This would be correct for [different clinical scenario].",
+    "clinicalPearl": "Remember: [one actionable key takeaway for PANCE].",
+    "highYieldImageOrTable": "N/A"
+  },
   "system": "${condition.system}",
   "tags": ["${condition.name}", "diagnosis", "high-yield"]
 }
@@ -133,7 +157,11 @@ CRITICAL RULES:
 - Use straight quotes only
 - Write "greater than" not ">" 
 - NO special characters like ≥ ≤ × → 
-- All answer options must be distinct and medically plausible`;
+- All answer options must be distinct and medically plausible
+- Every whyIncorrect must teach — wrong answers are learning opportunities
+- bottomLine: one sentence a student in a rush can read
+- whyCorrect: trace the vignette clues to the answer explicitly
+- clinicalPearl: one memorable, PANCE-relevant takeaway`;
 }
 
 async function generateQuestion(
@@ -168,9 +196,20 @@ async function generateQuestion(
       !parsed.question ||
       !parsed.options ||
       !parsed.correctAnswer ||
-      !parsed.explanation
+      !parsed.rationale
     ) {
       throw new Error('Missing required fields');
+    }
+
+    // Validate structured rationale completeness
+    const r = parsed.rationale;
+    if (!r.bottomLine || !r.whyCorrect || !r.clinicalPearl) {
+      throw new Error('Rationale missing required sections (bottomLine, whyCorrect, clinicalPearl)');
+    }
+    // At least one whyIncorrect must be present (for the incorrect answer choices)
+    const whyIncorrectFields = [r.whyIncorrectA, r.whyIncorrectB, r.whyIncorrectC, r.whyIncorrectD, r.whyIncorrectE];
+    if (!whyIncorrectFields.some((field) => typeof field === 'string' && field.trim().length > 0)) {
+      throw new Error('Rationale must include at least one whyIncorrect explanation');
     }
 
     return {
@@ -316,7 +355,7 @@ async function main() {
           question: data.question,
           options: data.options,
           correctAnswer: data.correctAnswer,
-          explanation: data.explanation,
+          explanation: JSON.stringify(data.rationale), // Store structured rationale as JSON
           system: data.system,
           tags: data.tags,
           difficulty: 'medium', // All questions are PANCE-level
