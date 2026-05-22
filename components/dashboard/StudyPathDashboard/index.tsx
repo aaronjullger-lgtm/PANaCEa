@@ -33,6 +33,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { ROUTES } from '@/config/routes';
 import { clinicalConsoleDemoData } from '@/components/clinical-console/studyDemoData';
 import { workspaceAccent } from '@/lib/tokens';
+import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import ProgressProjectionChart from './ProgressProjectionChart';
 import PlanAlternativesModal from './PlanAlternativesModal';
 import FatigueAlertBanner from './FatigueAlertBanner';
@@ -514,20 +515,20 @@ const StudyPathDashboard = () => {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <WorkspaceMetricCard
             label="Total study time"
-            value={`${Math.round(totalMinutes / 60)}h`}
+            value={<AnimatedCounter value={Math.round(totalMinutes / 60)} suffix="h" />}
             detail={`${totalSessions} sessions across ${daysCount} day${daysCount === 1 ? '' : 's'}.`}
             icon={Clock}
           />
           <WorkspaceMetricCard
             label="Projected retention"
-            value={`+${(projectedRetentionIncrease * 100).toFixed(1)}%`}
+            value={<AnimatedCounter value={projectedRetentionIncrease * 100} decimals={1} prefix="+" suffix="%" />}
             detail="Expected lift from this optimized plan."
             accent="#7a8f6e"
             icon={TrendingUp}
           />
           <WorkspaceMetricCard
             label="Confidence"
-            value={`${(confidence * 100).toFixed(0)}%`}
+            value={<AnimatedCounter value={confidence * 100} suffix="%" />}
             detail={
               confidence > 0.7
                 ? 'High confidence recommendation.'
@@ -540,7 +541,7 @@ const StudyPathDashboard = () => {
           />
           <WorkspaceMetricCard
             label="Blueprint coverage"
-            value={`${coverageTotal.toFixed(1)}%`}
+            value={<AnimatedCounter value={coverageTotal} decimals={1} suffix="%" />}
             detail={`${topicCount} scheduled topic block${topicCount === 1 ? '' : 's'} across the plan.`}
             accent="#728ba6"
             icon={Calendar}
