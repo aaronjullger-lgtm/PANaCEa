@@ -1,0 +1,56 @@
+#!/bin/bash
+# PANaCEa pre-commit hook — fast checks before every commit
+# Install: cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+set -e
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx)$' || true)
+
+if [ -z "$STAGED_FILES" ]; then
+  exit 0
+fi
+
+echo "🔍 Checking $(echo "$STAGED_FILES" | wc -l | tr -d ' ') staged files..."
+
+# 1. Block console.log in production source
+CONSOLE_FILES=$(echo "$STAGED_FILES" | xargs grep -l 'console\.log' 2>/dev/null || true)
+if [ -n "$CONSOLE_FILES" ]; then
+  echo "❌ console.log found in:"
+  echo "$CONSOLE_FILES"
+  echo ""
+  echo "Remove console.log statements or use a logger service."
+  echo "Override: git commit --no-verify"
+  exit 1
+fi
+
+# 2. Block raw hex colors in src/ (use CSS variables)
+HEX_FILES=$(echo "$STAGED_FILES" | grep '^src/' | xargs grep -lE '#[0-9a-fA-F]{6}' 2>/dev/null || true)
+if [ -n "$HEX_FILES" ]; then
+  echo "⚠️  Raw hex colors found in src/ (use CSS variables from lib/tokens/):"
+  echo "$HEX_FILES"
+  echo ""
+  echo "Override: git commit --no-verify"
+  # Warning only — don't block (lot of legacy)
+fi
+
+# 3. Check for process.env in functions/ (Edge — must use context.env)
+EDGE_ENV=$(echo "$STAGED_FILES" | grep '^functions/' | xargs grep -l 'process\.env' 2>/dev/null || true)
+if [ -n "$EDGE_ENV" ]; then
+  echo "❌ process.env in Edge functions (use context.env.*):"
+  echo "$EDGE_ENV"
+  echo ""
+  echo "Override: git commit --no-verify"
+  exit 1
+fi
+
+# 4. Check for Prisma imports in frontend files
+PRISMA_FE=$(echo "$STAGED_FILES" | grep -E '^(src/|components/|pages/)' | xargs grep -l "@prisma/client\|prisma" 2>/dev/null || true)
+if [ -n "$PRISMA_FE" ]; then
+  echo "❌ Prisma import in frontend code (route through API):"
+  echo "$PRISMA_FE"
+  echo ""
+  echo "Override: git commit --no-verify"
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed"

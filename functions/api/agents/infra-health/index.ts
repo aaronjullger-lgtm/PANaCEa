@@ -27,6 +27,7 @@ import {
   runAgent,
   ToolRegistry,
 } from '../../../../lib/services/agents';
+import { logAgentTelemetry } from '../../../../lib/services/agents/telemetry';
 import {
   INFRA_TOOLS,
 } from '../../../../lib/services/agents/tools';
@@ -127,6 +128,19 @@ export const onRequestPost = authenticatedEndpoint(
       };
       if (result.error) payload.error = result.error;
       if (validated.includeSteps) payload.steps = result.steps;
+
+      logAgentTelemetry({
+        endpoint: '/api/agents/infra-health',
+        action: validated.action,
+        userId: auth.userId,
+        stopReason: result.stopReason,
+        iterations: result.iterations,
+        tokensUsed: result.tokensUsed,
+        durationMs: result.durationMs,
+        errorCode: result.error?.code,
+        errorMessage: result.error?.message,
+        timestamp: new Date().toISOString(),
+      });
 
       return { data: payload };
     } catch (error) {

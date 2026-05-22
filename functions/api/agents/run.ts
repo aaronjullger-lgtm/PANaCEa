@@ -35,6 +35,7 @@ import {
   type ToolCategory,
   type ToolExecutionContext,
 } from '../../../lib/services/agents';
+import { logAgentTelemetry } from '../../../lib/services/agents/telemetry';
 
 // ─── Request schema ─────────────────────────────────────────────────────────
 
@@ -172,6 +173,19 @@ export const onRequestPost = aiEndpoint(
       };
       if (result.error) payload.error = result.error;
       if (validated.includeSteps) payload.steps = result.steps;
+
+      logAgentTelemetry({
+        endpoint: '/api/agents/run',
+        action: 'general',
+        userId: auth.userId,
+        stopReason: result.stopReason,
+        iterations: result.iterations,
+        tokensUsed: result.tokensUsed,
+        durationMs: result.durationMs,
+        errorCode: result.error?.code,
+        errorMessage: result.error?.message,
+        timestamp: new Date().toISOString(),
+      });
 
       // Non-completed runs still return 200 with a stopReason — the client
       // renders the failure surface-side. 5xx is reserved for infra faults.

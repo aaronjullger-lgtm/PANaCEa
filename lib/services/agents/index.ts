@@ -35,3 +35,5 @@ export {
   userProgressSummaryTool,
   fsrsDueCountTool,
 } from './tools';
+export { logAgentTelemetry, summarizeTelemetry } from './telemetry';
+export type { AgentTelemetryEntry } from './telemetry';

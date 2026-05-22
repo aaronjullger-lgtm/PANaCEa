@@ -19,4 +19,9 @@ npm run test:e2e            # Playwright E2E
 - To be audited during discovery pass
 
 ## Verification Log
-_Updates after each verification run_
+### 2026-05-22 — Baseline Verification
+- ✅ **Typecheck:** Passed (`npm run typecheck` → exit 0, tsconfig.production.json)
+- ✅ **Tests:** 517 files passed, 9,648 passed, 1 skipped (0 failures)
+- ✅ **Build:** Passed (verified earlier)
+- **Duration:** 203s (test), typecheck passed clean
+- **Branch:** main, 9 commits ahead of origin, clean working tree

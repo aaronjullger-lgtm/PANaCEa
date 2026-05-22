@@ -1,24 +1,25 @@
 # Current Mission
 
-**Last Updated:** 2026-05-22 04:25 EDT
+**Last Updated:** 2026-05-22 16:22 EDT
 **Coordinator:** panacea-syncytium-coordinator
 
 ## Active Priority
 
-**Task:** Initialize coordination system — no active implementation work yet.
-**Assigned To:** None (initialization pass)
-**Status:** Pending first coordination cycle
+**Task:** Workflow optimization — execute docs/plans/2026-05-22-workflow-optimization.md
+**Assigned To:** Clawde Code (main agent)
+**Status:** In progress — "Do First" items being applied
 
 ## Priority Queue
 
-1. Complete one full question/session path end-to-end (read APP_FUNCTIONALITY_PLAN.md for current blocker)
-2. Resolve any broken build, typecheck, or critical test failures
-3. Advance through APP_FUNCTIONALITY_PLAN.md in dependency order
+1. Complete workflow optimization "Do First" items (AGENTS.md, SOUL.md, TOOLS.md, cron fix)
+2. Update panacea-coding skill stats
+3. Set up morning/evening crons
+4. PatientEncounterMode decomposition (3,413→target 1,500)
 
 ## Blockers
 
-- None identified yet. First coordination cycle will assess APP_FUNCTIONALITY_PLAN.md.
+- None active. P0 production blockers (source identity migration, smoke tests) need Aaron.
 
 ## Next Action
 
-Read `APP_FUNCTIONALITY_PLAN.md` to determine the critical path and assign the first agent.
+Finish applying Do First items, then move to cron setup.

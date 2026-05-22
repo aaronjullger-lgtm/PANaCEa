@@ -1,6 +1,15 @@
 # .autoclaw/error-log.md
 
-## Prevention Rules (from past errors)
+### CI Failures (2026-05-22)
+**Symptom:** Two scheduled workflows failing repeatedly
+**Root cause:**
+1. Reservoir Supply: `PRODUCTION_URL` and `CRON_SECRET` missing from GitHub Actions secrets
+2. Runtime Sanity: Prisma Accelerate TLS error — `self-signed certificate in certificate chain` on `prisma://accelerate.prisma-data.net/`
+**Fix needed:**
+1. Add `PRODUCTION_URL` and `CRON_SECRET` to GitHub repo secrets
+2. Verify Prisma Accelerate API key is valid; consider switching to DIRECT_DATABASE_URL with sslmode=require
+**Rule:** CI secrets must be audited when CI failures occur — check secrets availability before code
+**Deprecation:** Node.js 20 actions deprecated — update before June 2, 2026 (set FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true)
 
 ### Config Patch Reverts
 **Symptom:** Gateway config settings (web search, timeout, FS scope) reverted after restart
