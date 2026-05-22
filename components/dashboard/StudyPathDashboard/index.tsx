@@ -459,13 +459,19 @@ const StudyPathDashboard = () => {
     });
   }
 
-  if (!plan) {
+  const isEffectivelyEmpty =
+    !plan ||
+    (totalSessions === 0 && totalMinutes === 0 && topicCount === 0);
+
+  if (isEffectivelyEmpty) {
     return renderFallbackStudyPath({
       title: 'Build a route from the next useful study signal.',
       subtitle:
-        'No persisted study path is available in this session yet, but the workspace still shows the expected structure and next actions.',
+        'No persisted study path is available in this session yet. Start a practice block to generate performance data, then the optimizer can build a personalized weekly route.',
       reason:
-        'No live plan was returned for the current session. Generate a plan after authenticated performance data is available, or start Practice to create fresh signals.',
+        !plan
+          ? 'No live plan was returned for the current session. Generate a plan after authenticated performance data is available, or start Practice to create fresh signals.'
+          : 'Your plan was returned but contains no scheduled sessions yet. Complete a baseline calibration block or a few practice questions to seed enough data for a route.',
       tone: 'empty',
     });
   }

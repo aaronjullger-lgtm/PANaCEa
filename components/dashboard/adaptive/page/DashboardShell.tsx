@@ -145,7 +145,16 @@ export function DashboardShell({ viewModel }: { viewModel: DashboardViewModel })
                 className="rounded-2xl border border-[color-mix(in_srgb,var(--atlas-warning-amber)_40%,transparent)] bg-[color-mix(in_srgb,var(--atlas-warning-amber)_10%,transparent)] px-4 py-3 text-sm text-atlas-warning"
                 role="status"
               >
-                {partialMessage}
+                <div className="flex items-center justify-between gap-3">
+                  <p>{partialMessage}</p>
+                  <button
+                    type="button"
+                    onClick={() => window.location.reload()}
+                    className="flex-shrink-0 rounded-lg bg-[color-mix(in_srgb,var(--atlas-warning-amber)_20%,transparent)] px-3 py-1.5 text-xs font-medium text-atlas-warning hover:bg-[color-mix(in_srgb,var(--atlas-warning-amber)_30%,transparent)] transition-colors"
+                  >
+                    Retry
+                  </button>
+                </div>
               </section>
             ) : null}
 
