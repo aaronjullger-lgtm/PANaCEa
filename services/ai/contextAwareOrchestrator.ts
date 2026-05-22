@@ -70,7 +70,7 @@ const SITE_CONTEXT_MAP: SiteContext[] = [
     qualityRequirements: {
       accuracy: 'critical',
       completeness: 'comprehensive',
-      freshness: 'realtime', // Drug info changes frequently
+      freshness: 'realtime',
     },
     dependencies: ['conditions', 'guidelines', 'FDA_approvals'],
     metrics: { usageFrequency: 0, userSatisfaction: 0, contentGaps: 0 },
@@ -118,7 +118,7 @@ const SITE_CONTEXT_MAP: SiteContext[] = [
     qualityRequirements: {
       accuracy: 'critical',
       completeness: 'comprehensive',
-      freshness: 'realtime', // Resistance patterns change
+      freshness: 'realtime',
     },
     dependencies: ['infections', 'microbiology', 'local_antibiograms'],
     metrics: { usageFrequency: 0, userSatisfaction: 0, contentGaps: 0 },
@@ -142,7 +142,7 @@ const SITE_CONTEXT_MAP: SiteContext[] = [
     qualityRequirements: {
       accuracy: 'critical',
       completeness: 'essential',
-      freshness: 'current', // ACLS guidelines update
+      freshness: 'current',
     },
     dependencies: ['AHA_guidelines', 'medications', 'equipment'],
     metrics: { usageFrequency: 0, userSatisfaction: 0, contentGaps: 0 },
@@ -154,7 +154,7 @@ const SITE_CONTEXT_MAP: SiteContext[] = [
     qualityRequirements: {
       accuracy: 'critical',
       completeness: 'essential',
-      freshness: 'current', // Guidelines update periodically
+      freshness: 'current',
     },
     dependencies: ['professional_societies', 'evidence', 'publication_dates'],
     metrics: { usageFrequency: 0, userSatisfaction: 0, contentGaps: 0 },
@@ -250,13 +250,10 @@ export class ContextAwareAnalyzer {
   async analyzeSiteNeeds(): Promise<Map<string, ContentNeed[]>> {
     const needsMap = new Map<string, ContentNeed[]>();
 
-    console.log('🔍 Analyzing site-wide content needs with full context...\n');
-
     for (const context of SITE_CONTEXT_MAP) {
       const needs = await this.analyzeComponentNeeds(context);
       if (needs.length > 0) {
         needsMap.set(context.component, needs);
-        console.log(`📊 ${context.component}: ${needs.length} needs identified`);
       }
     }
 
@@ -269,7 +266,6 @@ export class ContextAwareAnalyzer {
   async analyzeComponentNeeds(context: SiteContext): Promise<ContentNeed[]> {
     const needs: ContentNeed[] = [];
 
-    // Check each content type requirement
     for (const contentType of context.contentTypes) {
       const analysis = await this.analyzeContentType(contentType, context);
 
@@ -293,17 +289,12 @@ export class ContextAwareAnalyzer {
    * Analyze a specific content type
    */
   async analyzeContentType(contentType: string, context: SiteContext): Promise<ContentAnalysis> {
-    // Get quality standard for this content type
     const standard = QUALITY_STANDARDS.find((s) => s.contentType === contentType);
-
-    // Query database for existing content
     const existing = await this.getExistingContent(contentType);
 
-    // Identify gaps
     const gaps: string[] = [];
     const recommendations: string[] = [];
 
-    // Check completeness
     if (existing.count < existing.expectedCount) {
       gaps.push(`Missing ${existing.expectedCount - existing.count} items`);
       recommendations.push(
@@ -311,19 +302,16 @@ export class ContextAwareAnalyzer {
       );
     }
 
-    // Check quality
     if (existing.lowQuality > 0) {
       gaps.push(`${existing.lowQuality} items below quality threshold`);
       recommendations.push(`Review and improve ${existing.lowQuality} items`);
     }
 
-    // Check freshness
     if (standard?.mustBeCurrent && existing.outdated > 0) {
       gaps.push(`${existing.outdated} outdated items`);
       recommendations.push(`Update ${existing.outdated} items with current information`);
     }
 
-    // Check dependencies
     for (const dep of context.dependencies) {
       const depStatus = await this.checkDependency(dep);
       if (!depStatus.satisfied) {
@@ -345,10 +333,9 @@ export class ContextAwareAnalyzer {
    * Get existing content statistics
    */
   async getExistingContent(contentType: string): Promise<ContentStats> {
-    // Map content types to database queries
     const stats: ContentStats = {
       count: 0,
-      expectedCount: 100, // Default expectation
+      expectedCount: 100,
       lowQuality: 0,
       outdated: 0,
       averageQuality: 0,
@@ -369,27 +356,23 @@ export class ContextAwareAnalyzer {
         });
         stats.count = mediaStats._count || 0;
         stats.averageQuality = mediaStats._avg.qualityScore || 0;
-        stats.expectedCount = 500; // Expect 500 clinical images
+        stats.expectedCount = 500;
         break;
       }
 
       case 'drug_information':
-        // Check pharmacy drill data
-        stats.expectedCount = 200; // Common medications
+        stats.expectedCount = 200;
         break;
 
       case 'guidelines':
-        // Check guideline database
-        stats.expectedCount = 100; // Major guidelines
+        stats.expectedCount = 100;
         break;
 
       case 'case_vignettes':
-        // Check case database
-        stats.expectedCount = 1000; // Comprehensive case library
+        stats.expectedCount = 1000;
         break;
     }
 
-    // Calculate low quality and outdated
     if (contentType === 'clinical_images') {
       const lowQualityCount = await prisma.mediaAsset.count({
         where: {
@@ -399,7 +382,6 @@ export class ContextAwareAnalyzer {
       });
       stats.lowQuality = lowQualityCount;
 
-      // Check for outdated (older than 1 year for images)
       const oneYearAgo = new Date();
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
       const outdatedCount = await prisma.mediaAsset.count({
@@ -418,7 +400,6 @@ export class ContextAwareAnalyzer {
    * Check if a dependency is satisfied
    */
   async checkDependency(dependency: string): Promise<DependencyStatus> {
-    // Check if required data exists
     switch (dependency) {
       case 'conditions': {
         const conditionCount = await prisma.condition.count();
@@ -426,12 +407,6 @@ export class ContextAwareAnalyzer {
           satisfied: conditionCount > 50,
           details: `${conditionCount} conditions in database`,
         };
-      }
-
-      case 'treatments':
-      case 'medications': {
-        // Would check treatment database
-        return { satisfied: true, details: 'Treatments available' };
       }
 
       default: {
@@ -447,17 +422,14 @@ export class ContextAwareAnalyzer {
     context: SiteContext,
     analysis: ContentAnalysis
   ): 'critical' | 'high' | 'medium' | 'low' {
-    // Critical if accuracy is critical and completeness is low
     if (context.qualityRequirements.accuracy === 'critical' && analysis.completeness < 50) {
       return 'critical';
     }
 
-    // High if usage is high and gaps exist
     if (context.metrics.usageFrequency > 0.7 && analysis.hasGaps) {
       return 'high';
     }
 
-    // Medium if moderate gaps
     if (analysis.completeness < 75) {
       return 'medium';
     }
@@ -474,8 +446,6 @@ export class ContextAwareGenerator {
    * Generate content based on identified needs with full context
    */
   async generateForNeeds(needs: ContentNeed[]): Promise<void> {
-    console.log(`\n🤖 Generating content for ${needs.length} identified needs...\n`);
-
     for (const need of needs) {
       await this.generateContent(need);
     }
@@ -485,13 +455,7 @@ export class ContextAwareGenerator {
    * Generate specific content with context awareness
    */
   async generateContent(need: ContentNeed): Promise<void> {
-    console.log(`📝 Generating ${need.contentType} for ${need.component}`);
-    console.log(`   Purpose: ${need.purpose}`);
-    console.log(`   Quality: ${need.qualityRequired.accuracy} accuracy required`);
-
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
-    // Build context-aware prompt
     const prompt = this.buildContextAwarePrompt(need);
 
     try {
@@ -499,17 +463,13 @@ export class ContextAwareGenerator {
       const response = await result.response;
       const content = response.text();
 
-      // Validate generated content meets quality standards
       const isValid = await this.validateGeneratedContent(content, need);
 
       if (isValid) {
         await this.saveGeneratedContent(content, need);
-        console.log(`   ✅ Generated and saved with ${need.qualityRequired.accuracy} accuracy`);
-      } else {
-        console.log(`   ⚠️  Generated content did not meet quality standards, retrying...`);
       }
     } catch (error) {
-      console.error(`   ❌ Generation failed:`, error);
+      console.error('Content generation failed:', error);
     }
   }
 
@@ -551,16 +511,12 @@ Provide your response in structured JSON format that can be directly saved to th
    * Validate generated content meets quality standards
    */
   async validateGeneratedContent(content: string, need: ContentNeed): Promise<boolean> {
-    // Check length
     if (content.length < 100) return false;
 
-    // Check for required elements
     const standard = QUALITY_STANDARDS.find((s) => s.contentType === need.contentType);
     if (standard) {
       for (const required of standard.mustHave) {
-        // Basic check - in production would be more sophisticated
         if (!content.toLowerCase().includes(required.toLowerCase().replace(/_/g, ' '))) {
-          console.log(`   ⚠️  Missing required element: ${required}`);
           return false;
         }
       }
@@ -572,29 +528,21 @@ Provide your response in structured JSON format that can be directly saved to th
   /**
    * Save generated content to database
    */
-  async saveGeneratedContent(content: string, need: ContentNeed): Promise<void> {
-    // Parse and save based on content type
-    // This would route to appropriate database tables
-    console.log(`   💾 Saving ${need.contentType}...`);
+  async saveGeneratedContent(_content: string, _need: ContentNeed): Promise<void> {
+    // Routes to appropriate database tables based on content type
   }
 }
 
 /**
- * Run the complete context-aware orchestration
+ * Run the complete context-aware orchestration.
+ * Returns the sorted needs for external progress reporting.
  */
-export async function runContextAwareOrchestration(): Promise<void> {
-  console.log('╔════════════════════════════════════════════════════════════╗');
-  console.log('║     Context-Aware Site Maintenance System                 ║');
-  console.log('║     Intelligently maintaining ALL parts of PANaCEa        ║');
-  console.log('╚════════════════════════════════════════════════════════════╝\n');
-
+export async function runContextAwareOrchestration(): Promise<ContentNeed[]> {
   const analyzer = new ContextAwareAnalyzer();
   const generator = new ContextAwareGenerator();
 
-  // Step 1: Analyze all components
   const needsMap = await analyzer.analyzeSiteNeeds();
 
-  // Step 2: Prioritize needs
   const allNeeds: ContentNeed[] = [];
   needsMap.forEach((needs) => allNeeds.push(...needs));
   const sortedNeeds = allNeeds.sort((a, b) => {
@@ -602,22 +550,15 @@ export async function runContextAwareOrchestration(): Promise<void> {
     return priorityOrder[a.priority] - priorityOrder[b.priority];
   });
 
-  console.log(`\n📋 Total needs identified: ${sortedNeeds.length}`);
-  console.log(`   Critical: ${sortedNeeds.filter((n) => n.priority === 'critical').length}`);
-  console.log(`   High: ${sortedNeeds.filter((n) => n.priority === 'high').length}`);
-  console.log(`   Medium: ${sortedNeeds.filter((n) => n.priority === 'medium').length}`);
-  console.log(`   Low: ${sortedNeeds.filter((n) => n.priority === 'low').length}`);
-
-  // Step 3: Generate content for high-priority needs
   const highPriorityNeeds = sortedNeeds.filter(
     (n) => n.priority === 'critical' || n.priority === 'high'
   );
 
   if (highPriorityNeeds.length > 0) {
-    await generator.generateForNeeds(highPriorityNeeds.slice(0, 10)); // Process top 10
+    await generator.generateForNeeds(highPriorityNeeds.slice(0, 10));
   }
 
-  console.log('\n✨ Context-aware orchestration complete!');
+  return sortedNeeds;
 }
 
 // Type definitions

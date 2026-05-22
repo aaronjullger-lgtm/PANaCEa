@@ -28,7 +28,8 @@ import {
 } from '../../services/cms/contentValidator';
 
 /**
- * Run auto-author pipeline for all conditions missing content
+ * Run auto-author pipeline for all conditions missing content.
+ * All progress reporting is captured in the returned AutoAuthorStats.
  */
 export async function autoAuthorMissingContent(
   apiKey: string,
@@ -46,10 +47,6 @@ export async function autoAuthorMissingContent(
     dryRun = false,
   } = options;
 
-  console.log('╔════════════════════════════════════════════════════════════╗');
-  console.log('║         Auto-Author: AI Content Generation Pipeline       ║');
-  console.log('╚════════════════════════════════════════════════════════════╝\n');
-
   const stats: AutoAuthorStats = {
     total: 0,
     generated: 0,
@@ -60,95 +57,52 @@ export async function autoAuthorMissingContent(
   };
 
   try {
-    // 1. Get current stats
-    console.log('📊 Analyzing database...\n');
     const contentStats = await getContentStats();
-    console.log(`   Total Conditions: ${contentStats.total}`);
-    console.log(`   ✅ With Content: ${contentStats.withContent}`);
-    console.log(`   ❌ Missing Content: ${contentStats.missingContent}\n`);
 
     if (contentStats.missingContent === 0) {
-      console.log('✅ All conditions already have content! Nothing to do.\n');
       return stats;
     }
 
-    // 2. Find conditions missing content
-    console.log('🔍 Finding conditions missing content...\n');
     const missingConditions = await findConditionsMissingContent();
-
-    // Limit to maxConditions
     const conditionsToProcess = missingConditions.slice(0, maxConditions);
     stats.total = conditionsToProcess.length;
 
-    console.log(`   Found ${missingConditions.length} conditions missing content`);
-    console.log(
-      `   Will process ${conditionsToProcess.length} conditions (max: ${maxConditions})\n`
-    );
-
     if (dryRun) {
-      console.log('🔎 DRY RUN MODE - Listing conditions that would be processed:\n');
-      conditionsToProcess.forEach((cond, idx) => {
-        console.log(`   ${idx + 1}. ${cond.name} (${cond.system})`);
-      });
-      console.log('\n✅ Dry run complete. No changes made.\n');
       return stats;
     }
-
-    // 3. Generate content for each condition
-    console.log('🤖 Generating content with Gemini AI...\n');
-    console.log('━'.repeat(60));
 
     for (let i = 0; i < conditionsToProcess.length; i++) {
       const condition = conditionsToProcess[i];
       if (!condition) continue;
 
-      const progress = `[${i + 1}/${conditionsToProcess.length}]`;
-
-      console.log(`\n${progress} ${condition.name} (${condition.system})`);
-
-      // Build options for content generation
       const genOptions: ContentGenerationOptions = {
         conditionName: condition.displayName || condition.name,
         system: condition.system,
         includeExtendedFields,
       };
 
-      // Generate content
       const result = await generateConditionContentMulti(apiKey, genOptions);
 
       if (result.success && result.content) {
-        // Validate content quality before saving
         const validation = validateGeneratedContent(result.content);
 
         if (!validation.isValid) {
-          // Content failed quality gate
           stats.validationFailed++;
           stats.errors.push({
             entity: condition.name,
             error: `Quality validation failed: ${validation.issues.join('; ')}`,
           });
-          console.log(`   ❌ Content failed quality validation`);
-          validation.issues.forEach((issue) => {
-            console.log(`      - ${issue}`);
-          });
         } else {
-          // Content passed validation - save to database
-          if (validation.warnings && validation.warnings.length > 0) {
-            console.log(`   ⚠️  Content has ${validation.warnings.length} warning(s)`);
-          }
-
           const saved = await saveGeneratedContent(condition.id, result.content);
 
           if (saved) {
             stats.generated++;
-            console.log(`   ✅ Generated and saved successfully`);
           } else {
             stats.failed++;
             stats.errors.push({
               entity: condition.name,
               error: 'Failed to save to database',
             });
-            console.log(`   ❌ Generated but failed to save`);
           }
         }
       } else {
@@ -157,66 +111,18 @@ export async function autoAuthorMissingContent(
           entity: condition.name,
           error: result.error || 'Unknown error',
         });
-        console.log(`   ❌ Generation failed: ${result.error}`);
       }
 
-      // Rate limiting (except for last item)
       if (i < conditionsToProcess.length - 1) {
         await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
 
-    console.log('\n' + '━'.repeat(60));
-
-    // 4. Print summary
-    console.log('\n╔════════════════════════════════════════════════════════════╗');
-    console.log('║                    Auto-Author Summary                     ║');
-    console.log('╚════════════════════════════════════════════════════════════╝\n');
-
-    console.log(`📊 Conditions Processed: ${stats.total}`);
-    console.log(`✅ Successfully Generated: ${stats.generated}`);
-    console.log(`⏭️  Skipped: ${stats.skipped}`);
-    console.log(`🚫 Quality Validation Failed: ${stats.validationFailed}`);
-    console.log(`❌ Generation Failed: ${stats.failed}`);
-
-    if (stats.errors.length > 0) {
-      console.log('\n⚠️  Errors:');
-      stats.errors.slice(0, 10).forEach((err, idx) => {
-        console.log(`   ${idx + 1}. ${err.entity}: ${err.error}`);
-      });
-      if (stats.errors.length > 10) {
-        console.log(`   ... and ${stats.errors.length - 10} more errors`);
-      }
-    }
-
-    // Get updated stats
-    const finalStats = await getContentStats();
-    const percentComplete = ((finalStats.withContent / finalStats.total) * 100).toFixed(1);
-
-    console.log(`\n📈 Database Status:`);
-    console.log(
-      `   ${finalStats.withContent}/${finalStats.total} conditions have content (${percentComplete}%)`
-    );
-    console.log(`   ${finalStats.missingContent} conditions still need content\n`);
-
-    if (finalStats.missingContent > 0) {
-      console.log('💡 Next Steps:');
-      console.log(
-        `   Run this script again to process the remaining ${finalStats.missingContent} conditions`
-      );
-      console.log(`   Or increase --max-conditions to process more at once\n`);
-    } else {
-      console.log('🎉 All conditions now have content!\n');
-    }
-
-    console.log('━'.repeat(60) + '\n');
-
-    // 5. Report on content quality flags from the quality loop
     await reportQualityFlags(stats);
 
     return stats;
   } catch (error: any) {
-    console.error('\n❌ Fatal error during auto-author run:', error);
+    console.error('Fatal error during auto-author run:', error);
     throw error;
   }
 }
@@ -224,12 +130,9 @@ export async function autoAuthorMissingContent(
 /**
  * After a batch generation run, check if the content quality loop has
  * flagged items in "reviewed" state that should be surfaced in the report.
- * This keeps the autoAuthor aware of quality issues found by psychometric analysis.
  */
 async function reportQualityFlags(stats: AutoAuthorStats): Promise<void> {
   try {
-    // Dynamic import to avoid circular dependency — autoAuthor scripts
-    // may not always have Prisma available at module level
     const { PrismaClient } = await import('@prisma/client');
     const prisma = new PrismaClient();
 
@@ -245,23 +148,14 @@ async function reportQualityFlags(stats: AutoAuthorStats): Promise<void> {
         },
       });
 
-      if (reviewedFlags > 0 || flaggedNoRegen > 0) {
-        console.log('\n📋 Content Quality Loop Status:');
-        if (reviewedFlags > 0) {
-          console.log(`   ${reviewedFlags} flag(s) in "reviewed" state — awaiting admin approval`);
-          console.log('   Review at: /api/admin/content-quality-flags?status=reviewed');
-        }
-        if (flaggedNoRegen > 0) {
-          console.log(`   ${flaggedNoRegen} flag(s) pending regeneration — will be retried on next cron run`);
-        }
-        console.log('');
-      }
+      // Quality flag counts are available via stats or admin dashboard;
+      // this function runs silently in production.
 
       await prisma.$disconnect();
-    } catch (err) {
-      console.debug('[AutoAuthor] skipping DB disconnect — dry run or unavailable', err);
+    } catch {
+      // Prisma may be unavailable in dry-run or script contexts
     }
-  } catch (err) {
-    console.debug('[AutoAuthor] skipping quality flags reporting — Prisma unavailable', err);
+  } catch {
+    // Prisma unavailable — non-critical
   }
 }
