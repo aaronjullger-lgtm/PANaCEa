@@ -379,7 +379,6 @@ async function generateMissingContent(needs: ContentNeed[]): Promise<void> {
 
   for (const need of highPriorityNeeds.slice(0, 3)) {
     if (need.type === 'resource' && need.condition) {
-      console.log(`  📝 Generating educational resource for ${need.condition}`);
       // Would generate summary, key points, etc.
     }
   }
@@ -402,7 +401,6 @@ async function optimizeDatabase(): Promise<void> {
     },
   });
 
-  console.log(`🧹 Cleaned up ${cleaned.count} old rejected media`);
 
   // Update quality scores for old content
   const oldMedia = await prisma.mediaAsset.findMany({
@@ -413,7 +411,6 @@ async function optimizeDatabase(): Promise<void> {
     take: 10,
   });
 
-  console.log(`🔄 Re-assessing ${oldMedia.length} media without quality scores`);
 }
 
 /**
@@ -444,5 +441,4 @@ export function scheduleAutomatedPipeline(): void {
     6 * 60 * 60 * 1000
   );
 
-  console.log('⏰ Automated pipeline scheduled to run every 6 hours');
 }

@@ -172,7 +172,6 @@ export async function initializeSession(): Promise<SessionState> {
     systemPerformance: {},
   };
 
-  console.log('[MockService] Session initialized:', mockSessionState.sessionId);
   return mockSessionState;
 }
 
@@ -238,7 +237,6 @@ export async function fetchSessionQuestions(
       (systemDistribution[q.system || 'UNKNOWN'] || 0) + 1;
   });
 
-  console.log('[MockService] Returning', filteredQuestions.length, 'mock questions');
 
   return {
     questions: filteredQuestions,
@@ -274,7 +272,6 @@ export async function recordAnswer(
     mockSessionState.totalTimeMs += timeSpentMs;
   }
 
-  console.log('[MockService] Answer recorded:', { questionId, isCorrect, timeSpentMs });
 }
 
 /**
@@ -299,7 +296,6 @@ export async function completeSession(): Promise<{
     totalTimeMs: mockSessionState?.totalTimeMs || 0,
   };
 
-  console.log('[MockService] Session completed:', result);
   mockSessionState = null;
 
   return result;
@@ -390,9 +386,4 @@ export function isMockModeEnabled(): boolean {
  */
 if (typeof window !== 'undefined') {
   const mockEnabled = isMockModeEnabled();
-  console.log(
-    mockEnabled
-      ? '🎭 [MockService] MOCK MODE ENABLED - Using fake data'
-      : '🔌 [MockService] Mock mode disabled - Using live API'
-  );
 }

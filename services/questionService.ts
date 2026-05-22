@@ -193,7 +193,6 @@ async function savePearlsToDatabase(
       },
       body: JSON.stringify({ conditionId, pearls }),
     });
-    console.log(`[Pearl Harvester] Saved ${pearls.length} pearls for ${conditionId}`);
   } catch (error) {
     console.error('[Pearl Harvester] Failed to save pearls:', error);
   }
@@ -327,13 +326,6 @@ async function triggerBackgroundGeneration(
   count = 20,
   token?: string | null
 ): Promise<void> {
-  console.info('[QuestionService] Pool refill is handled by reviewed backend jobs.', {
-    system,
-    category,
-    difficulty,
-    requestedCount: count,
-    authenticated: Boolean(token),
-  });
 }
 
 /**
@@ -448,7 +440,6 @@ export async function getQuestion(
 
     if (questions.length > 0) {
       dbQuestion = questions[0] ?? null;
-      console.log('[QuestionService] Served question from DB pool');
     }
   } catch (error) {
     console.timeEnd('[QuestionService] DB Fetch');
@@ -463,7 +454,6 @@ export async function getQuestion(
   // Fall back to the server-side enhanced generation endpoint. It must verify
   // and persist the question before returning, so answer submission can resolve
   // the question ID through the canonical API pipeline.
-  console.log('[QuestionService] Pool empty or failed, using persisted enhanced generation');
   console.time('[QuestionService] Enhanced generation');
   token = getToken ? await getToken() : null;
   const question = await generateEnhancedQuestion(settings, growthAreas, undefined, token);
@@ -719,15 +709,11 @@ export async function getQuestionBatch(
 
     // If we got all requested questions from pool, return them
     if (questions.length >= count) {
-      console.log(`[QuestionService] Served ${questions.length} questions from pool`);
       return questions;
     }
 
     // If we got some but not all, supplement with generated ones using CoVe
     const needed = count - questions.length;
-    console.log(
-      `[QuestionService] Pool had ${questions.length}, generating ${needed} more with CoVe`
-    );
 
     const generatedQuestions: Question[] = [];
     const enabledSystems = systemsFilter?.length ? new Set(systemsFilter) : undefined;
@@ -771,9 +757,6 @@ export async function getQuestionBatch(
       const generatedQuestions: Question[] = [];
       const enabledSystems = systemsFilter?.length ? new Set(systemsFilter) : undefined;
 
-      console.log(
-        `[QuestionService] Fallback: generating ${count} persisted enhanced questions`
-      );
       const generationTimeout = 5000; // 5 seconds per question
       for (let i = 0; i < count; i++) {
         try {
@@ -795,9 +778,6 @@ export async function getQuestionBatch(
       }
 
       if (generatedQuestions.length > 0) {
-        console.log(
-          `[QuestionService] Generated ${generatedQuestions.length} persisted enhanced questions via fallback`
-        );
         return generatedQuestions;
       }
     } catch (coveError) {
@@ -823,7 +803,6 @@ export async function getEnhancedQuestion(
   const question = await generateEnhancedQuestion(settings, growthAreas, enabledSystems, token);
 
   if (question) {
-    console.log('[QuestionService] Served enhanced question');
     return question;
   }
 

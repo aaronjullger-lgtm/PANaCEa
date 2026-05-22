@@ -296,7 +296,6 @@ export class MedicalComplianceService {
     contentId: string,
     contentType: ContentComplianceCheck['contentType']
   ): Promise<ContentComplianceCheck> {
-    console.log(`🔍 Checking compliance for ${contentType}: ${contentId}`);
 
     const checks: ContentCheck[] = [];
 
@@ -501,7 +500,6 @@ export class MedicalComplianceService {
       overallCompliance: number;
     };
   }> {
-    console.log('📊 Running comprehensive compliance audit...');
 
     const status: ComplianceStatus[] = [];
     const issues: ComplianceIssue[] = [];
@@ -733,9 +731,6 @@ export class MedicalComplianceService {
    * Schedule compliance review
    */
   async scheduleReview(requirementId: string, reviewer: string, dueDate: Date): Promise<void> {
-    console.log(
-      `📅 Scheduling review for requirement ${requirementId} with ${reviewer} due ${dueDate.toISOString()}`
-    );
 
     // In a real implementation, this would create a review task in the database
     // For now, just log it
@@ -744,7 +739,6 @@ export class MedicalComplianceService {
       .find((req) => req.id === requirementId);
 
     if (requirement) {
-      console.log(`Review scheduled: ${requirement.code} - ${requirement.description}`);
     }
   }
 
