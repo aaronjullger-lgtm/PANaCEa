@@ -84,6 +84,17 @@ import { streamGeminiText } from '@/lib/utils/streamingClient';
 import { Sparkline } from '@/components/ui/Sparkline';
 import { ChatSkeleton, InlineButtonSpinner } from '@/components/loading';
 import { EncounterLoadingView } from './EncounterLoadingView';
+import {
+  PHASE_ORDER,
+  canAdvancePhase,
+  determineCategory,
+  getRelevanceColor,
+  getRelevanceLabel,
+  getScoreColor,
+  getSemanticVitalClass,
+  getTranslatedText,
+  generateTrendData,
+} from '@/lib/utils/encounterHelpers';
 import { useVitalsEngine } from '@/hooks/useVitalsEngine';
 import { formatPatientAgeShort } from '@/lib/utils/ageFormatter';
 
@@ -448,10 +459,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     };
   }, [showLiveSession]);
 
-  const getSemanticVitalClass = useCallback((value: number, range?: [number, number]) => {
-    if (!range) return 'text-[var(--color-text-inverse)]';
-    return value < range[0] || value > range[1] ? 'text-data-fail' : 'text-data-pass';
-  }, []);
+  // getSemanticVitalClass extracted to lib/utils/encounterHelpers.ts
 
   const detectInterventionIntent = useCallback(
     (text: string) => {
@@ -475,52 +483,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     });
   };
 
-  const getTranslatedText = (text: string) => {
-    if (languageMode === 'english') return text;
-    const translated = translateToSpanish(text);
-    if (languageMode === 'spanish') return translated;
-    // Side-by-side mode: show both with subtle divider (no [ES] prefix)
-    return `${text}\n\n—\n${translated}`;
-  };
+  // getTranslatedText extracted to lib/utils/encounterHelpers.ts
 
-  // Deterministic pseudo-random using a simple hash of the input string
-  // Avoids unstable sparkline data on every re-render
-  const generateTrendData = useCallback((currentValueStr: string): number[] | null => {
-    const match = currentValueStr.match(/(\d+(\.\d+)?)/);
-    if (!match) return null;
-
-    const currentVal = parseFloat(match[0]);
-    if (isNaN(currentVal)) return null;
-
-    // Simple deterministic seed from the string
-    let seed = 0;
-    for (let i = 0; i < currentValueStr.length; i++) {
-      seed = ((seed << 5) - seed + currentValueStr.charCodeAt(i)) | 0;
-    }
-    const seededRandom = () => {
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-      return (seed % 1000) / 1000;
-    };
-
-    const points = 6;
-    const data: number[] = [];
-    const trendType = seededRandom();
-    let val = currentVal;
-
-    for (let i = 0; i < points; i++) {
-      data.unshift(val);
-      const noise = (seededRandom() - 0.5) * (currentVal * 0.1);
-      if (trendType < 0.6) {
-        val = val + noise;
-      } else if (trendType < 0.8) {
-        val = val - currentVal * 0.05 + noise;
-      } else {
-        val = val + currentVal * 0.05 + noise;
-      }
-    }
-
-    return data;
-  }, []);
+  // generateTrendData extracted to lib/utils/encounterHelpers.ts
 
   const handleStartEncounter = async (filters?: { targetSystems?: string[]; difficulty?: string } | null) => {
     setIsLoading(true);
@@ -1149,25 +1114,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   }, [session?.id, getToken]);
 
   // Phase ordering for validation
-  const PHASE_ORDER: EncounterPhase[] = ['history', 'physical', 'diagnostic', 'diagnosis', 'treatment'];
-
-  const canAdvancePhase = (from: EncounterPhase, to: EncounterPhase): { allowed: boolean; reason?: string } => {
-    const fromIdx = PHASE_ORDER.indexOf(from);
-    const toIdx = PHASE_ORDER.indexOf(to);
-
-    // Can always go back
-    if (toIdx <= fromIdx) return { allowed: true };
-
-    // Validate minimum requirements before advancing
-    if (from === 'history' && (session?.questions.length ?? 0) < 2) {
-      return { allowed: false, reason: 'Ask at least 2 history questions before moving on.' };
-    }
-    // Skipping more than one phase forward requires confirmation
-    if (toIdx - fromIdx > 1) {
-      return { allowed: true, reason: `Skipping ${toIdx - fromIdx - 1} phase(s). Some scoring categories may be affected.` };
-    }
-    return { allowed: true };
-  };
+  // PHASE_ORDER and canAdvancePhase extracted to lib/utils/encounterHelpers.ts
 
   const advancePhase = (target?: EncounterPhase) => {
     const nextPhase = target || (() => {
@@ -1182,7 +1129,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       return;
     }
 
-    const validation = canAdvancePhase(phase, nextPhase);
+    const validation = canAdvancePhase(phase, nextPhase, session?.questions.length ?? 0);
     if (!validation.allowed) {
       toast.error(validation.reason || 'Cannot advance yet.');
       return;
@@ -1196,70 +1143,13 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     recordMilestone(`phase_${nextPhase}`);
   };
 
-  const determineCategory = (question: string): PatientQuestion['category'] => {
-    const lowerQ = question.toLowerCase();
-    if (
-      lowerQ.includes('history') ||
-      lowerQ.includes('when') ||
-      lowerQ.includes('how long') ||
-      lowerQ.includes('family')
-    ) {
-      return 'history';
-    }
-    if (
-      lowerQ.includes('exam') ||
-      lowerQ.includes('physical') ||
-      lowerQ.includes('abdomen') ||
-      lowerQ.includes('heart')
-    ) {
-      return 'physical';
-    }
-    if (
-      lowerQ.includes('lab') ||
-      lowerQ.includes('test') ||
-      lowerQ.includes('ecg') ||
-      lowerQ.includes('xray')
-    ) {
-      return 'labs';
-    }
-    return 'other';
-  };
+  // determineCategory extracted to lib/utils/encounterHelpers.ts
 
-  const getRelevanceColor = (relevance: PatientQuestion['relevance']) => {
-    switch (relevance) {
-      case 'essential':
-        return 'text-[var(--color-data-neutral)] bg-[var(--color-data-neutral)]/10';
-      case 'helpful':
-        return 'text-[var(--color-accent)] bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30';
-      case 'unnecessary':
-        return 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/10';
-      case 'redundant':
-        return 'text-[var(--color-text-muted)] bg-[var(--color-bg-tertiary)] border-[var(--color-border)]';
-      default:
-        return 'text-[var(--color-text-muted)] bg-[var(--color-bg-tertiary)] border-[var(--color-border)]';
-    }
-  };
+  // getRelevanceColor extracted to lib/utils/encounterHelpers.ts
 
-  const getRelevanceLabel = (relevance: PatientQuestion['relevance']) => {
-    switch (relevance) {
-      case 'essential':
-        return 'Essential';
-      case 'helpful':
-        return 'Helpful';
-      case 'unnecessary':
-        return 'Unnecessary';
-      case 'redundant':
-        return 'Redundant';
-      default:
-        return 'Other';
-    }
-  };
+  // getRelevanceLabel extracted to lib/utils/encounterHelpers.ts
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-data-pass';
-    if (score >= 60) return 'text-data-provisional';
-    return 'text-data-fail';
-  };
+  // getScoreColor extracted to lib/utils/encounterHelpers.ts
 
   // Landing Page View - Clinical White/Navy Theme
   if (viewState === 'landing') {
@@ -1781,7 +1671,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 </div>
                 <p className="text-[var(--color-text-inverse)] font-semibold">Q: {q.questionText}</p>
                 <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
-                  A: {getTranslatedText(q.response)}
+                  A: {getTranslatedText(q.response, languageMode)}
                 </p>
               </div>
             ))}
@@ -2184,7 +2074,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                                 </p>
                                 <p className="text-lg font-semibold text-[var(--color-text-inverse)] whitespace-pre-wrap mb-4">
                                   {currentCase?.chiefComplaint
-                                    ? getTranslatedText(currentCase.chiefComplaint)
+                                    ? getTranslatedText(currentCase.chiefComplaint, languageMode)
                                     : '—'}
                                 </p>
                                 <p className="text-xs font-bold text-data-neutral uppercase tracking-widest mb-2">
@@ -2286,7 +2176,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                           </p>
                           <p className="text-lg font-semibold text-[var(--color-text-inverse)] whitespace-pre-wrap">
                             {currentCase?.chiefComplaint ? (
-                              getTranslatedText(currentCase.chiefComplaint)
+                              getTranslatedText(currentCase.chiefComplaint, languageMode)
                             ) : (
                               <span className="inline-block w-32 h-4 bg-data-neutral-bg rounded animate-pulse"></span>
                             )}
