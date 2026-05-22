@@ -73,6 +73,7 @@ export const FatigueAlertBanner: React.FC<FatigueAlertBannerProps> = ({
 
   const config = RISK_CONFIG[riskLevel];
   const Icon = config.icon;
+  const iconPulse = riskLevel === 'HIGH' ? 'animate-pulse' : '';
 
   if (isDismissed) {
     return null;
@@ -99,7 +100,7 @@ export const FatigueAlertBanner: React.FC<FatigueAlertBannerProps> = ({
           backgroundColor: config.bgColor
         }}
       >
-        <Icon className="w-4 h-4 flex-shrink-0" style={{ color: config.color }} />
+        <Icon className={`w-4 h-4 flex-shrink-0 ${iconPulse}`} style={{ color: config.color }} />
         <span className="text-xs text-[var(--color-text-secondary)]">
           {config.title}
         </span>
@@ -129,7 +130,7 @@ export const FatigueAlertBanner: React.FC<FatigueAlertBannerProps> = ({
     >
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3">
-        <Icon className="w-5 h-5 flex-shrink-0" style={{ color: config.color }} />
+        <Icon className={`w-5 h-5 flex-shrink-0 ${iconPulse}`} style={{ color: config.color }} />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-[var(--color-text-primary)]">
             {config.title}
