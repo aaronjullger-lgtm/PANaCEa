@@ -592,13 +592,9 @@ export async function runCoVePipeline(
   const verificationId = `cove_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const flags: CoVeFlag[] = [];
 
-  console.debug(`[CoVe] Starting verification pipeline: ${verificationId}`);
-  console.debug(`[CoVe] Condition: ${context.conditionName}, System: ${context.system}`);
 
   // Step 1: Extract factual claims
-  console.debug('[CoVe] Step 1: Extracting factual claims...');
   const claims = await extractFactualClaims(question, geminiApiCall);
-  console.debug(`[CoVe] Extracted ${claims.length} claims`);
 
   if (claims.length === 0) {
     flags.push({
@@ -609,16 +605,12 @@ export async function runCoVePipeline(
   }
 
   // Step 2: Verify claims against database
-  console.debug('[CoVe] Step 2: Verifying claims...');
   const claimVerifications = await verifyClaims(claims, context, geminiApiCall);
 
   const verifiedCount = claimVerifications.filter((v) => v.verified).length;
   const contradictedCount = claimVerifications.filter((v) => v.correction).length;
   const unverifiedCount = claimVerifications.filter((v) => !v.verified && !v.correction).length;
 
-  console.debug(
-    `[CoVe] Verified: ${verifiedCount}, Contradicted: ${contradictedCount}, Unverified: ${unverifiedCount}`
-  );
 
   if (contradictedCount > 0) {
     flags.push({
@@ -637,7 +629,6 @@ export async function runCoVePipeline(
   }
 
   // Step 3: Verify correct answer
-  console.debug('[CoVe] Step 3: Verifying correct answer...');
   const answerVerification = await verifyCorrectAnswer(question, context, geminiApiCall);
 
   if (!answerVerification.isCorrect) {
@@ -649,7 +640,6 @@ export async function runCoVePipeline(
   }
 
   // Step 4: Check distractors
-  console.debug('[CoVe] Step 4: Checking distractors...');
   const distractorChecks = await checkDistractors(question, context, geminiApiCall);
 
   const accidentallyCorrect = distractorChecks.filter((d) => d.isAccidentallyCorrect);
@@ -705,8 +695,6 @@ export async function runCoVePipeline(
 
   const passed = recommendation === 'accept';
 
-  console.debug(`[CoVe] Pipeline complete: ${passed ? 'PASSED' : 'FAILED'} (${recommendation})`);
-  console.debug(`[CoVe] Overall confidence: ${(overallConfidence * 100).toFixed(1)}%`);
 
   return {
     verificationId,

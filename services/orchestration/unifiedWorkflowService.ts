@@ -113,7 +113,6 @@ export async function orchestrateUnifiedWorkflow(
             reviewHistory,
           });
           metadata.cmrrUsed = true;
-          console.log(`[UnifiedWorkflow] CMRR optimal retention: ${optimalRetention}`);
         }
       } catch (error) {
         console.warn('[UnifiedWorkflow] CMRR calculation failed:', error);
@@ -125,7 +124,6 @@ export async function orchestrateUnifiedWorkflow(
       try {
         const quadrants = await fetchCalibrationQuadrantsForUser(userId, prisma);
         const adjusted = adjustRetentionWithCalibration(optimalRetention, quadrants);
-        console.log(`[UnifiedWorkflow] Calibration adjusted retention from ${optimalRetention} to ${adjusted}`);
         optimalRetention = adjusted;
         metadata.calibrationUsed = true;
       } catch (error) {
@@ -145,7 +143,6 @@ export async function orchestrateUnifiedWorkflow(
         if (stagingQuestion) {
           metadata.stagingLakeUsed = true;
           fromStaging = true;
-          console.log(`[UnifiedWorkflow] Found staging question: ${stagingQuestion.id}`);
         }
       } catch (error) {
         console.warn('[UnifiedWorkflow] Staging lake lookup failed:', error);
@@ -177,7 +174,6 @@ export async function orchestrateUnifiedWorkflow(
       // For demonstration, we'll return a placeholder; actual implementation would call
       // the existing question generation pipeline (functions/api/questions/generate).
       metadata.aiGenerationUsed = true;
-      console.log('[UnifiedWorkflow] AI generation would be invoked here');
       // In a real implementation, you would call generateSingleQuestion or similar
       // generatedQuestion = await generateSingleQuestion(...);
       // For now, we'll return a mock result to indicate integration is operational.
@@ -214,7 +210,6 @@ export async function orchestrateUnifiedWorkflow(
         });
         if (osceSuggestion) {
           metadata.osceSuggestionUsed = true;
-          console.log(`[UnifiedWorkflow] OSCE suggestion: ${osceSuggestion.caseId}`);
         }
       } catch (error) {
         console.warn('[UnifiedWorkflow] OSCE suggestion failed:', error);
@@ -227,7 +222,6 @@ export async function orchestrateUnifiedWorkflow(
         extractedPearls = extractPearlsFromRationale(generatedQuestion.explanation.rationale);
         if (extractedPearls.length > 0) {
           metadata.pearlHarvestingUsed = true;
-          console.log(`[UnifiedWorkflow] Extracted ${extractedPearls.length} pearls`);
         }
       } catch (error) {
         console.warn('[UnifiedWorkflow] Pearl extraction failed:', error);
@@ -279,11 +273,6 @@ async function findSuitableStagingQuestion(
     });
 
     if (stagingQuestion) {
-      console.log('[UnifiedWorkflow] Found suitable staging question', {
-        stagingId: stagingQuestion.id,
-        system: stagingQuestion.system,
-        difficulty: stagingQuestion.difficulty,
-      });
       return stagingQuestion;
     }
   } catch (error) {

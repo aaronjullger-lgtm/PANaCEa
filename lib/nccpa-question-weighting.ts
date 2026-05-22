@@ -374,30 +374,22 @@ export function getDistributionSummary(sessionSize: number = 40): string {
  * Sample usage example
  */
 export function exampleUsage() {
-  console.log('🎓 NCCPA Blueprint Weighting System\n');
 
   // 40-question session
   const sessionSize = 40;
   const distribution = calculateSessionDistribution(sessionSize);
 
-  console.log(`Distribution for ${sessionSize}-question session:`);
   for (const [system, count] of distribution) {
-    console.log(`  ${system}: ${count} questions (${getSystemWeight(system)}%)`);
   }
 
-  console.log('\nWeighted random selection (5 systems):');
   const selected = selectWeightedSystems(5);
-  console.log(`  ${selected.join(', ')}`);
 
-  console.log('\nValidation:');
   const testCounts = new Map([
     ['CV', 5],
     ['PULM', 4],
     ['GI', 3],
   ]);
   const validation = validateSessionDistribution(testCounts, 40);
-  console.log(`  Valid: ${validation.valid}`);
   if (!validation.valid) {
-    console.log('  Violations:', validation.violations);
   }
 }

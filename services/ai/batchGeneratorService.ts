@@ -34,7 +34,6 @@ export async function generateBatchForSystem(
   system: string,
   count: number = 25
 ): Promise<{ generated: number; failed: number; questions: any[] }> {
-  console.log(`[BatchGen] Starting batch generation for ${system}, count=${count}`);
 
   // Get conditions for this system from MedicalContent
   const conditions = await prisma.medicalContent.findMany({
@@ -44,7 +43,6 @@ export async function generateBatchForSystem(
   });
 
   if (conditions.length === 0) {
-    console.log(`[BatchGen] No conditions found for ${system}`);
     return { generated: 0, failed: 0, questions: [] };
   }
 
@@ -83,7 +81,6 @@ export async function generateBatchForSystem(
 
         questions.push(saved);
         generated++;
-        console.log(`  ✓ Generated question for ${condition.condition}`);
       }
 
       // Rate limit
@@ -94,7 +91,6 @@ export async function generateBatchForSystem(
     }
   }
 
-  console.log(`[BatchGen] Complete: ${generated} generated, ${failed} failed`);
   return { generated, failed, questions };
 }
 
@@ -162,7 +158,6 @@ export async function generateForAllLowSystems(threshold: number = 50): Promise<
 
   for (const systemStatus of lowSystems) {
     const needed = threshold - systemStatus.unused;
-    console.log(`\n[BatchGen] ${systemStatus.system} needs ${needed} questions`);
 
     const result = await generateBatchForSystem(systemStatus.system, needed);
     totalGenerated += result.generated;
@@ -186,11 +181,7 @@ if (require.main === module) {
     if (system) {
       await generateBatchForSystem(system, count);
     } else {
-      console.log('Running batch generation for all low systems...');
       const result = await generateForAllLowSystems();
-      console.log(
-        `\nComplete: ${result.totalGenerated} generated across ${result.systemsProcessed} systems`
-      );
     }
     process.exit(0);
   })();
