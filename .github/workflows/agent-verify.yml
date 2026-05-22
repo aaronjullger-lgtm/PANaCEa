@@ -1,0 +1,42 @@
+name: Agent Change Verification
+on:
+  pull_request:
+    paths:
+      - 'components/**'
+      - 'lib/**'
+      - 'hooks/**'
+      - 'functions/api/**'
+      - 'services/**'
+      - 'config/**'
+      - 'pages/**'
+      - 'prisma/schema.prisma'
+  push:
+    branches: [main]
+    paths:
+      - 'components/**'
+      - 'lib/**'
+      - 'hooks/**'
+      - 'functions/api/**'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck:ci
+      - name: Critical Tests
+        run: npm run test:critical
+      - name: Build
+        run: npm run build
+      - name: Bundle Size
+        run: npm run build:check-size
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
