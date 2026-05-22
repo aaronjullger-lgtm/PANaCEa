@@ -93,7 +93,7 @@ export const Loader: React.FC<LoaderProps> = ({
   }, []);
 
   const bgClass = forceDark
-    ? 'bg-black'
+    ? 'bg-[#020711]/95'
     : 'bg-[var(--color-bg-primary)]/80';
 
   const dotClass = forceDark
