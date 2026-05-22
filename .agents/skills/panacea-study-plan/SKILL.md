@@ -1,75 +1,72 @@
 ---
 name: "panacea-study-plan"
-description: "Use to work on PANaCEa's study plan generation, daily planning, StudyPlanTask V2 consolidation, progress tracking, task completion, and study scheduling. Trigger when asked about study plans, daily plans, study scheduling, plan generation, task consolidation, or progress tracking integration."
+description: "Use to work on PANaCEa study plan generation, StudyPlanTask V2 consolidation, daily plan endpoints, progress tracking, adaptive task completion, and learner-facing plan surfaces. Trigger when asked about study plans, daily plans, study scheduling, adaptive tasks, progress plan, or StudyPlanTask consolidation."
 ---
 
 # PANaCEa Study Plan
 
-You own the study plan subsystem: daily plan generation, StudyPlanTask lifecycle, progress tracking, plan regeneration, and the V2 consolidation from the split service architecture.
+You own the study plan pipeline: from FSRS review data through task generation to learner-facing daily plans and progress tracking.
 
 ## First Files
 
-- `CLAUDE.md` for scheduler and plan architecture
-- `functions/api/_shared/studyPlanService.ts` — Edge plan service
-- `lib/services/studyPlanService.ts` — client-side plan service
-- `functions/api/study-plan/today.ts` — today's plan endpoint
-- `functions/api/study-plan/progress.ts` — plan progress endpoint
-- `functions/api/users/me/daily-plan.ts` — daily plan compatibility
-- `prisma/schema.prisma` — StudyPlan, StudyPlanTask, DailyPlan models
-- `functions/api/study/session/generate.ts` — session generation with topic mastery
-- `lib/services/drillReviewService.ts` — review submission advances plan tasks
-- `NEXT_IMPLEMENTATION_PLAN.md` — V2 consolidation tasks
+- `CLAUDE.md` for FSRS and scaling rules
+- `functions/api/_shared/studyPlanService.ts` — Edge study plan service
+- `lib/services/studyPlanService.ts` — client-side study plan service
+- `functions/api/study-plan/` — study plan API endpoints
+- `functions/api/user/review-history.ts` — review history for plan inputs
+- `lib/services/drillReviewService.ts` — review → task completion linkage
+- `pages/ProgressPage.tsx` — learner-facing progress/plan page
+- `components/dashboard/adaptive/` — adaptive dashboard components
+- `hooks/useStudyPlanLaunch.ts` — study plan launch hook
+- `APP_FUNCTIONALITY_PLAN.md` — known blockers
+- `NEXT_IMPLEMENTATION_PLAN.md` — implementation order
 
 ## Architecture
 
 ```
-User Activity → ReviewLog → ensureStudyPlanWindow → StudyPlan + StudyPlanTasks
-                                    ↓
-                              Daily Plan (today's actionable items)
-                                    ↓
-                              Session Launch → Session Generation
-                                    ↓
-                              Review Submission → Task Completion → Plan Progress
+ReviewLog (submitted) → StudyPlanService → StudyPlanTask (daily)
+                                              ├── pending (auto)
+                                              ├── in_progress (learner acting)
+                                              └── completed (review submission)
+                         ↓
+                  Daily Plan API → ProgressPage → learner views tasks
 ```
 
 ## Current State (from scorecard: 80/100)
 
-### Completed
-- Review submissions advance linked daily study-plan tasks
-- Task completion when question targets met
-- Study-plan window regeneration from real review activity
-- Stale pending plans refreshed after new review data
-- Completed/in-progress plans preserved during regeneration
-- Current-plan output routes single-system tasks as `mode=system`
-- New locally generated targeted tasks use `mode=targeted`
-- Compatibility task sanitization canonicalizes stale modes
-- Today's adaptive plan renders on `/progress`
+**Completed:**
+- Task progress auto-completes from submitted review attempts
+- Stale pending plans regenerate from newer review data
+- Single-system tasks route as `mode=system`
+- Locally generated targeted tasks use `task mode=targeted`
+- Compatibility sanitization canonicalizes stale task modes
+- Progress page shows actionable adaptive tasks with launch actions
 
-### Still Open (V2 Consolidation)
-- Full cross-route StudyPlanTask V2 contract unified between `_shared/studyPlanService.ts` and `lib/services/studyPlanService.ts`
-- Re-inspect active normalized task shape
-- `conditionIds`, `reviewCardIds`, `linkedSessionId`, dashboard review coverage inputs
-- Study-path, study-plan, daily-plan compatibility route alignment
-- Keep compatibility endpoint shapes stable during consolidation
+**Remaining (StudyPlanTask V2 consolidation):**
+1. Full cross-route contract between `_shared/studyPlanService.ts` and `lib/services/studyPlanService.ts`
+2. Consistency for `conditionIds`, `reviewCardIds`, `linkedSessionId` across plan surfaces
+3. Dashboard review coverage inputs aligned with plan task tracking
+4. Active normalized task shape verified across all consumers
+5. Daily plan, study-path, and study-plan compatibility routes consolidated
 
 ## Rules
 
-- Preserve completed and in-progress plan rows during regeneration
-- Plan tasks must map to real FSRS cards or real condition targets
-- Do not create plans with zero valid tasks
-- Task completion must be atomic with review submission
-- Compatibility routes must not break during V2 migration
-- Plan generation reads latest real ReviewLog, not cached/estimated data
-- Never expose other users' plan data
+- Study plan tasks derive from real ReviewLog data, not synthetic estimates
+- Completed tasks must not be regenerated or overwritten
+- In-progress tasks are preserved during regeneration
+- Stale pending tasks regenerate when newer review data exists
+- Task routing must use the correct mode (`targeted`, `system`, `condition`)
+- Compatibility routes must maintain stable output shapes
+- No hardcoded task counts — derive from actual FSRS due cards and review history
 
 ## Common Traps
 
-- Regenerating plans and overwriting completed tasks
-- Creating duplicate plans for the same day/user
-- Plan tasks with stale/missing conditionIds or cardIds
-- V2 tasks not backwards-compatible with V1 daily-plan endpoint
-- Session generation not linking back to plan task
-- Plan completion not triggering next-day plan generation
+- Overwriting completed tasks during regeneration
+- Regenerating tasks without checking for newer review data
+- Route mismatches: `mode=condition` vs `mode=system` vs `mode=targeted`
+- Missing `conditionIds` in targeted task payloads
+- Forgetting to link `linkedSessionId` after session launch
+- Compatibility endpoint shaping differing from primary endpoint output
 
 ## Tests To Look For
 
@@ -77,13 +74,21 @@ User Activity → ReviewLog → ensureStudyPlanWindow → StudyPlan + StudyPlanT
 - `functions/api/study-plan/progress.test.ts`
 - `functions/api/study-plan/today.test.ts`
 - `hooks/useStudyPlanLaunch.test.tsx`
-- `tests/drillReviewService.test.ts` — plan task completion from review
-- `functions/api/users/me/daily-plan.test.ts` — compatibility endpoint
+- `tests/drillReviewService.test.ts` (auto-completion from reviews)
+- `components/dashboard/adaptive/` component tests
 
 ## Verification
 
 ```bash
-npx vitest run functions/api/_shared/studyPlanService.test.ts functions/api/study-plan/progress.test.ts functions/api/study-plan/today.test.ts hooks/useStudyPlanLaunch.test.tsx tests/drillReviewService.test.ts
-NODE_OPTIONS="--max-old-space-size=4096" npm run typecheck
+npx vitest run functions/api/_shared/studyPlanService.test.ts functions/api/study-plan/progress.test.ts functions/api/study-plan/today.test.ts hooks/useStudyPlanLaunch.test.tsx
 npm run test:critical
+NODE_OPTIONS="--max-old-space-size=4096" npm run typecheck
 ```
+
+## Hard Guardrails
+
+- Never invent study plan data — use real ReviewLog and FSRS state
+- Never delete completed or in-progress learner task rows
+- Preserve backward compatibility on daily plan API shapes
+- Frame all plan outputs as learning guidance, not medical advice
+- Task counts and projections must be truthful — no inflated metrics

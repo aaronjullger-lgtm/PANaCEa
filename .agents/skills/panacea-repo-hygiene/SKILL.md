@@ -1,104 +1,86 @@
 ---
 name: "panacea-repo-hygiene"
-description: "Use to clean up PANaCEa's codebase: find and remove dead code, duplicate pathways, deprecated compatibility shells, stale documentation, unused dependencies, and orphaned imports. Trigger when asked to clean up the repo, remove dead code, audit imports, find duplicates, or reduce codebase debt."
+description: "Use to audit and clean PANaCEa-specific dead code, duplicate pathways, deprecated docs, compatibility shells, stale barrel exports, orphaned imports, and unused dependencies. Trigger when asked to clean up the repo, find dead code, audit imports, remove duplicates, or perform repo hygiene."
 ---
 
 # PANaCEa Repo Hygiene
 
-You hunt dead code. PANaCEa has 36 skills, 461+ Edge functions, 169+ services, 603+ components — entropy accumulates. Your job is controlled removal of what's truly dead.
+You find and remove dead weight in the PANaCEa codebase. Duplicate components, stale compatibility shells, deprecated docs, orphaned imports, unused dependencies — you track them down and clean them up.
 
 ## First Files
 
-- `CLAUDE.md` for architecture rules
-- `AGENTS.md` for decision authority (ask before deleting files)
-- `APP_FUNCTIONALITY_PLAN.md` for known dead code and cleanup history
-- `package.json` for dependency census
-- `vite.config.ts` for chunk splitting and excluded packages
+- `CLAUDE.md` for stack and architecture rules
+- `AGENTS.md` for repo conventions
+- `APP_FUNCTIONALITY_PLAN.md` for known dead-code items
+- `package.json` for dependencies
+- `vite.config.ts` for chunk configuration
+- `config/lazyComponents.tsx` for lazy loading registry
+- `config/AppRoutes.tsx` for route registration
+- `config/routes.ts` for route definitions
 
-## Known Dead Code Categories
+## Audit Domains
 
-### Already Cleaned (do not re-audit)
-- `pages/LandingPage.tsx` — removed, canonical is `components/landing/LandingPage.tsx`
-- `components/ui/SkeletonLoader.tsx` — removed, canonical is `components/loading/index.tsx`
-- `components/ui/SectionHeader.tsx` — removed, canonical is `components/studypanacea/SectionHeader.tsx`
-- `components/ui/SmartImage.tsx` — removed, canonical is `components/library/SmartImage.tsx`
-- `components/panels/ExplanationPanel.tsx` — removed, canonical is `components/questions/ExplanationPanel.tsx`
-- `components/toolkit/RotationSelector.tsx` — removed, canonical is `components/onboarding/RotationSelector.tsx`
-- `gsap`, `@react-three/fiber`, `@react-three/drei` — removed from dependencies
-- `geist` — removed from dependencies
-- Stale `docs/repo-audit/*` bundle — removed
+### Dead Components
+- Run `rg` to find components with no active imports
+- Check barrel exports pointing to deleted files
+- Check for duplicate implementations (e.g., two TopicMasteryBreakdown components)
+- Known cleanup targets from APP_FUNCTIONALITY_PLAN.md:
+  - Legacy landing pages, UI components, section headers
+  - Skeleton loader shims
+  - Smart image duplicates
+  - Rotation selector duplicates
 
-### Still Needs Auditing (from scorecard: 78/100)
-- Compatibility shells and stale docs remain
-- Import census for orphaned files
-- Duplicate route/menu registrations (`CommandCenterPage`, `/menu`, `TrainingMenu`)
-- Historical docs referencing FSRS v5, old dashboards, old smoke routes
-- Deprecated API routes with no remaining consumers
-- Unused barrel exports and index files
-- Dead services and utilities
-- Stale configuration files
+### Deprecated Docs
+- Search `docs/` for docs referencing removed dependencies (GSAP, R3F, drei)
+- Flag docs with stale no-launch claims or outdated setup instructions
+- Check for docs contradicting current implementation
 
-## Hygiene Rules
+### Compatibility Shells
+- Express routes that duplicate production Edge Functions
+- Legacy API wrappers that just forward to canonical paths
+- Outdated mode/route registrations
+- Historical dashboards still in route registry
 
-- **Ask before deleting any file** — files may appear dead but serve compatibility
-- **`trash` > `rm`** — always move to trash, never permanently delete
-- **Verify with `rg` before claiming dead** — search the entire repo for imports/references
-- **Check barrel exports** — a file may be unused directly but re-exported through an index
-- **Check lazy imports** — `config/lazyComponents.tsx` and dynamic `import()` calls may be the only consumer
-- **Check route registries** — `config/appViews.ts`, `config/AppRoutes.tsx`, `config/routes.ts` may reference the file
-- **One file at a time** — delete, verify build passes, commit, then next
-- **Document every removal** — what was removed, why, and what replaced it
+### Orphaned Imports
+- Check for imports of deleted files (broken barrel exports)
+- Find `export * from './deleted-file'` patterns
+- Audit circular dependencies that could cause build issues
 
-## Audit Methods
+### Unused Dependencies
+- Audit `package.json` against actual imports (`rg` import patterns)
+- Flag packages in lockfile not used by source
+- Check for packages that could be devDependencies instead of dependencies
 
-### Find Dead Files
-```bash
-# For a suspected dead file:
-rg "from.*<file-basename>" --type ts --type tsx
-rg "import.*<file-basename>" --type ts --type tsx
-rg "<file-path-pattern>" --type ts --type tsx
-```
+## Cleanup Workflow
 
-### Find Unused Dependencies
-```bash
-npm ls <package-name> --all
-rg "from ['\"]<package-name>" --type ts --type tsx
-rg "require\(['\"]<package-name>" --type ts --type tsx
-```
+1. Run `rg` to find the target pattern (imports, file references)
+2. Verify zero active consumers before deletion
+3. Use `trash` not `rm` — move to `_trash/` for review
+4. Remove barrel export entries pointing to deleted files
+5. Run `npm run typecheck` and `npm run build` after cleanup
+6. Run `npm test` to catch missed imports
 
-### Find Duplicate Implementations
-```bash
-# Find files with similar names in different directories
-find . -name "*<ComponentName>*" -not -path "*/node_modules/*" -not -path "*/dist/*"
-```
+## Verification Ladder After Cleanup
 
-### Find Stale Docs
-```bash
-# Find docs referencing removed features
-rg "FSRS v5|old dashboard|deprecated" docs/ --type md
-```
+1. `npm run typecheck` — no new errors
+2. `npm run build` — builds clean, no missing import errors
+3. `npm run test:critical` — no regressions
+4. `git diff --check` — clean diff
 
-## Verification
+## Known Targets (from scorecard)
 
-After any file removal:
-```bash
-npm run typecheck
-npm run build
-npm run test:critical
-npm run lint
-```
+- Compatibility shells from deprecated dashboards
+- Stale docs referencing removed GSAP/R3F/drei
+- Express-only routes that shadow production Functions
+- Orphaned training mode registrations
+- Historical docs/archive sweep for FSRS v5 claims and old smoke routes
+- Duplicate `CommandCenterPage`, `/menu`, `TrainingMenu` routes
 
-If any command fails, the file was not truly dead — restore it.
+## Hard Guardrails
 
-## Reporting
-
-```
-## Hygiene Pass Summary
-
-**Files Removed:** <count>
-**Lines Removed:** <count>
-**Dependencies Removed:** <list>
-**Docs Cleaned:** <list>
-**Verification:** <commands run and results>
-**Risks Noted:** <any files that looked dead but weren't>
-```
+- Never delete a file without verifying zero active imports
+- Always use `trash` not `rm` — recoverable
+- Run typecheck and build after every deletion
+- Do not touch actively imported production code
+- Preserve user work in dirty working tree
+- Document what was removed and why

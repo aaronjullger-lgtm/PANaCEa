@@ -1,88 +1,96 @@
 ---
 name: "panacea-identity-migration"
-description: "Use to design and implement PANaCEa's canonical question identity and concept identity migrations, schema changes, backfill scripts, database probes, and identity contract rollout. Trigger when working on question identity, source identity, concept identity, QuestionIdentity model, identity migration, or normalized study schema."
+description: "Use to design, implement, audit, and verify PANaCEa's canonical question/source identity migration and condition/content identity migration — the P0 schema blockers. Trigger when working on QuestionIdentity, identity columns, migration scripts, backfill, identity probes, or the normalized study schema rollout."
 ---
 
 # PANaCEa Identity Migration
 
-You own the canonical identity migration — the P0 blocker for production. Your job: migrate PANaCEa from legacy ID-based content references to durable, source-tracked canonical identities.
+You own the P0 identity migration: enabling canonical question identity and condition/content identity across the schema, without breaking existing read/write paths.
 
 ## First Files
 
-- `CLAUDE.md` for repo invariants
-- `prisma/schema.prisma` — current schema with `QuestionIdentity` model and nullable identity links
-- `prisma/migrations/20260517000000_add_question_identity_contract/migration.sql` — current migration
+- `prisma/schema.prisma` — current schema, identity columns, QuestionIdentity model
+- `prisma/migrations/20260517000000_add_question_identity_contract/migration.sql` — existing additive migration
 - `docs/database/normalized-study-schema.md` — identity contract documentation
-- `prisma/README.md` — schema documentation
+- `prisma/README.md` — migration notes
 - `lib/study/questionIdentityPersistence.ts` — server-side identity helpers
-- `lib/study/questionIdentity.ts` — identity type definitions
-- `scripts/db/audit-learning-identity.ts` — identity audit probe
-- `APP_FUNCTIONALITY_PLAN.md` — current blockers
-- `NEXT_IMPLEMENTATION_PLAN.md` — identity migration tasks
+- `lib/study/questionIdentity.ts` — identity types and normalization
+- `scripts/db/audit-learning-identity.ts` — existing audit/probe script
+- `functions/api/study/session/generate.ts` — identity writing in session generation
+- `lib/services/drillReviewService.ts` — identity writing in review submission
+- `functions/api/questions/attempt.ts` — identity writing in attempt recording
+- `APP_FUNCTIONALITY_PLAN.md` — current P0 blockers
 
 ## Current State
 
-The additive migration layer EXISTS but is not deployed:
-- `QuestionIdentity` model created with nullable FK links on `Card`, `QuestionAttempt`, `ReviewLog`, `SavedQuestion`, `StudySessionQuestion`
-- Runtime writers already dual-write `questionIdentityId` where available
-- Identity resolution helpers exist in `lib/study/questionIdentityPersistence.ts`
-- Audit probe scripts check for table existence and coverage
+- `QuestionIdentity` model and nullable FK columns exist in schema
+- Migration `20260517000000` adds identity columns with deterministic backfill for `Question`, `PreGeneratedQuestion`, `StagingQuestion`, and `QuestionSeed` sources
+- Active runtime writers dual-write `questionIdentityId` to session questions, attempts, review logs, saved questions, and cards
+- Audit probe script can check rollout state
+- **Not yet applied to production** — this is the P0 blocker
 
-## What Still Needs Doing
+## Migration Tasks
 
-### P0: Canonical Question/Source Identity Migration
-- Apply the existing migration to production
-- Backfill `QuestionIdentity` rows for all existing `Question`, `PreGeneratedQuestion`, `StagingQuestion`, and `QuestionSeed` sources
-- Backfill `questionIdentityId` on existing `Card`, `QuestionAttempt`, `ReviewLog`, `SavedQuestion`, and `StudySessionQuestion` rows
-- Make identity FK columns non-nullable after backfill verification
-- Remove legacy ID-based join paths after identity is universal
+### 1. Probe Current State
+Run `npm run db:audit-learning-identity` to check:
+- Does the `question_identities` table exist?
+- Are nullable identity columns present?
+- Which source types have unresolved identity targets?
+- What percentage of rows have `questionIdentityId` populated?
 
-### P0: Condition/Content Identity Migration
-- Design `ContentIdentity` model for `MedicalContent`, `Drug`, `Condition`
-- Add nullable `contentIdentityId` to `UserProgress`, review-linked tables
-- Migration design and backfill plan
-- Apply and verify
+### 2. Design Migration Plan
+- Confirm migration order: `question_identities` table → FK columns → backfill
+- Verify backfill scripts handle all source types (Question, PreGeneratedQuestion, StagingQuestion, QuestionSeed)
+- Ensure zero-downtime: additive columns, nullable FKs, no data loss
+- Plan rollback path
 
-### P1: Identity Contract Hardening
-- `QuestionIdentity` lookup should be the canonical path for all content references
-- Remove or deprecate legacy `sourceQuestionId`/`canonicalQuestionId` dual-ID patterns
-- Ensure all read paths resolve through identity, not raw FKs
+### 3. Execute and Verify
+- Run migration
+- Run backfill
+- Verify probe reports 100% coverage
+- Run critical FSRS/session tests
+
+### 4. Condition/Content Identity (Next)
+- Design condition identity migration for `UserProgress.conditionId` → `MedicalContent.id`
+- Map condition-linked review writes
+- Probe, migrate, backfill, verify
 
 ## Rules
 
 - Never run production migrations without explicit approval
-- All migrations must be additive first (nullable columns → backfill → non-nullable)
-- Every migration must have a rollback plan
-- Probe scripts must work before AND after migration (skip gracefully pre-migration)
-- Backfill scripts must be idempotent (safe to re-run)
-- Identity resolution must fall back safely when FKs are not yet available
-- Do not change existing runtime writers unless identity contract changes
-
-## Common Traps
-
-- Forgetting to backfill existing rows before making columns non-nullable
-- Not updating read paths that still join on legacy IDs
-- Missing identity links in drill session manager (non-main sessions)
-- Sync compatibility paths that write without identity
-- Express compatibility routes that bypass identity
+- All identity migrations must be additive (no column drops, no data loss)
+- Backfill scripts must be idempotent
+- Existing read/write paths must continue working during rollout
+- Nullable FKs are intentional — allow gradual adoption
+- Test with `npm run test:critical` after any migration script change
 
 ## Tests To Look For
 
-- `lib/study/questionIdentity.test.ts`
 - `lib/study/questionIdentityPersistence.test.ts`
+- `lib/study/questionIdentity.test.ts`
+- `lib/sessionGeneration.test.ts`
+- `functions/api/study/session-generate.test.ts`
+- `tests/drillReviewService.test.ts`
+- `functions/api/questions/attempt.test.ts`
+- `functions/api/questions/record.test.ts`
+- `functions/api/sync.saved-question-identity.test.ts`
 - `tests/learningIdentityAudit.test.ts`
-- `functions/api/study/session-generate.test.ts` — identity in session generation
-- `tests/drillReviewService.test.ts` — identity in review writes
-- `functions/api/questions/attempt.test.ts` — identity in attempt recording
-- `functions/api/questions/record.test.ts` — identity in record path
-- `functions/api/sync.saved-question-identity.test.ts` — identity in sync
-- `tests/express-sync.test.ts` — identity in Express compatibility
+- `tests/express-sync.test.ts`
 
 ## Verification
 
 ```bash
+npm run db:audit-learning-identity
 npx prisma validate
-npx vitest run lib/study/questionIdentity*.test.ts tests/learningIdentityAudit.test.ts functions/api/study/session-generate.test.ts tests/drillReviewService.test.ts functions/api/questions/attempt.test.ts
-NODE_OPTIONS="--max-old-space-size=4096" npm run typecheck
+npx vitest run lib/study/questionIdentity*.test.ts tests/learningIdentityAudit.test.ts
 npm run test:critical
+NODE_OPTIONS="--max-old-space-size=4096" npm run typecheck
 ```
+
+## Hard Guardrails
+
+- Do not run production migrations without explicit Aaron approval
+- Do not drop existing columns during rollout
+- Do not make identity columns non-nullable until backfill is confirmed
+- Preserve legacy question ID fields for backward compatibility
+- Document every migration step in `docs/database/`
