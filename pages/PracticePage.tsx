@@ -787,7 +787,17 @@ export const PracticePage: React.FC<PracticePageProps> = ({
                   <WorkspaceEmptyState
                     icon={BarChart3}
                     title="Cockpit calibrating"
-                    description="Complete a few more recent questions before system-level targeting becomes reliable."
+                    description="Complete a few more recent questions before system-level targeting becomes reliable. Most users unlock targeting after 30–50 answers."
+                    action={
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        onClick={() => onNavigateToDrillMode('core_adaptive')}
+                      >
+                        Start questions
+                      </Button>
+                    }
                   />
                 )}
 
