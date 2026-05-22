@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url';
 import {
   getClerkE2ECredentials,
   hasActiveClerkSession,
+  hasClerkBackendAuth,
+  signInWithClerkBackend,
   signInWithClerkCredentials,
   waitForClerk,
 } from './helpers/clerkAuth';
@@ -27,12 +29,25 @@ setup('authenticate with Clerk', async ({ page }) => {
 
     if (await hasActiveClerkSession(page)) {
       console.log('Existing Clerk session detected. Saving storage state.');
-    } else if (credentials) {
-      console.log('E2E Clerk credentials detected. Signing in programmatically.');
-      await signInWithClerkCredentials(page, credentials, { startPath: '/study' });
+    } else if (hasClerkBackendAuth()) {
+      console.log('Clerk backend auth available. Signing in via Clerk Backend API (bypasses MFA).');
+      await signInWithClerkBackend(page, credentials!.email, { startPath: '/study' });
+    } else if (credentials?.password) {
+      console.log('E2E Clerk password credentials detected. Signing in via browser form.');
+      await signInWithClerkCredentials(
+        page,
+        { email: credentials.email, password: credentials.password },
+        { startPath: '/study' }
+      );
     } else {
       console.log('No E2E Clerk credentials found. Waiting up to 2 minutes for manual login.');
-      console.log('Set E2E_CLERK_TEST_EMAIL and E2E_CLERK_TEST_PASSWORD to avoid manual login.');
+      console.log(
+        'For backend-based sign-in (recommended, bypasses MFA): set CLERK_SECRET_KEY + E2E_CLERK_TEST_EMAIL in .env.'
+      );
+      console.log(
+        'For browser-based sign-in: also set E2E_CLERK_TEST_PASSWORD. ' +
+          'Ensure the Clerk user has MFA / Client Trust disabled.'
+      );
 
       await expect
         .poll(async () => hasActiveClerkSession(page), {
