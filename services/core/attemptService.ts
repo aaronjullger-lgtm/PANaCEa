@@ -62,7 +62,8 @@ export function unwrapUserStatsResponse(payload: unknown): any | null {
       if (data.stats) return data.stats;
       if (data.data && typeof data.data === 'object' && data.data.stats) return data.data.stats;
     }
-    return data ?? null;
+    // Malformed: no recognizable stats structure found
+    return null;
   } catch {
     return null;
   }

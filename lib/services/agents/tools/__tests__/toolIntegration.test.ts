@@ -8,18 +8,21 @@
 import { describe, it, expect } from 'vitest';
 import {
   ToolRegistry,
+} from '../../toolRegistry';
+import {
   createDefaultToolRegistry,
   createClinicalToolRegistry,
   createQualityToolRegistry,
   createInfraToolRegistry,
-} from '../toolRegistry';
+} from '../index';
+import type { AgentTool } from '../../toolRegistry';
 import {
   CLINICAL_TOOLS,
   QUALITY_TOOLS,
   COVERAGE_TOOLS,
   INFRA_TOOLS,
   DEFAULT_TOOL_NAMES,
-} from '../tools';
+} from '../index';
 
 describe('Tool Registry — Full Integration', () => {
   it('registers all 10 tools in the default registry', () => {
