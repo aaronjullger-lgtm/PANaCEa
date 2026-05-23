@@ -5,28 +5,32 @@
 
 ## Active Priority
 
-**Task:** First specialist agent dispatch — PANaCEa code work
-**Assigned To:** TBD (selecting agent based on backlog priority)
-**Status:** Ready to dispatch
-
-## Recently Completed
-
-- ✅ Autonomy Skillsmith Agent: Created missing status docs — `APP_FUNCTIONALITY_PLAN.md` (root shim), `UPDATED_PRODUCTION_READINESS_SCORECARD.md`, `NEXT_IMPLEMENTATION_PLAN.md`
-- ✅ Autonomy Skillsmith Agent: Fixed CLAUDE.md stale skill count/path (27→44, `.claude/skills/`→`.agents/skills/`)
+**Task:** Wave 2 autonomous improvement — audit findings acted upon
+**Status:** 3 agents dispatched on hygiene/cleanup tasks
 
 ## Priority Queue
 
-1. Dispatch first specialist agent for highest-value backlog item
-2. Clean up 13 uncommitted working tree changes (commit or revert)
-3. Fix PANaCEa Daily Test Health cron delivery error
-4. PatientEncounterMode decomposition (3,413→target 1,500)
-5. Authenticated E2E smoke (blocked on Clerk 2FA — needs Aaron)
+1. ✅ Wave 1 agents completed: FSRS audit, session audit, hygiene audit (all clean)
+2. ✅ Sub-agents completed: API-envelope callers + PatientEncounterMode decomposition
+3. ✅ Dead migration proposals removed, auto-sync drain wired
+4. 🔄 Wave 2: dead file removal, API-envelope modes/ migration, hex→CSS var migration
+5. Dispatch additional agents for: Drill modes audit, Study plan analytics, Question identity verification
 
 ## Blockers
 
-- **P0:** Clerk E2E auth (no safe non-2FA test user) — blocks browser-level core-flow smoke
-- **P1:** 13 uncommitted changes in working tree — need review
+- **P0:** Clerk E2E auth (backend API path installed, needs CLERK_SECRET_KEY in env)
+- **P2:** Full typecheck OOM-unstable — documented limitation
+
+## Recent Agent Output
+
+| Agent | Result |
+|-------|--------|
+| fsrs-scheduler-integrity | FSRS gates verified, 87/87 tests pass |
+| core-adaptive-session-runtime | Pipeline healthy, 40/40 tests pass |
+| repo-hygiene-and-duplicate-path | 8 dead files, 1 name collision, clean loading |
+| panacea-session-pipeline (sub) | PatientEncounterMode 3,413→2,848 |
+| panacea-repo-hygiene (sub) | API-envelope unwrapping in learner components |
 
 ## Next Action
 
-Pick highest-value backlog task from APP_FUNCTIONALITY_PLAN, dispatch appropriate specialist.
+Wait for Wave 2 completions, then dispatch clinical/stats agents.
