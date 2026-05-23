@@ -1,7 +1,10 @@
 #!/bin/bash
-# PANaCEa Deployment Verification Script
-# 
-# This script verifies that all components are correctly deployed
+# PANaCEa Deployment Verification Script (LEGACY — Express/PM2 server model)
+#
+# ⚠️ This script validates a pre-Cloudflare Express + PM2 server deployment.
+# It does NOT apply to the current Cloudflare Pages production deployment.
+# For Cloudflare Pages verification, see deployment/DEPLOYMENT_CHECKLIST.md
+# or run: npm run pages:serve && BASE_URL=http://localhost:8788 npm run verify:health
 #
 # Usage: ./deployment/scripts/verify-deployment.sh
 

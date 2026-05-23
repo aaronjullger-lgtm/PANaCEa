@@ -1,42 +1,52 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockPrisma } = vi.hoisted(() => ({
-  mockPrisma: {
-    userQuestionSeen: {
-      findMany: vi.fn(),
-      upsert: vi.fn(),
-    },
-    preGeneratedQuestion: {
-      count: vi.fn(),
-      findMany: vi.fn(),
-      create: vi.fn(),
-    },
-    questionSeed: {
-      findMany: vi.fn(),
-      update: vi.fn(),
-    },
-    question: {
-      findMany: vi.fn(),
-      updateMany: vi.fn(),
-    },
-    userProgress: {
-      findMany: vi.fn(),
-      findFirst: vi.fn(),
-    },
-    medicalContent: {
-      findMany: vi.fn(),
-    },
-  } as any,
-}));
+const { mockPrisma, MockContentService } = vi.hoisted(() => {
+  const mockContent = {
+    getConditionsContent: vi.fn().mockResolvedValue(new Map()),
+    getConditionContent: vi.fn().mockResolvedValue(null),
+    getConditionMeta: vi.fn().mockResolvedValue(null),
+    disconnect: vi.fn().mockResolvedValue(undefined),
+  };
+  return {
+    mockPrisma: {
+      userQuestionSeen: {
+        findMany: vi.fn(),
+        upsert: vi.fn(),
+      },
+      preGeneratedQuestion: {
+        count: vi.fn(),
+        findMany: vi.fn(),
+        create: vi.fn(),
+      },
+      questionSeed: {
+        findMany: vi.fn(),
+        update: vi.fn(),
+      },
+      question: {
+        findMany: vi.fn(),
+        updateMany: vi.fn(),
+      },
+      userProgress: {
+        findMany: vi.fn(),
+        findFirst: vi.fn(),
+      },
+      medicalContent: {
+        findMany: vi.fn(),
+      },
+    } as any,
+    MockContentService: vi.fn(function (this: any) {
+      Object.assign(this, mockContent);
+      return this;
+    }),
+  };
+});
 
 vi.mock('../../../functions/api/_shared/prisma-edge', () => ({
   createEdgePrismaClient: vi.fn(() => mockPrisma),
 }));
 
 vi.mock('../content/contentService', () => ({
-  ContentService: vi.fn().mockImplementation(() => ({
-    getConditionsContent: vi.fn().mockResolvedValue(new Map()),
-  })),
+  ContentService: MockContentService,
 }));
 
 import { SessionService, parseRationaleFromExplanation } from './sessionService';

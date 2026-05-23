@@ -1,7 +1,9 @@
 #!/bin/bash
-# PANaCEa Deployment Script
-# 
-# This script automates the deployment process according to DEPLOYMENT_GUIDE_PHASE_3_5.md
+# PANaCEa Deployment Script (LEGACY — Express/PM2 server model)
+#
+# ⚠️ This script deploys to a VM-based Express + PM2 server.
+# The current production deployment is Cloudflare Pages via GitHub Actions.
+# For Cloudflare Pages deploy, use: npm run deploy:local  or push to main (CI auto-deploy).
 #
 # Usage: ./deployment/scripts/deploy.sh [--skip-backup] [--skip-migration] [--skip-workers]
 

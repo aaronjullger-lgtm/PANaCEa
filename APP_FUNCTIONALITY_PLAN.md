@@ -1,7 +1,9 @@
 # APP_FUNCTIONALITY_PLAN.md
 
-> Recovery plan, known blockers, verification history, current task, and next best step.
+> Quick-reference recovery plan, known blockers, verification history, current task, and next best step.
 > Created 2026-05-22 — referenced by 5+ agent skills. Update after setup, build, runtime, auth, API, test, or workflow changes.
+>
+> **For the full detailed plan (core user flows, route registry, API map, dependency audit, setup verification), see [`docs/plans/APP_FUNCTIONALITY_PLAN.md`](docs/plans/APP_FUNCTIONALITY_PLAN.md).**
 
 ## Status
 

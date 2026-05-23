@@ -1,6 +1,6 @@
 # Current Mission
 
-**Last Updated:** 2026-05-22 17:47 EDT
+**Last Updated:** 2026-05-23 19:50 EDT
 **Coordinator:** panacea-syncytium-coordinator
 
 ## Active Priority
@@ -8,6 +8,11 @@
 **Task:** First specialist agent dispatch — PANaCEa code work
 **Assigned To:** TBD (selecting agent based on backlog priority)
 **Status:** Ready to dispatch
+
+## Recently Completed
+
+- ✅ Autonomy Skillsmith Agent: Created missing status docs — `APP_FUNCTIONALITY_PLAN.md` (root shim), `UPDATED_PRODUCTION_READINESS_SCORECARD.md`, `NEXT_IMPLEMENTATION_PLAN.md`
+- ✅ Autonomy Skillsmith Agent: Fixed CLAUDE.md stale skill count/path (27→44, `.claude/skills/`→`.agents/skills/`)
 
 ## Priority Queue
 

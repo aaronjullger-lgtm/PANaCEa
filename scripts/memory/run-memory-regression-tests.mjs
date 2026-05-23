@@ -24,6 +24,7 @@ const MEMORY_TEST_FILES = [
   'tests/memory/knowledgeCacheRetention.test.ts',
   'tests/memory/memoryEvalGoldenQueries.test.ts',
   'tests/memory/tabularMemorySchema.test.ts',
+  'lib/services/tokenMatchCache.test.ts',
   'tests/api/graph/expand.test.ts',
   'tests/graph/GraphBuilder.test.ts',
   'tests/graph/RelationshipExtractor.test.ts',

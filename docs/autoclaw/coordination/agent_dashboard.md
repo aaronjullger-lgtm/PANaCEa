@@ -6,6 +6,7 @@ Last updated: 2026-05-22
 
 | Agent | Tasks Completed | Tests Added | Regressions Caught | Last Active |
 |-------|----------------|-------------|-------------------|-------------|
+| autonomy-skillsmith-agent | 3 | — | — | May 23 |
 | panacea-syncytium-coordinator | 1 | — | — | May 22 |
 | panacea-clinical-content-auditor | 0 | — | — | — |
 | panacea-question-generation | 0 | — | — | — |
