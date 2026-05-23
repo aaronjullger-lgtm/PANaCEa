@@ -144,6 +144,10 @@ import { useAnalyticsTracking, type QuestionMeta } from '@/hooks/useAnalyticsTra
 import { useWellnessChecks } from '@/hooks/useWellnessChecks';
 import { computeScore } from '@/lib/scoring/computeScore';
 import { getQuestionIdentity } from '@/lib/study/questionIdentity';
+import {
+  resolveStructuredRationale,
+  renderStructuredRationale,
+} from '@/lib/study/renderStructuredRationale';
 
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
@@ -1870,22 +1874,23 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               userWrongAnswer={(currentQuestion.options as string[])?.[selectedAnswerIndex] ?? ''}
               options={currentQuestion.options as string[]}
               fullExplanation={(() => {
+                const structured = resolveStructuredRationale(currentQuestion.rationale);
+                if (structured) {
+                  // Include per-distractor analysis when student chose wrong answer
+                  return renderStructuredRationale({
+                    ...structured,
+                    ...(selectedAnswerIndex !== currentQuestion.correctAnswerIndex && {
+                      // If incorrect, precede with distractor analysis focused on their mistake
+                      _preferDistractorView: true,
+                    }),
+                  });
+                }
                 const stripHtml = (s: string) =>
                   s
                     .replace(STRIP_HTML_TAGS_REGEX, ' ')
                     .replace(/\s+/g, ' ')
                     .trim();
-                const r = currentQuestion.rationale;
-                if (typeof r === 'object' && r !== null && 'bottomLine' in r) {
-                  const s = r as { bottomLine?: string; whyCorrect?: string };
-                  return (
-                    [s.bottomLine, s.whyCorrect]
-                      .filter((x): x is string => typeof x === 'string')
-                      .map(stripHtml)
-                      .join(' ') || 'See rationale above.'
-                  );
-                }
-                return stripHtml(typeof r === 'string' ? r : '') || 'See rationale above.';
+                return stripHtml(typeof currentQuestion.rationale === 'string' ? currentQuestion.rationale : '') || 'See rationale in the explanation panel.';
               })()}
               onClose={() => setShowSocraticTutor(false)}
             />

@@ -945,7 +945,36 @@ function resolveCorrectAnswerIndex(
   return null;
 }
 
+/**
+ * Normalize question explanation for serving.
+ *
+ * Prefers structured rationale JSON when available (from question-generator.ts),
+ * which preserves bottomLine, whyCorrect, whyIncorrectA-E, clinicalPearl, and
+ * highYieldImageOrTable for rich rendering in ExplanationPanel.
+ *
+ * Falls back to QuestionExplanation records or legacy flat-string rationale.
+ */
 function normalizeQuestionExplanation(rawExplanations: unknown, legacyExplanation: unknown): string | null {
+  // Phase 1: If legacyExplanation is structured rationale JSON, preserve it intact
+  //   ExplanationPanel handles both string and object formats at render time
+  if (typeof legacyExplanation === 'string') {
+    try {
+      const parsed = JSON.parse(legacyExplanation) as unknown;
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        !Array.isArray(parsed) &&
+        ('whyCorrect' in (parsed as Record<string, unknown>) ||
+          'bottomLine' in (parsed as Record<string, unknown>))
+      ) {
+        return legacyExplanation; // preserve structured JSON string
+      }
+    } catch {
+      // Not JSON — treat as plain string rationale
+    }
+  }
+
+  // Phase 2: Extract from QuestionExplanation records
   if (Array.isArray(rawExplanations)) {
     const explanations = rawExplanations
       .filter((explanation) => explanation && typeof explanation === 'object')
@@ -967,6 +996,7 @@ function normalizeQuestionExplanation(rawExplanations: unknown, legacyExplanatio
     if (body) return body;
   }
 
+  // Phase 3: Plain string rationale
   return normalizeString(legacyExplanation);
 }
 

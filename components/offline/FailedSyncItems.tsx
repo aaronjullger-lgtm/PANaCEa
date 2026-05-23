@@ -1,13 +1,87 @@
 /**
  * Failed Sync Items Component
- * Displays items that failed to sync after multiple attempts (Dead Letter Queue)
+ *
+ * Displays dead-lettered sync items from the primary syncManager (Sprint 7).
+ * Items here exhausted MAX_SYNC_ATTEMPTS (5) and need user-driven recovery:
+ * retry or discard.
+ *
+ * Previously used a legacy dead-letter queue from offlineSync.ts (Phase 4)
+ * which was never populated — rewired to syncManager's live dead-letter system.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Copy, Trash2, X, CheckCircle } from 'lucide-react';
-import { getDeadLetterQueue, type SyncOperation } from '@/lib/services/sync/offlineSync';
-import { StorageKeys } from '@/lib/storage/storageRegistry';
+import { AlertTriangle, Copy, Trash2, X, CheckCircle, RefreshCw } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useSyncManager, type OfflineAnswer, type OfflineReview, type OfflinePearlAction } from '@/lib/services/sync/syncManager';
+import { toast } from '@/lib/toast';
+
+// ── Unified display item ────────────────────────────────────────────────────
+
+type DeadLetterKind = 'answer' | 'review' | 'pearl';
+
+interface DeadLetterDisplayItem {
+  id: string;
+  kind: DeadLetterKind;
+  label: string;
+  questionId?: string;
+  pearlId?: string;
+  syncAttempts: number;
+  lastSyncError?: string;
+  timestamp: number;
+  raw: OfflineAnswer | OfflineReview | OfflinePearlAction;
+}
+
+function formatDeadLetterItems(
+  answers: OfflineAnswer[],
+  reviews: OfflineReview[],
+  pearlActions: OfflinePearlAction[],
+): DeadLetterDisplayItem[] {
+  const items: DeadLetterDisplayItem[] = [];
+
+  for (const a of answers) {
+    items.push({
+      id: a.id,
+      kind: 'answer',
+      label: `Answer — ${a.questionId}`,
+      questionId: a.questionId,
+      syncAttempts: a.syncAttempts,
+      lastSyncError: a.lastSyncError,
+      timestamp: a.timestamp,
+      raw: a,
+    });
+  }
+
+  for (const r of reviews) {
+    items.push({
+      id: r.id,
+      kind: 'review',
+      label: `Review — ${r.questionId}`,
+      questionId: r.questionId,
+      syncAttempts: r.syncAttempts,
+      lastSyncError: r.lastSyncError,
+      timestamp: r.timestamp,
+      raw: r,
+    });
+  }
+
+  for (const p of pearlActions) {
+    items.push({
+      id: p.id,
+      kind: 'pearl',
+      label: `Pearl ${p.action} — ${p.pearlId}`,
+      pearlId: p.pearlId,
+      syncAttempts: p.syncAttempts,
+      lastSyncError: p.lastSyncError,
+      timestamp: p.timestamp,
+      raw: p,
+    });
+  }
+
+  return items;
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
 
 interface FailedSyncItemsProps {
   isOpen: boolean;
@@ -15,10 +89,25 @@ interface FailedSyncItemsProps {
 }
 
 export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClose }) => {
-  const [failedItems, setFailedItems] = useState<SyncOperation[]>([]);
+  const { getToken } = useAuth();
+  const { getDeadLetteredItems, retryDeadLettered, discardDeadLettered } = useSyncManager(getToken);
+
+  const [items, setItems] = useState<DeadLetterDisplayItem[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
+  const [recovering, setRecovering] = useState(false);
 
+  // Refresh dead-lettered items whenever the panel opens
+  const refresh = useCallback(() => {
+    const dead = getDeadLetteredItems();
+    setItems(formatDeadLetterItems(dead.answers, dead.reviews, dead.pearlActions));
+  }, [getDeadLetteredItems]);
+
+  useEffect(() => {
+    if (isOpen) refresh();
+  }, [isOpen, refresh]);
+
+  // ESC to close
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -28,31 +117,38 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  useEffect(() => {
-    if (isOpen) {
-      const items = getDeadLetterQueue();
-      setFailedItems(items);
-    }
-  }, [isOpen]);
-
-  const handleCopyItem = (item: SyncOperation) => {
-    const text = JSON.stringify(item.data, null, 2);
+  const handleCopyItem = (item: DeadLetterDisplayItem) => {
+    const text = JSON.stringify(item.raw, null, 2);
     navigator.clipboard.writeText(text).then(() => {
       setCopiedId(item.id);
       setTimeout(() => setCopiedId(null), 2000);
     });
   };
 
-  const handleRemoveItem = (itemId: string) => {
-    const updatedItems = failedItems.filter((item) => item.id !== itemId);
-    setFailedItems(updatedItems);
-    localStorage.setItem(StorageKeys.DEAD_LETTER_QUEUE, JSON.stringify(updatedItems));
+  const handleRetryAll = async () => {
+    if (!navigator.onLine || recovering) return;
+    setRecovering(true);
+    try {
+      const token = await getToken();
+      const result = await retryDeadLettered(token ?? undefined);
+      const total = result.answers + result.reviews + result.pearls;
+      if (total > 0) {
+        toast.success(`Retried ${total} stuck item${total === 1 ? '' : 's'}.`);
+      }
+      refresh();
+    } catch {
+      toast.warning('Sync retry paused. Your progress is saved locally.');
+    } finally {
+      setRecovering(false);
+    }
   };
 
-  const handleClearAll = () => {
-    setFailedItems([]);
-    localStorage.removeItem(StorageKeys.DEAD_LETTER_QUEUE);
+  const handleDiscardAll = () => {
+    const counts = discardDeadLettered();
+    const total = counts.answers + counts.reviews + counts.pearlActions;
+    toast.success(`Discarded ${total} stuck item${total === 1 ? '' : 's'}.`);
     setShowConfirmClear(false);
+    refresh();
   };
 
   if (!isOpen) return null;
@@ -78,8 +174,7 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
                   Failed Sync Items
                 </h2>
                 <p className="text-sm text-[var(--color-data-fail)]/90 mt-1">
-                  {failedItems.length} item{failedItems.length !== 1 ? 's' : ''} failed to sync
-                  after multiple attempts
+                  {items.length} item{items.length !== 1 ? 's' : ''} failed to sync after 5 attempts
                 </p>
               </div>
               <button
@@ -94,52 +189,61 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
 
           {/* Content */}
           <div className="p-6 overflow-y-auto max-h-[calc(80vh-200px)]">
-            {failedItems.length === 0 ? (
+            {items.length === 0 ? (
               <div className="text-center py-8 text-[var(--color-text-muted)]">
-                <p>No failed sync items</p>
+                <p>No stuck sync items</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {failedItems.map((item) => (
+                {items.map((item) => (
                   <div
                     key={item.id}
                     className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-4"
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <div className="font-semibold text-[var(--color-text-primary)]">
-                          {item.operation.replace(/_/g, ' ').toUpperCase()}
+                        <div className="flex items-center gap-2">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]">
+                            {item.kind}
+                          </span>
+                          <div className="font-semibold text-[var(--color-text-primary)] text-sm">
+                            {item.kind === 'answer' && 'Answer'}
+                            {item.kind === 'review' && 'Review'}
+                            {item.kind === 'pearl' && `Pearl: ${(item.raw as OfflinePearlAction).action}`}
+                          </div>
                         </div>
+                        {item.questionId && (
+                          <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                            Question: {item.questionId}
+                          </div>
+                        )}
+                        {item.pearlId && (
+                          <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                            Pearl: {item.pearlId}
+                          </div>
+                        )}
                         <div className="text-xs text-[var(--color-text-muted)]">
-                          Failed after {item.attempts} attempts
+                          {item.syncAttempts} attempt{item.syncAttempts === 1 ? '' : 's'}
+                          {item.lastSyncError && ` — ${item.lastSyncError}`}
                         </div>
                         <div className="text-xs text-[var(--color-text-muted)]">
                           {new Date(item.timestamp).toLocaleString()}
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleCopyItem(item)}
-                          className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors relative"
-                          title="Copy data to clipboard"
-                        >
-                          {copiedId === item.id ? (
-                            <CheckCircle className="w-4 h-4 text-[var(--color-data-pass)]" />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleRemoveItem(item.id)}
-                          className="p-2 text-[var(--color-data-fail)] hover:text-[var(--color-data-fail)]/80 transition-colors"
-                          title="Remove item"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleCopyItem(item)}
+                        className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors relative"
+                        title="Copy data to clipboard"
+                      >
+                        {copiedId === item.id ? (
+                          <CheckCircle className="w-4 h-4 text-[var(--color-data-pass)]" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
                     </div>
                     <div className="text-xs text-[var(--color-text-primary)]/90 mt-2 p-2 bg-[var(--color-bg-primary)] rounded border border-[var(--color-border)] font-mono overflow-x-auto">
-                      <pre>{JSON.stringify(item.data, null, 2)}</pre>
+                      <pre>{JSON.stringify(item.raw, null, 2)}</pre>
                     </div>
                   </div>
                 ))}
@@ -148,12 +252,12 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
           </div>
 
           {/* Footer */}
-          {failedItems.length > 0 && (
+          {items.length > 0 && (
             <div className="border-t border-[var(--color-border)] p-4 bg-[var(--color-bg-secondary)]">
               {showConfirmClear ? (
                 <div className="flex flex-col gap-3">
                   <p className="text-sm text-[var(--color-data-fail)] font-medium">
-                    Are you sure you want to clear all failed items? This cannot be undone.
+                    Discard all {items.length} stuck item{items.length === 1 ? '' : 's'}? This cannot be undone and the data will not reach the server.
                   </p>
                   <div className="flex gap-2 justify-end">
                     <button
@@ -163,23 +267,34 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
                       Cancel
                     </button>
                     <button
-                      onClick={handleClearAll}
+                      onClick={handleDiscardAll}
                       className="px-4 py-2 bg-[var(--color-data-fail)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-data-fail)]/90 transition-colors"
                     >
-                      Yes, Clear All
+                      Yes, Discard All
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="flex justify-between items-center">
-                  <p className="text-sm text-[var(--color-text-muted)]">
-                    You can copy the data manually or clear these items
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <p className="text-sm text-[var(--color-text-muted)]">
+                      Retry when connected, or discard if not needed
+                    </p>
+                    <button
+                      onClick={handleRetryAll}
+                      disabled={!navigator.onLine || recovering}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--color-accent)]/10 hover:bg-[var(--color-accent)]/20 text-[var(--color-accent)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${recovering ? 'animate-spin' : ''}`} />
+                      Retry All
+                    </button>
+                  </div>
                   <button
                     onClick={() => setShowConfirmClear(true)}
-                    className="px-4 py-2 bg-[var(--color-data-fail)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-data-fail)]/90 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--color-data-fail)]/10 hover:bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] transition-colors"
                   >
-                    Clear All
+                    <Trash2 className="w-3 h-3" />
+                    Discard All
                   </button>
                 </div>
               )}

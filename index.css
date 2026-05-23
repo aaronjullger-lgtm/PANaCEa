@@ -90,7 +90,7 @@ body,
   animation: buzzword-marquee 20s linear infinite;
 }
 
-/* Shimmer loading animation — premium cinematic skeleton screens */
+/* Shimmer loading animation — clinical console skeleton screens */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -99,9 +99,9 @@ body,
   background: linear-gradient(
     105deg,
     var(--color-bg-secondary) 20%,
-    color-mix(in srgb, var(--color-bg-tertiary) 92%, #c4b78a) 45%,
-    color-mix(in srgb, var(--color-bg-tertiary) 85%, #e6d9b5) 50%,
-    color-mix(in srgb, var(--color-bg-tertiary) 92%, #c4b78a) 55%,
+    color-mix(in srgb, var(--color-bg-tertiary) 92%, var(--color-accent)) 45%,
+    color-mix(in srgb, var(--color-bg-tertiary) 85%, var(--color-accent-hover)) 50%,
+    color-mix(in srgb, var(--color-bg-tertiary) 92%, var(--color-accent)) 55%,
     var(--color-bg-secondary) 80%
   );
   background-size: 200% 100%;
@@ -2726,7 +2726,7 @@ a,
    SKELETON SHIMMER (LEFT-TO-RIGHT, DESIGN SYSTEM)
    =============================================== */
 
-/* Single skeleton: left-to-right gold-tinted shimmer overlay */
+/* Single skeleton: left-to-right clinical-cyan shimmer overlay */
 .skeleton-shimmer {
   position: relative;
   overflow: hidden;
@@ -2738,9 +2738,9 @@ a,
   background: linear-gradient(
     105deg,
     transparent 30%,
-    rgba(196, 183, 138, 0.08) 42%,
-    rgba(230, 217, 181, 0.12) 50%,
-    rgba(196, 183, 138, 0.08) 58%,
+    color-mix(in srgb, var(--color-accent) 8%, transparent) 42%,
+    color-mix(in srgb, var(--color-accent-hover) 12%, transparent) 50%,
+    color-mix(in srgb, var(--color-accent) 8%, transparent) 58%,
     transparent 70%
   );
   animation: skeleton-shimmer 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;

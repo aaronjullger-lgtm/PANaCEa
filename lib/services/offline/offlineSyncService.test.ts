@@ -35,6 +35,11 @@ describe('OfflineSyncService', () => {
   beforeEach(() => {
     mockLocalStorage.clear();
     vi.clearAllMocks();
+    // Reset navigator.onLine — some tests mutate it (e.g. "should not process queue when offline")
+    Object.defineProperty(global.navigator, 'onLine', {
+      value: true,
+      writable: true,
+    });
     service = new OfflineSyncService(mockLocalStorage as any);
   });
 
@@ -87,7 +92,7 @@ describe('OfflineSyncService', () => {
       expect(service.getQueue().length).toBe(0);
     });
 
-    it('should re-queue requests that fail', async () => {
+    it('should re-queue requests that fail (before max attempts)', async () => {
       const mockFetch = global.fetch as any;
       mockFetch.mockRejectedValue(new Error('Network error'));
 
@@ -95,8 +100,46 @@ describe('OfflineSyncService', () => {
 
       await service.processQueue();
 
-      // Request should be back in queue
+      // Request should be back in queue with incremented attempts
       expect(service.getQueue().length).toBe(1);
+      expect(service.getQueue()[0]!.attempts).toBe(1);
+    });
+
+    it('should dead-letter requests after MAX_ATTEMPTS failures', async () => {
+      const mockFetch = global.fetch as any;
+      mockFetch.mockRejectedValue(new Error('Network error'));
+
+      await service.queueRequest('/api/test', { method: 'POST' });
+
+      // Process 5 times — should dead-letter on the 5th failure
+      for (let i = 0; i < 5; i++) {
+        await service.processQueue();
+      }
+
+      expect(service.getQueue().length).toBe(0);
+      expect(service.getDeadLetter().length).toBe(1);
+      expect(service.getDeadLetter()[0]!.attempts).toBe(5);
+      expect(service.getDeadLetter()[0]!.deadLettered).toBe(true);
+    });
+
+    it('should not dead-letter if a request eventually succeeds', async () => {
+      const mockFetch = global.fetch as any;
+      // Fail 4 times, then succeed
+      mockFetch
+        .mockRejectedValueOnce(new Error('Fail 1'))
+        .mockRejectedValueOnce(new Error('Fail 2'))
+        .mockRejectedValueOnce(new Error('Fail 3'))
+        .mockRejectedValueOnce(new Error('Fail 4'))
+        .mockResolvedValueOnce({ ok: true });
+
+      await service.queueRequest('/api/test', { method: 'POST' });
+
+      for (let i = 0; i < 5; i++) {
+        await service.processQueue();
+      }
+
+      expect(service.getQueue().length).toBe(0);
+      expect(service.getDeadLetter().length).toBe(0);
     });
 
     it('should not process queue when offline', async () => {
@@ -124,6 +167,43 @@ describe('OfflineSyncService', () => {
 
       const queue = service.getQueue();
       expect(queue.length).toBe(2);
+    });
+  });
+
+  describe('dead-letter management', () => {
+    it('should return empty dead-letter queue initially', () => {
+      expect(service.getDeadLetter()).toEqual([]);
+    });
+
+    it('should remove a single dead-lettered item', async () => {
+      const mockFetch = global.fetch as any;
+      mockFetch.mockRejectedValue(new Error('Network error'));
+
+      await service.queueRequest('/api/a', { method: 'POST' });
+      await service.queueRequest('/api/b', { method: 'POST' });
+
+      // Dead-letter both
+      for (let i = 0; i < 5; i++) await service.processQueue();
+
+      const allDead = service.getDeadLetter();
+      expect(allDead.length).toBe(2);
+
+      service.removeDeadLetter(allDead[0]!.id);
+      expect(service.getDeadLetter().length).toBe(1);
+      expect(service.getDeadLetter()[0]!.url).toBe('/api/b');
+    });
+
+    it('should clear all dead-lettered items', async () => {
+      const mockFetch = global.fetch as any;
+      mockFetch.mockRejectedValue(new Error('Network error'));
+
+      await service.queueRequest('/api/a', { method: 'POST' });
+      for (let i = 0; i < 5; i++) await service.processQueue();
+
+      expect(service.getDeadLetter().length).toBe(1);
+
+      service.clearDeadLetter();
+      expect(service.getDeadLetter().length).toBe(0);
     });
   });
 });

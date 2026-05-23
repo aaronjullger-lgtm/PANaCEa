@@ -3,11 +3,20 @@
  *
  * Generates questions in batches for the question pool.
  * Called by poolMonitorService when pool levels drop.
+ *
+ * Routes all generated questions through the staging pipeline
+ * (saveToStaging → runAdequacyCheck → promoteToLive) so every
+ * question gets quality-checked and canonical-mirrored before
+ * reaching learners.
  */
 
-import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '../../lib/prisma';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import {
+  saveToStaging,
+  runAdequacyCheck,
+  promoteToLive,
+} from '../../functions/api/_shared/staging-questions';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY required');
@@ -28,12 +37,20 @@ interface GeneratedQuestion {
 }
 
 /**
- * Generate a batch of questions for a specific system
+ * Generate a batch of questions for a specific system.
+ *
+ * Each generated question flows through the staging pipeline:
+ *   saveToStaging → runAdequacyCheck → promoteToLive (if valid)
+ *
+ * Questions that fail adequacy checks stay in staging for later
+ * review via processStagingQueue / processStagingQueueWithCritic.
+ * Questions where the AI check cannot complete stay pending in
+ * staging (not discarded).
  */
 export async function generateBatchForSystem(
   system: string,
   count: number = 25
-): Promise<{ generated: number; failed: number; questions: any[] }> {
+): Promise<{ promoted: number; pending: number; failed: number; questions: any[] }> {
 
   // Get conditions for this system from MedicalContent
   const conditions = await prisma.medicalContent.findMany({
@@ -43,10 +60,11 @@ export async function generateBatchForSystem(
   });
 
   if (conditions.length === 0) {
-    return { generated: 0, failed: 0, questions: [] };
+    return { promoted: 0, pending: 0, failed: 0, questions: [] };
   }
 
-  let generated = 0;
+  let promoted = 0;
+  let pending = 0;
   let failed = 0;
   const questions: any[] = [];
 
@@ -60,27 +78,28 @@ export async function generateBatchForSystem(
       const question = await generateQuestionForCondition(condition, system);
 
       if (question) {
-        // Save directly to PreGeneratedQuestion pool
-        const saved = await prisma.preGeneratedQuestion.create({
-          data: {
-            id: uuidv4(),
-            questionData: {
-              question: question.question,
-              options: question.options,
-              correctIndex: question.correctIndex,
-              explanation: question.explanation,
-              tags: question.tags,
-            } as any,
-            system: system,
-            conditionId: condition.conditionId,
-            difficulty: question.difficulty,
-            questionType: question.questionType,
-            generatedAt: new Date(),
-          },
-        });
+        // Transform to staging-compatible format
+        const stagingData = buildStagingQuestionData(question, condition, system);
 
-        questions.push(saved);
-        generated++;
+        // Save to staging (validates structure)
+        const stagingQuestion = await saveToStaging(prisma, stagingData);
+
+        // Run AI adequacy check
+        const env = { GEMINI_API_KEY: process.env.GEMINI_API_KEY };
+        const checkResult = await runAdequacyCheck(prisma, env, stagingQuestion.id);
+
+        if (checkResult.isValid) {
+          // Passed all checks — promote to live pool + canonical mirror
+          const liveQuestion = await promoteToLive(prisma, stagingQuestion.id);
+          questions.push(liveQuestion);
+          promoted++;
+        } else if (checkResult.accuracyCheckCompleted) {
+          // Failed adequacy check — stays in staging as flagged/rejected
+          failed++;
+        } else {
+          // AI check did not complete — stays pending for later review
+          pending++;
+        }
       }
 
       // Rate limit
@@ -91,7 +110,38 @@ export async function generateBatchForSystem(
     }
   }
 
-  return { generated, failed, questions };
+  return { promoted, pending, failed, questions };
+}
+
+/**
+ * Transform a GeneratedQuestion into the shape saveToStaging expects.
+ * The staging functions resolve correctAnswer from either a string
+ * (letter or full text) or a numeric index via correctAnswerIndex/correctIndex.
+ */
+function buildStagingQuestionData(
+  question: GeneratedQuestion,
+  condition: { condition: string; conditionId?: string | null },
+  system: string
+): Record<string, unknown> {
+  return {
+    vignette: '',
+    question: question.question,
+    options: question.options,
+    correctAnswerIndex: question.correctIndex,
+    explanation: question.explanation,
+    system,
+    difficulty: question.difficulty,
+    tags: [
+      ...(question.tags || []),
+      `conditionId:${condition.conditionId || ''}`,
+      `medicalContentId:${condition.conditionId || ''}`,
+      `conditionName:${condition.condition}`,
+      `questionType:${question.questionType}`,
+      `questionOrder:first`,
+      `taskCategory:diagnosis`,
+      `source:batch_generator`,
+    ],
+  };
 }
 
 /**
@@ -144,7 +194,8 @@ Generate a clinical vignette question. Return ONLY valid JSON:
  */
 export async function generateForAllLowSystems(threshold: number = 50): Promise<{
   systemsProcessed: number;
-  totalGenerated: number;
+  totalPromoted: number;
+  totalPending: number;
   totalFailed: number;
 }> {
   // Get pool levels
@@ -153,20 +204,23 @@ export async function generateForAllLowSystems(threshold: number = 50): Promise<
 
   const lowSystems = poolStatus.filter((s) => s.unused < threshold);
 
-  let totalGenerated = 0;
+  let totalPromoted = 0;
+  let totalPending = 0;
   let totalFailed = 0;
 
   for (const systemStatus of lowSystems) {
     const needed = threshold - systemStatus.unused;
 
     const result = await generateBatchForSystem(systemStatus.system, needed);
-    totalGenerated += result.generated;
+    totalPromoted += result.promoted;
+    totalPending += result.pending;
     totalFailed += result.failed;
   }
 
   return {
     systemsProcessed: lowSystems.length,
-    totalGenerated,
+    totalPromoted,
+    totalPending,
     totalFailed,
   };
 }
@@ -179,9 +233,11 @@ if (require.main === module) {
 
   (async () => {
     if (system) {
-      await generateBatchForSystem(system, count);
+      const result = await generateBatchForSystem(system, count);
+      console.log(`Batch complete: ${result.promoted} promoted, ${result.pending} pending, ${result.failed} failed`);
     } else {
       const result = await generateForAllLowSystems();
+      console.log(`All systems: ${result.totalPromoted} promoted, ${result.totalPending} pending, ${result.totalFailed} failed`);
     }
     process.exit(0);
   })();

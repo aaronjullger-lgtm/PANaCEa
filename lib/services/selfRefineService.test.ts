@@ -76,6 +76,7 @@ function makeValidCritiqueJSON(overallScore = 0.75): string {
       { name: 'answer_homogeneity', score: 0.85, feedback: 'Parallel' },
       { name: 'testwise_cues', score: 0.9, feedback: 'No cues' },
       { name: 'diagnosis_in_stem', score: 0.9, feedback: 'No diagnosis named' },
+      { name: 'explanation_depth', score: 0.7, feedback: 'Distractor explanations could be more detailed' },
     ],
     issues: [
       {
@@ -231,11 +232,12 @@ describe('buildCritiquePrompt', () => {
     expect(prompt.toLowerCase()).toContain('json');
   });
 
-  it('includes all 7 critique dimensions', () => {
+  it('includes all 8 critique dimensions', () => {
     const prompt = buildCritiquePrompt(makeQuestion());
     const dimensions = [
       'CLINICAL_ACCURACY', 'DISTRACTOR_PLAUSIBILITY', 'BLOOMS_ALIGNMENT',
       'STEM_CLARITY', 'ANSWER_HOMOGENEITY', 'TESTWISE_CUES', 'DIAGNOSIS_IN_STEM',
+      'EXPLANATION_DEPTH',
     ];
     for (const dim of dimensions) {
       expect(prompt).toContain(dim);
@@ -316,9 +318,9 @@ describe('parseCritiqueResponse', () => {
     expect(result!.issues[0]?.severity).toBe('minor');
   });
 
-  it('parses all 7 dimensions', () => {
+  it('parses all 8 dimensions', () => {
     const result = parseCritiqueResponse(makeValidCritiqueJSON(0.75));
-    expect(result!.dimensions).toHaveLength(7);
+    expect(result!.dimensions).toHaveLength(8);
   });
 
   it('includes feedbackForRewrite', () => {

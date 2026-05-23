@@ -131,7 +131,7 @@ export async function createDrillSession(
         mode: drillType,
         // targetSystem removed - field does not exist in StudySession schema
         startedAt: new Date(),
-        sessionType: 'CRAM', // Mark as non-MAIN session type
+        sessionType: 'DRILL', // Drill sessions use the DRILL enum (legacy sessions used CRAM)
       },
     });
 
@@ -194,7 +194,7 @@ export async function getDrillSessionStats(
     const whereClause: any = {
       userId,
       sessionType: {
-        in: ['CRAM', 'RAPID_RECALL'], // Non-MAIN sessions
+        in: ['CRAM', 'DRILL', 'RAPID_RECALL'], // Non-MAIN drill sessions (CRAM = legacy, DRILL = current)
       },
     };
 
@@ -285,7 +285,7 @@ export async function verifyStatisticalIsolation(prisma: PrismaLike, userId: str
       where: { userId },
     });
 
-    // Check ReviewLog - MAIN sessions (real reviews) vs CRAM/RAPID_RECALL (drill sessions)
+    // Check ReviewLog - MAIN sessions (real reviews) vs non-MAIN (CRAM/DRILL/RAPID_RECALL)
     const mainReviews = await prisma.reviewLog.count({
       where: {
         userId,
@@ -296,7 +296,12 @@ export async function verifyStatisticalIsolation(prisma: PrismaLike, userId: str
     const drillReviews = await prisma.reviewLog.count({
       where: {
         userId,
-        OR: [{ review_type: 'cram' }, { sessionType: 'CRAM' }, { sessionType: 'RAPID_RECALL' }],
+        OR: [
+          { review_type: 'cram' },
+          { sessionType: 'CRAM' },
+          { sessionType: 'DRILL' },
+          { sessionType: 'RAPID_RECALL' },
+        ],
       },
     });
 
@@ -407,7 +412,7 @@ export async function getDrillOverview(prisma: PrismaLike, userId: string): Prom
     const sessions = await prisma.studySession.findMany({
       where: {
         userId,
-        sessionType: 'CRAM', // Drill sessions use CRAM type
+        sessionType: { in: ['CRAM', 'DRILL'] }, // CRAM = legacy sessions, DRILL = current
       },
       orderBy: {
         startedAt: 'desc',
@@ -432,46 +437,41 @@ export async function getDrillOverview(prisma: PrismaLike, userId: string): Prom
     // Calculate streaks (days with at least one drill session)
     const sessionDates = sessions.map((s) => s.startedAt.toISOString().split('T')[0]);
     const uniqueDates = [...new Set(sessionDates)].sort().reverse();
+    const dateSet = new Set(uniqueDates);
 
     let currentStreak = 0;
     let bestStreak = 0;
     let tempStreak = 0;
 
-    const today = new Date().toISOString().split('T')[0];
     const checkDate = new Date();
 
-    // Calculate current streak
-    for (let i = 0; i < uniqueDates.length; i++) {
-      const dateStr = checkDate.toISOString().split('T')[0];
-      if (uniqueDates.includes(dateStr)) {
-        currentStreak++;
-        checkDate.setDate(checkDate.getDate() - 1);
-      } else {
-        break;
-      }
+    // Calculate current streak — walk backwards from today
+    while (dateSet.has(checkDate.toISOString().split('T')[0])) {
+      currentStreak++;
+      checkDate.setDate(checkDate.getDate() - 1);
     }
 
-    // Calculate best streak - use bounds checking
+    // Calculate best streak from sorted unique dates (reverse chronological)
     for (let i = 0; i < uniqueDates.length; i++) {
       if (i === 0) {
         tempStreak = 1;
-      } else if (i > 0 && i < uniqueDates.length) {
-        // Safe array access with explicit bounds check
-        const prevDateStr = uniqueDates[i - 1] as string;
-        const currDateStr = uniqueDates[i] as string;
+        continue;
+      }
 
-        const prevDate = new Date(prevDateStr);
-        const currDate = new Date(currDateStr);
-        const diffDays = Math.floor(
-          (prevDate.getTime() - currDate.getTime()) / (1000 * 60 * 60 * 24)
-        );
+      const prevDateStr = uniqueDates[i - 1]!;
+      const currDateStr = uniqueDates[i]!;
 
-        if (diffDays === 1) {
-          tempStreak++;
-        } else {
-          bestStreak = Math.max(bestStreak, tempStreak);
-          tempStreak = 1;
-        }
+      const prevDate = new Date(prevDateStr);
+      const currDate = new Date(currDateStr);
+      const diffDays = Math.floor(
+        (prevDate.getTime() - currDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      if (diffDays === 1) {
+        tempStreak++;
+      } else {
+        bestStreak = Math.max(bestStreak, tempStreak);
+        tempStreak = 1;
       }
     }
     bestStreak = Math.max(bestStreak, tempStreak);

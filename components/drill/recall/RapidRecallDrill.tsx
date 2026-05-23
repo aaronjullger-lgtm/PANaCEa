@@ -16,6 +16,7 @@ import { InlineSpinner } from '@/components/loading';
 import { buzzwordService } from '@/services/domain';
 import { semanticValidationService } from '@/lib/services/semanticValidationService';
 import { useTelemetryCollector } from '@/hooks/useTelemetryCollector';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import type { TelemetryData } from '@/types/telemetry';
 
 interface RapidRecallDrillProps {
@@ -94,7 +95,8 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
             });
 
             if (response.ok) {
-              const data = (await response.json()) as { pearls?: PearlQuestion[] };
+              const json = await response.json();
+              const data = unwrapApiEnvelope<{ pearls?: PearlQuestion[] }>(json);
               if (data.pearls && data.pearls.length > 0) {
                 setPearlQuestions(data.pearls);
                 setUsePearls(true);

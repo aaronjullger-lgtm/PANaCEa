@@ -7,6 +7,7 @@
 
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { logger } from "@/lib/simple-logger";
+import { unwrapApiEnvelope, getApiEnvelopeError } from '@/lib/utils/apiEnvelope';
 
 const attemptLogger = logger.scope('AttemptService');
 
@@ -54,18 +55,17 @@ function createAttemptIdempotencyKey(questionId: string): string {
 }
 
 export function unwrapUserStatsResponse(payload: unknown): any | null {
-  if (!payload || typeof payload !== 'object') return null;
-  const root = payload as Record<string, any>;
-  if (root.stats) return root.stats;
-  if (root.data && typeof root.data === 'object') {
-    const data = root.data as Record<string, any>;
-    if (data.stats) return data.stats;
-    if (data.data && typeof data.data === 'object') {
-      const nested = data.data as Record<string, any>;
-      if (nested.stats) return nested.stats;
+  try {
+    const data = unwrapApiEnvelope<any>(payload);
+    // Try common nesting patterns: { stats } or { data: { stats } }
+    if (data && typeof data === 'object') {
+      if (data.stats) return data.stats;
+      if (data.data && typeof data.data === 'object' && data.data.stats) return data.data.stats;
     }
+    return data ?? null;
+  } catch {
+    return null;
   }
-  return null;
 }
 
 /**
@@ -191,7 +191,7 @@ async function sendAttemptToServer(
     return null;
   }
 
-  return await response.json();
+  return unwrapApiEnvelope<AttemptResponse>(await response.json());
 }
 
 /**
@@ -246,10 +246,14 @@ export async function getUserStats(token?: string | null): Promise<any | null> {
     });
 
     if (!response.ok) {
+      const errPayload = await response.json().catch(() => null);
       if (response.status === 404) {
         attemptLogger.warn('User stats not found (404) – user may not be synced yet');
       } else {
-        attemptLogger.error('Failed to fetch user stats', { status: response.status });
+        attemptLogger.error('Failed to fetch user stats', {
+          status: response.status,
+          error: getApiEnvelopeError(errPayload, ''),
+        });
       }
       return null;
     }
@@ -260,8 +264,7 @@ export async function getUserStats(token?: string | null): Promise<any | null> {
       return null;
     }
 
-    const result = await response.json();
-    const stats = unwrapUserStatsResponse(result);
+    const stats = unwrapApiEnvelope<any>(await response.json());
     if (!stats) {
       attemptLogger.warn('User stats response did not contain stats payload');
     }

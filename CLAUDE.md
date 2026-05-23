@@ -429,18 +429,17 @@ npm run orchestrate:full     # Full automation pipeline
 
 ---
 
-## Custom Skills (27)
+## Agent Skills (44)
 
-PANaCEa has 27 custom Claude skills in `.claude/skills/`. These auto-trigger based on description matching. See `.claude/skills/SKILL-ROUTING-QUICK.md` for a quick reference routing guide.
+PANaCEa has 44 OpenClaw agent skills in `.agents/skills/`. These auto-trigger based on description matching. See `docs/skills-usage.md` and `docs/skills-overview.md` for the full inventory and routing guide.
 
-**Tier 1 (always relevant):**
-`panacea-dev`, `panacea-navigator`, `panacea-verify`, `sprint-pipeline`, `panacea-fsrs-wiring`
+A separate `.claude/skills/` directory exists for Claude Code-specific skills (Claude Code auto-discovers its own skill-root). Agent-skills maintenance should target `.agents/skills/`, not `.claude/skills/`.
 
-**Tier 2 (commonly used):**
-`fsrs-pipeline`, `fsrs-domain`, `session-orchestration`, `cf-edge-api`, `clinical-content-gen`, `react-refactor`, `vitest-author`, `dashboard-trust`, `panacea-style-system`, `panacea-component-sprint`
-
-**Tier 3 (specialized):**
-`ai-generation-safety`, `async-state-hardening`, `auth-policy-review`, `clinical-library-search`, `clinical-safety-review`, `desktop-commander-deploy`, `model-routing-escalation`, `osce-architect`, `prisma-data-integrity`, `repo-hygiene`, `ui-primitive-consolidation`, `skill-creator`
+See `.agents/skills/skill-routing-and-usage/references/routing-matrix.md` for the unified routing matrix, and `docs/skills-overview.md` for the current skill inventory organized by domain:
+- **Routing & Workflow (11):** `skill-routing-and-usage`, `panacea-navigator`, `repo-operating-system`, `debug-reproduce-isolate`, `setup-testing-safety-net`, `panacea-verify`, `panacea-regression-guard`, `panacea-repo-hygiene`, `think`, `panacea-syncytium-coordinator`, `wrap-up`
+- **PANaCEa Product (15):** `aidesigner-frontend`, `panacea-view-composition`, `panacea-dashboard-analytics`, `panacea-content-refinery`, `panacea-edge-endpoints`, `panacea-fsrs-guardrails`, `panacea-session-pipeline`, `panacea-offline-sync`, `panacea-osce-simulation`, `panacea-prisma-data-integrity`, `panacea-identity-migration`, `panacea-question-generation`, `panacea-study-plan`, `panacea-clinical-content-auditor`, `panacea-syncytium-coordinator`
+- **Memory & Retrieval (7):** `memory-discovery`, `rag-quality`, `hybrid-retrieval`, `graph-memory`, `tabular-memory`, `memory-safety`, `memory-regression-eval`
+- **Reusable Engineering (11):** `api-database-audit-and-fix`, `optimize-ci-cd`, `security-and-privacy-audit`, `panacea-auth-guard`, `panacea-deployment-guard`, `performance-audit-optimise`, `spaced-repetition-scheduler-improve`, `ai-agent-design-and-eval`, `product-improvement-planner`, `release-readiness`, `post-launch-monitoring-and-response`
 
 ---
 

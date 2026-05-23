@@ -164,11 +164,17 @@ export async function analyzeAndTriggerGeneration(
       );
 
       const result = await generateBatchForSystem(gap.abbreviation, generateCount);
-      generatedCounts[gap.system] = result.generated;
+      generatedCounts[gap.system] = result.promoted;
       generationTriggered = true;
 
-      if (result.failed > 0) {
-        errors.push(`${gap.system}: ${result.failed}/${generateCount} failed`);
+      if (result.failed > 0 || result.pending > 0) {
+        const detail = [
+          result.failed > 0 ? `${result.failed} failed` : '',
+          result.pending > 0 ? `${result.pending} pending` : '',
+        ]
+          .filter(Boolean)
+          .join(', ');
+        errors.push(`${gap.system}: ${detail}/${generateCount}`);
       }
     } catch (err: any) {
       errors.push(`${gap.system}: generation failed — ${err.message}`);

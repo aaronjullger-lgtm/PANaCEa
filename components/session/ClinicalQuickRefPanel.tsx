@@ -15,6 +15,7 @@ import {
   ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope, getApiEnvelopeError } from '@/lib/utils/apiEnvelope';
 
 // ─── Types (mirrors clinicalQuickRefService) ─────────────────────────────────
 
@@ -101,7 +102,12 @@ export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditi
       const res = await fetch(`/api/reference/quick-ref?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) setData(await res.json());
+      if (res.ok) {
+        const json = await res.json();
+        setData(unwrapApiEnvelope<QuickRefData>(json));
+      } else {
+        console.warn('[ClinicalQuickRefPanel] API error', getApiEnvelopeError(await res.json().catch(() => null)));
+      }
     } catch (refErr) {
       console.warn('[ClinicalQuickRefPanel] Fetch failed', refErr);
     }

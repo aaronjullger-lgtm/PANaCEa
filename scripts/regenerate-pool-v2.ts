@@ -22,6 +22,10 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 import { prisma, disconnect } from './_shared/db';
 import { resolvePoolRegenerationClearPlan } from './regenerate-pool-v2-safety';
+import {
+  upsertCanonicalQuestionMirror,
+  type CanonicalQuestionMirrorInput,
+} from '../functions/api/_shared/canonical-question-mirror';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -350,6 +354,31 @@ async function main() {
           });
           console.log(`      ✓ Created ${result.count} questions`);
           totalGenerated += result.count;
+
+          // Create canonical Question mirrors with normalized
+          // QuestionAnswerChoice + QuestionExplanation rows
+          if (result.count > 0) {
+            let mirrored = 0;
+            for (const record of records) {
+              try {
+                const id = await upsertCanonicalQuestionMirror(prisma as any, {
+                  id: record.id,
+                  questionData: record.questionData,
+                  system: record.system,
+                  difficulty: record.difficulty,
+                  conditionId: record.conditionId,
+                  medicalContentId: record.medicalContentId,
+                  generatedAt: record.generatedAt,
+                }, { source: 'regenerate_pool_v2' });
+                if (id) mirrored++;
+              } catch {
+                // Mirror failure is non-fatal
+              }
+            }
+            if (mirrored > 0) {
+              console.log(`      📚 ${mirrored} canonical mirrors created`);
+            }
+          }
         } catch (error: any) {
           console.error(`      ❌ DB error: ${error.message}`);
           totalFailed += questions.length;

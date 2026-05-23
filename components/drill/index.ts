@@ -17,9 +17,6 @@ export { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 export { default as DrillShell } from './DrillShell';
 export { DrillLandingPage } from './DrillLandingPage';
 
-// Loading States
-export { DrillLoadingState, DrillEmptyState } from './DrillLoadingState';
-
 // Session Components
 export { default as PharmDrillSession } from './PharmDrillSession';
 export { default as MiniLabDrillSession } from './MiniLabDrillSession';

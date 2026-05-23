@@ -1,18 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { InlineSpinner } from '@/components/loading';
+import { AlertTriangle, Trash2 } from 'lucide-react';
 import { offlineSyncService } from '../../lib/services/offline/offlineSyncService';
 
+interface QueuedRequest {
+  id: string;
+  url: string;
+  options: RequestInit;
+  timestamp: number;
+  attempts: number;
+  lastError?: string;
+  deadLettered?: boolean;
+}
+
 export function OfflineSyncPanel() {
-  const [queue, setQueue] = useState<any[]>([]);
+  const [queue, setQueue] = useState<QueuedRequest[]>([]);
+  const [deadLetter, setDeadLetter] = useState<QueuedRequest[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    const updateQueue = () => {
+    const updateStatus = () => {
       setQueue(offlineSyncService.getQueue());
+      setDeadLetter(offlineSyncService.getDeadLetter());
     };
 
-    updateQueue();
-    const interval = setInterval(updateQueue, 1000);
+    updateStatus();
+    const interval = setInterval(updateStatus, 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -27,7 +40,9 @@ export function OfflineSyncPanel() {
     }
   };
 
-  if (queue.length === 0) {
+  const totalItems = queue.length + deadLetter.length;
+
+  if (totalItems === 0) {
     return null;
   }
 
@@ -51,28 +66,73 @@ export function OfflineSyncPanel() {
           <h3 className="font-semibold text-[var(--color-data-provisional)]">Sync paused</h3>
         </div>
         <span className="text-sm font-medium text-[var(--color-data-provisional)]">
-          {queue.length} pending
+          {queue.length} pending{deadLetter.length > 0 ? `, ${deadLetter.length} stuck` : ''}
         </span>
       </div>
 
       <p className="text-sm text-[var(--color-data-provisional)] mb-3">
-        Your progress is saved locally. {queue.length} {queue.length === 1 ? 'item' : 'items'} will sync automatically when the connection returns.
+        Your progress is saved locally. {queue.length > 0 && `${queue.length} ${queue.length === 1 ? 'item' : 'items'} will sync automatically when the connection returns.`}
+        {deadLetter.length > 0 && ` ${deadLetter.length} ${deadLetter.length === 1 ? 'item has' : 'items have'} exhausted retries and need attention.`}
       </p>
 
-      <button
-        onClick={handleRetryAll}
-        disabled={isProcessing || !navigator.onLine}
-        className="w-full bg-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/90 disabled:bg-[var(--color-data-provisional)]/60 text-[var(--color-text-inverse)] font-medium py-2 px-4 rounded transition-colors disabled:cursor-not-allowed"
-      >
-        {isProcessing ? (
-          <span className="flex items-center justify-center gap-2">
-            <InlineSpinner size="sm" />
-            Syncing progress...
-          </span>
-        ) : (
-          <span>Retry sync</span>
-        )}
-      </button>
+      {/* Dead-lettered items */}
+      {deadLetter.length > 0 && (
+        <div className="mb-3 rounded-md border border-[var(--color-data-fail)]/30 bg-[var(--color-data-fail)]/10 p-2.5">
+          <div className="flex items-start gap-2 mb-2">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-[var(--color-data-fail)]" />
+            <p className="text-xs text-[var(--color-text-primary)]">
+              {deadLetter.length} item{deadLetter.length === 1 ? '' : 's'} failed after 5 attempts. Discard if unneeded.
+            </p>
+          </div>
+          <div className="space-y-1 max-h-24 overflow-y-auto">
+            {deadLetter.map((item) => (
+              <div key={item.id} className="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+                <span className="truncate max-w-[200px]" title={item.url}>
+                  {item.url}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    offlineSyncService.removeDeadLetter(item.id);
+                    setDeadLetter(offlineSyncService.getDeadLetter());
+                  }}
+                  className="p-1 hover:text-[var(--color-data-fail)] transition-colors"
+                  aria-label="Discard stuck item"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              offlineSyncService.clearDeadLetter();
+              setDeadLetter([]);
+            }}
+            className="mt-2 text-xs text-[var(--color-data-fail)] hover:underline"
+          >
+            Discard all stuck items
+          </button>
+        </div>
+      )}
+
+      {queue.length > 0 && (
+        <button
+          onClick={handleRetryAll}
+          disabled={isProcessing || !navigator.onLine}
+          className="w-full bg-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/90 disabled:bg-[var(--color-data-provisional)]/60 text-[var(--color-text-inverse)] font-medium py-2 px-4 rounded transition-colors disabled:cursor-not-allowed"
+        >
+          {isProcessing ? (
+            <span className="flex items-center justify-center gap-2">
+              <InlineSpinner size="sm" />
+              Syncing progress...
+            </span>
+          ) : (
+            <span>Retry sync</span>
+          )}
+        </button>
+      )}
 
       {!navigator.onLine && (
         <p className="text-xs text-[var(--color-data-provisional)] mt-2 text-center">

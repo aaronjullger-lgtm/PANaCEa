@@ -185,10 +185,10 @@ Remaining optional release-hardening coverage:
 
 ## Dead Code and Duplication
 
-- Duplicate hybrid search: `lib/search.ts` and `lib/services/search/hybridSearch.ts`.
+- ✅ **Duplicate hybrid search (FIXED 2026-05-22):** `lib/search.ts` now delegates RRF fusion to `lib/services/search/hybridSearch.ts` (SQL CTE with app-level fallback). `lib/search.ts` retains only MedicalContent hydration + reranker adapters. One canonical RRF implementation.
 - Duplicate semantic cache: `lib/services/semanticCacheService.ts` and `functions/api/_shared/semantic-cache.ts`.
-- `ContentChunk` and contextual retrieval are partially implemented but not clearly connected to primary RAG.
-- GraphRAG documentation claims vector+graph behavior that is not evident in the implementation.
+- `ContentChunk` and contextual retrieval are partially implemented but not clearly connected to primary RAG. **2026-05-22 confirmation:** Prisma `ContentChunk` model exists with vector embeddings and is populated by `scripts/intelligence/chunk-content.ts`, but NO retrieval service under `lib/services/` queries it. Primary RAG uses `MedicalContentEmbedding`, not `ContentChunk`. The `ContentChunk` type imported in `functions/api/library/contextualize-batch.ts` is the TypeScript interface from `contextualRetrieval.ts`, not the Prisma model. **Recommendation:** retire or add a clear migration path before embedding more content into unused chunks.
+- GraphRAG documentation now explicitly states graph-only lexical seeding; vector integration belongs in future hybrid router.
 - Some planning docs are stale or conflicting; refresh after architecture decisions.
 
 ## Recommended Architecture

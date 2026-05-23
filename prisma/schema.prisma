@@ -1851,6 +1851,10 @@ model MedicalContentEmbedding {
 }
 
 /// RAG chunk for semantic search; embedding index supports vector_cosine_ops (HNSW in migration if needed).
+/// ⚠️  DEPRECATION NOTICE (2026-05-22): ContentChunk is populated by scripts/intelligence/chunk-content.ts
+/// but is NOT wired into the primary RAG retrieval path. The canonical retrieval path uses
+/// MedicalContentEmbedding via ragContextService.ts. See docs/memory-audit.md for the
+/// retirement-or-wire decision. Do not add new chunk ingestion without resolving this.
 model ContentChunk {
   id                          String                        @id @default(uuid())
   medicalContentId            String

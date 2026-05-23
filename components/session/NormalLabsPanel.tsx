@@ -10,6 +10,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { Beaker, X, ChevronDown } from 'lucide-react';
 import { InlineSpinner } from '@/components/loading';
 import { normalizeApiItems } from '@/lib/utils/normalizeApiResponse';
+import { unwrapApiEnvelope, getApiEnvelopeError } from '@/lib/utils/apiEnvelope';
 
 export interface NormalLabEntry {
   id: string;
@@ -73,8 +74,11 @@ export const NormalLabsPanel: React.FC<NormalLabsPanelProps> = ({ isOpen, onClos
       const res = await fetch(`/api/reference/normal-labs?${params.toString()}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null);
+        throw new Error(getApiEnvelopeError(errJson) || `HTTP ${res.status}`);
+      }
+      const json = unwrapApiEnvelope(await res.json());
       // Middleware unwraps handler's { data: X } → body is X directly,
       // so the endpoint returns { success, data: [...] }. Use shared
       // normalizer to stay resilient to legacy shapes.

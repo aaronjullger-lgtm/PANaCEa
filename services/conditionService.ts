@@ -1,4 +1,5 @@
 import type { ConditionMeta } from "@/types/conditions";
+import { unwrapApiEnvelope, getApiEnvelopeError } from '@/lib/utils/apiEnvelope';
 
 /**
  * API response shape from /api/conditions (inner data object)
@@ -12,21 +13,14 @@ interface ConditionsApiResponseData {
 }
 
 /**
- * Full API response with data wrapper
- */
-interface ConditionsApiResponse {
-  data: ConditionsApiResponseData;
-}
-
-/**
- * Extract the conditions array from an API response
+ * Extract the conditions array from an API response.
  * Handles multiple response formats:
  * - Direct arrays: [...]
  * - Wrapped with data: { data: { conditions: [...] } }
  * - Wrapped without data: { conditions: [...] }
  */
 function extractConditionsArray(
-  data: ConditionsApiResponse | ConditionsApiResponseData | ConditionMeta[] | unknown
+  data: ConditionsApiResponseData | ConditionMeta[] | unknown
 ): ConditionMeta[] {
   // If data is already an array, return it directly
   if (Array.isArray(data)) {
@@ -41,20 +35,12 @@ function extractConditionsArray(
 
   const dataObj = data as Record<string, unknown>;
 
-  // Handle nested wrapper: { data: { conditions: [...] } }
-  if ('data' in dataObj && dataObj.data && typeof dataObj.data === 'object') {
-    const innerData = dataObj.data as Record<string, unknown>;
-    if ('conditions' in innerData && Array.isArray(innerData.conditions)) {
-      return innerData.conditions as ConditionMeta[];
-    }
-  }
-
   // Handle direct wrapper: { conditions: [...] }
   if ('conditions' in dataObj && Array.isArray(dataObj.conditions)) {
     return dataObj.conditions as ConditionMeta[];
   }
 
-  // Fallback: log warning and return empty array
+  // Fallback
   console.error(
     '[conditionService] Unexpected API response format:',
     typeof data,
@@ -66,18 +52,20 @@ function extractConditionsArray(
 export async function getAllConditions(): Promise<ConditionMeta[]> {
   const response = await fetch('/api/conditions');
   if (!response.ok) {
-    throw new Error(`Failed to fetch all conditions: ${response.statusText}`);
+    const errJson = await response.json().catch(() => null);
+    throw new Error(getApiEnvelopeError(errJson, `Failed to fetch all conditions: ${response.statusText}`));
   }
-  const data = await response.json();
+  const data = unwrapApiEnvelope<ConditionsApiResponseData | ConditionMeta[]>(await response.json());
   return extractConditionsArray(data);
 }
 
 export async function getConditionsBySystem(system: string): Promise<ConditionMeta[]> {
   const response = await fetch(`/api/conditions?system=${system}`);
   if (!response.ok) {
-    throw new Error(`Failed to fetch conditions for system ${system}: ${response.statusText}`);
+    const errJson = await response.json().catch(() => null);
+    throw new Error(getApiEnvelopeError(errJson, `Failed to fetch conditions for system ${system}: ${response.statusText}`));
   }
-  const data = await response.json();
+  const data = unwrapApiEnvelope<ConditionsApiResponseData | ConditionMeta[]>(await response.json());
   return extractConditionsArray(data);
 }
 

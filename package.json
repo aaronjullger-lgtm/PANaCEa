@@ -153,6 +153,7 @@
     "test:smoke": "playwright test e2e/all-modes",
     "test:ui-smoke:preview": "npm run build && node scripts/smoke-ui-preview.mjs",
     "test:auth": "node --env-file-if-exists=.env ./node_modules/@playwright/test/cli.js test e2e/auth.setup.ts --headed",
+    "test:auth:check": "node --env-file-if-exists=.env scripts/check-auth-prerequisites.mjs",
     "audit:prisma": "tsx scripts/audit-prisma-disconnect.ts",
     "audit:zod": "tsx scripts/audit-zod-validation.ts",
     "audit:loading": "tsx scripts/audit-loading-states.ts",

@@ -13,6 +13,8 @@ export interface StudyPlanSettings {
   excludeAreas: string[];
   targetRetention: number;
   maxSessionsPerDay: number;
+  /** Hours before a regenerated plan is considered stale and eligible for regeneration. Default 12. */
+  planRefreshHours: number;
 }
 
 export interface StudyPlanTarget {

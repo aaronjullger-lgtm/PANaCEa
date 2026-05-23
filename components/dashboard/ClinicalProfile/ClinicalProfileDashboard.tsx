@@ -62,6 +62,8 @@ const ClinicalProfileDashboard: React.FC = () => {
               title: 'Building your clinical profile.',
               subtitle:
                 'Prioritizing missed patterns, timing signals, and diagnostic tendencies from your study history.',
+              backLabel: 'Back to Study',
+              onBack: () => navigate(ROUTES.STUDY),
             }}
           />
         </WorkspaceReveal>
@@ -97,6 +99,8 @@ const ClinicalProfileDashboard: React.FC = () => {
             status: isPreview
               ? 'Guest-safe profile preview'
               : `${totalQuestions} question${totalQuestions === 1 ? '' : 's'} analyzed`,
+            backLabel: 'Back to Study',
+            onBack: () => navigate(ROUTES.STUDY),
             primaryAction: {
               label: isPreview ? 'Retry live profile' : 'Refresh profile',
               onClick: refetch,

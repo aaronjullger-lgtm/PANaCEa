@@ -463,6 +463,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
               <input
                 type="text"
+                aria-label="Search practice modes by name, system, or drill style"
                 placeholder="Search pharmacology, systems, treatments, recall..."
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}

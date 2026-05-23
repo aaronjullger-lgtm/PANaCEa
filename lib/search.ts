@@ -2,6 +2,10 @@
  * Hybrid Search: Keyword (FTS) + Semantic (HNSW vector) with Reciprocal Rank Fusion.
  * Use for Reference Library / MedicalContent search (e.g. "MI" + "heart attack").
  *
+ * RRF fusion delegates to lib/services/search/hybridSearch.ts (SQL CTE RRF with
+ * app-level fallback). This module adds MedicalContent hydration, the optional
+ * `rerankFast` post-processor, and the toRAGChunk/applyReranker adapters.
+ *
  * Optionally post-processes the fused list with the cross-encoder-style
  * `rerankFast` service (feature-based reranking) for a recall→precision boost
  * on ambiguous queries. Callers opt in via `rerank: true` to avoid changing
@@ -9,21 +13,12 @@
  */
 
 import type { Prisma, PrismaClient } from '@prisma/client';
-import { getEmbedding } from './gemini';
 import { rerankFast } from './services/rerankService';
+import { hybridSearchRRF } from './services/search/hybridSearch';
 import type { RAGChunk, RAGContext, ContentType } from './services/ragContextService';
 
-const RRF_K = 60;
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
-const PER_LIST_LIMIT = 100;
-
-/**
- * HNSW ef_search — see functions/api/library/semantic-search.ts for rationale.
- * Keep the two values in sync; 100 balances recall and latency for 768-dim
- * clinical embeddings.
- */
-const HNSW_EF_SEARCH = 100;
 
 export interface HybridSearchDeps {
   prisma: PrismaClient;
@@ -71,30 +66,11 @@ export interface MedicalContentSearchResult {
 }
 
 /**
- * Reciprocal Rank Fusion: score = sum over lists of 1 / (k + rank).
- * k=60 is a common default; ranks are 1-based.
- */
-function reciprocalRankFusion(
-  keywordIds: string[],
-  semanticIds: string[]
-): Array<{ id: string; rrfScore: number }> {
-  const scoreMap = new Map<string, number>();
-  keywordIds.forEach((id, i) => {
-    const rank = i + 1;
-    scoreMap.set(id, (scoreMap.get(id) ?? 0) + 1 / (RRF_K + rank));
-  });
-  semanticIds.forEach((id, i) => {
-    const rank = i + 1;
-    scoreMap.set(id, (scoreMap.get(id) ?? 0) + 1 / (RRF_K + rank));
-  });
-  return Array.from(scoreMap.entries())
-    .map(([id, rrfScore]) => ({ id, rrfScore }))
-    .sort((a, b) => b.rrfScore - a.rrfScore);
-}
-
-/**
- * Hybrid search: full-text (websearch_to_tsquery) + vector (HNSW) over MedicalContentEmbedding,
- * then RRF fusion. Returns unified, re-ranked list of conditions.
+ * Hybrid search: delegates RRF fusion to lib/services/search/hybridSearch.ts
+ * (SQL CTE with app-level fallback), then hydrates MedicalContent rows and
+ * optionally applies reranking.
+ *
+ * Returns unified, re-ranked list of conditions with full content fields.
  */
 export async function searchMedicalContent(
   query: string,
@@ -102,55 +78,19 @@ export async function searchMedicalContent(
 ): Promise<MedicalContentSearchResult[]> {
   const { prisma, apiKey, limit: requestedLimit, rerank, rerankTargetSystem } = deps;
   const limit = Math.min(requestedLimit ?? DEFAULT_LIMIT, MAX_LIMIT);
-  const perListLimit = Math.max(limit * 2, 50);
 
   const trimmed = query.trim();
   if (!trimmed) return [];
 
-  // Step A: Keyword (full-text) search
-  let keywordRows: Array<{ id: string; rank: number }> = [];
-  try {
-    keywordRows = await prisma.$queryRaw<Array<{ id: string; rank: number }>>`
-      SELECT id, ts_rank(search_vector, websearch_to_tsquery('english', ${trimmed}))::float as rank
-      FROM "MedicalContent"
-      WHERE search_vector @@ websearch_to_tsquery('english', ${trimmed})
-        AND status = 'published'
-      ORDER BY rank DESC
-      LIMIT ${perListLimit}
-    `;
-  } catch {
-    keywordRows = [];
-  }
+  // Step 1: RRF fusion via canonical hybrid search service
+  const fusedResults = await hybridSearchRRF(trimmed, { prisma, apiKey, limit });
 
-  // Step B: Semantic (vector) search via MedicalContentEmbedding (HNSW)
-  let semanticRows: Array<{ medicalContentId: string }> = [];
-  try {
-    const embedding = await getEmbedding(trimmed, apiKey);
-    const vectorStr = `[${embedding.join(',')}]`;
-    // SET LOCAL is transaction-scoped; safe on a pooled connection.
-    await prisma.$executeRawUnsafe(`SET LOCAL hnsw.ef_search = ${HNSW_EF_SEARCH}`);
-    semanticRows = await prisma.$queryRawUnsafe<Array<{ medicalContentId: string }>>(
-      `SELECT e."medicalContentId"
-       FROM "MedicalContentEmbedding" e
-       ORDER BY e.embedding <=> $1::vector
-       LIMIT $2`,
-      vectorStr,
-      perListLimit
-    );
-  } catch {
-    semanticRows = [];
-  }
+  if (fusedResults.length === 0) return [];
 
-  const keywordIds = keywordRows.map((r) => r.id);
-  const semanticIds = semanticRows.map((r) => r.medicalContentId);
+  const ids = fusedResults.map((r) => r.id);
+  const scoreMap = new Map(fusedResults.map((r) => [r.id, r.score]));
 
-  // Step C: RRF fusion
-  const fused = reciprocalRankFusion(keywordIds, semanticIds).slice(0, limit);
-  const ids = fused.map((f) => f.id);
-  const scoreMap = new Map(fused.map((f) => [f.id, f.rrfScore]));
-
-  if (ids.length === 0) return [];
-
+  // Step 2: Hydrate with full MedicalContent fields
   const content = await prisma.medicalContent.findMany({
     where: { id: { in: ids } },
     select: {
@@ -183,6 +123,7 @@ export async function searchMedicalContent(
     })
     .filter((r): r is MedicalContentSearchResult => r !== null);
 
+  // Step 3: Optional reranking
   if (!rerank || hydrated.length <= 1) {
     return hydrated;
   }

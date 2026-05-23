@@ -211,6 +211,56 @@ async function generateQuestion(
     if (!whyIncorrectFields.some((field) => typeof field === 'string' && field.trim().length > 0)) {
       throw new Error('Rationale must include at least one whyIncorrect explanation');
     }
+    // Enforce minimum quality on per-distractor explanations: each must be a substantive
+    // teaching point (≥30 chars, explains what scenario the distractor IS correct for)
+    for (const field of whyIncorrectFields) {
+      if (typeof field === 'string' && field.trim().length > 0 && field.trim().length < 30) {
+        throw new Error(`Rationale field is too short to be teaching-quality (minimum 30 characters)`);
+      }
+    }
+    // Verify bottomLine and whyCorrect are substantial
+    if (r.bottomLine.trim().length < 20) {
+      throw new Error('bottomLine is too short — must be a complete sentence with key discriminator');
+    }
+    if (r.whyCorrect.trim().length < 40) {
+      throw new Error('whyCorrect is too short — must walk through vignette steps with specific findings');
+    }
+
+    // ── Board-Style Clue Quality Gates ──
+    // Gate 1: Check for diagnosis leaked in vignette
+    const vignetteLower = parsed.vignette.toLowerCase();
+    const conditionLower = condition.name.toLowerCase();
+    const conditionTokens = conditionLower.split(/\s+/).filter(t => t.length > 3);
+    const leakedInVignette = conditionTokens.some(
+      token => vignetteLower.includes(token) &&
+        !vignetteLower.includes(`not ${token}`) &&
+        !vignetteLower.includes(`rule out ${token}`)
+    );
+    if (leakedInVignette) {
+      throw new Error('Condition name leaked in vignette — raw patient data only');
+    }
+
+    // Gate 2: Check for ≥2 pertinent negatives
+    const negativeCues = ['denies', 'no ', 'without', 'negative', 'absent',
+      'normal ', 'unremarkable', 'clear', 'no evidence', 'none'];
+    const negativeCount = negativeCues.filter(cue => vignetteLower.includes(cue)).length;
+    if (negativeCount < 1 && retryCount === 0) {
+      throw new Error('Vignette lacks pertinent negatives — must include ≥1 negative finding to rule out differentials');
+    }
+
+    // Gate 3: Check options are meaningfully distinct (not near-duplicates)
+    const optionEntries = Object.entries(parsed.options);
+    for (let i = 0; i < optionEntries.length; i++) {
+      for (let j = i + 1; j < optionEntries.length; j++) {
+        const a = optionEntries[i]![1].toLowerCase().trim();
+        const b = optionEntries[j]![1].toLowerCase().trim();
+        const commonWords = a.split(' ').filter(w => b.includes(w)).length;
+        const totalWords = Math.max(a.split(' ').length, b.split(' ').length);
+        if (totalWords > 0 && commonWords / totalWords > 0.8) {
+          throw new Error(`Options ${optionEntries[i]![0]} and ${optionEntries[j]![0]} are too similar — distinguish them`);
+        }
+      }
+    }
 
     return {
       ...parsed,

@@ -9,6 +9,7 @@
 
 import type { SessionSettings, Question } from '../../types';
 import { resolveCorrectAnswerIndex } from '../../lib/answerLetterMap';
+import { unwrapApiEnvelope, getApiEnvelopeError } from '@/lib/utils/apiEnvelope';
 
 /**
  * Fetch a pre-generated question from the API
@@ -64,11 +65,12 @@ export async function getQuestionClient(
     });
 
     if (!response.ok) {
-      console.error('[getQuestionClient] API error:', response.status, response.statusText);
+      const errJson = await response.json().catch(() => null);
+      console.error('[getQuestionClient] API error:', response.status, getApiEnvelopeError(errJson, response.statusText));
       return null;
     }
 
-    const data = await response.json() as {
+    const data = unwrapApiEnvelope<{
       questions?: Array<{
         id: string;
         questionText: string;
@@ -84,7 +86,7 @@ export async function getQuestionClient(
         difficulty: string;
       }>;
       needsGeneration?: boolean;
-    };
+    }>(await response.json());
 
     if (data.questions && data.questions.length > 0) {
       const q = data.questions[0]!;
@@ -173,11 +175,12 @@ export async function fetchPearlsClient(
     });
 
     if (!response.ok) {
-      console.error('[fetchPearlsClient] API error:', response.status, response.statusText);
+      const errJson = await response.json().catch(() => null);
+      console.error('[fetchPearlsClient] API error:', response.status, getApiEnvelopeError(errJson, response.statusText));
       return [];
     }
 
-    const data = await response.json() as { pearls?: string[] };
+    const data = unwrapApiEnvelope<{ pearls?: string[] }>(await response.json());
     return data.pearls || [];
   } catch (error) {
     console.error('[fetchPearlsClient] Error:', error);

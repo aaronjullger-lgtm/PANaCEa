@@ -40,6 +40,7 @@ import { useProductTourShouldShow } from './components/onboarding/ProductTour';
 import { AppProviders } from './components/layout/AppProviders';
 import { AppRoutes, type SimulationFocus } from './config/AppRoutes';
 import { IncidentBanner } from './components/error/IncidentBanner';
+import { SkipToContent } from './components/a11y';
 import { ProtectedRouteGate } from './components/auth/ProtectedRouteGate';
 import { isProtectedAppPath } from './lib/routing/protectedRouteIntent';
 
@@ -1140,6 +1141,8 @@ const App: React.FC = () => {
     <MotionConfig reducedMotion="user">
     <AppProviders>
       <div className="min-h-screen bg-[var(--color-canvas,#F8FAFC)] dark:bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
+        <SkipToContent />
+
         {/*
           System status ribbon — stays mounted at the top of every authenticated
           page so users see the heads-up regardless of route. Guest mode owns

@@ -1,6 +1,13 @@
 /**
  * RAG Chunking Script – fill ContentChunk from MedicalContent key fields.
  *
+ * ⚠️  DEPRECATION NOTICE (2026-05-22): The primary RAG retrieval path uses
+ * MedicalContentEmbedding (via ragContextService.ts), NOT ContentChunk.
+ * Chunked content is stored but not retrieved by any production path.
+ * See docs/memory-audit.md and prisma/schema.prisma ContentChunk comment
+ * for the retirement-or-wire decision. Do not add new chunk ingestion
+ * without resolving this.
+ *
  * Splits overview, treatment, symptoms, diagnostics, pathophysiology into
  * ~300–500 char chunks (sentence-boundary), embeds via Gemini, upserts into ContentChunk.
  *

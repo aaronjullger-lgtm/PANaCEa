@@ -36,6 +36,7 @@ const DEFAULT_SETTINGS: StudyPlanSettings = {
   excludeAreas: [],
   targetRetention: 0.9,
   maxSessionsPerDay: 2,
+  planRefreshHours: 12,
 };
 
 interface PersistedPlanTask {
@@ -138,6 +139,10 @@ function coercePlannerSettings(
     maxSessionsPerDay:
       typeof raw.maxSessionsPerDay === 'number' && raw.maxSessionsPerDay > 0
         ? Math.round(raw.maxSessionsPerDay)
+        : undefined,
+    planRefreshHours:
+      typeof raw.planRefreshHours === 'number' && raw.planRefreshHours >= 1 && raw.planRefreshHours <= 168
+        ? Math.round(raw.planRefreshHours)
         : undefined,
   };
 }
@@ -706,6 +711,8 @@ async function resolvePlannerContext(
         plannerSettings.targetRetention ?? DEFAULT_SETTINGS.targetRetention,
       maxSessionsPerDay:
         plannerSettings.maxSessionsPerDay ?? DEFAULT_SETTINGS.maxSessionsPerDay,
+      planRefreshHours:
+        plannerSettings.planRefreshHours ?? DEFAULT_SETTINGS.planRefreshHours,
     },
     userPreferencesUpdatedAt: preferences?.updatedAt ?? null,
     userProfileUpdatedAt: user?.updatedAt ?? null,
@@ -970,7 +977,8 @@ function buildPersistedPlanRowInput(
 function isPlanRowStale(
   row: PersistedStudyPlanRow,
   context: Pick<ResolvedPlannerContext, 'userPreferencesUpdatedAt' | 'userProfileUpdatedAt'>,
-  latestReviewAt: Date | null
+  latestReviewAt: Date | null,
+  refreshHours: number,
 ): boolean {
   const staleAgainstPrefs =
     context.userPreferencesUpdatedAt &&
@@ -981,8 +989,10 @@ function isPlanRowStale(
     latestReviewAt &&
     row.status === 'pending' &&
     row.updatedAt < latestReviewAt;
+  const staleByAge =
+    Date.now() - row.updatedAt.getTime() > refreshHours * 3600000;
 
-  return Boolean(staleAgainstPrefs || staleAgainstProfile || staleAgainstReviews);
+  return Boolean(staleAgainstPrefs || staleAgainstProfile || staleAgainstReviews || staleByAge);
 }
 
 export async function ensureStudyPlanWindow(
@@ -1052,7 +1062,7 @@ export async function ensureStudyPlanWindow(
   const shouldRegenerate =
     options?.forceRegenerate ||
     existingRows.length < requestedDays ||
-    existingRows.some((row) => isPlanRowStale(row, context, latestReviewAt));
+    existingRows.some((row) => isPlanRowStale(row, context, latestReviewAt, context.settings.planRefreshHours));
 
   if (shouldRegenerate) {
     const { flattenedTopics, allocator } = await computePlannerSignals(
@@ -1087,7 +1097,7 @@ export async function ensureStudyPlanWindow(
         existingRow &&
         safeTaskArray(existingRow.recommendedSessions, existingRow.planDate).length > 0 &&
         !options?.forceRegenerate &&
-        !isPlanRowStale(existingRow, context, latestReviewAt)
+        !isPlanRowStale(existingRow, context, latestReviewAt, context.settings.planRefreshHours)
       ) {
         continue;
       }

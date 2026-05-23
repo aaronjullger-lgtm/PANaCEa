@@ -5,6 +5,8 @@
  * Errors propagate to UI for proper handling.
  */
 
+import { unwrapApiEnvelope, getApiEnvelopeError } from '@/lib/utils/apiEnvelope';
+
 interface BuzzwordEntry {
   id: string;
   word: string;
@@ -29,10 +31,10 @@ export const buzzwordService = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Failed to fetch buzzwords: ${response.status}`);
+      throw new Error(getApiEnvelopeError(errorData, `Failed to fetch buzzwords: ${response.status}`));
     }
 
-    const data = await response.json();
+    const data = unwrapApiEnvelope<BuzzwordEntry[]>(await response.json());
     buzzwordCache = data;
     return data;
   },
@@ -46,10 +48,10 @@ export const buzzwordService = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Failed to fetch random buzzwords: ${response.status}`);
+      throw new Error(getApiEnvelopeError(errorData, `Failed to fetch random buzzwords: ${response.status}`));
     }
 
-    return await response.json();
+    return unwrapApiEnvelope<BuzzwordEntry[]>(await response.json());
   },
 
   /**

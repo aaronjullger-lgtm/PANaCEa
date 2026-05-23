@@ -77,7 +77,8 @@ export type CritiqueCategory =
   | 'stem_clarity'
   | 'answer_homogeneity'
   | 'testwise_cues'
-  | 'diagnosis_in_stem';
+  | 'diagnosis_in_stem'
+  | 'explanation_depth';
 
 /** Configuration for self-refine behavior */
 export interface SelfRefineConfig {
@@ -182,15 +183,16 @@ Options: ${question.options.join(' | ')}
 Correct Answer: ${question.correctAnswer}
 Explanation: ${question.explanation.rationale}
 
-EVALUATE on these 7 dimensions (score each 0.0 to 1.0):
+EVALUATE on these 8 dimensions (score each 0.0 to 1.0):
 
 1. CLINICAL_ACCURACY: Are all clinical facts correct? Does the correct answer match current guidelines?
-2. DISTRACTOR_PLAUSIBILITY: Would each wrong answer be correct for a slightly different patient?
+2. DISTRACTOR_PLAUSIBILITY: Would each wrong answer be correct for a slightly different patient? Are they all realistic?
 3. BLOOMS_ALIGNMENT: Is this truly application/analysis level, not just recall?
-4. STEM_CLARITY: Is the vignette clear? Does it avoid unnecessary complexity?
+4. STEM_CLARITY: Is the vignette clear? Does it include ≥2 pertinent negatives? Does it avoid unnecessary complexity?
 5. ANSWER_HOMOGENEITY: Are all options grammatically parallel, similar length, and same category?
 6. TESTWISE_CUES: Are there grammatical clues, absolute terms, or length differences that give away the answer?
 7. DIAGNOSIS_IN_STEM: Does the stem avoid naming the diagnosis (should present raw patient data only)?
+8. EXPLANATION_DEPTH: Does each whyIncorrect explain WHAT scenario the distractor is correct for AND why it fails for THIS patient? Are the explanations teaching-quality, not dismissive one-liners?
 
 OUTPUT FORMAT (JSON):
 {
@@ -202,7 +204,8 @@ OUTPUT FORMAT (JSON):
     {"name": "stem_clarity", "score": 0.0-1.0, "feedback": "..."},
     {"name": "answer_homogeneity", "score": 0.0-1.0, "feedback": "..."},
     {"name": "testwise_cues", "score": 0.0-1.0, "feedback": "..."},
-    {"name": "diagnosis_in_stem", "score": 0.0-1.0, "feedback": "..."}
+    {"name": "diagnosis_in_stem", "score": 0.0-1.0, "feedback": "..."},
+    {"name": "explanation_depth", "score": 0.0-1.0, "feedback": "..."}
   ],
   "issues": [
     {"severity": "critical|major|minor", "category": "dimension_name", "description": "...", "suggestion": "..."}
@@ -241,6 +244,7 @@ export function parseCritiqueResponse(rawJson: string): CritiqueResult | null {
     const validCategories = new Set<string>([
       'clinical_accuracy', 'distractor_plausibility', 'blooms_alignment',
       'stem_clarity', 'answer_homogeneity', 'testwise_cues', 'diagnosis_in_stem',
+      'explanation_depth',
     ]);
 
     const issues: CritiqueIssue[] = (parsed.issues ?? [])
@@ -301,20 +305,35 @@ ${issueBlock || 'No specific issues — improve overall quality.'}
 
 REWRITE RULES:
 - Fix ALL identified issues while preserving the clinical concept being tested
-- Do NOT name the diagnosis in the vignette stem
-- Each distractor must be correct for a slightly different clinical scenario
+- Do NOT name the diagnosis in the vignette stem — raw patient data only
+- Include ≥2 pertinent negatives that rule out top differentials
+- Each distractor must be correct for a different clinical scenario — explain WHAT scenario
+- Every whyIncorrect MUST explain what the distractor IS correct for and why it fails for THIS patient
 - Maintain or increase the Bloom's taxonomy level
 - Keep the same correct answer concept (the clinical fact being tested should not change)
 
-OUTPUT FORMAT (JSON — same schema as original):
+OUTPUT FORMAT (JSON):
 {
-  "type": "${originalQuestion.type}",
-  "question": "Improved vignette...",
-  "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
-  "correctAnswer": "Matches one option exactly",
-  "explanation": {
-    "rationale": "Why correct, citing clinical evidence",
-    "incorrect": {"A": "Why wrong", "B": "...", "C": "...", "D": "..."}
+  "vignette": "Realistic clinical vignette (2-4 sentences, raw patient data only)...",
+  "question": "What is the most likely diagnosis?",
+  "options": {
+    "A": "First option",
+    "B": "Second option",
+    "C": "Third option",
+    "D": "Fourth option",
+    "E": "Fifth option"
+  },
+  "correctAnswer": "B",
+  "rationale": {
+    "bottomLine": "The diagnosis is X, and the key discriminator is Y.",
+    "whyCorrect": "Walk through vignette steps that lead to the diagnosis, referencing specific findings.",
+    "whyIncorrectA": "Incorrect because [specific reason]. This would be correct for [different clinical scenario].",
+    "whyIncorrectB": "Incorrect because [specific reason]. This would be correct for [different clinical scenario].",
+    "whyIncorrectC": "Incorrect because [specific reason]. This would be correct for [different clinical scenario].",
+    "whyIncorrectD": "Incorrect because [specific reason]. This would be correct for [different clinical scenario].",
+    "whyIncorrectE": "Incorrect because [specific reason]. This would be correct for [different clinical scenario].",
+    "clinicalPearl": "Remember: [one actionable key takeaway for PANCE].",
+    "highYieldImageOrTable": "N/A"
   },
   "difficulty": ${originalQuestion.difficulty},
   "sourceSections": ${JSON.stringify(originalQuestion.sourceSections ?? [])},
