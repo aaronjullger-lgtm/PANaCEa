@@ -1413,5 +1413,126 @@ describe('submitDrillReview', () => {
 
       expect(prisma.confusionPair.upsert).toHaveBeenCalled();
     });
+
+    it('should cap gradeContinuous at 1.5 when Ghost Grader fires indecision rule', async () => {
+      // Ghost Grader's indecision rule fires when behavioral signals strongly indicate
+      // the student was guessing or indecisive (e.g., RW first switch + multiple switches,
+      // high oscillations, hint viewed). When this rule fires, the rating is forced to
+      // Again and gradeContinuous must be capped at INDECISION_GRADE_CAP (1.5) so the
+      // ReviewLog telemetry reflects the corrected grading.
+      //
+      // Regression guard: before Sprint 3.5, Ghost Grader returned a -99 sentinel in
+      // gradeContinuousAdjustment that, if applied directly via the third branch
+      // (adjustment !== 0), would produce gradeContinuous = 4.0 + (-99) = -95.0 instead
+      // of the intended cap at 1.5. The caller must check rule === 'indecision' first.
+
+      const input: SubmitDrillReviewInput = {
+        questionId,
+        selectedAnswer: 'Correct Answer',
+        timeSpentMs: 45000, // Slow but correct — enough to not be rapid guess
+        sessionType: 'targeted',
+        telemetry: {
+          duration_ms: 45000,
+          rapid_guess: false,
+          // Simulate indecision signals: high oscillations, RW first switch via option_interactions
+          hover_oscillations: 5,
+          answer_changes: 3,
+        },
+      };
+      const question = {
+        id: questionId,
+        conditionId,
+        questionData: {
+          options: ['Correct Answer', 'Wrong A', 'Wrong B', 'Wrong C'],
+          correctAnswer: 'Correct Answer',
+        },
+      };
+
+      // Mock deriveContinuousRating to return a high grade — student answered correctly
+      // and the behavioral math (without Ghost Grader) would give a 3.8 grade.
+      (deriveContinuousRating as Mock).mockReturnValueOnce({
+        grade: 3.8,
+        confidence: 0.6,
+        discreteRating: Rating.Good,
+      });
+
+      // Mock applyHonestRatingWithDetail to simulate Ghost Grader firing indecision
+      (applyHonestRatingWithDetail as Mock).mockReturnValueOnce({
+        rating: Rating.Again,          // Forced to Again
+        rule: 'indecision',            // The critical rule
+        gradeContinuousAdjustment: -99, // Sentinel — must NOT be applied directly
+      });
+
+      // Set up the rest of the pipeline mocks
+      (prisma.userProgress.findUnique as Mock).mockResolvedValue({
+        fsrsCard: {
+          stability: 8.0,
+          difficulty: 2.0,
+          state: 2,
+          elapsed_days: 3.0,
+          scheduled_days: 7.0,
+          reps: 2,
+          lapses: 0,
+          last_review: new Date(Date.now() - 3 * 86400000),
+        },
+      });
+      (prisma.medicalContent.findFirst as Mock).mockResolvedValue({ id: 'med_999', conditionId, system: 'CV' });
+      (prisma.questionAttempt.findFirst as Mock).mockResolvedValue(null);
+      (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_gg_indecision' });
+      (prisma.reviewLog.create as Mock).mockResolvedValue({ id: 'review_gg_indecision' });
+
+      // Mock FSRS instance
+      const fsrsInstance = {
+        next: vi.fn(),
+        calculateRetrievability: vi.fn(),
+      };
+      vi.mocked(FSRS).mockImplementation(function () {
+        return fsrsInstance;
+      });
+      fsrsInstance.next.mockReturnValue({
+        card: {
+          stability: 4.0,
+          difficulty: 3.5,
+          state: 3, // Relearning (Again on a Review card)
+          elapsed_days: 3.0,
+          scheduled_days: 0.0035,
+          reps: 3,
+          lapses: 1,
+          last_review: new Date(),
+        },
+      });
+      fsrsInstance.calculateRetrievability.mockReturnValue(0.6);
+
+      const result = await submitDrillReview(prisma, userId, input, question);
+
+      // Assert: rating forced to Again by Ghost Grader
+      expect(result.implicitMetrics.rating).toBe(Rating.Again);
+
+      // Assert: gradeContinuous capped at INDECISION_GRADE_CAP (1.5), NOT
+      // 3.8 + (-99) = -95.0 from the sentinel being applied directly
+      expect(result.implicitMetrics.gradeContinuous).toBeLessThanOrEqual(1.5);
+      // Should be exactly 1.5 since 3.8 > 1.5 and Math.min(3.8, 1.5) = 1.5
+      expect(result.implicitMetrics.gradeContinuous).toBe(1.5);
+
+      // Assert: confidence reflects the instability of indecision
+      // (Ghost Grader doesn't directly change confidence, but the
+      // behavioral signal chain may reduce it through switch penalties)
+      expect(result.implicitMetrics.confidence).toBeLessThanOrEqual(0.7);
+
+      // Assert: ReviewLog was created with the corrected grade_continuous
+      expect(prisma.reviewLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            grade: Rating.Again,
+            grade_continuous: 1.5, // Capped, not -95.0
+            review_type: 'real',
+          }),
+        })
+      );
+
+      // Assert: FSRS was updated (Again on a Review card → Relearning)
+      expect(result.fsrsSchedule).toBeDefined();
+      expect(updateUserProgressWithHistory).toHaveBeenCalled();
+    });
   });
 });

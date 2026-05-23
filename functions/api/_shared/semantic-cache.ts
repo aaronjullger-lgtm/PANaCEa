@@ -1,78 +1,33 @@
-interface CacheQuery {
-  queryText: string;
-  questionType: string;
-  system?: string;
-  difficulty?: string;
-}
+/**
+ * Question-generation cache for Cloudflare Edge Functions.
+ *
+ * Imports pure token-match helpers from lib/services/tokenMatchCache.ts
+ * and wraps them with Prisma calls. NOT a true semantic cache — uses
+ * Jaccard token overlap, not vector embeddings.
+ *
+ * Depends on a `semanticCache` table with fields:
+ *   queryText, questionType, system, difficulty, cachedQuestion,
+ *   lastUsedAt, useCount.
+ */
 
-interface CacheMatch {
-  question: any;
-  similarity: number;
-  cacheId: string;
-}
+import {
+  tokenizeForCache,
+  jaccardSimilarity,
+  normalizeMedicalTerms,
+  JACCARD_SIMILARITY_THRESHOLD,
+  type TokenCacheQuery,
+  type TokenCacheMatch,
+} from '@/lib/services/tokenMatchCache';
 
-const SIMILARITY_THRESHOLD = 0.85;
-
-function tokenize(text: string): string[] {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s]/g, ' ')
-    .split(/\s+/)
-    .filter((t) => t.length > 0);
-}
-
-function calculateSimilarity(tokens1: string[], tokens2: string[]): number {
-  const set1 = new Set(tokens1);
-  const set2 = new Set(tokens2);
-
-  const intersection = new Set([...set1].filter((x) => set2.has(x)));
-  const union = new Set([...set1, ...set2]);
-
-  if (union.size === 0) return 0;
-  return intersection.size / union.size;
-}
-
-function normalizeMedicalTerms(text: string): string {
-  const normalizations: Record<string, string> = {
-    pericarditis: 'pericarditis',
-    'acute pericarditis': 'pericarditis',
-    'pericardial inflammation': 'pericarditis',
-    'myocardial infarction': 'mi',
-    'heart attack': 'mi',
-    mi: 'mi',
-    stemi: 'mi',
-    nstemi: 'mi',
-    'diabetes mellitus': 'diabetes',
-    diabetes: 'diabetes',
-    'type 2 diabetes': 'diabetes',
-    t2dm: 'diabetes',
-    'congestive heart failure': 'chf',
-    'heart failure': 'chf',
-    chf: 'chf',
-    copd: 'copd',
-    'chronic obstructive pulmonary disease': 'copd',
-    pneumonia: 'pneumonia',
-    'community acquired pneumonia': 'pneumonia',
-    cap: 'pneumonia',
-  };
-
-  let normalized = text.toLowerCase();
-
-  for (const [variant, canonical] of Object.entries(normalizations)) {
-    const regex = new RegExp(`\\b${variant}\\b`, 'gi');
-    normalized = normalized.replace(regex, canonical);
-  }
-
-  return normalized;
-}
+export type { TokenCacheQuery as CacheQuery, TokenCacheMatch as CacheMatch };
 
 export async function findSimilarCachedQuestion(
   prisma: any,
-  query: CacheQuery
-): Promise<CacheMatch | null> {
+  query: TokenCacheQuery,
+): Promise<TokenCacheMatch | null> {
   try {
     const normalizedQuery = normalizeMedicalTerms(query.queryText);
-    const queryTokens = tokenize(normalizedQuery);
+    const queryTokens = tokenizeForCache(normalizedQuery);
 
     const cacheEntries = await prisma.semanticCache.findMany({
       where: {
@@ -80,22 +35,19 @@ export async function findSimilarCachedQuestion(
         ...(query.system && { system: query.system }),
         ...(query.difficulty && { difficulty: query.difficulty }),
       },
-      orderBy: {
-        lastUsedAt: 'desc',
-      },
+      orderBy: { lastUsedAt: 'desc' },
       take: 50,
     });
 
-    let bestMatch: CacheMatch | null = null;
+    let bestMatch: TokenCacheMatch | null = null;
     let highestSimilarity = 0;
 
     for (const entry of cacheEntries) {
       const normalizedCache = normalizeMedicalTerms(entry.queryText);
-      const cacheTokens = tokenize(normalizedCache);
+      const cacheTokens = tokenizeForCache(normalizedCache);
+      const similarity = jaccardSimilarity(queryTokens, cacheTokens);
 
-      const similarity = calculateSimilarity(queryTokens, cacheTokens);
-
-      if (similarity > highestSimilarity && similarity >= SIMILARITY_THRESHOLD) {
+      if (similarity > highestSimilarity && similarity >= JACCARD_SIMILARITY_THRESHOLD) {
         highestSimilarity = similarity;
         bestMatch = {
           question: entry.cachedQuestion,
@@ -124,8 +76,8 @@ export async function findSimilarCachedQuestion(
 
 export async function cacheGeneratedQuestion(
   prisma: any,
-  query: CacheQuery,
-  question: any
+  query: TokenCacheQuery,
+  question: any,
 ): Promise<void> {
   try {
     await prisma.semanticCache.create({

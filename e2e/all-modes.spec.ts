@@ -117,6 +117,36 @@ const routes = [
     description: 'Mechanical ventilation management',
   },
   {
+    name: 'Condition Drill',
+    url: '/?view=condition_drill',
+    expectText: 'Condition',
+    description: 'Condition-based quiz drill — organ system selection and random mix',
+  },
+  {
+    name: 'Contrastive Drill',
+    url: '/?view=contrastive_drill',
+    expectText: 'Contrastive',
+    description: 'Contrastive pattern recognition — side-by-side condition comparison',
+  },
+  {
+    name: 'DDx Compare Drill',
+    url: '/?view=ddx_compare',
+    expectText: 'DDx',
+    description: 'Differential diagnosis comparison — Must Not Miss, Most Common, Red Flag',
+  },
+  {
+    name: 'Elaboration Drill',
+    url: '/?view=elaboration_drill',
+    expectText: 'Elaborative',
+    description: 'Elaborative interrogation — free-text explanation graded by Gemini on 0-3 rubric',
+  },
+  {
+    name: 'ICD-10 Coding Drill',
+    url: '/?view=icd_coding_drill',
+    expectText: 'ICD-10',
+    description: 'ICD-10 code selection from clinical vignettes',
+  },
+  {
     name: 'Virtual OSCE',
     url: '/?view=patient_encounter',
     expectText: 'Virtual OSCE',
@@ -286,5 +316,40 @@ test.describe('Critical API Endpoint Tests', () => {
     expect(response.status()).not.toBe(401);
 
     console.log('✅ System Drill API endpoint - PASSED\n');
+  });
+
+  test('Contrastive Drill API (/api/drills/contrastive/sets) returns valid data', async ({
+    request,
+  }) => {
+    console.log('\n🧪 Testing Contrastive Drill API endpoint directly...');
+
+    const response = await request.get('/api/drills/contrastive/sets');
+
+    console.log(`📊 Status: ${response.status()}`);
+
+    expect(response.status()).not.toBe(500);
+    expect(response.status()).not.toBe(401);
+
+    console.log('✅ Contrastive Drill API endpoint - PASSED\n');
+  });
+
+  test('Elaboration Drill API (/api/drills/elaboration/generate) responds without 500', async ({
+    request,
+  }) => {
+    console.log('\n🧪 Testing Elaboration Drill API endpoint directly...');
+
+    const response = await request.post('/api/drills/elaboration/generate', {
+      data: { system: 'CV' },
+    });
+
+    console.log(`📊 Status: ${response.status()}`);
+
+    // Should not return 500
+    expect(response.status()).not.toBe(500);
+
+    // Should not be unauthorized
+    expect(response.status()).not.toBe(401);
+
+    console.log('✅ Elaboration Drill API endpoint - PASSED\n');
   });
 });

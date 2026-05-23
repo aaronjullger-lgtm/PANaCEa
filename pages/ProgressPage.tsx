@@ -73,6 +73,21 @@ function formatMinutes(minutes: number): string {
   return remainder > 0 ? `${hours}h ${remainder}m` : `${hours}h`;
 }
 
+function formatPlanAge(generatedAt: string | null | undefined): string | null {
+  if (!generatedAt) return null;
+  const generated = new Date(generatedAt);
+  if (isNaN(generated.getTime())) return null;
+  const diffMs = Date.now() - generated.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'Just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return 'Yesterday';
+  return `${diffDays}d ago`;
+}
+
 function formatGap(gapPercent: number | null): string {
   if (gapPercent == null) return 'Coverage neutral';
   if (gapPercent >= 0) return `${gapPercent.toFixed(1)}% above blueprint`;
@@ -480,6 +495,20 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                     <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--color-text-secondary)]">
                       {todayStudyPlan.summary}
                     </p>
+                    {studyPlan?.generatedAt && (
+                      <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                        Plan updated {formatPlanAge(studyPlan.generatedAt)}
+                        {studyPlan.state === 'ready' && (
+                          <button
+                            type="button"
+                            className="ml-2 underline underline-offset-2 hover:text-[var(--color-text-secondary)] transition-colors"
+                            onClick={() => void refreshStudyPlan()}
+                          >
+                            Regenerate now
+                          </button>
+                        )}
+                      </p>
+                    )}
                   </div>
                   <div className="flex shrink-0 flex-wrap items-center gap-2">
                     <span className="rounded-full bg-[var(--color-bg-tertiary)] px-2.5 py-1 text-xs font-semibold text-[var(--color-text-muted)]">

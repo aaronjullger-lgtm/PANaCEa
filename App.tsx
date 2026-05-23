@@ -23,7 +23,7 @@ import { useUserStats } from './hooks/useUserStats';
 import { preloadData } from './lib/utils/dataLoader';
 import { useAccessibleTransition } from './hooks/useReducedMotion';
 import { useViewTransition } from './hooks/useViewTransition';
-import { flushPendingToLocalStorage } from './lib/services/sync/offlineSync';
+import { flushPendingToLocalStorage, setupAutoSync } from './lib/services/sync/offlineSync';
 import { ROUTES } from './config/routes';
 import { buildMainSessionLaunchPath } from './lib/study/mainSessionLaunch';
 
@@ -419,6 +419,17 @@ const App: React.FC = () => {
     globalThis.addEventListener('beforeunload', handleBeforeUnload);
     return () => globalThis.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
+
+  // ---- Wire legacy offline sync queue drain on reconnect ----
+  // flushPendingToLocalStorage (above) writes performance/saved-question data to
+  // the legacy offline queue. setupAutoSync ensures that queue is actually
+  // processed when connectivity returns — without this, flushed data sits in
+  // localStorage permanently and never reaches the server.
+  useEffect(() => {
+    if (!getToken) return;
+    const cleanup = setupAutoSync(() => getToken());
+    return cleanup;
+  }, [getToken]);
 
   // ---- derived: "growth areas" and heatmap data ----
   // Heatmap and growth areas use synced performanceData filtered by focus === 'all'

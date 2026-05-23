@@ -1,4 +1,12 @@
 /**
+ * ⚠️  DEPRECATED (2026-05-22): Use lib/services/tokenMatchCache.ts for pure helpers
+ * and functions/api/_shared/semantic-cache.ts for Edge-compatible Prisma wrappers.
+ *
+ * This module formerly duplicated token-match logic and used a global Prisma import
+ * incompatible with Cloudflare Edge Functions. It is retained as a re-export shim
+ * for _trash/old-routes/questions.ts only. Remove this file once the trash route is
+ * fully deleted.
+ *
  * Semantic caching service for AI-generated questions
  * Recognizes semantically similar queries and serves cached content
  * Reduces LLM API costs by avoiding duplicate generations
