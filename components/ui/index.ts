@@ -37,7 +37,6 @@ export * from './VirtualizedTableBody';
 export * from './avatar';
 export * from './button';
 export * from './card';
-export * from './clinical-badge';
 export * from './command';
 export * from './dialog';
 export * from './icons';
