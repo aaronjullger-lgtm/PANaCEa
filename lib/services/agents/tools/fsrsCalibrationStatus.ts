@@ -93,40 +93,43 @@ export const fsrsCalibrationStatusTool = defineTool<
     }
 
     const totalActiveCards = await prisma.userProgress.count({
-      where: { ...baseWhere, stability: { gt: 0 } },
+      where: { ...baseWhere, fsrsStability: { gt: 0 } },
     });
 
     const overdueCount = await prisma.userProgress.count({
       where: {
         ...baseWhere,
-        stability: { gt: 0 },
+        fsrsStability: { gt: 0 },
         nextReviewAt: { lt: now },
       },
     });
 
+    // "Ease hell": high difficulty + relearning state (State 3 in FSRS v6) + low reps
+    // Approximated as: difficulty > 0.85 AND state >= 3 (relearning) AND few reps
     const easeHellCount = await prisma.userProgress.count({
       where: {
         ...baseWhere,
-        difficulty: { gt: 0.85 },
-        consecutiveLapses: { gte: 3 },
+        fsrsDifficulty: { gt: 0.85 },
+        fsrsState: { gte: 3 },
+        fsrsReps: { lte: 10 },
       },
     });
 
     const reviewBacklog7d = await prisma.userProgress.count({
       where: {
         ...baseWhere,
-        stability: { gt: 0 },
+        fsrsStability: { gt: 0 },
         nextReviewAt: { lte: sevenDays },
       },
     });
 
     const agg = await prisma.userProgress.aggregate({
-      where: { ...baseWhere, stability: { gt: 0 } },
-      _avg: { difficulty: true, stability: true },
+      where: { ...baseWhere, fsrsStability: { gt: 0 } },
+      _avg: { fsrsDifficulty: true, fsrsStability: true },
     });
 
-    const avgDifficulty = Math.round(((agg?._avg?.difficulty ?? 0) * 100)) / 100;
-    const avgStability = Math.round(((agg?._avg?.stability ?? 0) * 100)) / 100;
+    const avgDifficulty = Math.round(((agg?._avg?.fsrsDifficulty ?? 0) * 100)) / 100;
+    const avgStability = Math.round(((agg?._avg?.fsrsStability ?? 0) * 100)) / 100;
 
     const overduePercent = totalActiveCards > 0
       ? Math.round((overdueCount / totalActiveCards) * 1000) / 10

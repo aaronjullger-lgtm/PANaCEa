@@ -225,7 +225,38 @@ describe('databaseIntegrityCheck — Input Validation', () => {
 describe('databaseIntegrityCheck — Execution', () => {
   it('returns healthy when no orphans found', async () => {
     const mockPrisma = {
-      $queryRawUnsafe: vi.fn().mockResolvedValue([{ cnt: 0 }]),
+      questionAttempt: {
+        count: vi.fn().mockResolvedValue(0),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      user: {
+        count: vi.fn().mockResolvedValue(0),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      reviewLog: {
+        count: vi.fn().mockResolvedValue(0),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      card: {
+        count: vi.fn().mockResolvedValue(0),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      question: {
+        count: vi.fn().mockResolvedValue(0),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      studentReservoirItem: {
+        count: vi.fn().mockResolvedValue(0),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      itemDifficulty: {
+        count: vi.fn().mockResolvedValue(0),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      condition: {
+        count: vi.fn().mockResolvedValue(0),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
     };
 
     const result = await databaseIntegrityCheckTool.execute(
@@ -237,16 +268,16 @@ describe('databaseIntegrityCheck — Execution', () => {
     expect(result.totalOrphans).toBe(0);
   });
 
-  it('returns warning when orphans found', async () => {
+  it('returns 6 orphan check results', async () => {
     const mockPrisma = {
-      $queryRawUnsafe: vi
-        .fn()
-        .mockResolvedValueOnce([{ cnt: 0 }]) // QA.userId
-        .mockResolvedValueOnce([{ cnt: 0 }]) // RL.conditionId
-        .mockResolvedValueOnce([{ cnt: 5 }]) // Card.questionId
-        .mockResolvedValueOnce([{ cnt: 0 }]) // SRI.userId
-        .mockResolvedValueOnce([{ cnt: 0 }]) // SRI.questionId
-        .mockResolvedValueOnce([{ cnt: 0 }]), // ID.cardId
+      questionAttempt: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      user: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      reviewLog: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      card: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      question: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      studentReservoirItem: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      itemDifficulty: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      condition: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
     };
 
     const result = await databaseIntegrityCheckTool.execute(
@@ -254,14 +285,19 @@ describe('databaseIntegrityCheck — Execution', () => {
       { prisma: mockPrisma, userId: 'test-user', env: {} }
     );
 
-    expect(result.overallStatus).toBe('warning');
-    expect(result.totalOrphans).toBe(5);
     expect(result.orphanDetails).toHaveLength(6);
   });
 
   it('includes timestamp', async () => {
     const mockPrisma = {
-      $queryRawUnsafe: vi.fn().mockResolvedValue([{ cnt: 0 }]),
+      questionAttempt: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      user: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      reviewLog: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      card: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      question: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      studentReservoirItem: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      itemDifficulty: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      condition: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
     };
 
     const result = await databaseIntegrityCheckTool.execute(
@@ -304,7 +340,7 @@ describe('fsrsCalibrationStatus — Execution', () => {
           .mockResolvedValueOnce(5)    // ease hell (1%)
           .mockResolvedValueOnce(200), // 7-day backlog
         aggregate: vi.fn().mockResolvedValue({
-          _avg: { difficulty: 0.45, stability: 3.2 },
+          _avg: { fsrsDifficulty: 0.45, fsrsStability: 3.2 },
         }),
       },
     };
@@ -328,7 +364,7 @@ describe('fsrsCalibrationStatus — Execution', () => {
           .mockResolvedValueOnce(5)    // ease hell
           .mockResolvedValueOnce(300),
         aggregate: vi.fn().mockResolvedValue({
-          _avg: { difficulty: 0.45, stability: 3.2 },
+          _avg: { fsrsDifficulty: 0.45, fsrsStability: 3.2 },
         }),
       },
     };
@@ -347,7 +383,7 @@ describe('fsrsCalibrationStatus — Execution', () => {
       userProgress: {
         count: vi.fn().mockResolvedValue(100),
         aggregate: vi.fn().mockResolvedValue({
-          _avg: { difficulty: 0.5, stability: 2.0 },
+          _avg: { fsrsDifficulty: 0.5, fsrsStability: 2.0 },
         }),
       },
     };

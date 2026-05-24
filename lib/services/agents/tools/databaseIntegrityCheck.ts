@@ -38,22 +38,90 @@ interface IntegrityReport {
 }
 
 interface PrismaLike {
-  $queryRawUnsafe: (query: string) => Promise<Array<Record<string, unknown>>>;
+  questionAttempt: {
+    count: (args: { where: Record<string, unknown> }) => Promise<number>;
+  };
+  user: {
+    count: (args: { where: Record<string, unknown> }) => Promise<number>;
+    findMany: (args: { select: Record<string, boolean>; take: number }) => Promise<Array<{ id: string }>>;
+  };
+  reviewLog: {
+    count: (args: { where: Record<string, unknown> }) => Promise<number>;
+  };
+  card: {
+    count: (args: { where: Record<string, unknown> }) => Promise<number>;
+    findMany: (args: { select: Record<string, boolean>; take: number }) => Promise<Array<{ id: string }>>;
+  };
+  question: {
+    count: (args: { where: Record<string, unknown> }) => Promise<number>;
+    findMany: (args: { select: Record<string, boolean>; take: number }) => Promise<Array<{ id: string }>>;
+  };
+  studentReservoirItem: {
+    count: (args: { where: Record<string, unknown> }) => Promise<number>;
+  };
+  itemDifficulty: {
+    count: (args: { where: Record<string, unknown> }) => Promise<number>;
+  };
+  condition: {
+    count: (args: { where: Record<string, unknown> }) => Promise<number>;
+  };
 }
 
 /**
  * Orphan checks against key PANaCEa relationships.
  * These are the known FK gaps from the 2026-04-17 audit.
  * Last verified: 0 orphans found.
+ *
+ * Uses ORM queries (not raw SQL) for compatibility with
+ * Prisma 7's adapter-based client (PrismaPg, Edge).
  */
-const ORPHAN_CHECKS: Array<{ table: string; fkColumn: string; refTable: string; refColumn: string }> = [
-  { table: 'QuestionAttempt', fkColumn: 'userId', refTable: 'User', refColumn: 'id' },
-  { table: 'ReviewLog', fkColumn: 'conditionId', refTable: 'Condition', refColumn: 'id' },
-  { table: 'Card', fkColumn: 'questionId', refTable: 'Question', refColumn: 'id' },
-  { table: 'StudentReservoirItem', fkColumn: 'userId', refTable: 'User', refColumn: 'id' },
-  { table: 'StudentReservoirItem', fkColumn: 'questionId', refTable: 'Question', refColumn: 'id' },
-  { table: 'ItemDifficulty', fkColumn: 'cardId', refTable: 'Card', refColumn: 'id' },
-];
+
+async function checkOrphans(
+  prisma: PrismaLike,
+  childTable: string,
+  fkColumn: string,
+  refTable: string,
+  refColumn: string,
+): Promise<number> {
+  // Strategy: get all child IDs, then count how many reference rows don't exist
+  // For efficiency, use batch approach: get sample of IDs, check existence
+  try {
+    // Query 1: Count children with non-null FK
+    const childAccessor = (prisma as any)[childTable];
+    if (!childAccessor) return -1;
+
+    const totalWithFK = await childAccessor.count({
+      where: { [fkColumn]: { not: null } },
+    });
+
+    if (totalWithFK === 0) return 0;
+
+    // Query 2: Get a sample of FK values
+    const sample = await childAccessor.findMany({
+      select: { [fkColumn]: true },
+      take: 1000,
+      where: { [fkColumn]: { not: null } },
+    });
+
+    // Query 3: Count how many of these reference rows exist
+    const refAccessor = (prisma as any)[refTable];
+    if (!refAccessor) return -1;
+
+    const fkValues = [...new Set(sample.map((s: any) => s[fkColumn]))].filter(Boolean);
+    if (fkValues.length === 0) return 0;
+
+    const existingCount = await refAccessor.count({
+      where: { [refColumn]: { in: fkValues } },
+    });
+
+    // If all sampled FK values exist, extrapolate: 0 orphans
+    // Otherwise: orphanCount = (missingRate * totalWithFK)
+    const missingRate = (fkValues.length - existingCount) / fkValues.length;
+    return Math.round(missingRate * totalWithFK);
+  } catch {
+    return -1; // Error during check
+  }
+}
 
 export const databaseIntegrityCheckTool = defineTool<
   Input,
@@ -76,49 +144,45 @@ export const databaseIntegrityCheckTool = defineTool<
   },
   category: 'read',
   costHint: 'expensive',
-  timeoutMs: 10000,
+  timeoutMs: 15000,
   execute: async (input: Input, ctx: ToolExecutionContext) => {
     if (!ctx.prisma) {
       throw new Error('database_integrity_check requires a Prisma client');
     }
     const prisma = ctx.prisma as PrismaLike;
+
+    const orphanChecks = [
+      { table: 'questionAttempt', fkColumn: 'userId', refTable: 'user', refColumn: 'id' },
+      { table: 'reviewLog', fkColumn: 'conditionId', refTable: 'condition', refColumn: 'id' },
+      { table: 'card', fkColumn: 'questionId', refTable: 'question', refColumn: 'id' },
+      { table: 'studentReservoirItem', fkColumn: 'userId', refTable: 'user', refColumn: 'id' },
+      { table: 'studentReservoirItem', fkColumn: 'questionId', refTable: 'question', refColumn: 'id' },
+      { table: 'itemDifficulty', fkColumn: 'cardId', refTable: 'card', refColumn: 'id' },
+    ];
+
     const details: OrphanCheck[] = [];
     let totalOrphans = 0;
 
-    for (const check of ORPHAN_CHECKS) {
-      try {
-        const query = `
-          SELECT COUNT(*) as cnt
-          FROM "${check.table}" t
-          LEFT JOIN "${check.refTable}" r ON t."${check.fkColumn}" = r."${check.refColumn}"
-          WHERE t."${check.fkColumn}" IS NOT NULL
-            AND r."${check.refColumn}" IS NULL
-        `;
-        const result = await prisma.$queryRawUnsafe(query);
-        const count = Number(result[0]?.cnt ?? 0);
-        totalOrphans += count;
+    for (const check of orphanChecks) {
+      const orphanCount = await checkOrphans(
+        prisma, check.table, check.fkColumn, check.refTable, check.refColumn
+      );
 
-        let severity: OrphanCheck['severity'];
-        if (count === 0) severity = 'ok';
-        else if (count < 10) severity = 'warning';
-        else severity = 'critical';
+      let severity: OrphanCheck['severity'];
+      if (orphanCount === 0) severity = 'ok';
+      else if (orphanCount === -1) severity = 'warning';
+      else if (orphanCount < 10) severity = 'warning';
+      else severity = 'critical';
 
-        details.push({
-          table: check.table,
-          fkColumn: check.fkColumn,
-          references: `${check.refTable}.${check.refColumn}`,
-          orphanCount: count,
-          severity,
-        });
-      } catch (err) {
-        details.push({
-          table: check.table,
-          fkColumn: check.fkColumn,
-          references: `${check.refTable}.${check.refColumn}`,
-          orphanCount: -1,
-          severity: 'warning',
-        });
-      }
+      if (orphanCount > 0) totalOrphans += orphanCount;
+
+      details.push({
+        table: check.table,
+        fkColumn: check.fkColumn,
+        references: `${check.refTable}.${check.refColumn}`,
+        orphanCount,
+        severity,
+      });
     }
 
     let overallStatus: IntegrityReport['overallStatus'];
