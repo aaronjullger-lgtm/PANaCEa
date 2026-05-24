@@ -50,6 +50,8 @@ import {
 } from '@/components/workspace';
 import { BodyMapWidget } from '@/components/dashboard/BodyMapWidget';
 import { RoundsButton } from '@/components/dashboard/RoundsButton';
+import { SearchBar } from '@/components/search';
+import type { SearchFilter } from '@/components/search';
 import { useUserContext } from '@/hooks/useUserContext';
 import { useRolling360Stats } from '@/hooks/useRolling360Stats';
 import {
@@ -431,60 +433,32 @@ export const PracticePage: React.FC<PracticePageProps> = ({
 
       <WorkspaceReveal delay={0.04}>
         <WorkspaceFilterBar>
-          <div className="space-y-4">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-              <div className="space-y-1.5">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                  Mode search
-                </p>
-                <p className="max-w-2xl text-sm leading-6 text-[var(--color-text-secondary)]">
-                  Filter by time first, then search by system, modality, or drill style.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {(Object.keys(TIME_FILTER_LABELS) as Array<keyof typeof TIME_FILTER_LABELS>).map(
-                  (filter) => (
-                    <Button
-                      key={filter}
-                      type="button"
-                      size="sm"
-                      variant={timeFilter === filter ? 'primary' : 'secondary'}
-                      onClick={() => setTimeFilter(filter)}
-                      className="rounded-full"
-                    >
-                      {TIME_FILTER_LABELS[filter]}
-                    </Button>
-                  )
-                )}
-              </div>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                Mode search
+              </p>
+              <p className="max-w-2xl text-sm leading-6 text-[var(--color-text-secondary)]">
+                Filter by time first, then search by system, modality, or drill style.
+              </p>
             </div>
-
-            <label className="relative block">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
-              <input
-                type="text"
-                aria-label="Search practice modes by name, system, or drill style"
-                placeholder="Search pharmacology, systems, treatments, recall..."
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                className="w-full rounded-2xl border py-3.5 pl-11 pr-12 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
-                style={{
-                  borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
-                  background:
-                    'color-mix(in srgb, var(--color-bg-secondary) 76%, var(--color-bg-primary) 24%)',
-                }}
-              />
-              {searchQuery ? (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)]"
-                  aria-label="Clear search"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              ) : null}
-            </label>
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onSelect={setSearchQuery}
+              placeholder="Search pharmacology, systems, treatments, recall..."
+              storageKey="practice.search.recent"
+              filters={(
+                Object.keys(TIME_FILTER_LABELS) as Array<keyof typeof TIME_FILTER_LABELS>
+              ).map((filter): SearchFilter => ({
+                id: filter,
+                label: TIME_FILTER_LABELS[filter],
+                active: timeFilter === filter,
+              }))}
+              onToggleFilter={(filterId) =>
+                setTimeFilter(filterId as 'all' | 'quick' | 'medium' | 'long')
+              }
+            />
           </div>
         </WorkspaceFilterBar>
       </WorkspaceReveal>
