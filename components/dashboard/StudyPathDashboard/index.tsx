@@ -424,7 +424,7 @@ const StudyPathDashboard = () => {
           />
         </WorkspaceReveal>
         <WorkspaceReveal delay={0.05}>
-          <WorkspaceSurface accent="#b39b6c">
+          <WorkspaceSurface accent="var(--color-category-specialty)">
             <div
               className="flex min-h-[16rem] flex-col items-center justify-center gap-4 text-center"
               role="status"
@@ -523,7 +523,7 @@ const StudyPathDashboard = () => {
             label="Projected retention"
             value={<AnimatedCounter value={projectedRetentionIncrease * 100} decimals={1} prefix="+" suffix="%" />}
             detail="Expected lift from this optimized plan."
-            accent="#7a8f6e"
+            accent="var(--color-category-toolkit)"
             icon={TrendingUp}
           />
           <WorkspaceMetricCard
@@ -536,14 +536,14 @@ const StudyPathDashboard = () => {
                   ? 'Moderate confidence recommendation.'
                   : 'Lower confidence because the data is thinner.'
             }
-            accent="#b39b6c"
+            accent="var(--color-category-specialty)"
             icon={Zap}
           />
           <WorkspaceMetricCard
             label="Blueprint coverage"
             value={<AnimatedCounter value={coverageTotal} decimals={1} suffix="%" />}
             detail={`${topicCount} scheduled topic block${topicCount === 1 ? '' : 's'} across the plan.`}
-            accent="#728ba6"
+            accent="var(--color-category-practice)"
             icon={Calendar}
           />
         </div>
@@ -595,7 +595,7 @@ const StudyPathDashboard = () => {
       </WorkspaceReveal>
 
       <WorkspaceReveal delay={0.12}>
-        <WorkspaceSurface accent="#a67f7f">
+        <WorkspaceSurface accent="var(--color-category-visual)">
           <FatigueAlertBanner riskLevel={fatigueRisk} />
         </WorkspaceSurface>
       </WorkspaceReveal>
@@ -605,7 +605,7 @@ const StudyPathDashboard = () => {
           title="Progress projection"
           subtitle="Use the projection chart to see what this plan expects to change if you actually follow it."
         >
-          <WorkspaceSurface accent="#728ba6">
+          <WorkspaceSurface accent="var(--color-category-practice)">
             <ProgressProjectionChart planId={plan.id} />
           </WorkspaceSurface>
         </WorkspaceSection>
@@ -629,7 +629,7 @@ const StudyPathDashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.25, delay: Math.min(index * 0.03, 0.24) }}
               >
-                <WorkspaceSurface accent={index % 2 === 0 ? '#c4b78a' : '#728ba6'}>
+                <WorkspaceSurface accent={index % 2 === 0 ? 'var(--color-category-specialty)' : 'var(--color-category-practice)'}>
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="flex items-start gap-4">
                       <div className="workspace-icon-tile flex h-12 w-12 flex-col items-center justify-center rounded-2xl text-[var(--color-text-primary)]">
@@ -698,7 +698,7 @@ const StudyPathDashboard = () => {
             title="Why this plan was chosen"
             subtitle="A plain-language explanation of the optimizer’s current recommendation."
           >
-            <WorkspaceSurface accent="#9a7f9a">
+            <WorkspaceSurface accent="var(--color-category-simulation)">
               <p className="whitespace-pre-line text-sm leading-7 text-[var(--color-text-secondary)]">
                 {rationale}
               </p>
@@ -708,7 +708,7 @@ const StudyPathDashboard = () => {
       ) : null}
 
       <WorkspaceReveal delay={0.28}>
-        <WorkspaceSurface accent="#728ba6">
+        <WorkspaceSurface accent="var(--color-category-practice)">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1.5">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">

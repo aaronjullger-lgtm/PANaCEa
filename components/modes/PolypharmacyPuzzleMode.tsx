@@ -20,6 +20,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '@clerk/clerk-react';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface PolypharmacyPuzzleModeProps {
   onExit?: () => void;
@@ -206,10 +207,11 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
           // so `cases` lives at the top level of response.json(). The old check
           // for `data.data.cases` matched neither shape and silently fell
           // through to SAMPLE_CASES[0] — every student got the demo case
-          // instead of a real generated one. Handle both shapes defensively
-          // in case some deployed version still double-wraps.
+          // instead of a real generated one. unwrapApiEnvelope() handles both
+          // shapes defensively in case some deployed version still double-wraps.
           const json: any = await response.json();
-          const cases = json?.cases ?? json?.data?.cases;
+          const data = unwrapApiEnvelope<{ cases?: PolypharmacyCase[] }>(json);
+          const cases = data?.cases;
           if (Array.isArray(cases) && cases[0]) {
             setCurrentCase(cases[0] as PolypharmacyCase);
           } else {

@@ -2,8 +2,10 @@
  * API: Evaluate OSCE session using SPBench rubric
  * POST /api/osce/evaluate
  *
- * Purpose: Evaluation agent - post-hoc SPBench 8-dimension rubric scoring
- * Model: Gemini 2.5 Pro
+ * Purpose: Post-hoc SPBench 8-dimension rubric scoring via AI Gateway.
+ * Model: Gemini 2.5 Pro (routed through unified AI Gateway).
+ *
+ * Feature-gated behind ENABLE_OSCE_BETA.
  */
 
 import { z } from 'zod';
@@ -11,102 +13,162 @@ import { authenticatedEndpoint, type CloudflareContext } from '../_shared/middle
 import { featureDisabledResponse, isFeatureEnabled } from '../_shared/feature-flags';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import type { CloudflareEnv } from '../_shared/types';
+import { resolveUserByClerkId } from '../_shared/resolveUser';
+import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
+import { SpbenchScoreSchema, SPBENCH_SCORE_DESCRIPTION } from '@/lib/ai/schemas/grading';
 
-// Schema for session evaluation
+// ─── Schema ────────────────────────────────────────────────────────────────
+
 const EvaluateSessionSchema = z.object({
   body: z.object({
     sessionId: z.string(),
   }),
 });
 
+// ─── Handler ───────────────────────────────────────────────────────────────
+
 const evaluateSessionHandler = authenticatedEndpoint(
   EvaluateSessionSchema,
-  async ({ env, validated, auth }) => {
+  async ({ env, validated, auth, request }) => {
     const log = createEndpointLogger('/api/osce/evaluate', auth.userId);
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
       const { sessionId } = validated.body;
-      log.info('Evaluating OSCE session', { sessionId });
+      log.info('Evaluating OSCE session with SPBench', { sessionId });
 
-      // Get OsceSession with case data
-      const session = await prisma.osceSession.findUnique({
-        where: { id: sessionId },
-      });
-
-      if (!session) {
-        log.warn('OsceSession not found');
-        return {
-          status: 404,
-          error: 'OsceSession not found',
-        };
+      // Resolve the authenticated user
+      const user = await resolveUserByClerkId(prisma, auth.userId);
+      if (!user) {
+        log.warn('User not found for OSCE evaluation', { clerkId: auth.userId });
+        return { status: 404, error: 'User not found' };
       }
 
-      // Get intent log
-      const intentLog = await prisma.clinicalIntentLog.findMany({
-        where: { sessionId },
-        orderBy: { classifiedAt: 'asc' },
-      });
-
-      // Get PatientEncounterSession for diagnosis
-      const peSession = await prisma.patientEncounterSession.findUnique({
-        where: { id: sessionId },
-        include: {
-          OsceResult: true,
-          PatientEncounterCase: true,
-        },
+      // Fetch session with ownership check
+      const peSession = await prisma.patientEncounterSession.findFirst({
+        where: { id: sessionId, userId: user.id },
+        include: { PatientEncounterCase: true },
       });
 
       if (!peSession) {
-        log.warn('PatientEncounterSession not found');
+        log.warn('Session not found for evaluation', { sessionId });
+        return { status: 404, error: 'Session not found' };
+      }
+
+      // Check for existing evaluation (idempotency)
+      const existingEval = await prisma.spbenchScore.findUnique({
+        where: { sessionId },
+      });
+      if (existingEval) {
+        log.info('Returning cached SPBench evaluation', { sessionId });
         return {
-          status: 404,
-          error: 'PatientEncounterSession not found',
+          data: {
+            success: true,
+            cached: true,
+            scores: {
+              QC: existingEval.queryCompetence,
+              CC: existingEval.caseCoverage,
+              CD: existingEval.clinicalDepth,
+              RC: existingEval.relevanceCheck,
+              LC: existingEval.logicalConsistency,
+              LN: existingEval.languageNaturality,
+              CS: existingEval.clinicalSafety,
+              PD: existingEval.professionalDemeanor,
+              overall: existingEval.overallScore,
+            },
+            justification: existingEval.justification,
+          },
         };
       }
 
-      const studentDiagnosis = peSession?.diagnosis ?? 'not provided';
-      const correctDiagnosis = peSession.PatientEncounterCase.correctDiagnosis;
+      // Fetch intent log for richer evaluation context
+      const intentLog = await prisma.clinicalIntentLog.findMany({
+        where: { sessionId },
+        orderBy: { classifiedAt: 'asc' },
+        select: { intent: true, studentText: true },
+      });
 
-      // Build transcript
-      const transcript = await buildTranscript(sessionId, prisma);
+      const studentDiagnosis = peSession.diagnosis ?? 'not provided';
+      const correctDiagnosis = peSession.PatientEncounterCase?.correctDiagnosis ?? 'unknown';
+      const transcript = peSession.messages ?? [];
 
-      // Load evaluation agent prompt
-      const prompt = await loadEvaluationPrompt(
+      // Build prompt for SPBench evaluation
+      const systemPrompt = buildSpbenchSystemPrompt(
         transcript,
         intentLog,
         studentDiagnosis,
         correctDiagnosis,
       );
 
-      // Call Gemini 2.5 Pro for SPBench scoring
-      const scores = await evaluateSessionSpbench(prompt, env);
+      const userPrompt = buildSpbenchUserPrompt(
+        transcript,
+        intentLog,
+        studentDiagnosis,
+        correctDiagnosis,
+      );
+
+      // ── Call AI Gateway for SPBench scoring ──
+      let scores;
+      try {
+        const { data } = await gateway.grade(toGatewayContext({ request, env, validated, auth } as any), {
+          endpoint: '/api/osce/evaluate',
+          schema: SpbenchScoreSchema,
+          schemaDescription: SPBENCH_SCORE_DESCRIPTION,
+          systemPrompt,
+          userPrompt,
+          tier: 'powerful', // SPBench evaluation needs pro-tier reasoning
+          temperature: 0.2,
+          maxOutputTokens: 2048,
+        });
+        scores = data;
+      } catch (err: unknown) {
+        if (err instanceof GatewayError) {
+          log.warn('SPBench gateway grading failed', {
+            code: err.code,
+            requestId: err.requestId,
+            message: err.message.slice(0, 200),
+          });
+          if (err.code === 'RATE_LIMITED') {
+            return { status: 429, error: 'Rate limit exceeded' };
+          }
+          if (err.code === 'SCHEMA_INVALID_AFTER_REPAIR') {
+            return { status: 422, error: 'Invalid evaluation response format' };
+          }
+        }
+        log.error('Unexpected SPBench evaluation error', err);
+        return { status: 502, error: 'Evaluation service failed' };
+      }
 
       log.info('SPBench scores generated', { sessionId, overallScore: scores.overallScore });
 
-      // Save SPBench scores
+      // Persist SPBench scores
       await prisma.spbenchScore.upsert({
         where: { sessionId },
         create: {
           id: crypto.randomUUID(),
           sessionId,
-          ...toSpbenchScoreData(scores),
+          queryCompetence: scores.QC,
+          caseCoverage: scores.CC,
+          clinicalDepth: scores.CD,
+          relevanceCheck: scores.RC,
+          logicalConsistency: scores.LC,
+          languageNaturality: scores.LN,
+          clinicalSafety: scores.CS,
+          professionalDemeanor: scores.PD,
+          overallScore: scores.overallScore,
+          justification: scores.justification,
         },
-        update: toSpbenchScoreData(scores),
-      });
-
-      // Update OsceSession as completed
-      await prisma.osceSession.update({
-        where: { id: session.id },
-        data: {
-          status: 'completed',
-          currentAgent: 'evaluation',
-          evaluationState: {
-            transcript,
-            scores,
-          },
-          completedAt: new Date(),
+        update: {
+          queryCompetence: scores.QC,
+          caseCoverage: scores.CC,
+          clinicalDepth: scores.CD,
+          relevanceCheck: scores.RC,
+          logicalConsistency: scores.LC,
+          languageNaturality: scores.LN,
+          clinicalSafety: scores.CS,
+          professionalDemeanor: scores.PD,
+          overallScore: scores.overallScore,
+          justification: scores.justification,
         },
       });
 
@@ -129,194 +191,119 @@ const evaluateSessionHandler = authenticatedEndpoint(
       };
     } catch (error) {
       log.error('Session evaluation failed', error);
-      return {
-        status: 500,
-        error: 'Failed to evaluate session',
-      };
+      return { status: 500, error: 'Failed to evaluate session' };
     } finally {
       await safePrismaDisconnect(prisma);
     }
   },
 );
 
+// ─── Export (feature-gated) ────────────────────────────────────────────────
+
 export const onRequestPost = (context: CloudflareContext) => {
   if (!isFeatureEnabled(context.env, 'ENABLE_OSCE_BETA')) {
     return featureDisabledResponse(
       context.request,
-      'OSCE beta endpoints are disabled for this launch.'
+      'OSCE beta endpoints are disabled for this launch.',
     );
   }
-
   return evaluateSessionHandler(context);
 };
 
-// Build transcript from PatientEncounterSession messages
-async function buildTranscript(
-  sessionId: string,
-  prisma: any,
-): Promise<string> {
-  const peSession = await prisma.patientEncounterSession.findUnique({
-    where: { id: sessionId },
-    select: { messages: true },
-  });
+// ─── Prompt Builders ───────────────────────────────────────────────────────
 
-  if (!peSession || !peSession.messages) {
-    return 'No transcript available.';
+function formatTranscript(
+  messages: unknown,
+): string {
+  if (typeof messages === 'string') return messages;
+  try {
+    const arr = JSON.parse(JSON.stringify(messages));
+    if (!Array.isArray(arr)) return JSON.stringify(messages);
+    return arr
+      .map((m: any) => {
+        const role = m?.role === 'student' ? 'Student' : 'Patient';
+        return `${role}: ${m?.text ?? JSON.stringify(m)}`;
+      })
+      .join('\n');
+  } catch {
+    return JSON.stringify(messages);
   }
-
-  const messages = JSON.parse(peSession.messages);
-  const lines = messages.map((msg: any) => {
-    const role = msg.role === 'student' ? 'Student' : 'Patient';
-    return `${role}: ${msg.text}`;
-  });
-
-  return lines.join('\n');
 }
 
-function toSpbenchScoreData(scores: {
-  QC: number;
-  CC: number;
-  CD: number;
-  RC: number;
-  LC: number;
-  LN: number;
-  CS: number;
-  PD: number;
-  overallScore: number;
-  justification: string;
-}) {
-  return {
-    queryCompetence: scores.QC,
-    caseCoverage: scores.CC,
-    clinicalDepth: scores.CD,
-    relevanceCheck: scores.RC,
-    logicalConsistency: scores.LC,
-    languageNaturality: scores.LN,
-    clinicalSafety: scores.CS,
-    professionalDemeanor: scores.PD,
-    overallScore: scores.overallScore,
-    justification: scores.justification,
-  };
-}
-
-// Load evaluation agent prompt
-async function loadEvaluationPrompt(
-  transcript: string,
-  intentLog: any[],
+function buildSpbenchSystemPrompt(
+  transcript: unknown,
+  intentLog: ReadonlyArray<{ intent: string; studentText: string }>,
   studentDiagnosis: string,
   correctDiagnosis: string,
-): Promise<{ system: string; user: string }> {
-  const intentLogText = intentLog
-    .map((i: any) => `${i.intent}: ${i.studentText}`)
+): string {
+  const transcriptText = formatTranscript(transcript);
+  const intentText = intentLog
+    .map((i) => `[INTENT:${i.intent}] "${i.studentText}"`)
     .join('\n');
 
-  return {
-    system: `You are a post-hoc OSCE evaluation agent using SPBench rubric.
+  return `You are a post-hoc OSCE evaluation agent using the SPBench rubric.
 
-    Score 8 dimensions (0-100 scale):
-    1. Query Competence (QC): Appropriateness of history questions
-    2. Case Coverage (CC): Completeness of data gathered
-    3. Clinical Depth (CD): Depth of diagnostic reasoning
-    4. Relevance Check (RC): Focus on relevant findings
-    5. Logical Consistency (LC): Coherence of reasoning
-    6. Language Naturality (LN): Patient-appropriate communication
-    7. Clinical Safety (CS): Red flag detection
-    8. Professional Demeanor (PD): Empathy and professionalism
+Score 8 dimensions on a 0-100 scale:
 
-    Session transcript:
-    ${transcript}
+1. Query Competence (QC): How well did the student choose appropriate history questions? Focused, systematic, and relevant questions rate higher.
 
-    Intent log:
-    ${intentLogText}
+2. Case Coverage (CC): How complete was the data gathered? Did the student cover chief complaint, HPI, PMH, medications, allergies, ROS, social/family history?
 
-    Student diagnosis: ${studentDiagnosis}
-    Correct diagnosis: ${correctDiagnosis}
+3. Clinical Depth (CD): How deep was the diagnostic reasoning? Did the student form a plausible differential, interpret findings, and reach a well-supported diagnosis?
 
-    Return ONLY JSON:
-    {
-      "QC": <score>,
-      "CC": <score>,
-      "CD": <score>,
-      "RC": <score>,
-      "LC": <score>,
-      "LN": <score>,
-      "CS": <score>,
-      "PD": <score>,
-      "justification": "<brief explanation>"
-    }`,
-    user: `Evaluate this OSCE session using the SPBench rubric.
+4. Relevance Check (RC): How focused was the questioning? Did the student stay on track or pursue irrelevant lines of inquiry?
 
-    Session data:
-    - Transcript:
-${transcript}
+5. Logical Consistency (LC): How coherent was the reasoning chain from data → differential → diagnosis → plan?
 
-    - Intents explored:
-${intentLogText}
+6. Language Naturality (LN): Was the communication patient-appropriate? Clear, jargon-free, empathetic?
 
-    - Student diagnosis: ${studentDiagnosis}
-    - Correct diagnosis: ${correctDiagnosis}
+7. Clinical Safety (CS): Did the student recognize red flags? Avoid dangerous omissions? Consider "cannot-miss" diagnoses?
 
-    Return JSON with 8 SPBench scores (0-100) and justification.`,
-  };
+8. Professional Demeanor (PD): Was the student respectful, empathetic, and professional? Did they introduce themselves and explain their role?
+
+--- SESSION DATA ---
+
+Transcript (Student = Student, Patient = Simulated Patient):
+${transcriptText}
+
+Intent log (clinical intents the student explored):
+${intentText}
+
+Student's diagnosis: ${studentDiagnosis}
+Correct diagnosis: ${correctDiagnosis}
+
+--- SCORING GUIDANCE ---
+- Score each dimension independently based on what is evidenced in the transcript.
+- If the diagnosis is correct AND well-supported by history/exam data, score CD and LC higher.
+- If the diagnosis is correct but poorly supported (guessing), score LC lower.
+- If red flags were missed (e.g., no CVA tenderness check in suspected pyelonephritis), lower CS.
+- If the student used open-ended questions, showed empathy, and explained their reasoning, raise LN and PD.
+- Provide a brief, specific justification summarizing key strengths and areas for improvement.
+
+Return ONLY a single JSON object. No markdown, no code fence, no prose.`;
 }
 
-// Evaluate session using SPBench rubric
-async function evaluateSessionSpbench(
-  prompt: { system: string; user: string },
-  env: CloudflareEnv,
-): Promise<{
-  QC: number;
-  CC: number;
-  CD: number;
-  RC: number;
-  LC: number;
-  LN: number;
-  CS: number;
-  PD: number;
-  overallScore: number;
-  justification: string;
-}> {
-  // Use AI Gateway or direct Gemini call
-  // This would use the existing AI Gateway infrastructure
-  // For now, generate mock scores based on transcript analysis
-  
-  // Simple scoring based on transcript length and diagnosis match
-  const transcriptLines = prompt.system.split('\n').length;
-  const hasCorrectDiagnosis = prompt.system.includes(
-    'Student diagnosis: ' + prompt.user.split('Student diagnosis: ')[1]?.split('\n')[0],
-  );
+function buildSpbenchUserPrompt(
+  transcript: unknown,
+  intentLog: ReadonlyArray<{ intent: string; studentText: string }>,
+  studentDiagnosis: string,
+  correctDiagnosis: string,
+): string {
+  const transcriptText = formatTranscript(transcript);
+  const intentText = intentLog
+    .map((i) => `[INTENT:${i.intent}] "${i.studentText}"`)
+    .join('\n');
 
-  // Base scores
-  const QC = Math.min(100, transcriptLines * 3); // More questions = higher QC
-  const CC = Math.min(100, transcriptLines * 2); // More data = higher CC
-  const CD = hasCorrectDiagnosis ? 80 : 40;
-  const RC = 70; // Mock relevance
-  const LC = 75; // Mock consistency
-  const LN = 80; // Mock naturality
-  const CS = 85; // Mock safety
-  const PD = 75; // Mock professionalism
+  return `Evaluate this OSCE session using the SPBench 8-dimension rubric.
 
-  // Weighted average (QC and CC weighted higher at 15% each)
-  const overallScore =
-    QC * 0.15 +
-    CC * 0.15 +
-    CD * 0.15 +
-    RC * 0.1 +
-    LC * 0.15 +
-    LN * 0.1 +
-    CS * 0.1 +
-    PD * 0.1;
+Session transcript:
+${transcriptText}
 
-  return {
-    QC,
-    CC,
-    CD,
-    RC,
-    LC,
-    LN,
-    CS,
-    PD,
-    overallScore: Math.round(overallScore),
-    justification: 'Session evaluation complete. Good history taking and case coverage.',
-  };
+Clinical intents explored:
+${intentText}
+
+Student's submitted diagnosis: ${studentDiagnosis}
+Correct answer: ${correctDiagnosis}
+
+Return JSON with 8 SPBench dimension scores (0-100 each), an overall weighted score, and a justification.`;
 }

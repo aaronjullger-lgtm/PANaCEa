@@ -31,6 +31,7 @@ import type {
   OrderCategory,
 } from '@/types/osce-enhanced';
 import { SkeletonText } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface OrderPanelProps {
   isOpen: boolean;
@@ -104,10 +105,11 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
           if (!response.ok) {
             throw new Error(`Order catalog unavailable (HTTP ${response.status})`);
           }
-          const data = (await response.json()) as {
+          const json = await response.json();
+          const data = unwrapApiEnvelope<{
             items?: OrderableItemWithMeta[];
             bundles?: OrderBundle[];
-          };
+          }>(json);
           setOrderableItems(data.items || []);
           setBundles(data.bundles || []);
         } catch (error) {

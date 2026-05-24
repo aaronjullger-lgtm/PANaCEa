@@ -20,11 +20,7 @@ const OSCECompleteBodySchema = z.object({
     sessionId: IDSchema,
     diagnosis: z.string().max(2000).optional(),
     treatmentPlan: z.string().max(5000).optional(),
-    // NEW: Optional analytics data from Module 4
-    soapComparison: z.record(z.string(), z.unknown()).optional(),
-    timingAnalytics: z.record(z.string(), z.unknown()).optional(),
-    infographics: z.array(z.string()).optional(),
-    // OSCE telemetry from useOSCEMetrics hook
+    // OSCE telemetry from useOSCEMetrics hook (replaces removed CaseFile model)
     osceTelemetry: z.object({
       totalTimeMs: z.number().optional(),
       clinicalConfidenceIndex: z.number().min(1).max(4).optional(),
@@ -51,7 +47,7 @@ export const onRequestPost = authenticatedEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
-      const { sessionId, diagnosis, treatmentPlan, soapComparison, timingAnalytics, infographics, osceTelemetry } =
+      const { sessionId, diagnosis, treatmentPlan, osceTelemetry } =
         validated.body;
       log.info('Completing OSCE session', { sessionId });
 

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { History, TrendingUp, Award, MessageSquare, AlertTriangle, Stethoscope } from 'lucide-react';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface StatsData {
   totalEncounters: number;
@@ -58,12 +59,9 @@ const OSCEHistoryPanel: React.FC<OSCEHistoryPanelProps> = ({
         // Middleware strips `{ data: ... }` at the HTTP layer, so stats
         // live at the top level. Prior code read `json.data`, which was
         // always undefined — the OSCE history panel showed "no data" for
-        // every user. Accept both shapes defensively.
+        // every user. unwrapApiEnvelope() handles both shapes defensively.
         const json: any = await response.json();
-        const payload =
-          json && typeof json === 'object' && 'totalEncounters' in json
-            ? json
-            : json?.data ?? null;
+        const payload = unwrapApiEnvelope(json);
         setStats(payload);
         setError(null);
       } catch (err) {

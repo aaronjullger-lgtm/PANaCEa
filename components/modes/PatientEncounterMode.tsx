@@ -66,6 +66,7 @@ import {
 } from '@/services/domain';
 import type { OsceGradeResult, OSCETelemetryPayload } from '@/services/domain';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import { toast } from '@/lib/toast';
 import {
   chatWithPatientSimulator,
@@ -247,7 +248,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         });
         if (!res.ok) return;
         const json: any = await res.json();
-        const d = json.data ?? json;
+        const d = unwrapApiEnvelope(json);
         if (d && typeof d.totalEncounters === 'number') {
           setOsceStats({
             totalEncounters: d.totalEncounters,

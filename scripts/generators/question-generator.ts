@@ -262,6 +262,30 @@ async function generateQuestion(
       }
     }
 
+    // Gate 4: Cross-reference — does whyCorrect reference specific vignette findings?
+    const whyCorrectLower = r.whyCorrect.toLowerCase();
+    const STOP_WORDS = new Set([
+      'a', 'an', 'the', 'is', 'are', 'was', 'were', 'this', 'that', 'with', 'for',
+      'and', 'or', 'but', 'in', 'on', 'at', 'to', 'of', 'from', 'by', 'as', 'be',
+      'has', 'have', 'had', 'not', 'no', 'his', 'her', 'she', 'he', 'it', 'its',
+      'patient', 'presents', 'presenting', 'year', 'old', 'man', 'woman', 'male',
+      'female', 'day', 'days', 'week', 'weeks', 'month', 'months', 'history',
+      'which', 'who', 'what', 'when', 'where', 'can', 'may', 'will', 'would',
+      'should', 'could', 'the', 'been',
+    ]);
+    const vignetteTerms = new Set(
+      vignetteLower
+        .split(/[^a-z0-9]+/)
+        .filter(t => t.length >= 4 && !STOP_WORDS.has(t))
+    );
+    const whyCorrectTerms = whyCorrectLower.split(/[^a-z0-9]+/);
+    const matchedTerms = [...vignetteTerms].filter(t => whyCorrectTerms.includes(t));
+    if (matchedTerms.length < 2 && retryCount === 0) {
+      throw new Error(
+        `whyCorrect doesn't reference enough vignette findings (matched: ${matchedTerms.length}) — cite specific clues`
+      );
+    }
+
     return {
       ...parsed,
       system: condition.system,

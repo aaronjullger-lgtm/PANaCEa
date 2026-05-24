@@ -21,6 +21,7 @@ import { MiniModeLayout, MiniModeHeader, MiniModeCard } from './MiniModeLayout';
 import { useTheme } from '@/hooks/useTheme';
 import { submitDrillResult } from '@/services/core';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface FluidElectrolyteModeProps {
   onExit?: () => void;
@@ -95,7 +96,8 @@ const fetchFluidCase = async (): Promise<FluidElectrolyteCase | null> => {
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
-    const data = (await response.json()) as { cases?: FluidElectrolyteCase[] };
+    const json = await response.json();
+    const data = unwrapApiEnvelope<{ cases?: FluidElectrolyteCase[] }>(json);
     if (!data.cases || data.cases.length === 0) {
       throw new Error('No cases returned from API');
     }

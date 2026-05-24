@@ -92,6 +92,11 @@ Resolve with: `npx prisma migrate resolve --applied <dir>`
 
 | Date | Command | Result | Notes |
 |------|---------|--------|-------|
+| 2026-05-23 | `test:critical` | PASS | 6 files, 143 tests |
+| 2026-05-23 | `tests/fsrsSingleWriter` | PASS | 6 tests (hardened from 1) |
+| 2026-05-23 | `tests/drillReviewService` | PASS | 17 tests |
+| 2026-05-23 | `lib/services/session/sessionService` | PASS | 9 tests (known benign stderr) |
+| 2026-05-23 | E2E smoke gap fix | DONE | 5 uncovered drill types added to all-modes.spec.ts |
 | 2026-05-22 | `audit-skills.sh` | PASS | 44 skills, 0 errors, 0 warnings |
 | 2026-04-17 | Orphan FK probe | PASS | 0 orphans across all targeted tables |
 | 2026-03-31 | syncManager auth fix | FIXED | Token provider pattern added |

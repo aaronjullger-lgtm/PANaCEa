@@ -17,7 +17,7 @@ export { MobileMenuToggle } from './MobileMenuToggle';
 
 // Panel Components
 export { RecentConditionsPanel } from './RecentConditionsPanel';
-export { BookmarksPanel } from './BookmarksPanel';
+export { BookmarksPanel } from './LibraryBookmarksPanel';
 
 // Card Components
 export { EnhancedConditionCard } from './EnhancedConditionCard';

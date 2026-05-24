@@ -21,6 +21,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
+import { unwrapApiEnvelope, getApiEnvelopeError } from '@/lib/utils/apiEnvelope';
 
 interface CodeBlueSpeedModeProps {
   onExit?: () => void;
@@ -49,13 +50,12 @@ async function fetchCodeBlueQuestions(count: number = 10): Promise<CodeBlueQuest
     const response = await fetch(`/api/drills/code-blue?count=${count}`);
 
     if (!response.ok) {
-      const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
-        error?: string;
-      };
-      throw new Error(errorData.error || `API request failed: ${response.status}`);
+      const errorJson = await response.json().catch(() => ({}));
+      throw new Error(getApiEnvelopeError(errorJson, `API request failed: ${response.status}`));
     }
 
-    const questions = (await response.json()) as CodeBlueQuestion[];
+    const json = await response.json();
+    const questions = unwrapApiEnvelope<CodeBlueQuestion[]>(json);
 
     if (!Array.isArray(questions) || questions.length === 0) {
       throw new Error('No Code Blue questions available');

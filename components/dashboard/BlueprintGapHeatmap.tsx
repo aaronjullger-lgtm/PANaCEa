@@ -289,7 +289,7 @@ export function BlueprintGapHeatmap({
                   {' '}({sys.accuracy}% acc
                   {sys.totalAttempts > 0 &&
                     sys.totalAttempts < MIN_ATTEMPTS_FOR_ACCURACY_COLOR && (
-                    <span style={{ color: '#d1d5db' }}> · provisional, n&lt;{MIN_ATTEMPTS_FOR_ACCURACY_COLOR}</span>
+                    <span style={{ color: 'var(--color-text-muted)' }}> · provisional, n&lt;{MIN_ATTEMPTS_FOR_ACCURACY_COLOR}</span>
                   )}
                   ) · Target {sys.targetPercent}% · Actual {sys.actualPercent}% · {gapLabel(sys.gapPercent)}
                 </div>

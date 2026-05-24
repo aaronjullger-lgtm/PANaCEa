@@ -583,7 +583,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           <h2
             className="text-xl md:text-2xl font-semibold"
             style={{
-              background: 'linear-gradient(135deg, #c4b78a 0%, #e6d9b5 100%)',
+              background: 'linear-gradient(135deg, var(--color-category-specialty) 0%, color-mix(in srgb, var(--color-category-specialty) 80%, white) 100%)',
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -633,7 +633,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         >
           <h3
             className="text-xs font-semibold uppercase mb-3 px-2"
-            style={{ color: '#c4b78a', letterSpacing: '0.08em', opacity: 0.7 }}
+            style={{ color: 'var(--color-category-specialty)', letterSpacing: '0.08em', opacity: 0.7 }}
           >
             Categories
           </h3>
@@ -647,9 +647,9 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
               }`}
               style={activeSection === section.key ? {
-                background: 'color-mix(in srgb, #c4b78a 12%, var(--color-bg-secondary))',
-                border: '1px solid color-mix(in srgb, #c4b78a 24%, transparent)',
-                boxShadow: '0 0 8px color-mix(in srgb, #c4b78a 16%, transparent)',
+                background: 'color-mix(in srgb, var(--color-category-specialty) 12%, var(--color-bg-secondary))',
+                border: '1px solid color-mix(in srgb, var(--color-category-specialty) 24%, transparent)',
+                boxShadow: '0 0 8px color-mix(in srgb, var(--color-category-specialty) 16%, transparent)',
               } : {
                 border: '1px solid transparent',
               }}

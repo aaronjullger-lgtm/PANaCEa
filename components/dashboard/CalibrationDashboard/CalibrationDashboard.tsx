@@ -137,13 +137,13 @@ const DirectionBadge = React.memo(function DirectionBadge({ direction }: { direc
     overconfident: {
       label: 'Overconfident',
       icon: TrendingUp,
-      color: '#ef4444',
+      color: 'var(--color-data-fail)',
       bg: 'rgba(239, 68, 68, 0.1)',
     },
     underconfident: {
       label: 'Underconfident',
       icon: TrendingDown,
-      color: '#3b82f6',
+      color: 'var(--color-accent)',
       bg: 'rgba(59, 130, 246, 0.1)',
     },
     calibrated: {
@@ -327,7 +327,7 @@ export default function CalibrationDashboard() {
       <div style={{
         padding: 24,
         textAlign: 'center',
-        color: '#ef4444',
+        color: 'var(--color-data-fail)',
         fontFamily: FONT_BODY,
       }}>
         <AlertTriangle size={32} style={{ marginBottom: 8 }} />
@@ -394,13 +394,13 @@ export default function CalibrationDashboard() {
     ? 'var(--color-data-pass)'
     : data.fsrs.brierScore < 0.25
       ? 'var(--color-data-provisional)'
-      : '#ef4444';
+      : 'var(--color-data-fail)';
 
   const eceColor = data.fsrs.ece < 0.05
     ? 'var(--color-data-pass)'
     : data.fsrs.ece < 0.1
       ? 'var(--color-data-provisional)'
-      : '#ef4444';
+      : 'var(--color-data-fail)';
 
   return (
     <div style={{
@@ -463,7 +463,7 @@ export default function CalibrationDashboard() {
           icon={data.fsrs.direction === 'overconfident' ? TrendingUp :
             data.fsrs.direction === 'underconfident' ? TrendingDown : Target}
           color={data.fsrs.direction === 'calibrated' ? 'var(--color-data-pass)' :
-            data.fsrs.direction === 'overconfident' ? '#ef4444' : '#3b82f6'}
+            data.fsrs.direction === 'overconfident' ? 'var(--color-data-fail)' : 'var(--color-accent)'}
         />
       </div>
 
@@ -495,7 +495,7 @@ export default function CalibrationDashboard() {
           <ReliabilityDiagram
             bins={data.metacognitive.reliabilityBins}
             title="Metacognitive Calibration"
-            accentColor="#8b5cf6"
+            accentColor="var(--color-accent)"
           />
         </div>
       </div>

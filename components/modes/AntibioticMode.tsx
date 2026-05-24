@@ -25,6 +25,7 @@ import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { toTitleCase } from '@/lib/textUtils';
 import { submitDrillResult } from '@/services/core';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface AntibioticModeProps {
   onExit?: () => void;
@@ -127,7 +128,8 @@ const fetchAntibioticGuidelines = async (): Promise<AntibioticGuideline[]> => {
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
-    const data = (await response.json()) as { guidelines?: AntibioticGuideline[] };
+    const json = await response.json();
+    const data = unwrapApiEnvelope<{ guidelines?: AntibioticGuideline[] }>(json);
     return data.guidelines || [];
   } catch (error) {
     console.error('Failed to fetch antibiotic guidelines:', error);

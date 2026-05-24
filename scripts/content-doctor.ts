@@ -992,10 +992,13 @@ Return ONLY a JSON object:
 }
 
 Requirements:
-- Each pearl should be a complete sentence
+- Each pearl should be a complete sentence with BOTH a clinical fact AND the reasoning
 - Focus on diagnostic pitfalls, treatment pearls, or test-taking strategies
 - Must be clinically accurate and PANCE-relevant
 - 3-5 pearls per condition
+- CRITICAL: Every pearl must include the rationale — why this matters clinically.
+  BAD: "ACE inhibitors are first-line for heart failure."
+  GOOD: "ACE inhibitors are first-line for heart failure because they reduce mortality and hospitalizations by blocking maladaptive RAAS activation."
 
 Return ONLY valid JSON, no markdown.`,
   };

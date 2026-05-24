@@ -861,7 +861,7 @@ export class SessionService {
 
     let contentMap: Map<string, any>;
     try {
-      contentMap = await this.contentService.getConditionsContent(conditionIds);
+      contentMap = await this.contentService?.getConditionsContent(conditionIds) ?? new Map();
     } catch (error) {
       logger.error(`[${LOG_SCOPE}] Failed to enrich with medical content`, { error });
       // Return original questions without enrichment

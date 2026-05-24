@@ -1,36 +1,27 @@
 # Current Mission
 
-**Last Updated:** 2026-05-23 19:50 EDT
+**Last Updated:** 2026-05-23 19:45 EDT
 **Coordinator:** panacea-syncytium-coordinator
 
 ## Active Priority
 
-**Task:** Wave 2 autonomous improvement — audit findings acted upon
-**Status:** 3 agents dispatched on hygiene/cleanup tasks
+**Task:** Agent ecosystem stable — coordinating first specialist dispatches
+**Assigned To:** None (standby)
+**Status:** Infrastructure complete, ready for production work
 
 ## Priority Queue
 
-1. ✅ Wave 1 agents completed: FSRS audit, session audit, hygiene audit (all clean)
-2. ✅ Sub-agents completed: API-envelope callers + PatientEncounterMode decomposition
-3. ✅ Dead migration proposals removed, auto-sync drain wired
-4. 🔄 Wave 2: dead file removal, API-envelope modes/ migration, hex→CSS var migration
-5. Dispatch additional agents for: Drill modes audit, Study plan analytics, Question identity verification
+1. PatientEncounterMode decomposition (2,848→target sub-components) — largest single-file monolith
+2. Source identity migration (P0 — needs Aaron approval for schema changes)
+3. Runtime smoke tests (P0 — blocked on Clerk E2E credentials)
+4. Atomic durable writes (P1 — drillReviewService transaction wrapping)
+5. Design token adoption tracking (P2 — ongoing hex→CSS var migration)
 
 ## Blockers
 
-- **P0:** Clerk E2E auth (backend API path installed, needs CLERK_SECRET_KEY in env)
-- **P2:** Full typecheck OOM-unstable — documented limitation
-
-## Recent Agent Output
-
-| Agent | Result |
-|-------|--------|
-| fsrs-scheduler-integrity | FSRS gates verified, 87/87 tests pass |
-| core-adaptive-session-runtime | Pipeline healthy, 40/40 tests pass |
-| repo-hygiene-and-duplicate-path | 8 dead files, 1 name collision, clean loading |
-| panacea-session-pipeline (sub) | PatientEncounterMode 3,413→2,848 |
-| panacea-repo-hygiene (sub) | API-envelope unwrapping in learner components |
+- **P0:** Clerk E2E auth (no safe non-2FA test user) — blocks browser-level core-flow smoke
+- **P0:** Identity migration needs explicit Aaron approval (schema changes)
 
 ## Next Action
 
-Wait for Wave 2 completions, then dispatch clinical/stats agents.
+Await Aaron direction on which P1/P2 task to attack first, or dispatch PatientEncounterMode decomposition sub-agent.

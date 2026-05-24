@@ -2,7 +2,7 @@
  * BookmarksPanel - Displays bookmarked questions (To Review / MenuView)
  *
  * Shows user's bookmarked questions with search and tag filters.
- * For condition bookmarks (library), use components/library/BookmarksPanel.
+ * For condition bookmarks (library), use components/library/LibraryBookmarksPanel.
  */
 
 import React, { useState, useMemo } from 'react';

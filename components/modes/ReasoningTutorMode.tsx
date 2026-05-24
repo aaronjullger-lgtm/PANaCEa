@@ -3,6 +3,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Send, X, ShieldCheck, Sparkles, Search } from 'lucide-react';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope, getApiEnvelopeError } from '@/lib/utils/apiEnvelope';
 
 type ChatRole = 'user' | 'model';
 
@@ -97,26 +98,26 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
       // sessionCacheName, and groundingSources live at the top level of the
       // parsed body. The old code read `json.data.reply`, which was always
       // undefined, so every tutor response surfaced as "empty response"
-      // error to the student. Accept both shapes defensively.
-      const json = (await response.json()) as {
-        error?: string;
-        reply?: string;
-        sessionCacheName?: string;
-        groundingSources?: GroundingSource[];
-        data?: { reply?: string; sessionCacheName?: string; groundingSources?: GroundingSource[] };
-      };
+      // error to the student. unwrapApiEnvelope() handles both shapes
+      // defensively.
+      const json = await response.json();
 
       if (!response.ok) {
-        const message = json?.error || 'Tutor failed to respond. Please try again.';
+        const message = getApiEnvelopeError(json, 'Tutor failed to respond. Please try again.');
         setError(message);
         setIsLoading(false);
         return;
       }
 
-      const replyText: string | undefined = json?.reply ?? json?.data?.reply;
-      const newCacheName: string | undefined = json?.sessionCacheName ?? json?.data?.sessionCacheName;
-      const groundingSources: GroundingSource[] | undefined =
-        json?.groundingSources ?? json?.data?.groundingSources;
+      const data = unwrapApiEnvelope<{
+        reply?: string;
+        sessionCacheName?: string;
+        groundingSources?: GroundingSource[];
+      }>(json);
+
+      const replyText = data.reply;
+      const newCacheName = data.sessionCacheName;
+      const groundingSources = data.groundingSources;
 
       if (newCacheName) {
         setSessionCacheName(newCacheName);

@@ -3,6 +3,7 @@ import { DdxProblem } from '../../functions/api/ddx/generate';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint, API_ENDPOINTS } from '../../lib/utils/apiConfig';
 import { toast } from 'sonner';
+import { unwrapApiEnvelope } from '../../lib/utils/apiEnvelope';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Loader } from '../loading';
@@ -24,7 +25,8 @@ const DdxTrainer = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Failed to fetch new DDx problem.');
-      const data = (await response.json()) as DdxProblem;
+      const json = await response.json();
+      const data = unwrapApiEnvelope<DdxProblem>(json);
       setProblem(data);
     } catch (error) {
       console.error('[DdxTrainer] fetch error:', error);

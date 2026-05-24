@@ -289,6 +289,42 @@ export const BEHAVIOR_GRADE_DESCRIPTION = `{
 }
 Return ONLY this JSON object — no markdown, no code fence, no prose.`;
 
+// ─── SPBench OSCE evaluation (8-dimension rubric) ────────────────────────
+
+/**
+ * SPBench 8-dimension rubric for post-hoc OSCE session evaluation.
+ * Used by /api/osce/evaluate — scores are 0-100 per dimension,
+ * overallScore is the weighted average (QC×0.15 + CC×0.15 + CD×0.15
+ * + RC×0.10 + LC×0.15 + LN×0.10 + CS×0.10 + PD×0.10).
+ */
+export const SpbenchScoreSchema = z.object({
+  QC: z.number().min(0).max(100), // Query Competence
+  CC: z.number().min(0).max(100), // Case Coverage
+  CD: z.number().min(0).max(100), // Clinical Depth
+  RC: z.number().min(0).max(100), // Relevance Check
+  LC: z.number().min(0).max(100), // Logical Consistency
+  LN: z.number().min(0).max(100), // Language Naturality
+  CS: z.number().min(0).max(100), // Clinical Safety
+  PD: z.number().min(0).max(100), // Professional Demeanor
+  overallScore: z.number().min(0).max(100),
+  justification: z.string().min(10).max(2000),
+});
+export type SpbenchScore = z.infer<typeof SpbenchScoreSchema>;
+
+export const SPBENCH_SCORE_DESCRIPTION = `{
+  "QC": number 0-100,
+  "CC": number 0-100,
+  "CD": number 0-100,
+  "RC": number 0-100,
+  "LC": number 0-100,
+  "LN": number 0-100,
+  "CS": number 0-100,
+  "PD": number 0-100,
+  "overallScore": number 0-100 (weighted: QC×0.15+CC×0.15+CD×0.15+RC×0.10+LC×0.15+LN×0.10+CS×0.10+PD×0.10),
+  "justification": "<2-4 sentence summary of the evaluation>"
+}
+Return ONLY this JSON object — no markdown, no code fence, no prose.`;
+
 // ─── Vision / spatial grading (e.g. anatomy identification) ───────────────
 
 export const VisionGradeSchema = z.object({

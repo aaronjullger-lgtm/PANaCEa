@@ -25,6 +25,7 @@ import { geminiService } from '@/services/ai';
 import { GEMINI_FLASH_MODEL } from "@/config/topic-map";
 import { EmptyState } from '@/components/ui/EmptyState';
 import { DrillLoadingState, InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope, getApiEnvelopeError } from '@/lib/utils/apiEnvelope';
 
 /**
  * HighYieldCondition interface - matches database API response
@@ -189,11 +190,12 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
         const response = await fetch('/api/conditions/high-yield?limit=50&random=true');
 
         if (!response.ok) {
-          const errorData = (await response.json().catch(() => ({}))) as { error?: string };
-          throw new Error(errorData.error || `Failed to fetch conditions: ${response.status}`);
+          const errorJson = await response.json().catch(() => ({}));
+          throw new Error(getApiEnvelopeError(errorJson, `Failed to fetch conditions: ${response.status}`));
         }
 
-        const data = (await response.json()) as { conditions?: HighYieldCondition[] };
+        const json = await response.json();
+        const data = unwrapApiEnvelope<{ conditions?: HighYieldCondition[] }>(json);
 
         if (!data.conditions || data.conditions.length === 0) {
           throw new Error('No high-yield conditions found in database');

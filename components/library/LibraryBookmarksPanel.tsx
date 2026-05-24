@@ -1,5 +1,5 @@
 /**
- * BookmarksPanel - Displays bookmarked conditions (library / condition reference)
+ * LibraryBookmarksPanel - Displays bookmarked conditions (library / condition reference)
  *
  * Shows user's bookmarked conditions from Clinical Reference Library with optional notes.
  * For question bookmarks (To Review / MenuView), use components/panels/BookmarksPanel.
