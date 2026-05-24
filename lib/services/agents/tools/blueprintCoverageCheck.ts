@@ -90,7 +90,7 @@ export const blueprintCoverageCheckTool = defineTool<
 
     // Get total pool size for target calculation
     const totalPoolSize = await prisma.question.count({
-      where: { lifecycleStatus: 'active' },
+      where: { lifecycleStatus: 'ACTIVE' },
     });
 
     const results: SystemCoverage[] = [];
@@ -100,7 +100,7 @@ export const blueprintCoverageCheckTool = defineTool<
 
       const where: Record<string, unknown> = {
         system: sys,
-        lifecycleStatus: 'active',
+        lifecycleStatus: 'ACTIVE',
       };
       if (minScore > 0) {
         where.contentHealthScore = { gte: minScore };

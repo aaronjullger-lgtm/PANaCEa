@@ -110,7 +110,7 @@ export const contentHealthAuditTool = defineTool<
     const threshold = input.healthThreshold ?? 0.5;
     const limit = input.limit ?? 20;
 
-    const baseWhere: Record<string, unknown> = { lifecycleStatus: 'active' };
+    const baseWhere: Record<string, unknown> = { lifecycleStatus: 'ACTIVE' };
     if (input.system) baseWhere.system = input.system;
 
     const totalQuestions = await prisma.question.count({ where: baseWhere });

@@ -9,34 +9,40 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import { writeFileSync, readFileSync } from 'fs';
 import { join } from 'path';
 
-// Load .env for DATABASE_URL (Prisma 7+ requires explicit config in Node.js)
+// Load .env
 function loadEnv(): Record<string, string> {
-  const envPath = join(process.cwd(), '.env');
   const env: Record<string, string> = {};
   try {
-    const content = readFileSync(envPath, 'utf-8');
+    const content = readFileSync(join(process.cwd(), '.env'), 'utf-8');
     for (const line of content.split('\n')) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith('#')) continue;
       const eq = trimmed.indexOf('=');
       if (eq === -1) continue;
-      const key = trimmed.slice(0, eq).trim();
-      const value = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
-      env[key] = value;
-      process.env[key] = value;
+      env[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
     }
   } catch { /* ignore */ }
   return env;
 }
 
-const env = loadEnv();
+const envVars = loadEnv();
 
 // Dynamic imports for tools
 async function run() {
-  const prisma = new PrismaClient();
+  const directUrl = envVars.DIRECT_DATABASE_URL || envVars.DATABASE_URL;
+  if (!directUrl) {
+    console.error('DATABASE_URL not found in .env');
+    process.exit(1);
+  }
+
+  const pool = new Pool({ connectionString: directUrl });
+  const adapter = new PrismaPg(pool);
+  const prisma = new PrismaClient({ adapter } as any);
   const ctx = { prisma, userId: 'health-report-script', env: {} };
 
   const [
