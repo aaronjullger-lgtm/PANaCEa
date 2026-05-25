@@ -67,14 +67,14 @@ export async function storeSoapGradingEvent(
 
   // Best-effort sync to backend (non-blocking for the UI caller)
   try {
-    void fetch('/api/analytics/soap-note', {
+    fetch('/api/analytics/soap-note', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(event),
     }).catch((err) => {
-      console.debug('[soapAnalyticsService] Backend sync failed, data stored locally', err);
+      logger.debug(`[${LOG_SCOPE}] Backend sync failed, data stored locally`, { err });
     });
   } catch (err) {
-    console.debug('[soapAnalyticsService] fetch unavailable, relying on local storage', err);
+    logger.debug(`[${LOG_SCOPE}] fetch unavailable, relying on local storage`, { err });
   }
 }

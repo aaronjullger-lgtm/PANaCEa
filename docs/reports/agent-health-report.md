@@ -11,21 +11,8 @@ Invalid `prisma.question.count()` invocation in
   89   : Object.keys(NCCPA_2025_BLUEPRINT);
   90 
   91 // Get total pool size for target calculation
-→ 92 const totalPoolSize = await prisma.question.count({
-       select: {
-         _count: {
-           select: {
-             _all: true
-           }
-         }
-       },
-       where: {
-         lifecycleStatus: "active"
-                          ~~~~~~~~
-       }
-     })
-
-Invalid value for argument `lifecycleStatus`. Expected QuestionLifecycleStatus.
+→ 92 const totalPoolSize = await prisma.question.count(
+Error opening a TLS connection: self-signed certificate in certificate chain
 
 ## 2. Content Health
 
@@ -33,41 +20,28 @@ Invalid value for argument `lifecycleStatus`. Expected QuestionLifecycleStatus.
 Invalid `prisma.question.count()` invocation in
 /Users/aaronullger/GitHub/StudyPANaCEa/lib/services/agents/tools/contentHealthAudit.ts:116:50
 
-  113 const baseWhere: Record<string, unknown> = { lifecycleStatus: 'active' };
+  113 const baseWhere: Record<string, unknown> = { lifecycleStatus: 'ACTIVE' };
   114 if (input.system) baseWhere.system = input.system;
   115 
-→ 116 const totalQuestions = await prisma.question.count({
-        select: {
-          _count: {
-            select: {
-              _all: true
-            }
-          }
-        },
-        where: {
-          lifecycleStatus: "active"
-                           ~~~~~~~~
-        }
-      })
-
-Invalid value for argument `lifecycleStatus`. Expected QuestionLifecycleStatus.
+→ 116 const totalQuestions = await prisma.question.count(
+Error opening a TLS connection: self-signed certificate in certificate chain
 
 ## 3. Database Integrity
 
 **Status:** 🟢 healthy
 **Total orphans:** 0
-**Checked at:** 2026-05-24T00:08:40.915Z
+**Checked at:** 2026-05-24T00:10:39.555Z
 
 | Table | FK Column | References | Orphans | Status |
 |-------|-----------|-----------|---------|--------|
-| QuestionAttempt | userId | User.id | error | 🟡 warning |
-| ReviewLog | conditionId | Condition.id | error | 🟡 warning |
-| Card | questionId | Question.id | error | 🟡 warning |
-| StudentReservoirItem | userId | User.id | error | 🟡 warning |
-| StudentReservoirItem | questionId | Question.id | error | 🟡 warning |
-| ItemDifficulty | cardId | Card.id | error | 🟡 warning |
+| questionAttempt | userId | user.id | error | 🟡 warning |
+| reviewLog | conditionId | condition.id | error | 🟡 warning |
+| card | questionId | question.id | error | 🟡 warning |
+| studentReservoirItem | userId | user.id | error | 🟡 warning |
+| studentReservoirItem | questionId | question.id | error | 🟡 warning |
+| itemDifficulty | cardId | card.id | error | 🟡 warning |
 
-**Elapsed:** 1.5s
+**Elapsed:** 0.3s
 
 ## 4. FSRS Calibration
 
@@ -78,46 +52,5 @@ Invalid `prisma.userProgress.count()` invocation in
   92   baseWhere.userId = input.userId;
   93 }
   94 
-→ 95 const totalActiveCards = await prisma.userProgress.count({
-       select: {
-         _count: {
-           select: {
-             _all: true
-           }
-         }
-       },
-       where: {
-         stability: {
-         ~~~~~~~~~
-           gt: 0
-         },
-     ?   AND?: UserProgressWhereInput | UserProgressWhereInput[],
-     ?   OR?: UserProgressWhereInput[],
-     ?   NOT?: UserProgressWhereInput | UserProgressWhereInput[],
-     ?   id?: StringFilter | String,
-     ?   userId?: StringFilter | String,
-     ?   conditionId?: StringFilter | String,
-     ?   progressContext?: EnumProgressContextFilter | ProgressContext,
-     ?   fsrsCard?: JsonNullableFilter,
-     ?   fsrsParams?: JsonNullableFilter,
-     ?   reviewHistory?: JsonNullableListFilter,
-     ?   totalAttempts?: IntFilter | Int,
-     ?   correctCount?: IntFilter | Int,
-     ?   accuracy?: FloatFilter | Float,
-     ?   lastReviewAt?: DateTimeNullableFilter | DateTime | Null,
-     ?   nextReviewAt?: DateTimeNullableFilter | DateTime | Null,
-     ?   createdAt?: DateTimeFilter | DateTime,
-     ?   updatedAt?: DateTimeFilter | DateTime,
-     ?   system?: StringNullableFilter | String | Null,
-     ?   fsrsStability?: FloatNullableFilter | Float | Null,
-     ?   fsrsDifficulty?: FloatNullableFilter | Float | Null,
-     ?   fsrsState?: IntNullableFilter | Int | Null,
-     ?   fsrsReps?: IntNullableFilter | Int | Null,
-     ?   lastImplicitCredit?: DateTimeNullableFilter | DateTime | Null,
-     ?   implicitCreditSource?: StringNullableFilter | String | Null,
-     ?   MedicalContent?: MedicalContentScalarRelationFilter | MedicalContentWhereInput,
-     ?   User?: UserScalarRelationFilter | UserWhereInput
-       }
-     })
-
-Unknown argument `stability`. Available options are marked with ?.
+→ 95 const totalActiveCards = await prisma.userProgress.count(
+Error opening a TLS connection: self-signed certificate in certificate chain

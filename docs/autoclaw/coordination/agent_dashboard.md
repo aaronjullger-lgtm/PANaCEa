@@ -1,6 +1,6 @@
 # Agent Completion Dashboard
 
-Last updated: 2026-05-22
+Last updated: 2026-05-24
 
 ## Active Agents
 
@@ -49,14 +49,16 @@ Legend: ░ = no activity, ▓ = light use, █ = heavy use
 
 - **Total agents:** 20 PANaCEa-specific
 - **Total skills:** 44
-- **Tasks dispatched:** 0
-- **Tasks completed:** 1 (coordinator initialization)
-- **Tests added by agents:** 0
-- **Regressions caught:** 0
-- **Cron jobs active:** 14
-- **Verification gate:** scripts/agent-verify.sh
+- **Total handoffs:** 0
+- **Verification runs:** 0
+- **Active file claims:** 0
+- **Risks:** 4 critical, 3 high
 
-## Today's Progress (May 22)
+## Today's Progress (May 24)
+- ✅ Weekly agent activity report ran — no new handoffs, 0 verification runs, 0 active file claims
+- ⚠️ 4 critical risks, 3 high risks outstanding (no change from prior week)
+
+## Previous Progress (May 22)
 - ✅ 14 cron jobs configured (daily health, morning/evening status, 6 weekly scans, self-reflection, memory maintenance, learning capture, retrospective)
 - ✅ Agent dependency graph documented
 - ✅ Agent verification gate script created

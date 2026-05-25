@@ -4,6 +4,7 @@
  */
 
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import type { PatientEncounterCase, PatientQuestion } from '@/types/drill-modes';
 
 export interface OSCESession {
@@ -272,8 +273,10 @@ export async function getSessionHistory(
 
     if (!response.ok) return null;
 
-    const data: any = await response.json();
-    return data.history || [];
+    const json: any = await response.json();
+    // API returns { ok: true, data: { history } } — handle both wrapped and unwrapped shapes
+    const data = unwrapApiEnvelope<{ history?: Array<any> }>(json);
+    return data?.history ?? json?.history ?? [];
   } catch (error) {
     console.error('Error fetching session history:', error);
     return null;
