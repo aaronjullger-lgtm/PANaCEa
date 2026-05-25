@@ -51,7 +51,7 @@ Operational notes for the most-used PANaCEa agents. How to invoke, what tools th
 ```bash
 cd /Users/aaronullger/GitHub/StudyPANaCEa
 npm test                          # Baseline: all passing?
-NODE_OPTIONS="--max-old-space-size=4096" npx tsc --noEmit  # Typecheck
+npm run typecheck                 # Uses tsconfig.production.json (no OOM flag needed)
 ```
 
 ### Sprint Pattern
@@ -297,7 +297,7 @@ lib/constants/pa-curriculum.ts        # 12 courses, 10 rotations
 ### Verification
 ```bash
 # After generation:
-npm test -- --reporter=verbose tests/questionGeneration
+npx vitest run tests/questionGeneration.test.ts --reporter=verbose
 npx vitest run functions/api/questions --reporter=verbose
 ```
 

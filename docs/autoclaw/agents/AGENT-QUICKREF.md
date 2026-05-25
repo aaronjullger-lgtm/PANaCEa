@@ -20,9 +20,12 @@
 | **Performance** | Slow/big/suspicious |
 | **Orchestrator** | Any non-trivial task |
 
-## Specialist Agents (20)
+## Specialist Agents (23)
 | Domain | Agent | Trigger |
 |--------|-------|---------|
+| Coordination | syncytium-coordinator | Multi-agent mission routing |
+| Coordination | navigator | Codebase navigation/file discovery |
+| Coordination | autonomy-skillsmith-agent | Skill/workflow creation |
 | Content | question-generation | "generate questions" |
 | Content | clinical-content-auditor | "audit content quality" |
 | Content | content-refinery | "ingest PDF/media" |
@@ -60,7 +63,7 @@ Infra:    database_integrity_check, fsrs_calibration_status
 ## Verification Chain
 ```bash
 npm test                          # Full suite: 0 failures required
-npm run typecheck                 # NODE_OPTIONS="--max-old-space-size=4096"
+npm run typecheck                 # Uses tsconfig.production.json
 npm run build                     # Production build: must pass
 ```
 

@@ -8,6 +8,9 @@ Last updated: 2026-05-24
 |-------|----------------|-------------|-------------------|-------------|
 | autonomy-skillsmith-agent | 3 | — | — | May 23 |
 | panacea-syncytium-coordinator | 1 | — | — | May 22 |
+| panacea-navigator | 0 | — | — | — |
+| panacea-medical-verifier | 0 | — | — | — |
+| panacea-blueprint-coverage | 0 | — | — | — |
 | panacea-clinical-content-auditor | 0 | — | — | — |
 | panacea-question-generation | 0 | — | — | — |
 | panacea-regression-guard | 0 | — | — | — |
@@ -47,7 +50,7 @@ Legend: ░ = no activity, ▓ = light use, █ = heavy use
 
 ## Metrics
 
-- **Total agents:** 20 PANaCEa-specific
+- **Total agents:** 23 PANaCEa-specific
 - **Total skills:** 44
 - **Total handoffs:** 0
 - **Verification runs:** 0

@@ -37,52 +37,60 @@ Orchestrator → Scout → Architect → Builder → Reviewer → QA → Done
 
 ## Specialist Agents (Domain-Specific)
 
-20 PANaCEa-domain agents for deep expertise. Invoke by name or task domain.
+23 PANaCEa-domain agents for deep expertise. Invoke by name or task domain.
+
+### Coordination & Meta-Agents (3 agents)
+
+| # | Agent | Domain | Key Files | Guardrails |
+|---|-------|--------|-----------|------------|
+| 12 | **syncytium-coordinator** | Multi-agent orchestration, mission tracking | `docs/autoclaw/coordination/` | All coordination docs |
+| 13 | **navigator** | Repo-wide codebase navigation, file discovery | Entire codebase | `.autoclaw/project-map.md` |
+| 14 | **autonomy-skillsmith-agent** | Skill creation, workflow automation | `.autoclaw/skills/`, `docs/autoclaw/agents/` | Standalone |
 
 ### Content & Learning Pipeline (5 agents)
 
 | # | Agent | Domain | Key Files | Guardrails |
 |---|-------|--------|-----------|------------|
-| 12 | **question-generation** | AI question gen, blueprint alignment | `lib/services/autoAuthor/`, `functions/api/questions/` | panacea-content-refinery, panacea-edge-endpoints |
-| 13 | **clinical-content-auditor** | Medical accuracy, content quality | `lib/services/content/`, `functions/api/content/` | panacea-content-refinery, panacea-prisma-data-integrity |
-| 14 | **content-refinery** | PDF/media ingestion, content enrichment | `scripts/refinery/`, `lib/services/media/` | Standalone |
-| 15 | **session-pipeline** | Study session flow, quiz submission | `components/session/QuizView.tsx`, `hooks/useQuizSubmit.ts` | RISK-002 critical subsystem |
-| 16 | **study-plan** | Adaptive study scheduling, plan generation | `lib/services/studyPlan/`, `functions/api/study-plan/` | panacea-fsrs-guardrails, panacea-dashboard-analytics |
+| 15 | **question-generation** | AI question gen, blueprint alignment | `lib/services/autoAuthor/`, `functions/api/questions/` | panacea-content-refinery, panacea-edge-endpoints |
+| 16 | **clinical-content-auditor** | Medical accuracy, content quality | `lib/services/content/`, `functions/api/content/` | panacea-content-refinery, panacea-prisma-data-integrity |
+| 17 | **content-refinery** | PDF/media ingestion, content enrichment | `scripts/refinery/`, `lib/services/media/` | Standalone |
+| 18 | **session-pipeline** | Study session flow, quiz submission | `components/session/QuizView.tsx`, `hooks/useQuizSubmit.ts` | RISK-002 critical subsystem |
+| 19 | **study-plan** | Adaptive study scheduling, plan generation | `lib/services/studyPlan/`, `functions/api/study-plan/` | panacea-fsrs-guardrails, panacea-dashboard-analytics |
 
 ### Quality & Verification (4 agents)
 
 | # | Agent | Domain | Key Files | Guardrails |
 |---|-------|--------|-----------|------------|
-| 17 | **regression-guard** | Test coverage, regression prevention | `tests/`, `vitest.config.ts` | panacea-verify |
-| 18 | **verify** | Test runner, coverage thresholds | All test commands | Standalone (shared dependency) |
-| 19 | **medical-verifier** | Medical accuracy of generated content | `lib/services/agents/tools/conditionVerify.ts` | Clinical domain knowledge |
-| 20 | **blueprint-coverage** | NCCPA blueprint alignment audit | `lib/constants/blueprint.ts`, `lib/services/agents/tools/blueprintCoverageCheck.ts` | panacea-content-refinery |
+| 20 | **regression-guard** | Test coverage, regression prevention | `tests/`, `vitest.config.ts` | panacea-verify |
+| 21 | **verify** | Test runner, coverage thresholds | All test commands | Standalone (shared dependency) |
+| 22 | **medical-verifier** | Medical accuracy of generated content | `lib/services/agents/tools/conditionVerify.ts` | Clinical domain knowledge |
+| 23 | **blueprint-coverage** | NCCPA blueprint alignment audit | `lib/constants/blueprint.ts`, `lib/services/agents/tools/blueprintCoverageCheck.ts` | panacea-content-refinery |
 
 ### Infrastructure & Operations (5 agents)
 
 | # | Agent | Domain | Key Files | Guardrails |
 |---|-------|--------|-----------|------------|
-| 21 | **identity-migration** | Source identity (canonical IDs) | `prisma/migrations/`, `lib/services/identity/` | panacea-prisma-data-integrity, panacea-verify (P0, needs Aaron) |
-| 22 | **deployment-guard** | Production readiness, deploy safety | `wrangler.toml`, `.github/workflows/deploy.yml` | release-readiness, security-and-privacy-audit |
-| 23 | **repo-hygiene** | Branch cleanup, dead code, root MD | `.github/`, `scripts/` | repo-operating-system |
-| 24 | **prisma-data-integrity** | Schema health, migrations, indexes | `prisma/schema.prisma`, `prisma/migrations/` | Standalone |
-| 25 | **edge-endpoints** | Cloudflare Edge API patterns | `functions/api/` | RISK-003 critical subsystem (auth/Edge rules) |
+| 24 | **identity-migration** | Source identity (canonical IDs) | `prisma/migrations/`, `lib/services/identity/` | panacea-prisma-data-integrity, panacea-verify (P0, needs Aaron) |
+| 25 | **deployment-guard** | Production readiness, deploy safety | `wrangler.toml`, `.github/workflows/deploy.yml` | Risk register + security audit before deploy |
+| 26 | **repo-hygiene** | Branch cleanup, dead code, root MD | `.github/`, `scripts/` | Repo conventions in `.autoclaw/repo-patterns.md` |
+| 27 | **prisma-data-integrity** | Schema health, migrations, indexes | `prisma/schema.prisma`, `prisma/migrations/` | Standalone |
+| 28 | **edge-endpoints** | Cloudflare Edge API patterns | `functions/api/` | RISK-003 critical subsystem (auth/Edge rules) |
 
 ### UX & Analytics (3 agents)
 
 | # | Agent | Domain | Key Files | Guardrails |
 |---|-------|--------|-----------|------------|
-| 26 | **dashboard-analytics** | Analytics widgets, dashboard data | `components/dashboard/`, `lib/services/analytics/` | panacea-session-pipeline |
-| 27 | **view-composition** | Component decomposition, layout | `components/modes/`, `components/session/` | Standalone |
-| 28 | **osce-simulation** | OSCE clinical encounter mode | `components/modes/osce/`, `hooks/useEnhancedOSCE.ts` | panacea-session-pipeline |
+| 29 | **dashboard-analytics** | Analytics widgets, dashboard data | `components/dashboard/`, `lib/services/analytics/` | panacea-session-pipeline |
+| 30 | **view-composition** | Component decomposition, layout | `components/modes/`, `components/session/` | Standalone |
+| 31 | **osce-simulation** | OSCE clinical encounter mode | `components/modes/osce/`, `hooks/useEnhancedOSCE.ts` | panacea-session-pipeline |
 
 ### Safety & Auth (3 agents)
 
 | # | Agent | Domain | Key Files | Guardrails |
 |---|-------|--------|-----------|------------|
-| 29 | **auth-guard** | Clerk RBAC, auth middleware | `functions/api/_shared/auth.ts`, `lib/auth/` | security-and-privacy-audit |
-| 30 | **fsrs-guardrails** | FSRS algorithm safety, binary rating | `lib/fsrs.ts`, `lib/implicit-metrics.ts` | RISK-001 critical subsystem |
-| 31 | **offline-sync** | Offline queue, sync manager | `lib/services/sync/`, `components/offline/` | panacea-session-pipeline |
+| 32 | **auth-guard** | Clerk RBAC, auth middleware | `functions/api/_shared/auth.ts`, `lib/auth/` | Risk register security audit before auth changes |
+| 33 | **fsrs-guardrails** | FSRS algorithm safety, binary rating | `lib/fsrs.ts`, `lib/implicit-metrics.ts` | RISK-001 critical subsystem |
+| 34 | **offline-sync** | Offline queue, sync manager | `lib/services/sync/`, `components/offline/` | panacea-session-pipeline |
 
 ---
 
@@ -108,6 +116,8 @@ All specialist agents use these shared tools for read-only system queries:
 ## Dependency Graph
 
 ```
+syncytium-coordinator ─── All agents (mission routing)
+
 question-generation ──┬── content-refinery
                       └── edge-endpoints
 
@@ -118,11 +128,14 @@ identity-migration ──┬── prisma-data-integrity
                      └── verify
 
 regression-guard ──── verify
-deployment-guard ──── release-readiness, security-and-privacy-audit
-auth-guard ────────── security-and-privacy-audit
-repo-hygiene ──────── repo-operating-system
+deployment-guard ──── Risk register (docs/autoclaw/coordination/risk_register.md)
+auth-guard ────────── Risk register security audit
+repo-hygiene ──────── Repo conventions (.autoclaw/repo-patterns.md)
 clinical-content-auditor ──┬── content-refinery
                            └── prisma-data-integrity
+
+navigator ─────────── .autoclaw/project-map.md
+autonomy-skillsmith-agent ─── .autoclaw/skills/
 
 All agents ────────── verify (test runner)
 ```

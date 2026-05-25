@@ -69,7 +69,8 @@ Tool-to-agent mapping, tool dependencies, and configuration for all 10 PANaCEa a
 - **Category:** read
 
 #### `fsrs_calibration_status`
-- **Input:** `{ userId?: string }\n- Returns:** FSRS parameter health, calibration drift, anomaly detection
+- **Input:** `{ userId?: string }`
+- **Returns:** FSRS parameter health, calibration drift, anomaly detection
 - **Used by:** fsrs-guardrails, regression-guard
 - **Category:** read
 
