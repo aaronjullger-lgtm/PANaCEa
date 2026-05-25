@@ -61,3 +61,22 @@ git diff HEAD~1 --stat
 
 Lesson logged to .autoclaw/error-log.md
 ```
+
+## Coordination
+- **Triggered by:** Test failures, build breaks, runtime errors — from any agent
+- **Hands off to:** Builder (to apply the fix), Reviewer (to verify fix)
+- **Dependencies:** `.autoclaw/error-log.md` (check before debugging — may already be documented)
+
+## Pre-Flight
+```bash
+# Check if error is already documented
+grep -A3 "Symptom\|Root cause" .autoclaw/error-log.md | head -20
+# Recent changes (if regression)
+git log --oneline -10
+git diff HEAD~1 --stat
+```
+
+## Common Pitfalls
+- **Fixing symptoms not root cause:** Verify hypothesis before applying fix
+- **Scope creep:** Don't refactor while debugging — minimal fix only
+- **Sub-agent import bugs:** Check for wrong directory depth (`../foo` vs `../../foo`) in test files

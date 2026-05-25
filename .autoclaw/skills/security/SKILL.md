@@ -72,3 +72,23 @@ Reduce blast radius. Never leak secrets. Verify auth boundaries.
 
 Logged to .autoclaw/security-log.md
 ```
+
+## Coordination
+- **Triggered by:** Orchestrator (before risky ops), Reviewer (security concerns found), Architect (migration/deploy designs)
+- **Hands off to:** Architect (risk report for design adjustment), Orchestrator (go/no-go signal)
+- **Critical subsystems:** RISK-001 (FSRS), RISK-002 (Session), RISK-003 (Edge Auth) — see `docs/autoclaw/coordination/risk_register.md`
+
+## Pre-Flight
+```bash
+# Check risk register for known subsystem vulnerabilities
+grep -A10 "RISK-00[1-3]" docs/autoclaw/coordination/risk_register.md
+# Verify secrets hygiene
+rg "process\.env" functions/api/ 2>/dev/null || echo "Edge hygiene: clean"
+# Check .gitignore covers secrets
+grep "\.env" .gitignore
+```
+
+## Common Pitfalls
+- **Skipping blast radius analysis:** Always assess what else the change affects
+- **Trusting external code:** Sub-agent and external script output needs full security review
+- **Auth bypass in tests:** Tests that skip auth don't prove production safety

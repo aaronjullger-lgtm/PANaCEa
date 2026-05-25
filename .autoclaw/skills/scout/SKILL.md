@@ -55,3 +55,20 @@ find . -name "*ComponentName*test*"
 - Update .autoclaw/project-map.md with new discoveries
 - If pattern is unclear, note it as a question
 - Don't spend >10 tool calls exploring — report what you found and ask if deeper dive needed
+
+## Coordination
+- **Triggered by:** Orchestrator, any "explore X" task
+- **Hands off to:** Architect (for design), Debugger (if issues found), Builder (if simple/clear)
+- **Dependencies:** `.autoclaw/project-map.md`, `.autoclaw/repo-patterns.md`, PANaCEa CLAUDE.md
+
+## Pre-Flight
+```bash
+# Check cached knowledge first
+cat .autoclaw/project-map.md | head -50
+cat .autoclaw/memory.md
+```
+
+## Common Pitfalls
+- **Rediscovering the wheel:** Check .autoclaw/ files before deep-diving code
+- **Over-exploring:** Cap at 10 tool calls — report and ask if more needed
+- **Stale map data:** Cross-check project-map.md against actual file existence

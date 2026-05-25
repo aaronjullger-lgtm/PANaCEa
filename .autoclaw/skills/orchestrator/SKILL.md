@@ -115,3 +115,26 @@ After each mode completes, verify:
 - .autoclaw/decision-log.md (if new decision)
 - .autoclaw/error-log.md (if errors encountered)
 ```
+
+## Coordination
+- **Triggers:** Any non-trivial task — auto-activates as default router
+- **Manages:** All 11 mode agents + 23 specialist agents
+- **Dependencies:** `docs/autoclaw/agents/AGENT-CATALOG.md` (agent inventory), `docs/autoclaw/agents/AGENT-WORKFLOWS.md` (workflow chains), `.autoclaw/next-actions.md` (priority queue)
+
+## Pre-Flight
+```bash
+# Load current state
+cat .autoclaw/memory.md
+cat .autoclaw/next-actions.md | head -30
+# Check active file claims (avoid conflicts)
+cat docs/autoclaw/coordination/file_claims.md
+```
+
+## Specialist Agent Routing
+For domain-specific tasks, route to specialist agents instead of mode agents:
+- **FSRS/scheduling:** `fsrs-guardrails` (CRITICAL — RISK-001)
+- **Database/schema:** `prisma-data-integrity`
+- **Content/questions:** `question-generation` → `medical-verifier` → `clinical-content-auditor`
+- **Auth/middleware:** `auth-guard`
+- **Deployment:** `deployment-guard` (requires Aaron approval)
+- **OSCE:** `osce-simulation`

@@ -54,6 +54,24 @@ Critique your own work before calling it done. Catch issues the Builder missed.
 - [ ] Existing tests still pass?
 - [ ] No test ordering assumptions?
 
+## Coordination
+- **Receives from:** Builder (after every sprint), sub-agents (output verification)
+- **Hands off to:** Builder (if fixes needed), QA (if approved), Security (if risky changes detected)
+- **Sub-agent review:** Extra strict — verify build + tests, check import paths for wrong directory depth, check for missing `?.` on injected deps
+
+## Sub-Agent Output Verification
+```bash
+npm run build          # Must pass
+npm test               # 0 failures
+rg "process\.env" functions/api/  # Edge hygiene check
+rg "from '\.\.\/" --type ts | head -20  # Import depth sanity check
+```
+
+## Common Pitfalls
+- **Rubber-stamping:** Review every dimension — don't skip security for "simple" changes
+- **Missing Edge rules:** Always check for process.env, safePrismaDisconnect in new Edge code
+- **Sub-agent trust:** Sub-agents produce wrong import paths — verify before accepting
+
 ## Output Format
 ```
 ## Review: {change description}

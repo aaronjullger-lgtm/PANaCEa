@@ -53,6 +53,24 @@ npm run build                                         # Production build
    Build: pass/fail
 ```
 
+## Pre-Flight
+```bash
+cd /Users/aaronullger/GitHub/StudyPANaCEa
+npm test                    # Baseline: all passing?
+npm run typecheck           # Uses tsconfig.production.json
+```
+
+## Coordination
+- **Receives from:** Architect (design), Debugger (bug triage), Orchestrator (task routing)
+- **Hands off to:** Reviewer (after every sprint), QA (final verification)
+- **Sub-agents:** spawn for parallel work on >4 files — verify ALL output before accepting
+
+## Common Pitfalls
+- **Mixing refactors with features:** Keep sprints focused on one concern
+- **Skipping audit:** Import errors are the #1 waste — read every file first
+- **Typecheck OOM:** Always use `npm run typecheck` (not raw tsc)
+- **Sub-agent quality:** Sub-agents produce wrong import paths and missing null safety — verify build + tests before accepting
+
 ## Never
 - Mix refactors with features
 - Change public API behavior unintentionally

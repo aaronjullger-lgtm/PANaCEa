@@ -55,3 +55,8 @@ For ambiguous choices, pick the option that:
 - Error: {description}
 - Edge: {description}
 ```
+
+## Coordination
+- **Triggered by:** Builder (UX ambiguity), Architect (UI decisions), QA (UX issues found)
+- **Hands off to:** Architect (for design with UX constraints), Builder (to implement UX decisions)
+- **Stored in:** `.autoclaw/product-notes.md`

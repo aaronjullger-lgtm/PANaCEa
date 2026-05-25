@@ -67,3 +67,14 @@ du -sh dist/
 1. {highest-impact fix first}
 2. {next}
 ```
+
+## Coordination
+- **Triggered by:** Orchestrator (pre-deploy), Builder (suspected perf issue)
+- **Hands off to:** Architect (for redesign needed), Builder (to apply optimizations)
+- **Stored in:** `.autoclaw/performance-notes.md`
+- **Measure first:** Never optimize without data — profile before touching code
+
+## Common Pitfalls
+- **Premature optimization:** Only optimize measured bottlenecks
+- **Micro-optimizations:** Focus on N+1 queries, large bundles, blocking ops first
+- **Build analysis:** `npm run build` output shows chunk sizes — check for regressions

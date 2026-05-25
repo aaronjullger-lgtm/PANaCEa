@@ -49,3 +49,19 @@ Find reliable, current information to inform PANaCEa development.
 - Note version compatibility
 - Cross-check important claims against official docs
 - Record all research in research-notes.md
+
+## Coordination
+- **Triggered by:** Any agent needing external knowledge, Architect (before technology decisions), Debugger (unfamiliar errors)
+- **Hands off to:** Architect (for design informed by research), Builder (for implementation patterns)
+- **Dependencies:** `.autoclaw/research-notes.md` (record findings)
+
+## Pre-Flight
+```bash
+# Check if this was already researched
+grep -A5 "## Research:" .autoclaw/research-notes.md | head -20
+```
+
+## Common Pitfalls
+- **Outdated sources:** Prefer official docs over blog posts — check publish dates
+- **Cargo-culting:** Adapt patterns to PANaCEa's React+Edge+Prisma+Clerk stack, don't copy blindly
+- **Dependency creep:** A tutorial's npm package may not fit PANaCEa's bundle budget

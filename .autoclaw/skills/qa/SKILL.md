@@ -65,3 +65,20 @@ Prove the feature works through the full user path before claiming done.
 ### Verdict
 ✅ Ready / ⚠️ Ship with known issues / ❌ Blocked
 ```
+
+## Coordination
+- **Receives from:** Reviewer (approved changes), Builder (completed sprints)
+- **Hands off to:** Orchestrator (task complete signal), Debugger (if issues found)
+- **Final gate:** QA is the last check before a task is "done"
+
+## Pre-Flight
+```bash
+npm test                    # Full suite must pass
+npm run build               # Production build must succeed
+npm run typecheck           # Clean typecheck
+```
+
+## Common Pitfalls
+- **Skipping auth checks:** Always verify unauthenticated users can't access protected data
+- **Trusting memory:** Verify data persistence by actually querying — don't assume
+- **Shallow verification:** Run the full user flow, not just the changed code path

@@ -50,3 +50,22 @@ Design the right solution before implementing. Write Architecture Decision Recor
 - Prefer completing existing code over rewriting
 - Document decision in .autoclaw/decision-log.md
 - Keep designs to existing architecture — no paradigm shifts without explicit approval
+
+## Coordination
+- **Receives from:** Scout (exploration findings), Orchestrator (task routing), Product (UX decisions)
+- **Hands off to:** Builder (implementation sprints)
+- **Dependencies:** `.autoclaw/project-map.md`, `.autoclaw/decision-log.md`, `docs/autoclaw/coordination/risk_register.md` (for RISK-001 through 007)
+
+## Pre-Flight
+```bash
+# Read current architecture state
+cat .autoclaw/project-map.md
+cat .autoclaw/decision-log.md | tail -30
+# Check risk register for affected subsystems
+grep -A5 "RISK-" docs/autoclaw/coordination/risk_register.md
+```
+
+## Common Pitfalls
+- **Over-engineering:** YAGNI — design for what's needed now, not hypothetical future
+- **Paradigm drift:** Stay within existing architecture (React+Edge+Prisma+Clerk)
+- **Ignoring risk register:** RISK-001 (FSRS), RISK-002 (Session), RISK-003 (Edge Auth) are critical
