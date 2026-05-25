@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import type { MedicalContent } from '../../types/admin-cms';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope, getApiEnvelopeError } from '@/lib/utils/apiEnvelope';
 
 interface ContentEditorProps {
   content: MedicalContent | null;
@@ -137,11 +138,11 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
       });
 
       if (!response.ok) {
-        const errBody = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(errBody.error || 'Failed to generate content');
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(getApiEnvelopeError(errBody, 'Failed to generate content'));
       }
 
-      const result = (await response.json()) as { content?: { content?: string } };
+      const result = unwrapApiEnvelope<{ content?: { content?: string } }>(await response.json());
       const generatedContent = result.content;
 
       // Update the editor with AI-generated content

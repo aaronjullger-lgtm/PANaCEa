@@ -19,6 +19,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface MediaAsset {
   id: string;
@@ -96,29 +97,21 @@ export function MediaApprovalDashboard() {
         },
       });
 
-      const data = (await response.json()) as {
-        success?: boolean;
+      const data = unwrapApiEnvelope<{
         media?: Array<{ id: string }>;
         total?: number;
-        error?: string;
-      };
+      }>(await response.json());
 
-      if (data.success) {
-        setPendingMedia((data.media || []) as MediaAsset[]);
-        // Calculate stats from response
-        if (data.total !== undefined) {
-          const pending = data.media?.length || 0;
-          // Fetch approved/rejected counts separately if needed
-          setStats({
-            pending,
-            approved: 0,
-            rejected: 0,
-            total: data.total,
-            approvalRate: 0,
-          });
-        }
-      } else {
-        setError(data.error || 'Failed to load media');
+      setPendingMedia((data.media || []) as MediaAsset[]);
+      if (data.total !== undefined) {
+        const pending = data.media?.length || 0;
+        setStats({
+          pending,
+          approved: 0,
+          rejected: 0,
+          total: data.total,
+          approvalRate: 0,
+        });
       }
     } catch (err) {
       console.error('Error loading pending media:', err);
@@ -153,7 +146,7 @@ export function MediaApprovalDashboard() {
         setPendingMedia((prev) => prev.filter((m) => m.id !== mediaId));
         setSelectedMedia(null);
       } else {
-        const data = (await response.json()) as { error?: string };
+        const data = unwrapApiEnvelope<{ error?: string }>(await response.json());
         setError(data.error || 'Failed to approve');
       }
     } catch (err) {
@@ -188,7 +181,7 @@ export function MediaApprovalDashboard() {
         setShowRejectionModal(false);
         setRejectionReason('');
       } else {
-        const data = (await response.json()) as { error?: string };
+        const data = unwrapApiEnvelope<{ error?: string }>(await response.json());
         setError(data.error || 'Failed to reject');
       }
     } catch (err) {
@@ -686,13 +679,8 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
         body: formData,
       });
 
-      const data = (await response.json()) as { success?: boolean; error?: string };
-
-      if (data.success) {
-        onSuccess();
-      } else {
-        setError(data.error || 'Upload failed');
-      }
+      const data = unwrapApiEnvelope<Record<string, unknown>>(await response.json());
+      onSuccess();
     } catch (err) {
       console.error('Upload error:', err);
       setError('Upload failed');

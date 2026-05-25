@@ -21,6 +21,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export interface BulkApprovalPanelProps {
   /** Array of selected suggestion IDs */
@@ -107,7 +108,7 @@ export function BulkApprovalPanel({
         throw new Error(`Bulk action failed: ${response.statusText} - ${errorText}`);
       }
 
-      const result = await response.json();
+      const result = unwrapApiEnvelope(await response.json());
       setSuccess(`${selectedIds.length} suggestions ${action.toLowerCase()}d successfully`);
       onActionComplete();
       // Clear selection after successful action

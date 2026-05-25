@@ -20,6 +20,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface QuestionFlag {
   id: string;
@@ -132,7 +133,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
         throw new Error('Failed to fetch flags');
       }
 
-      const data = (await response.json()) as { flags?: QuestionFlag[] };
+      const data = unwrapApiEnvelope<{ flags?: QuestionFlag[] }>(await response.json());
       setFlags(data.flags || []);
 
       // Calculate stats from flags

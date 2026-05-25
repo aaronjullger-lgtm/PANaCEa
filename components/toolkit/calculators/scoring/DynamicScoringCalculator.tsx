@@ -16,6 +16,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import {
   AlertCircle,
   BookOpen,
@@ -254,9 +255,10 @@ export default function DynamicScoringCalculator({
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json: any = await res.json();
+        const scoringData = unwrapApiEnvelope<ScoringSystemData>(json);
 
         if (!cancelled) {
-          setData(json.data);
+          setData(scoringData);
           // Initialize selections
           setCheckboxSelections({});
           setRadioSelections({});

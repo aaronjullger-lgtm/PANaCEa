@@ -22,6 +22,7 @@ import {
   Filter,
   RefreshCw,
 } from 'lucide-react';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface QualityStats {
   overview: {
@@ -103,16 +104,8 @@ export function QuestionQualityDashboard() {
         throw new Error('Failed to fetch quality stats');
       }
 
-      const data = (await response.json()) as {
-        success?: boolean;
-        data?: unknown;
-        error?: string;
-      };
-      if (data.success) {
-        setStats(data.data as QualityStats);
-      } else {
-        throw new Error(data.error || 'Unknown error');
-      }
+      const qualityData = unwrapApiEnvelope<QualityStats>(await response.json());
+      setStats(qualityData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load stats');
     } finally {

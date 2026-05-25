@@ -10,6 +10,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
 import { FlaskConical, Activity, Search, AlertTriangle } from 'lucide-react';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 const FONT_HEADING = "'Poppins', system-ui, sans-serif";
 const FONT_BODY = "'Inter', system-ui, sans-serif";
@@ -61,8 +62,8 @@ export default function NormalLabRefCards({ variant = 'labs' }: Props) {
         const res = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json: any = await res.json();
-        const payload = json.data ?? json;
-        const items = Array.isArray(payload) ? payload : (payload?.data ?? payload?.labs ?? []);
+        const payload = unwrapApiEnvelope<any>(json);
+        const items = Array.isArray(payload) ? payload : (payload?.labs ?? []);
         if (!cancelled) setData(Array.isArray(items) ? items : []);
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'Failed to load data');

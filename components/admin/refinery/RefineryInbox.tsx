@@ -8,19 +8,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { RefreshCw } from 'lucide-react';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope, getApiEnvelopeError } from '@/lib/utils/apiEnvelope';
 import { TriageCard, type RefineryItem, type MediaApprovePayload } from './TriageCard';
-
-interface InboxResponse {
-  data?: { items: RefineryItem[]; total: number };
-  error?: string;
-  status?: number;
-}
-
-interface ActionResponse {
-  data?: { success: boolean; message?: string };
-  error?: string;
-  status?: number;
-}
 
 function serializeItem(item: RefineryItem): RefineryItem {
   return {
@@ -46,13 +35,14 @@ export function RefineryInbox() {
       const res = await fetch('/api/admin/refinery/inbox', {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      const json: InboxResponse = await res.json();
+      const raw = await res.json();
       if (!res.ok) {
-        setError(json?.error ?? `HTTP ${res.status}`);
+        setError(getApiEnvelopeError(raw, `HTTP ${res.status}`));
         setItems([]);
         return;
       }
-      const list = json?.data?.items ?? [];
+      const json = unwrapApiEnvelope<{ items: RefineryItem[]; total: number }>(raw);
+      const list = json.items ?? [];
       setItems(list.map(serializeItem));
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to load inbox';
@@ -102,9 +92,9 @@ export function RefineryInbox() {
           },
           body: JSON.stringify(buildActionBody(item, id, action, payload)),
         });
-        const json: ActionResponse = await res.json();
+        const raw = await res.json();
         if (!res.ok) {
-          setError(json?.error ?? `Action failed: ${res.status}`);
+          setError(getApiEnvelopeError(raw, `Action failed: ${res.status}`));
           return;
         }
         setItems((prev) => prev.filter((i) => i.id !== id));

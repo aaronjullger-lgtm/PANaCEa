@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import {
   ArrowLeft,
   Calculator,
@@ -65,7 +66,8 @@ export default function ScoringSystemBrowser({ onBack }: { onBack?: () => void }
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json: any = await res.json();
-        if (!cancelled) setSystems(json.data || []);
+        const data = unwrapApiEnvelope<ScoringSystemSummary[]>(json);
+        if (!cancelled) setSystems(data || []);
       } catch (err: any) {
         if (!cancelled) setError(err.message);
       } finally {

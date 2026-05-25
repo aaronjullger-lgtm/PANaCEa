@@ -12,6 +12,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { Headphones, ArrowLeft, Copy, Check, Sparkles } from 'lucide-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface LectureConverterProps {
   readonly onClose?: () => void;
@@ -63,7 +64,8 @@ export function LectureConverter({
         }),
       });
 
-      const data = (await res.json()) as {
+      const raw = await res.json();
+      const data = raw as {
         error?: string;
         details?: string;
         data?: { script?: string; summary_points?: unknown[] };
@@ -75,7 +77,8 @@ export function LectureConverter({
         return;
       }
 
-      const scriptText = data?.data?.script;
+      const lectureData = unwrapApiEnvelope<{ script?: string; summary_points?: unknown[] }>(raw);
+      const scriptText = lectureData?.script;
       if (!scriptText) {
         setStatus('error');
         setErrorMessage('No script in response');
@@ -84,7 +87,7 @@ export function LectureConverter({
 
       setScript(scriptText);
       setSummaryPoints(
-        (Array.isArray(data?.data?.summary_points) ? data.data!.summary_points : []) as string[]
+        (Array.isArray(lectureData?.summary_points) ? lectureData.summary_points : []) as string[]
       );
       setStatus('ready');
     } catch (err) {

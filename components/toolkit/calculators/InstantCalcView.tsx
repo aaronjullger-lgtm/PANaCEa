@@ -6,6 +6,7 @@ import React, { useState, useCallback } from 'react';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface InstantCalcViewProps {
   onBack: () => void;
@@ -46,7 +47,8 @@ export const InstantCalcView: React.FC<InstantCalcViewProps> = ({ onBack }) => {
         },
         body: JSON.stringify({ prompt: prompt.trim() }),
       });
-      const data: SparkResponse = await res.json();
+      const raw = await res.json();
+      const data = unwrapApiEnvelope<SparkResponse>(raw);
       if (res.status === 501) {
         setUnavailable(true);
         setError(data.error || data.hint || 'Instant Calc unavailable.');

@@ -3,6 +3,7 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { ChevronRight, ChevronDown, Activity, AlertTriangle, Layers } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 // import { useFetcher } from '@remix-run/react'; // Removed Remix dependency
 
 interface ConditionFamilyViewProps {
@@ -48,7 +49,8 @@ export function ConditionFamilyView({
         const res = await fetch(`/api/conditions/family/${encodeURIComponent(canonicalName)}`);
         if (res.ok) {
           const json = (await res.json()) as FamilyData | null;
-          if (mounted) setData(json);
+          const familyData = unwrapApiEnvelope<FamilyData | null>(json);
+          if (mounted) setData(familyData);
         } else {
           console.error('Failed to load family data: ', res.status, res.statusText);
         }

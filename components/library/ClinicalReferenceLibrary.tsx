@@ -47,6 +47,7 @@ import { Skeleton } from '@/components/loading';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { toast } from '@/lib/toast';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import { useSemanticSearch } from '@/hooks/useSemanticSearch';
 import { useConditionBookmarks } from './hooks/useConditionBookmarks';
 import { useRecentConditions } from './hooks/useRecentConditions';
@@ -158,7 +159,8 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
         console.warn('[ClinicalReferenceLibrary] systems API error:', res.status, errorText);
         throw new Error('Unable to load organ systems. Please check your connection and try again.');
       }
-      const data = await res.json();
+      const raw = await res.json();
+      const data = unwrapApiEnvelope<SystemOption[]>(raw);
       if (Array.isArray(data)) {
         setSystems(data);
       } else if (data && typeof data === 'object') {
@@ -291,10 +293,10 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
         if (res.status === 401) return;
         throw new Error(`Failed to fetch progress map: ${res.status}`);
       }
-      const data = await res.json();
+      const raw = await res.json();
+      const data = unwrapApiEnvelope<{ progressMap?: typeof progressMap }>(raw);
       if (data && typeof data === 'object') {
-        const responseBody = data as { progressMap?: typeof progressMap };
-        setProgressMap(responseBody.progressMap ?? {});
+        setProgressMap(data.progressMap ?? {});
       }
     } catch (err) {
       console.error('[ClinicalReferenceLibrary] progress map fetch failed', err);

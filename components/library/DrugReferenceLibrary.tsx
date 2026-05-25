@@ -17,6 +17,7 @@ import {
 
 import DrugMaster, { type Drug as DrugDetail } from './DrugMaster';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 // Types
 interface DrugClass {
@@ -367,7 +368,8 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
       }
 
       const data = (await res.json()) as DrugClass[] | null | undefined;
-      setDrugClasses(data ?? []);
+      const classes = unwrapApiEnvelope<DrugClass[]>(data);
+      setDrugClasses(classes ?? []);
     } catch (err) {
       console.error('[DrugReferenceLibrary] classes fetch failed', err);
       setClassesError(err instanceof Error ? err.message : 'Failed to load drug classes');

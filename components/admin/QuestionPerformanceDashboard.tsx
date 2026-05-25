@@ -14,6 +14,7 @@ import {
 import { useAuth } from '@clerk/clerk-react';
 import { VirtualizedTableBody } from '@/components/ui/VirtualizedTableBody';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface QuestionPerformance {
   questionId: string;
@@ -90,11 +91,9 @@ export const QuestionPerformanceDashboard: React.FC = () => {
         throw new Error('Failed to fetch performance data');
       }
 
-      const result = (await response.json()) as {
-        data?: { questions?: QuestionPerformance[]; summary?: PerformanceSummary | null };
-      };
-      setQuestions(result.data?.questions || []);
-      setSummary(result.data?.summary ?? null);
+      const result = unwrapApiEnvelope<{ questions?: QuestionPerformance[]; summary?: PerformanceSummary | null }>(await response.json());
+      setQuestions(result.questions || []);
+      setSummary(result.summary ?? null);
     } catch (err) {
       console.error('Error fetching performance:', err);
       setError(err instanceof Error ? err.message : 'Failed to load performance data');

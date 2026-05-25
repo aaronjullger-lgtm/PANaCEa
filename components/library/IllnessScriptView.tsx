@@ -33,6 +33,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import {
   diagnosticStrength,
   diagnosticStrengthFallback,
@@ -822,8 +823,8 @@ export function IllnessScriptView({
         const body = await res.json().catch(() => ({ error: 'Request failed' }));
         throw new Error((body as { error?: string }).error ?? `HTTP ${res.status}`);
       }
-      const json = (await res.json()) as { data: APIResponse };
-      setData(json.data);
+      const json = await res.json();
+      setData(unwrapApiEnvelope<APIResponse>(json));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load illness script');
     } finally {

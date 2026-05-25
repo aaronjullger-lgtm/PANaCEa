@@ -26,6 +26,7 @@ import {
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface MnemonicGeneratorProps {
   /** The medical concept to create a mnemonic for */
@@ -76,8 +77,8 @@ async function generateMnemonicWithAuth(
     throw new Error('Failed to generate mnemonic');
   }
 
-  const data = (await response.json()) as { data?: GeneratedMnemonic };
-  return data.data ?? (data as unknown as GeneratedMnemonic);
+  const data = await response.json();
+  return unwrapApiEnvelope<GeneratedMnemonic>(data);
 }
 
 const generateMnemonic = async (

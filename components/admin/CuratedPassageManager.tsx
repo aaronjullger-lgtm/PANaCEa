@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BookOpen, Trash2, Plus } from 'lucide-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export interface CuratedPassageManagerProps {
   conditionId: string;
@@ -47,12 +48,8 @@ export const CuratedPassageManager: React.FC<CuratedPassageManagerProps> = ({
         setError(`Failed to load passages (status ${res.status})`);
         return;
       }
-      const payload = (await res.json()) as
-        | { passages?: CuratedPassage[] }
-        | { data?: { passages?: CuratedPassage[] } };
-      const wrapped = payload as { data?: { passages?: CuratedPassage[] } };
-      const flat = payload as { passages?: CuratedPassage[] };
-      const list = wrapped.data?.passages ?? flat.passages ?? [];
+      const payload = unwrapApiEnvelope<{ passages?: CuratedPassage[] }>(await res.json());
+      const list = payload.passages ?? [];
       setPassages(list);
     } catch (e) {
       setError('Error loading passages. See console for details.');

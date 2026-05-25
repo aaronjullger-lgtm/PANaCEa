@@ -10,6 +10,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
 import { Heart, Search, Star, Zap, Pill } from 'lucide-react';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 const FONT_HEADING = "'Poppins', system-ui, sans-serif";
 const FONT_BODY = "'Inter', system-ui, sans-serif";
@@ -53,7 +54,8 @@ export default function ACLSRefCards() {
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json: any = await res.json();
-        if (!cancelled) setData(json.data || []);
+        const data = unwrapApiEnvelope<ACLSStep[]>(json);
+        if (!cancelled) setData(data || []);
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'Failed to load ACLS algorithms');
       }

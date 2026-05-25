@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { getApiEndpoint, API_ENDPOINTS } from '../../lib/utils/apiConfig';
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import { useAuth } from '@clerk/clerk-react';
 import {
   Check,
@@ -64,9 +65,7 @@ const QuestionCurationPanel = () => {
       if (!response.ok) {
         throw new Error('Failed to fetch questions for curation.');
       }
-      const data = (await response.json()) as
-        | PreGeneratedQuestion[]
-        | { questions?: PreGeneratedQuestion[] };
+      const data = unwrapApiEnvelope<PreGeneratedQuestion[] | { questions?: PreGeneratedQuestion[] }>(await response.json());
       // Handle both array response and object with questions property
       const questionArray = Array.isArray(data) ? data : data.questions || [];
       setQuestions(
@@ -111,7 +110,7 @@ const QuestionCurationPanel = () => {
       });
 
       if (!response.ok) {
-        const errorData = (await response.json()) as { error?: string };
+        const errorData = unwrapApiEnvelope<{ error?: string }>(await response.json());
         throw new Error(errorData.error || `Failed to ${action} question.`);
       }
 

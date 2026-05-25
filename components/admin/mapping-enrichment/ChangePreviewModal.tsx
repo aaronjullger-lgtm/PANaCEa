@@ -5,6 +5,7 @@ import { X, AlertTriangle, CheckCircle2, BarChart3 } from 'lucide-react';
 import { InlineSpinner } from '@/components/loading';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import { logAuditEvent } from '@/services/domain/audit/mappingAuditLogger';
 import type { PreviewResult } from '@/services/domain/mappingEnrichment/previewService';
 
@@ -85,8 +86,8 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
         throw new Error(errorMsg);
       }
 
-      const result = (await response.json()) as { data?: PreviewResult };
-      setPreviewResult(result.data ?? null);
+      const result = unwrapApiEnvelope<PreviewResult>(await response.json());
+      setPreviewResult(result ?? null);
 
       // Log audit event for preview. Detailed persistent audit rows are written
       // server-side by /api/mapping-enrichment/preview.

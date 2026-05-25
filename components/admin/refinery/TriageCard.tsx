@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BookOpen, Image, HelpCircle, Check, X } from 'lucide-react';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import { useAuth } from '@clerk/clerk-react';
 
 export type RefineryItemType = 'content' | 'media' | 'question';
@@ -174,11 +175,10 @@ export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({
           `/api/admin/refinery/media-signed-url?path=${encodeURIComponent(rawPath)}`,
           { headers: token ? { Authorization: `Bearer ${token}` } : {} }
         );
-        const json: unknown = await res.json();
+        const envelope = unwrapApiEnvelope<{ url?: string }>(await res.json());
         if (cancelled) return;
-        const data = json as { data?: { url?: string } };
-        if (res.ok && data?.data?.url) {
-          setSignedImageUrl(data.data.url);
+        if (res.ok && envelope.url) {
+          setSignedImageUrl(envelope.url);
           setImageLoadError(false);
         } else {
           setImageLoadError(true);
@@ -201,9 +201,8 @@ export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({
     }
     try {
       const res = await fetch(`/api/conditions/search?q=${encodeURIComponent(trimmed)}&limit=10`);
-      const json: unknown = await res.json();
-      const data = json as { data?: Array<{ id: string; condition: string }> };
-      const list = Array.isArray(data?.data) ? data.data : [];
+      const json = unwrapApiEnvelope<Array<{ id: string; condition: string }>>(await res.json());
+      const list = Array.isArray(json) ? json : [];
       setConditionSearchResults(
         list.map((r: { id: string; condition: string }) => ({ id: r.id, condition: r.condition }))
       );

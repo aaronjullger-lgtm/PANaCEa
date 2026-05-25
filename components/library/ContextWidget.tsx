@@ -11,6 +11,7 @@ import { Pill, Activity, AlertCircle } from 'lucide-react';
 import { InlineSpinner } from '@/components/loading';
 import { useAuth } from '@clerk/clerk-react';
 import ReactMarkdown from 'react-markdown';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface ContextWidgetProps {
   conditionId: string;
@@ -48,7 +49,7 @@ export const ContextWidget: React.FC<ContextWidgetProps> = ({ conditionId, type 
         }
 
         const result = await response.json();
-        setData(result);
+        setData(unwrapApiEnvelope<any>(result));
       } catch (err) {
         console.error('Error fetching context widget:', err);
         setError(err instanceof Error ? err.message : 'Failed to load context');

@@ -21,6 +21,7 @@ import {
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { InlineSpinner } from '@/components/loading';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 const PRESETS = [
   { id: 'parkinsonian_gait', label: 'Parkinsonian Gait', desc: 'Shuffling, reduced arm swing' },
@@ -78,6 +79,25 @@ export function ClinicalMotionFlashcards({
   const [guessCorrect, setGuessCorrect] = useState<boolean | null>(null);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Payload types for API responses
+  type VeoPayload = {
+    error?: string;
+    details?: string;
+    status?: string;
+    videoUrl?: string;
+    operationName?: string;
+    pollUrl?: string;
+    preset?: string;
+  };
+  type PollPayload = {
+    status?: string;
+    videoUrl?: string;
+    videoBase64?: string;
+    error?: string;
+    pollIntervalSeconds?: number;
+  };
+  type NormalPayload = { status?: string; videoUrl?: string };
+
   const startGeneration = useCallback(async () => {
     const token = await getToken();
     const headers: HeadersInit = { 'Content-Type': 'application/json' };
@@ -101,33 +121,13 @@ export function ClinicalMotionFlashcards({
         body: JSON.stringify(body),
       });
 
-      const data = (await res.json()) as {
-        data?: {
-          error?: string;
-          details?: string;
-          status?: string;
-          videoUrl?: string;
-          operationName?: string;
-          pollUrl?: string;
-          preset?: string;
-        };
-        error?: string;
-      };
-      type VeoPayload = {
-        error?: string;
-        details?: string;
-        status?: string;
-        videoUrl?: string;
-        operationName?: string;
-        pollUrl?: string;
-        preset?: string;
-      };
-      const payload = (data.data ?? data) as VeoPayload;
+      const data = await res.json();
+      const payload = unwrapApiEnvelope<VeoPayload>(data);
 
       if (!res.ok) {
         setStatus('error');
         setErrorMessage(
-          payload?.error || data.error || payload?.details || 'Failed to start generation'
+          payload?.error || payload?.details || 'Failed to start generation'
         );
         return;
       }
@@ -170,23 +170,8 @@ export function ClinicalMotionFlashcards({
       : getApiEndpoint('/api/veo/status') +
         (pollUrl.includes('?') ? pollUrl.slice(pollUrl.indexOf('?')) : '');
     const res = await fetch(url, { headers });
-    const data = (await res.json()) as {
-      data?: {
-        status?: string;
-        videoUrl?: string;
-        videoBase64?: string;
-        error?: string;
-        pollIntervalSeconds?: number;
-      };
-    };
-    type PollPayload = {
-      status?: string;
-      videoUrl?: string;
-      videoBase64?: string;
-      error?: string;
-      pollIntervalSeconds?: number;
-    };
-    const payload = (data.data ?? data) as PollPayload;
+    const data = await res.json();
+    const payload = unwrapApiEnvelope<PollPayload>(data);
 
     if (payload?.status === 'ready') {
       setStatus('ready');
@@ -233,9 +218,8 @@ export function ClinicalMotionFlashcards({
       headers,
       body: JSON.stringify({ preset: 'normal_gait' }),
     });
-    const data = (await res.json()) as { data?: { status?: string; videoUrl?: string } };
-    type NormalPayload = { status?: string; videoUrl?: string };
-    const payload = (data.data ?? data) as NormalPayload;
+    const data = await res.json();
+    const payload = unwrapApiEnvelope<NormalPayload>(data);
     if (payload?.status === 'ready' && payload?.videoUrl) {
       setNormalVideoUrl(payload.videoUrl);
     }
