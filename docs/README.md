@@ -45,7 +45,7 @@ Learn about PANaCEa's system design:
 
 Backend endpoint contracts and API behavior docs:
 
-- **[API Overview](api/API_OVERVIEW.md)** - Updated admin and OSCE endpoint contracts (`/api/admin/check-access`, `/api/admin/stats`, `/api/osce/complete`, `/api/osce/stats`)
+- **[API Overview](api/API_OVERVIEW.md)** - Current contracts for changed Cloudflare Functions routes, including agents, OSCE, study-plan, batch drill submission, and semantic-cache-backed AI endpoints.
 
 ---
 

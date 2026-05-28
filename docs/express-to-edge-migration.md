@@ -102,7 +102,7 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 | `POST /api/osce/session` | — | ❌ MISSING |
 | `GET /api/osce/session/:sessionId` | — | ❌ MISSING |
 | `POST /api/osce/chat` | — | ❌ MISSING |
-| `POST /api/osce/complete` | — | ❌ MISSING |
+| `POST /api/osce/complete` | `functions/api/osce/complete.ts` | ✅ PORTED |
 | AI Router (Gemini proxy) | `functions/api/gemini/index.ts` | ⚠️ PARTIAL |
 
 ### Dormant Routes (Low Priority)

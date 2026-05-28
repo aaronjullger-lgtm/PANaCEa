@@ -50,7 +50,7 @@ This document defines the strict separation between **FSRS (Main Session)** data
 
 | Endpoint / Flow | Writes | Must NOT |
 |-----------------|--------|----------|
-| `POST /api/osce/complete` | `PatientEncounterSession` (status, diagnosis, treatmentPlan) + optional `CaseFile` (soapComparison/timingAnalytics/infographics) | Create `ReviewLog` |
+| `POST /api/osce/complete` | `PatientEncounterSession` (status, diagnosis, treatmentPlan, completedAt, optional `osceTelemetry`) | Create `ReviewLog`, `CaseFile`, Card, or `UserProgress` |
 | `POST /api/osce/analysis/grade` | `OsceResult` (+ optional `ConceptGap`) | Create or update `ReviewLog` or Card/UserProgress |
 
 ### Drills / practice modes

@@ -551,16 +551,30 @@ All endpoints below require authenticated requests.
       "sessionId": "string",
       "diagnosis": "string (optional)",
       "treatmentPlan": "string (optional)",
-      "soapComparison": "object (optional)",
-      "timingAnalytics": "object (optional)",
-      "infographics": ["string"]
+      "osceTelemetry": {
+        "totalTimeMs": "number (optional)",
+        "clinicalConfidenceIndex": "number 1-4 (optional)",
+        "redFlagsMissed": "number (optional)",
+        "unnecessaryOrders": "number (optional)",
+        "implicitRating": {
+          "rating": "number",
+          "confidence": "number",
+          "components": "object of numeric component scores (optional)"
+        },
+        "efficiencyScore": "number (optional)",
+        "speechMetrics": "object (optional)",
+        "diagnosticEfficiency": "object (optional)",
+        "rapportMetrics": "object (optional)",
+        "actionCount": "number (optional)"
+      }
     }
   }
   ```
   Behavior:
   - Marks the encounter session as `completed` (idempotent).
   - Returns `{ "success": true, "alreadyCompleted": true }` when already completed.
-  - Creates `CaseFile` best-effort when analytics payload is present (`soapComparison` or `timingAnalytics`).
+  - Persists telemetry on `PatientEncounterSession.osceTelemetry` when provided.
+  - Does not create `CaseFile`; grading output remains owned by `/api/osce/analysis/grade`.
 
 - **POST /api/osce/analysis/grade**  
   Request body:
