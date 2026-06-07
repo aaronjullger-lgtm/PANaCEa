@@ -136,7 +136,7 @@ export function classifyError(input: ErrorClassificationInput): ErrorDiagnostic 
   }
 
   const evidence = buildEvidence(input);
-  const latencyRatio = safeDivide(input.latencyMs, input.parTimeMs);
+  const latencyRatio = safeDivide(input.latencyMs, input.parTimeMs, 1);
 
   // Priority 1: Check for "Don't Know" usage
   if (input.usedDontKnow) {
@@ -250,7 +250,7 @@ function buildEvidence(input: ErrorClassificationInput): ErrorEvidence {
     initiallyCorrect,
     trajectoryConfidence: input.trajectoryConfidence,
     repeatDistractor: input.repeatDistractor || false,
-    latencyRatio: safeDivide(input.latencyMs, input.parTimeMs),
+    latencyRatio: safeDivide(input.latencyMs, input.parTimeMs, 1),
   };
 }
 

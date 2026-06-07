@@ -156,7 +156,7 @@ export function captureError(
     user?: { id: string; email?: string };
   }
 ): string {
-  logger.error('[Error]', { message: error.message, context, error });
+  logger.error('Error captured for Sentry reporting', { context, error });
 
   if (!Sentry || !isInitialized) {
     return '';

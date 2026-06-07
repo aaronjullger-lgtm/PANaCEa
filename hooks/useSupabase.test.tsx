@@ -51,7 +51,7 @@ describe('validateSupabaseConfig', () => {
 
     const result = validateSupabaseConfig();
     expect(result.valid).toBe(false);
-    expect(result.message).toContain('VITE_SUPABASE_URL');
+    expect(result.message).toContain('Supabase URL');
 
     // Restore
     (globalThis as any).__TEST_VITE_ENV__ = originalEnv;

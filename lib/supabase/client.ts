@@ -11,6 +11,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
+import type { SupabaseConfigValidationCode } from './config';
 import { validateSupabaseConfigValues } from './config';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
@@ -66,16 +67,12 @@ export function validateSupabaseConfig(): { valid: boolean; message: string } {
 
   if (result.valid) return result;
 
-  if (result.message.includes('VITE_SUPABASE_URL')) {
-    return { valid: false, message: 'SUPABASE_URL (or VITE_SUPABASE_URL) is not configured' };
-  }
+  const codeToMessage: Record<SupabaseConfigValidationCode, string> = {
+    VALID: 'Supabase configuration is valid',
+    MISSING_URL: 'SUPABASE_URL (or VITE_SUPABASE_URL) is not configured',
+    MISSING_ANON_KEY: 'SUPABASE_ANON_KEY (or VITE_SUPABASE_ANON_KEY) is not configured',
+    INVALID_URL: 'SUPABASE_URL must start with https://',
+  };
 
-  if (result.message.includes('VITE_SUPABASE_ANON_KEY')) {
-    return {
-      valid: false,
-      message: 'SUPABASE_ANON_KEY (or VITE_SUPABASE_ANON_KEY) is not configured',
-    };
-  }
-
-  return { valid: false, message: 'SUPABASE_URL must start with https://' };
+  return { valid: false, message: codeToMessage[result.code] || result.message };
 }

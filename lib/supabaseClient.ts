@@ -15,7 +15,7 @@ type ViteEnvLike = {
   VITE_SUPABASE_ANON_KEY?: string;
 };
 
-type TestableGlobalThis = typeof globalThis & {
+type GlobalThisWithTestEnv = typeof globalThis & {
   __TEST_VITE_ENV__?: ViteEnvLike;
 };
 
@@ -30,7 +30,7 @@ interface ClerkSessionLike {
 }
 
 function getRuntimeEnv(): ViteEnvLike {
-  const testGlobal = globalThis as TestableGlobalThis;
+  const testGlobal = globalThis as GlobalThisWithTestEnv;
   const override = testGlobal.__TEST_VITE_ENV__;
   const meta = import.meta as ImportMetaLike;
   return override || meta.env || {};
