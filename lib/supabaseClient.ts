@@ -8,16 +8,32 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-// import type { Session } from '@clerk/clerk-react';
+import { validateSupabaseConfigValues } from './supabase/config';
 
 type ViteEnvLike = {
   VITE_SUPABASE_URL?: string;
   VITE_SUPABASE_ANON_KEY?: string;
 };
 
+type GlobalThisWithTestEnv = typeof globalThis & {
+  __TEST_VITE_ENV__?: ViteEnvLike;
+};
+
+interface ImportMetaLike {
+  env?: ViteEnvLike;
+}
+
+interface ClerkSessionLike {
+  lastActiveToken?: {
+    jwt?: string;
+  } | null;
+}
+
 function getRuntimeEnv(): ViteEnvLike {
-  const override = (globalThis as any).__TEST_VITE_ENV__ as ViteEnvLike | undefined;
-  return override || ((import.meta as any).env as ViteEnvLike) || {};
+  const testGlobal = globalThis as GlobalThisWithTestEnv;
+  const override = testGlobal.__TEST_VITE_ENV__;
+  const meta = import.meta as ImportMetaLike;
+  return override || meta.env || {};
 }
 
 function getSupabaseUrl(): string {
@@ -34,7 +50,7 @@ function getSupabaseAnonKey(): string {
  * @param session - Clerk session object from useSession() hook
  * @returns Configured Supabase client
  */
-export function createSupabaseClient(session: any) {
+export function createSupabaseClient(session: ClerkSessionLike) {
   const supabaseUrl = getSupabaseUrl();
   const supabaseAnonKey = getSupabaseAnonKey();
   return createClient(supabaseUrl, supabaseAnonKey, {
@@ -91,19 +107,8 @@ export function createSupabaseClientWithTokenGetter(getToken: () => Promise<stri
  * Validate client-side Supabase configuration
  */
 export function validateSupabaseConfig(): { valid: boolean; message: string } {
-  const supabaseUrl = getSupabaseUrl();
-  const supabaseAnonKey = getSupabaseAnonKey();
-  if (!supabaseUrl) {
-    return { valid: false, message: 'VITE_SUPABASE_URL is not configured' };
-  }
-
-  if (!supabaseAnonKey) {
-    return { valid: false, message: 'VITE_SUPABASE_ANON_KEY is not configured' };
-  }
-
-  if (!supabaseUrl.startsWith('https://')) {
-    return { valid: false, message: 'VITE_SUPABASE_URL must start with https://' };
-  }
-
-  return { valid: true, message: 'Supabase configuration is valid' };
+  return validateSupabaseConfigValues({
+    url: getSupabaseUrl(),
+    anonKey: getSupabaseAnonKey(),
+  });
 }
