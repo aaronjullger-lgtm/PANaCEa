@@ -5,6 +5,8 @@
  * Sentry is only loaded when VITE_SENTRY_DSN is configured.
  */
 
+import { logger } from '@/lib/logger';
+
 type SentryBrowser = typeof import('@sentry/browser');
 type SentryReact = typeof import('@sentry/react');
 type SentryClient = SentryReact & {
@@ -42,14 +44,14 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
 
   // Only touch the DSN when we're in production
   if (!isProduction) {
-    console.log('[Sentry] Skipping initialization outside production');
+    logger.info('[Sentry] Skipping initialization outside production');
     return;
   }
 
   const dsn = import.meta.env.VITE_SENTRY_DSN;
 
   if (!dsn) {
-    console.log('[Sentry] DSN not configured, error tracking disabled');
+    logger.info('[Sentry] DSN not configured, error tracking disabled');
     return;
   }
 
@@ -102,7 +104,7 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
             // Wrap PromiseLike in Promise.resolve() to get .catch() support
             return Promise.resolve(defaultTransport.send(envelope)).catch((error: unknown) => {
               // Suppress sentry-tunnel errors to avoid console spam
-              console.debug('[Sentry] Tunnel error suppressed:', error);
+              logger.debug('[Sentry] Tunnel error suppressed', { error });
               return Promise.resolve({});
             });
           },
@@ -136,9 +138,9 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
     });
 
     isInitialized = true;
-    console.log('[Sentry] Initialized successfully');
+    logger.info('[Sentry] Initialized successfully');
   } catch (error) {
-    console.warn('[Sentry] Failed to initialize:', error);
+    logger.warn('[Sentry] Failed to initialize', { error });
   }
 }
 
@@ -154,7 +156,7 @@ export function captureError(
     user?: { id: string; email?: string };
   }
 ): string {
-  console.error('[Error]', error.message, context);
+  logger.error('[Error]', { message: error.message, context, error });
 
   if (!Sentry || !isInitialized) {
     return '';
@@ -189,7 +191,7 @@ export function captureMessage(
   }
 ): string {
   if (!Sentry || !isInitialized) {
-    console.log(`[${level}]`, message, context);
+    logger.info(`[${level}] ${message}`, context);
     return '';
   }
 

@@ -18,6 +18,7 @@
  * - Koriat & Goldsmith (1996): Monitoring and control in memory
  * - Metcalfe (2017): Error correction and hypercorrection
  */
+import { safeDivide } from './math/safeNumeric';
 
 /**
  * Error diagnostic classification
@@ -135,7 +136,7 @@ export function classifyError(input: ErrorClassificationInput): ErrorDiagnostic 
   }
 
   const evidence = buildEvidence(input);
-  const latencyRatio = input.latencyMs / input.parTimeMs;
+  const latencyRatio = safeDivide(input.latencyMs, input.parTimeMs);
 
   // Priority 1: Check for "Don't Know" usage
   if (input.usedDontKnow) {
@@ -249,7 +250,7 @@ function buildEvidence(input: ErrorClassificationInput): ErrorEvidence {
     initiallyCorrect,
     trajectoryConfidence: input.trajectoryConfidence,
     repeatDistractor: input.repeatDistractor || false,
-    latencyRatio: input.latencyMs / input.parTimeMs,
+    latencyRatio: safeDivide(input.latencyMs, input.parTimeMs),
   };
 }
 

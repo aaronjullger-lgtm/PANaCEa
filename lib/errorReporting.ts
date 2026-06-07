@@ -8,6 +8,7 @@
 
 import { toast } from 'sonner';
 import { captureError } from '@/lib/monitoring/sentry';
+import { logger } from '@/lib/logger';
 
 /**
  * Messages that indicate expected user-facing conditions (not bugs).
@@ -33,7 +34,7 @@ export function reportActionError(
   error?: unknown
 ): void {
   if (error !== undefined && error !== null) {
-    console.error('[Action error]', message, error);
+    logger.error('[Action error]', { message, error });
 
     // Only send unexpected errors to Sentry; expected user-facing conditions
     // (e.g. "please sign in") are not bugs and would create noise.

@@ -17,7 +17,7 @@
  * @see https://www.prisma.io/docs/orm/overview/databases/postgresql#driver-adapters
  */
 
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -70,7 +70,7 @@ NODE_ENV: ${process.env.NODE_ENV || 'undefined'}
     process.env.NODE_ENV === 'development' ||
     process.env.NODE_ENV === 'test' ||
     !process.env.NODE_ENV;
-  const logLevel = isDevelopment ? ['query', 'error', 'warn'] : ['error'];
+  const logLevel: Prisma.LogLevel[] = isDevelopment ? ['query', 'error', 'warn'] : ['error'];
 
   // LOCAL DEVELOPMENT & TESTING: Use PG Adapter to satisfy WASM engine requirements
   if (isDevelopment) {
@@ -85,14 +85,14 @@ NODE_ENV: ${process.env.NODE_ENV || 'undefined'}
 
     return new PrismaClient({
       adapter,
-      log: logLevel as any,
+      log: logLevel,
     });
   }
 
   // PRODUCTION: Use Accelerate extension with prisma:// URL
   const basePrisma = new PrismaClient({
     accelerateUrl: process.env.DATABASE_URL,
-    log: logLevel as any,
+    log: logLevel,
   });
 
   return basePrisma.$extends(withAccelerate());

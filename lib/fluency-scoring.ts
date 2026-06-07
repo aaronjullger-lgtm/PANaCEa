@@ -15,6 +15,7 @@
  * - Kelley & Jacoby (1998): Subjective fluency as a cue
  * - Benjamin et al. (1998): Retrieval fluency and recall
  */
+import { safeDivide } from './math/safeNumeric';
 
 /**
  * Fluency state classification
@@ -165,7 +166,7 @@ export function calculateFluency(input: FluencyInput): ResponseFluency {
  * Calculate individual fluency components
  */
 function calculateComponents(input: FluencyInput): FluencyComponents {
-  const latencyRatio = input.latencyMs / input.parTimeMs;
+  const latencyRatio = safeDivide(input.latencyMs, input.parTimeMs);
 
   // Stability score (from variance in recent latencies)
   let stabilityScore = 0.5; // Default if no history
@@ -175,7 +176,7 @@ function calculateComponents(input: FluencyInput): FluencyComponents {
     const variance =
       input.previousLatencies.reduce((sum, l) => sum + Math.pow(l - mean, 2), 0) /
       input.previousLatencies.length;
-    const cv = Math.sqrt(variance) / mean; // Coefficient of variation
+    const cv = safeDivide(Math.sqrt(variance), mean, 1); // Coefficient of variation
     stabilityScore = Math.max(0, 1 - cv / THRESHOLDS.CV_STABLE_THRESHOLD);
   }
 
@@ -240,7 +241,7 @@ function classifyState(
   components: FluencyComponents,
   input: FluencyInput
 ): FluencyState {
-  const latencyRatio = input.latencyMs / input.parTimeMs;
+  const latencyRatio = safeDivide(input.latencyMs, input.parTimeMs);
 
   // Disengaged: Very fast with low engagement
   if (latencyRatio < THRESHOLDS.MIN_ENGAGED_RATIO && components.engagementScore < 0.3) {

@@ -163,6 +163,7 @@
     "audit:design-system:strict": "tsx scripts/audit-design-system.ts --strict",
     "audit:all": "npm run audit:prisma && npm run audit:zod && npm run audit:loading && npm run audit:services && npm run audit:components",
     "env:check:backend": "node scripts/validate-backend-env.mjs",
+    "env:check:compat-date": "node scripts/validate-compatibility-date.mjs",
     "verify:anatomy-assets": "node scripts/verify-nih-anatomy-assets.mjs",
     "agents:trigger": "tsx scripts/cloud-agents/trigger.ts",
     "agents:bulk": "tsx scripts/cloud-agents/bulk-repos.ts",
