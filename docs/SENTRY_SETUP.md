@@ -47,7 +47,7 @@ The app sends events through **`/api/sentry-tunnel`** to avoid ad-blockers and C
    - `SENTRY_PROJECT_ID` (e.g. `4510664023212032`)
 3. If you created a **new** Sentry project, update `SENTRY_HOST` and `SENTRY_PROJECT_ID` in `sentry-tunnel.ts` to match your DSN.
 
-If they don’t match, the tunnel returns **403 Invalid project ID** or Sentry may reject the envelope.
+If they don't match, the tunnel returns **403 Invalid project ID** or Sentry may reject the envelope.
 
 ---
 
@@ -56,7 +56,7 @@ If they don’t match, the tunnel returns **403 Invalid project ID** or Sentry m
 If the browser shows **400** on `POST /api/sentry-tunnel`:
 
 - The tunnel returns **400** when the envelope is missing, empty, or malformed.
-- Response body is JSON with `error` and `reason` (e.g. `empty_body`, `invalid_format`, `invalid_header`, `invalid_dsn`). Use **Network** tab → **sentry-tunnel** → **Response** to see `reason`.
+- Response body uses PANaCEa's shared API error envelope with `ok: false`, `error.code`, and `message` (for example, `VALIDATION_FAILED` with `Empty envelope body`, `Failed to parse envelope header`, or `Invalid DSN format`). Use **Network** tab -> **sentry-tunnel** -> **Response** to inspect the envelope.
 - **Typical causes:**
   - **Empty body:** Request sent without body (e.g. wrong method or middleware stripping body).
   - **Invalid format:** Envelope not newline-delimited JSON as Sentry expects.
@@ -94,7 +94,7 @@ To see readable stack traces in Sentry:
 | Goal | Action |
 |------|--------|
 | Enable client error tracking | Set `VITE_SENTRY_DSN` (production only). |
-| Fix tunnel 400 | Check Network response `reason`; align DSN and tunnel project ID; ensure POST body is sent. |
+| Fix tunnel 400 | Check Network response `error.code` and `message`; align DSN and tunnel project ID; ensure POST body is sent. |
 | Fix tunnel 403 | Update `SENTRY_PROJECT_ID` (and host if needed) in `sentry-tunnel.ts` to match your DSN. |
 | Upload source maps | Set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_UPLOAD=true` at build time. |
 | Server-side errors to Sentry | Set `SENTRY_DSN` in Cloudflare Pages env for the API. |

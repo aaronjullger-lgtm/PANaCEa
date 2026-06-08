@@ -442,7 +442,7 @@ Development:
 - `npm run dev` -> `vite`
 - `npm run dev:server` -> `node --env-file=.env --watch --import tsx server.ts`
 - `npm run dev:all` -> `concurrently "npm run dev:server" "npm run dev"`
-- `npm run dev:wrangler` -> `wrangler pages dev dist --compatibility-date=2024-11-01 --compatibility-flag=nodejs_compat -- npm run dev`
+- `npm run dev:wrangler` -> `npm run build && wrangler pages dev dist --compatibility-date=2025-12-15 --compatibility-flag=nodejs_compat`
 
 Build and local serving:
 
@@ -451,8 +451,8 @@ Build and local serving:
 - `npm run build:check-size` -> `node scripts/check-bundle-size.mjs`
 - `npm run build:analyze` -> `ANALYZE=true npm run build`
 - `npm run preview` -> `vite preview`
-- `npm run pages:serve` -> `npm run build && wrangler pages dev dist`
-- `npm run pages:dev` -> `wrangler pages dev dist --compatibility-date=2024-11-01 --compatibility-flag=nodejs_compat -- npm run dev`
+- `npm run pages:serve` -> `wrangler pages dev dist --compatibility-date=2025-12-15 --compatibility-flag=nodejs_compat`
+- `npm run pages:dev` -> `npm run build && wrangler pages dev dist --compatibility-date=2025-12-15 --compatibility-flag=nodejs_compat`
 - `npm run pages:deploy` -> `npm run build && wrangler pages deploy dist`
 
 Lint:

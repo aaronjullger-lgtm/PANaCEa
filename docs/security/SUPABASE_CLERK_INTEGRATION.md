@@ -40,6 +40,14 @@ VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxxxx
 CLERK_SECRET_KEY=sk_test_xxxxx
 ```
 
+Supabase client configuration is validated before use:
+
+- `SUPABASE_URL`/`VITE_SUPABASE_URL` must be present and start with `https://`.
+- `SUPABASE_ANON_KEY`/`VITE_SUPABASE_ANON_KEY` must be present for anon/RLS clients.
+- Browser Clerk-aware clients read `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
+  from `import.meta.env`; the `globalThis.__TEST_VITE_ENV__` override is reserved
+  for tests.
+
 ### 2. Using Supabase with Clerk in React Components
 
 Use the `useSupabase()` hook to get a Supabase client configured with Clerk authentication:
@@ -164,6 +172,7 @@ createClient(supabaseUrl, supabaseAnonKey, {
 - Clerk handles token refresh automatically
 - Tokens are fetched on each Supabase request
 - No need to manually manage token lifecycle
+- Supabase's built-in auth persistence remains disabled for Clerk-backed clients
 
 ## Testing
 

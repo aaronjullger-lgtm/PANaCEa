@@ -38,6 +38,11 @@ A failure in any of these fails the merge. They run in parallel.
 | **Secret scan** | `gitleaks` against `.gitleaks.toml` | Full-history scan on push | &lt;1 min |
 | **A11y (axe-core)** | `npm run test:e2e:a11y` | axe-core WCAG 2.1 AA on SPA routes via `vite preview` | &lt;5 min |
 
+Compatibility-date parity is checked locally with `npm run env:check:compat-date`.
+That script fails if `wrangler.toml` and the Wrangler command in
+`.github/workflows/ci.yml` drift from the same `YYYY-MM-DD` value. The current
+Pages runtime date is `2025-12-15`.
+
 ### Rationale per gate
 
 - **Lint** — `--max-warnings 2000` is the current ceiling, not the target. See
@@ -65,7 +70,7 @@ failing the merge.
 | Gate | Command | Why advisory today |
 |---|---|---|
 | **Unit — full** | `npm test` (full Vitest) | 8 known-failing files per CLAUDE.md (React 19 compat issues in admin / Goals / offline). Demoted so the rest of the gate is actionable. |
-| **API smoke** | Playwright `e2e/api-health.spec.ts` via `wrangler pages dev` | `wrangler pages dev` pg/Node-builtins issue: the `nodejs_compat` flag is set but `pg` still fails to start the runtime locally in CI. Advisory until the runtime fix is verified across 3+ consecutive CI runs. |
+| **API smoke** | Playwright `e2e/api-health.spec.ts` via `wrangler pages dev --compatibility-date=2025-12-15 --compatibility-flags=nodejs_compat` | `wrangler pages dev` pg/Node-builtins issue: the `nodejs_compat` flag is set but `pg` still fails to start the runtime locally in CI. Advisory until the runtime fix is verified across 3+ consecutive CI runs. |
 
 Advisory jobs still upload artifacts (coverage, Playwright reports) so
 regressions are diagnosable.

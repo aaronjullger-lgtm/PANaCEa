@@ -258,7 +258,7 @@ Production runtime smoke:
 
 ```bash
 npm run build
-npx wrangler pages dev dist --port 8788 --compatibility-date=2024-01-01 --compatibility-flags=nodejs_compat
+npx wrangler pages dev dist --port 8788 --compatibility-date=2025-12-15 --compatibility-flags=nodejs_compat
 BASE_URL=http://localhost:8788 npm run test:e2e:wrangler
 E2E_REQUIRE_AUTH=1 npm run test:e2e:production-smoke
 ```
