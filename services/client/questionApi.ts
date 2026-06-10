@@ -115,9 +115,15 @@ export async function getQuestionClient(
         idx = resolved ?? -1;
       }
 
-      // Transform PreGeneratedQuestion to Question format
+      // Transform PreGeneratedQuestion to Question format.
+      // /api/questions/fetch serves PreGeneratedQuestion rows exclusively, so the
+      // review-pipeline identity must say so — otherwise getQuestionIdentity()
+      // infers 'question' and submit-review fails to resolve the id.
       const question: Question = {
         id: q.id,
+        questionSource: 'pre_generated',
+        canonicalQuestionId: null,
+        sourceQuestionId: q.id,
         question: q.questionText,
         options: opts,
         correctAnswerIndex: idx,

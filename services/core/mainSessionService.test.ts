@@ -64,6 +64,102 @@ describe('fetchSessionQuestions', () => {
     expect(result.poolStatus).toEqual({ available: 12, needsGeneration: false });
   });
 
+  it('preserves identity and content-linkage fields from the session API', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          ok: true,
+          data: {
+            questions: [
+              {
+                id: 'pg-1',
+                question: 'Question?',
+                vignette: 'A 24-year-old presents with...',
+                options: ['A', 'B', 'C', 'D'],
+                correctAnswerIndex: 0,
+                rationale: 'A is correct.',
+                system: 'CV',
+                pearls: [],
+                source: 'pool',
+                questionSource: 'pre_generated',
+                canonicalQuestionId: null,
+                sourceQuestionId: 'pg-1',
+                medicalContentId: 'mc-1',
+                difficulty: 'medium',
+              },
+            ],
+            analytics,
+            poolStatus: { available: 12, needsGeneration: false },
+          },
+        }),
+      })
+    );
+
+    const result = await fetchSessionQuestions({ focus: 'all' } as any, 'token', 1);
+
+    expect(result.questions[0]).toMatchObject({
+      questionSource: 'pre_generated',
+      canonicalQuestionId: null,
+      sourceQuestionId: 'pg-1',
+      medicalContentId: 'mc-1',
+      difficulty: 'medium',
+      vignette: 'A 24-year-old presents with...',
+    });
+  });
+
+  it('derives questionSource from the legacy source field when identity is absent', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          ok: true,
+          data: {
+            questions: [
+              {
+                id: 'pg-legacy',
+                question: 'Pool question?',
+                options: ['A', 'B'],
+                correctAnswerIndex: 0,
+                rationale: 'A.',
+                system: 'CV',
+                pearls: [],
+                source: 'pool',
+              },
+              {
+                id: 'q-main',
+                question: 'Main question?',
+                options: ['A', 'B'],
+                correctAnswerIndex: 1,
+                rationale: 'B.',
+                system: 'PULM',
+                pearls: [],
+                source: 'main',
+              },
+            ],
+            analytics,
+            poolStatus: { available: 12, needsGeneration: false },
+          },
+        }),
+      })
+    );
+
+    const result = await fetchSessionQuestions({ focus: 'all' } as any, 'token', 2);
+
+    expect(result.questions[0]).toMatchObject({
+      questionSource: 'pre_generated',
+      canonicalQuestionId: null,
+      sourceQuestionId: 'pg-legacy',
+    });
+    expect(result.questions[1]).toMatchObject({
+      questionSource: 'question',
+      canonicalQuestionId: 'q-main',
+      sourceQuestionId: 'q-main',
+    });
+  });
+
   it('fails closed instead of serving client-generated fallback questions when the canonical session API is unavailable', async () => {
     vi.stubGlobal(
       'fetch',

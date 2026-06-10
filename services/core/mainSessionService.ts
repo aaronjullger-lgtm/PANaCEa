@@ -56,6 +56,17 @@ let currentSession: SessionState | null = null;
 let lastPoolStatus: PoolStatus | null = null;
 
 /**
+ * Fallback identity mapping for API payloads that predate explicit
+ * per-question `questionSource` (mirrors SessionService.recordQuestionSeen).
+ */
+const SOURCE_TO_QUESTION_SOURCE: Record<string, NonNullable<Question['questionSource']>> = {
+  pool: 'pre_generated',
+  main: 'question',
+  seed: 'seed',
+  generated: 'generated',
+};
+
+/**
  * Initialize a new session
  */
 export function initializeSession(): SessionState {
@@ -215,23 +226,37 @@ export async function fetchSessionQuestions(
       // Update pool status cache
       lastPoolStatus = data.poolStatus;
 
-      // Transform API response to frontend Question format
-      const questions: Question[] = data.questions.map((q: any) => ({
-        id: q.id,
-        question: q.question || q.vignette,
-        options: q.options,
-        correctAnswerIndex: q.correctAnswerIndex,
-        rationale: q.rationale,
-        topic: q.system,
-        system: q.system,
-        subcategory: q.subcategory,
-        conditionId: q.conditionId,
-        condition: q.condition,
-        pearls: q.pearls || [],
-        source: q.source,
-        fromStaging: q.fromStaging,
-        metadata: q.metadata,
-      }));
+      // Transform API response to frontend Question format.
+      // Identity fields (questionSource/canonicalQuestionId/sourceQuestionId) MUST
+      // survive this transform: getQuestionIdentity() infers 'question' from any
+      // non-derived id, which mis-routes pool/seed submissions in submit-review.
+      const questions: Question[] = data.questions.map((q: any) => {
+        const questionSource: Question['questionSource'] =
+          q.questionSource ?? SOURCE_TO_QUESTION_SOURCE[q.source as string] ?? 'question';
+        return {
+          id: q.id,
+          canonicalQuestionId:
+            q.canonicalQuestionId ?? (questionSource === 'question' ? q.id : null),
+          sourceQuestionId: q.sourceQuestionId ?? q.id,
+          questionSource,
+          question: q.question || q.vignette,
+          vignette: q.vignette,
+          options: q.options,
+          correctAnswerIndex: q.correctAnswerIndex,
+          rationale: q.rationale,
+          topic: q.system,
+          system: q.system,
+          subcategory: q.subcategory,
+          conditionId: q.conditionId,
+          medicalContentId: q.medicalContentId ?? null,
+          condition: q.condition,
+          difficulty: q.difficulty,
+          pearls: q.pearls || [],
+          source: q.source,
+          fromStaging: q.fromStaging,
+          metadata: q.metadata,
+        };
+      });
 
       return {
         questions,

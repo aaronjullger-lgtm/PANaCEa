@@ -123,6 +123,48 @@ describe('SessionService production serving contract', () => {
     );
   });
 
+  it('serves explicit review-pipeline identity for pool and main questions', async () => {
+    mockPrisma.question.findMany.mockResolvedValue([
+      {
+        id: 'q-main-1',
+        question: 'Main question?',
+        vignette: null,
+        options: ['A', 'B', 'C', 'D'],
+        correctAnswer: 'A',
+        explanation: 'Because A.',
+        system: 'CV',
+        conditionId: 'condition-1',
+        medicalContentId: 'medical-content-1',
+        difficulty: 'medium',
+        timesSeen: 0,
+        Condition: { name: 'Heart failure' },
+      },
+    ]);
+
+    const service = new SessionService('postgresql://test', {} as any);
+    // count >= 11 so fetchSimpleSession allocates a non-zero main-table quota
+    const result = await service.getSessionQuestions({
+      userId: 'user-1',
+      count: 15,
+      system: 'Cardiovascular',
+      sessionLane: 'drill',
+    });
+
+    const pool = result.questions.find((q) => q.source === 'pool');
+    const main = result.questions.find((q) => q.source === 'main');
+
+    expect(pool).toMatchObject({
+      questionSource: 'pre_generated',
+      canonicalQuestionId: null,
+      sourceQuestionId: 'pg-1',
+    });
+    expect(main).toMatchObject({
+      questionSource: 'question',
+      canonicalQuestionId: 'q-main-1',
+      sourceQuestionId: 'q-main-1',
+    });
+  });
+
   it('does not serve seed-expanded or hot-path generated questions when safe persisted content is short', async () => {
     mockPrisma.preGeneratedQuestion.count.mockResolvedValue(0);
     mockPrisma.preGeneratedQuestion.findMany.mockResolvedValue([]);

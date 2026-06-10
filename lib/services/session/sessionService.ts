@@ -111,6 +111,14 @@ export interface EnrichedQuestion {
   pearls: string[];
   difficulty: string;
   source: 'pool' | 'main' | 'generated' | 'seed';
+  /**
+   * Review-pipeline identity. `questionSource` tells the submit-review resolver
+   * which table `sourceQuestionId` belongs to; without it the client infers
+   * 'question' from any non-derived id, which mis-routes pool/seed submissions.
+   */
+  questionSource: 'question' | 'pre_generated' | 'seed' | 'generated';
+  canonicalQuestionId: string | null;
+  sourceQuestionId: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -635,6 +643,9 @@ export class SessionService {
         pearls: (data.pearls || []) as string[],
         difficulty: q.difficulty,
         source: 'pool',
+        questionSource: 'pre_generated',
+        canonicalQuestionId: null,
+        sourceQuestionId: q.id,
         metadata: { generatedAt: q.generatedAt },
       });
       seenIds.add(q.id);
@@ -729,6 +740,9 @@ export class SessionService {
         pearls: [],
         difficulty: seed.difficulty,
         source: 'seed',
+        questionSource: 'seed',
+        canonicalQuestionId: null,
+        sourceQuestionId: id,
         metadata: { seedId: seed.id },
       };
     } catch (error) {
@@ -834,6 +848,9 @@ export class SessionService {
         pearls: [],
         difficulty: q.difficulty || 'medium',
         source: 'main',
+        questionSource: 'question',
+        canonicalQuestionId: q.id,
+        sourceQuestionId: q.id,
       });
       seenIds.add(q.id);
       questionIdsToUpdate.push(q.id);

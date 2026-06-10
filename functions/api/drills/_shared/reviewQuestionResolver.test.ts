@@ -124,6 +124,44 @@ describe('resolveReviewQuestion', () => {
     );
   });
 
+  it('recovers pre-generated questions misattributed as canonical questions', async () => {
+    const prisma = makePrisma({
+      preGeneratedQuestion: {
+        findFirst: vi.fn().mockResolvedValue({
+          id: 'pg-pool-1',
+          questionData: { question: 'Q', options: ['A', 'B'], correctAnswer: 'A' },
+          conditionId: 'cond-1',
+          medicalContentId: null,
+          system: 'CV',
+          difficulty: 'medium',
+          questionType: 'mcq',
+        }),
+      },
+    });
+
+    const result = await resolveReviewQuestion(prisma, {
+      userId: 'user-1',
+      questionId: 'pg-pool-1',
+      canonicalQuestionId: 'pg-pool-1',
+      questionSource: 'question',
+      selectedAnswer: 'A',
+    });
+
+    // The canonical claim is checked first, but a miss must fall back to
+    // PreGeneratedQuestion instead of degrading to the attempt fallback.
+    expect(prisma.question.findFirst).toHaveBeenCalled();
+    expect(result.source).toBe('pre_generated');
+    expect(result.question).toEqual(
+      expect.objectContaining({
+        id: 'pg-pool-1',
+        canonicalQuestionId: null,
+        sourceQuestionId: 'pg-pool-1',
+        questionSource: 'pre_generated',
+      })
+    );
+    expect(prisma.questionAttempt.findFirst).not.toHaveBeenCalled();
+  });
+
   it('marks attempt fallback submissions as generated typed references', async () => {
     const prisma = makePrisma({
       questionAttempt: {
