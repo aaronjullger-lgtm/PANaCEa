@@ -208,6 +208,61 @@ test.describe.serial('production smoke: authenticated core study loop', () => {
     expect(duplicateAttempt.response.status()).toBe(200);
     expect(dataFromEnvelope(duplicateAttempt.body)?.success).toBe(true);
 
+    // ── Canonical review loop ──
+    // Single-writer invariant: the legacy /api/questions/attempt compat path
+    // above must NOT return FSRS scheduling output — only
+    // /api/drills/submit-review (drillReviewService) schedules reviews.
+    expect(dataFromEnvelope(attempt.body)?.fsrsSchedule).toBeUndefined();
+
+    const reviewQuestion =
+      session.questions.find(
+        (q: any) =>
+          (q.conditionId || q.medicalContentId) &&
+          Array.isArray(q.options) &&
+          typeof q.correctAnswerIndex === 'number' &&
+          q.correctAnswerIndex >= 0 &&
+          q.correctAnswerIndex < q.options.length
+      ) ?? session.questions[0];
+
+    // Served questions carry explicit review-pipeline identity and progress
+    // linkage (the serving gate must exclude unlinked questions), plus a
+    // rationale so the explanation panel has content.
+    expect(String(reviewQuestion.questionSource ?? '')).toMatch(
+      /^(question|pre_generated|seed|generated)$/
+    );
+    expect(String(reviewQuestion.sourceQuestionId ?? reviewQuestion.id ?? '')).not.toHaveLength(0);
+    expect(reviewQuestion.conditionId ?? reviewQuestion.medicalContentId).toBeTruthy();
+    expect(
+      String(reviewQuestion.rationale ?? reviewQuestion.explanation ?? '').length
+    ).toBeGreaterThan(0);
+
+    const review = await postJson(request, '/api/drills/submit-review', token, {
+      questionId: reviewQuestion.sourceQuestionId ?? reviewQuestion.id,
+      canonicalQuestionId: reviewQuestion.canonicalQuestionId ?? null,
+      sourceQuestionId: reviewQuestion.sourceQuestionId ?? reviewQuestion.id,
+      questionSource: reviewQuestion.questionSource,
+      selectedAnswer: reviewQuestion.options[reviewQuestion.correctAnswerIndex],
+      timeSpentMs: 30_000, // well above the 2s server MVRT floor — not a rapid guess
+      timeToFirstClick: 6_000,
+      answerSwitches: 0,
+      totalDwellTime: 30_000,
+      sessionType: 'main',
+    });
+    expect(review.response.status()).toBe(200);
+    const reviewData = dataFromEnvelope(review.body);
+    expect(reviewData?.success).toBe(true);
+    // FSRS ran for a normal linked question: no skip reason, durable due state
+    // advanced into the future (QuestionAttempt + ReviewLog + UserProgress are
+    // written by the same call before this response is produced).
+    expect(reviewData?.fsrsSkippedReason).toBeUndefined();
+    expect(reviewData?.fsrsSchedule?.nextDueDate).toEqual(expect.any(String));
+    expect(new Date(reviewData.fsrsSchedule.nextDueDate).getTime()).toBeGreaterThan(Date.now());
+
+    // Next-selection reads the same due store the review just wrote.
+    const due = await getJson(request, '/api/srs/due', token);
+    expect(due.response.status()).toBe(200);
+    expect(dataFromEnvelope(due.body)).toBeTruthy();
+
     const dashboardAfter = await getJson(request, '/api/dashboard/stats', token);
     expect(dashboardAfter.response.status()).toBe(200);
     expect(dataFromEnvelope(dashboardAfter.body)).toBeTruthy();

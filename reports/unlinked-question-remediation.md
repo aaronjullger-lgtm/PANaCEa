@@ -56,9 +56,12 @@ vignette tests. The audit script can be re-run any time to refresh the list:
 npx tsx scripts/audit-unlinked-questions.ts   # requires DATABASE_URL/DIRECT_DATABASE_URL
 ```
 
-## Production runtime smoke — BLOCKED (environment)
+## Production runtime smoke — prior-sprint state (SUPERSEDED — see Sprint update below)
 
-`npm run test:e2e:production-smoke` could not be executed in this container.
+> Resolved in the 2026-06-10 sprint update: the runtime was started locally and
+> the public smoke now passes. This section is retained for history.
+
+`npm run test:e2e:production-smoke` could not be executed in the earlier container.
 
 Missing prerequisites:
 - `CLERK_SECRET_KEY` — backend auth verification (unset; no `.env` present)
@@ -87,3 +90,70 @@ end-to-end loop invariants, all green:
   `functions/api/drills/_shared/reviewQuestionResolver.test.ts`
 - durable FSRS writes + `fsrsSkippedReason` observability + single writer:
   `tests/drillReviewService.test.ts`
+
+---
+
+## Sprint update (2026-06-10): smoke verified + linking workflow added
+
+### Production runtime smoke — NOW RUN (previously blocked)
+
+Built the bundle and started the real Cloudflare runtime locally
+(`wrangler pages dev dist` on port 8789 with dummy DATABASE_URL/CLERK bindings).
+Fixed one build blocker found in the process: `functions/api/_shared/semantic-cache.ts`
+imported a missing `@/lib/services/tokenMatchCache` — created that pure module
+(extracted from the deprecated `semanticCacheService.ts` per its own deprecation
+note), which had been silently breaking the Functions build.
+
+`BASE_URL=http://127.0.0.1:8789 npm run test:e2e:production-smoke`:
+- ✓ `GET /api/health` returns public liveness (status ok, functionDeployed pass)
+- ✓ app shell loads at `/study`
+- ✓ unauthenticated `/api/user/stats` returns standard 401 `{ ok:false, error:{ code:'UNAUTHORIZED' } }`
+- − authenticated core-study-loop **self-skips** (no `CLERK_SECRET_KEY` +
+  `E2E_CLERK_TEST_EMAIL`; the local bindings are dummies, real Clerk sign-in
+  can't run here).
+
+The authenticated loop spec was **extended** (`e2e/production-smoke/core-launch.spec.ts`)
+to assert the full repaired loop so it runs on a credentialed machine:
+served-question explicit identity + progress linkage + rationale → answer →
+`/api/drills/submit-review` success with **no `fsrsSkippedReason`** and a
+future `nextDueDate` → `/api/srs/due` observes the write → single-writer
+invariant (legacy `/api/questions/attempt` returns no `fsrsSchedule`).
+
+To run the authenticated half:
+```
+npm run dev:wrangler   # or wrangler pages dev dist ... with real DATABASE_URL + CLERK_SECRET_KEY
+E2E_REQUIRE_AUTH=1 E2E_CLERK_TEST_EMAIL=... CLERK_SECRET_KEY=... \
+  BASE_URL=http://127.0.0.1:8788 npm run test:e2e:production-smoke
+```
+
+### Human-confirmed linking workflow
+
+Added a reviewed-linking workflow (no auto-inference, dry-run first):
+
+- `scripts/lib/linkingTemplate.ts` — pure template + validation helpers.
+- `scripts/generate-unlinked-question-linking-template.ts` — read-only; writes
+  `reports/unlinked-question-linking-template.json`, merges/preserves reviewer
+  fields on re-run.
+- `scripts/apply-unlinked-question-links.ts` — **dry-run by default**; `--apply`
+  to mutate, refuses production without `--allow-production`, refuses the whole
+  run if any reviewed row is invalid, never deletes. `retire` uses existing
+  status conventions (PreGen → `validationStatus='rejected'`; Question →
+  `lifecycleStatus='RETIRED'`).
+- `reports/unlinked-question-linking-template.json` — seed worklist (89 rows,
+  identity + candidate condition IDs; context fields enrich on DB run).
+
+Allowed `reviewDecision`: `link_condition`, `link_medical_content`, `retire`,
+`keep_quarantined`, `needs_more_information`. Exactly one reviewed target for
+link decisions; notes required for the non-link decisions; `reviewedBy` always
+required.
+
+### Admin UI decision
+
+An admin review pattern already exists (`functions/api/admin/question-review.ts`,
+`components/admin/QuestionReviewQueue.tsx`, `QuestionCurationPanel.tsx`). A
+minimal "assign condition/medical-content for unlinked questions" panel could
+extend `QuestionCurationPanel`, but admin components carry React 19 compat test
+exclusions (per CLAUDE.md) and building UI is out of this sprint's scope. For
+89 one-time rows the JSON template + dry-run apply script is the correct
+lightweight path now; revisit an admin panel only if unlinked content recurs at
+volume.
