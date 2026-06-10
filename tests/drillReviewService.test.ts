@@ -17,6 +17,7 @@ import {
   updateTimingAggregates,
 } from '../lib/services/userStatisticsService';
 import { applyDailyStudyPlanAction } from '../lib/services/studyPlanService';
+import { resolveAssignments, logABConversion } from '../lib/middleware/abTestMiddleware';
 import { normalizeDashboardSignals } from '../components/dashboard/adaptive/engine/normalizeSignals';
 import type { DashboardAnalyticsModel } from '../lib/dashboard/realStudyAnalytics';
 import type { TodayPlanData } from '../hooks/useTodayPlan';
@@ -1021,10 +1022,11 @@ describe('submitDrillReview', () => {
       };
       const question = { id: questionId, conditionId, questionData: {} };
 
-      await submitDrillReview(prisma, userId, input, question);
+      const result = await submitDrillReview(prisma, userId, input, question);
 
       expect(prisma.reviewLog.create).not.toHaveBeenCalled();
       expect(prisma.questionAttempt.create).toHaveBeenCalled();
+      expect(result.fsrsSkippedReason).toBe('session_type_excluded');
     });
 
     it('should skip ReviewLog for rapid‑recall sessions', async () => {
@@ -1036,9 +1038,10 @@ describe('submitDrillReview', () => {
       };
       const question = { id: questionId, conditionId, questionData: {} };
 
-      await submitDrillReview(prisma, userId, input, question);
+      const result = await submitDrillReview(prisma, userId, input, question);
 
       expect(prisma.reviewLog.create).not.toHaveBeenCalled();
+      expect(result.fsrsSkippedReason).toBe('session_type_excluded');
     });
 
     it('should handle rapid guess (duration < 500ms)', async () => {
@@ -1136,10 +1139,57 @@ describe('submitDrillReview', () => {
       };
       const question = { id: questionId, conditionId: null, questionData: {} };
 
-      await submitDrillReview(prisma, userId, input, question);
+      const result = await submitDrillReview(prisma, userId, input, question);
 
       expect(prisma.reviewLog.create).not.toHaveBeenCalled();
       expect(prisma.questionAttempt.create).toHaveBeenCalled();
+      // success:true with no schedule must be observable, never a silent no-op
+      expect(result.success).toBe(true);
+      expect(result.fsrsSchedule).toBeUndefined();
+      expect(result.fsrsSkippedReason).toBe('missing_condition_linkage');
+    });
+
+    it('should report rapid_guess as the FSRS skip reason', async () => {
+      const input: SubmitDrillReviewInput = {
+        questionId,
+        selectedAnswer: 'Answer',
+        timeSpentMs: 250,
+        telemetry: { duration_ms: 250, rapid_guess: true },
+      };
+      const question = { id: questionId, conditionId, questionData: {} };
+
+      (prisma.questionAttempt.findFirst as Mock).mockResolvedValue(null);
+      (prisma.reviewLog.create as Mock).mockResolvedValue({});
+      (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_123' });
+
+      const result = await submitDrillReview(prisma, userId, input, question);
+
+      expect(result.fsrsSkippedReason).toBe('rapid_guess');
+    });
+
+    it('logs A/B conversion events for completed reviews', async () => {
+      (resolveAssignments as Mock).mockResolvedValueOnce({
+        scheduling_retention_target: { variantName: 'control', config: {} },
+      });
+      const input: SubmitDrillReviewInput = {
+        questionId,
+        selectedAnswer: 'Answer',
+        timeSpentMs: 30000,
+        sessionType: 'cram',
+      };
+      const question = { id: questionId, conditionId, questionData: {} };
+
+      await submitDrillReview(prisma, userId, input, question);
+
+      expect(logABConversion).toHaveBeenCalledWith(
+        expect.anything(),
+        userId,
+        'scheduling_retention_target',
+        'control',
+        'review_completed',
+        expect.any(Number),
+        expect.objectContaining({ questionId })
+      );
     });
 
     it('should apply behavioral overrides (slow response)', async () => {

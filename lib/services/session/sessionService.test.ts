@@ -123,6 +123,35 @@ describe('SessionService production serving contract', () => {
     );
   });
 
+  it('only serves questions that can persist review progress (conditionId or medicalContentId)', async () => {
+    const linkageFilter = {
+      OR: [{ conditionId: { not: null } }, { medicalContentId: { not: null } }],
+    };
+
+    const service = new SessionService('postgresql://test', {} as any);
+    await service.getSessionQuestions({
+      userId: 'user-1',
+      count: 15,
+      system: 'Cardiovascular',
+      sessionLane: 'drill',
+    });
+
+    expect(mockPrisma.preGeneratedQuestion.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([linkageFilter]),
+        }),
+      })
+    );
+    expect(mockPrisma.question.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([linkageFilter]),
+        }),
+      })
+    );
+  });
+
   it('serves explicit review-pipeline identity for pool and main questions', async () => {
     mockPrisma.question.findMany.mockResolvedValue([
       {

@@ -394,6 +394,18 @@ export interface SubmitDrillReviewResult {
     stability: number;
     difficulty: number;
   };
+  /**
+   * Why FSRS scheduling did not run. Undefined when fsrsSchedule is present.
+   * 'missing_condition_linkage' means the question carries no conditionId, so
+   * the answer persisted as a QuestionAttempt but produced no ReviewLog or
+   * scheduling update — clients/ops must be able to see this rather than
+   * treating success:true as proof of a durable review.
+   */
+  fsrsSkippedReason?:
+    | 'session_type_excluded'
+    | 'rapid_guess'
+    | 'missing_condition_linkage'
+    | 'fsrs_update_failed';
   fireCredits?: Array<{ conceptId: string; stabilityMultiplier: number }>;
   /**
    * Sprint 3.4 — Wilson mastery signal (SHADOW / READ-ONLY).
@@ -2617,6 +2629,33 @@ export async function submitDrillReview(
     }
   }
 
+  // ── A/B Test: log conversion events for completed reviews ──
+  // Fires non-blocking; failures are caught internally and do not block the response.
+  if (Object.keys(abAssignments).length > 0) {
+    for (const [expId, assignment] of Object.entries(abAssignments)) {
+      logABConversion(
+        prisma as any,
+        userId,
+        expId,
+        assignment.variantName,
+        'review_completed',
+        isCorrect ? 1 : 0,
+        { timeSpentMs: numericTime, questionId, sessionType: sessionType ?? 'drill' }
+      );
+    }
+  }
+
+  // Make FSRS no-ops observable: success:true with no schedule must carry a reason.
+  const fsrsSkippedReason: SubmitDrillReviewResult['fsrsSkippedReason'] = fsrsSchedule
+    ? undefined
+    : !countForFSRS
+      ? 'session_type_excluded'
+      : isRapidGuess
+        ? 'rapid_guess'
+        : !question.conditionId
+          ? 'missing_condition_linkage'
+          : 'fsrs_update_failed';
+
   return {
     success: true,
     isCorrect,
@@ -2637,6 +2676,7 @@ export async function submitDrillReview(
     },
     // Real FSRS schedule data — undefined when FSRS was skipped (cram, rapid_recall, rapid guess, no conditionId)
     fsrsSchedule,
+    fsrsSkippedReason,
     // FIRe implicit review credits — stability multipliers for prerequisite concepts
     fireCredits,
     // Sprint 3.4 — Wilson mastery signal (read-only; does not affect scheduling).
@@ -2655,22 +2695,6 @@ export async function submitDrillReview(
         }
       : undefined,
   };
-
-  // ── A/B Test: log conversion events for completed reviews ──
-  // Fires non-blocking; failures are caught internally and do not block the response.
-  if (Object.keys(abAssignments).length > 0) {
-    for (const [expId, assignment] of Object.entries(abAssignments)) {
-      logABConversion(
-        prisma as any,
-        userId,
-        expId,
-        assignment.variantName,
-        'review_completed',
-        isCorrect ? 1 : 0,
-        { timeSpentMs: numericTime, questionId, sessionType: sessionType ?? 'drill' }
-      );
-    }
-  }
 }
 
 /**

@@ -24,6 +24,7 @@ import {
 import {
   withProductionPregeneratedSafety,
   withProductionQuestionSafety,
+  withProgressLinkage,
 } from '../questionServingSafety';
 
 // Interfaces moved from session.ts to be used in the service
@@ -580,7 +581,7 @@ export class SessionService {
     // For large counts, limit to reasonable size to prevent timeouts
     const fetchLimit = Math.min(count + 20, 50); // Max 50 questions per fetch
     const poolQuestions = await this.prisma.preGeneratedQuestion.findMany({
-      where,
+      where: withProgressLinkage(where) as Prisma.PreGeneratedQuestionWhereInput,
       take: fetchLimit,
       orderBy: { generatedAt: 'desc' }, // Prefer newer questions
     });
@@ -798,7 +799,7 @@ export class SessionService {
     // Optimize: fetch only what we need plus a small buffer, not count * 3
     const fetchLimit = Math.min(count + 15, 30); // Max 30 questions per fetch
     const dbQuestions = await this.prisma.question.findMany({
-      where,
+      where: withProgressLinkage(where) as Prisma.QuestionWhereInput,
       take: fetchLimit,
       orderBy: { timesSeen: 'asc' },
       include: {

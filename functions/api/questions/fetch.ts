@@ -8,7 +8,10 @@ import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserByClerkId } from '../_shared/resolveUser';
-import { withProductionPregeneratedSafety } from '../../../lib/services/questionServingSafety';
+import {
+  withProductionPregeneratedSafety,
+  withProgressLinkage,
+} from '../../../lib/services/questionServingSafety';
 
 const QuestionFetchSchema = z.object({
   system: z.string().optional(),
@@ -47,7 +50,8 @@ export const onRequestPost = authenticatedEndpoint(QuestionFetchSchema, async (c
 
     // Learner-facing fetches fail closed to validated content. Admin and
     // authoring surfaces have separate routes for pending/rejected drafts.
-    const where: any = withProductionPregeneratedSafety({});
+    // Progress linkage required: unlinked questions cannot persist review state.
+    const where: any = withProgressLinkage(withProductionPregeneratedSafety({}));
     if (system) where.system = system;
     if (difficulty) where.difficulty = difficulty;
     if (questionType) where.questionType = questionType;

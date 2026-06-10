@@ -131,6 +131,9 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
             system: string;
             conditionId?: string;
             condition?: string;
+            canonicalQuestionId?: string | null;
+            sourceQuestionId?: string | null;
+            questionSource?: 'question' | 'pre_generated' | 'staging' | 'seed' | 'generated';
           } | null;
           dueConceptKey: { conditionId: string; taskType: string | null };
         }>;
@@ -151,6 +154,12 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
             conditionId: key.conditionId,
             condition: q.condition ?? '',
             topic: q.system,
+            // Identity must survive this transform: due-siblings serves
+            // PreGeneratedQuestion variants, and without an explicit source the
+            // submit-review pipeline misclassifies the id as a canonical Question.
+            canonicalQuestionId: q.canonicalQuestionId ?? null,
+            sourceQuestionId: q.sourceQuestionId ?? q.id,
+            questionSource: q.questionSource ?? 'pre_generated',
             dueConceptKey: key,
           } as QuizQuestion;
         });
