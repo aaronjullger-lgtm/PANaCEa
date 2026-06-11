@@ -14,20 +14,44 @@
    references canonical `MedicalContent` rather than a legacy condition concept,
    so progress aggregation is correct.
 
-## Live DB state (the finding that reframes both)
+## CORRECTION (2026-06-11): there is NO schema drift
+
+> The "tables do not exist" rows below were a **false alarm** from the
+> 2026-06-10 probe, which queried the Prisma *model* names (`QuestionIdentity`,
+> `StudySessionQuestion`) instead of the actual Postgres table names set by
+> `@@map(...)`. Re-probed 2026-06-11 against `lzfescdrpezzjhgveotz` by table name:
+
+| Postgres table (`@@map`) | Exists | Rows | Columns / indexes / FKs |
+| --- | --- | --- | --- |
+| `question_identities` (`QuestionIdentity`) | **yes** | 2197 | match `schema.prisma` exactly |
+| `study_session_questions` (`StudySessionQuestion`) | **yes** | 0 | match `schema.prisma` exactly |
+| `Card` / `StudentReservoirItem` | yes | — | — |
+
+Both backing migrations are recorded as **applied** in Prisma's `_prisma_migrations`
+ledger:
+- `20260502000000_normalized_study_schema` (applied; one earlier attempt was
+  rolled back then re-applied cleanly)
+- `20260517000000_add_question_identity_contract` (applied)
+
+`npx prisma validate` passes; the live columns, indexes, and foreign keys match
+the schema. **No migration is required — the schema is in sync.** The
+`questionIdentityId` columns on `QuestionAttempt` / `ReviewLog` / `Card` /
+`SavedQuestion` and the `study_session_questions` FKs all resolve.
+
+### Original (now-superseded) live DB state from 2026-06-10
 
 | Table | Rows | Note |
 | --- | --- | --- |
 | `QuestionAttempt` | **0** | has `questionIdentityId` column |
 | `ReviewLog` | **0** | has `questionIdentityId` column |
 | `UserProgress` | **0** | 0 orphan `conditionId` |
-| `QuestionIdentity` table | **does not exist** | schema + code reference it |
-| `StudySessionQuestion` table | **does not exist** | schema + code reference it |
+| ~~`QuestionIdentity` table~~ | — | **WRONG — table exists as `question_identities`** |
+| ~~`StudySessionQuestion` table~~ | — | **WRONG — table exists as `study_session_questions`** |
 | `Card` / `StudentReservoirItem` tables | exist | — |
 
-**The learning tables are empty — this is pre-launch data.** There is no
-history to backfill or to "prove end-to-end," which was the stated risk behind
-both P0 items. That removes the large/destructive part of each migration.
+**The learning tables (QuestionAttempt/ReviewLog/UserProgress) are empty — this
+is pre-launch data.** There is no history to backfill, which removes the
+large/destructive part of the two *concept-identity* migrations below.
 
 ## Already mitigated by 7b012c6 / 3969c9d
 
@@ -42,17 +66,14 @@ both P0 items. That removes the large/destructive part of each migration.
   out of the live path so no new `UserProgress` row is created from an unlinked
   question.
 
-## What remains unsolved without the migration
+## What remains (after the 2026-06-11 correction)
 
-- **Schema drift:** `QuestionAttempt.questionIdentityId` /
-  `ReviewLog.questionIdentityId` columns exist but the `QuestionIdentity` table
-  they reference is **not deployed**; `StudySessionQuestion` is likewise absent.
-  Code guards these (delegate-existence checks + try/catch), so writes degrade
-  to "skip the identity/link row" rather than failing — but the durable
-  normalization those tables provide is not actually happening.
-- **Durable, queryable provenance:** without `QuestionIdentity`, source identity
-  lives only on the inline `*QuestionId` columns of each row, not in a
-  normalized table that can be joined/audited.
+- **Schema drift: NONE.** `question_identities` and `study_session_questions`
+  are deployed and match the schema; `questionIdentityId` FKs resolve. The
+  durable normalization those tables provide IS available. Nothing to fix here.
+- **Concept-identity (UserProgress.conditionId → MedicalContent):** still a
+  forward-only design item, but backfill-free (UserProgress is empty) and
+  already enforced at write time by `resolveProgressConditionId()`. Not blocking.
 
 ## Risks
 
@@ -65,47 +86,32 @@ both P0 items. That removes the large/destructive part of each migration.
 - **Low (concept):** `UserProgress.conditionId → MedicalContent` is already
   enforced at write time and there is no legacy data to migrate.
 
-## Recommended order
+## Remaining work (none is schema-drift)
 
-1. **Resolve schema drift first** (deploy `QuestionIdentity` +
-   `StudySessionQuestion` to match `schema.prisma`, confirm `questionIdentityId`
-   FKs resolve). This is the real gap; do it while tables are empty (zero risk).
-2. **Source-identity migration** becomes a no-op backfill (0 rows) + the
-   forward-only guard tests already specified. Add `source`/identity guard tests
-   and ship.
-3. **Concept-identity migration** is likewise backfill-free; add the FK
-   constraint + the before/after aggregation test (trivially equal on empty
-   data) and ship.
+1. ~~Resolve schema drift~~ — **DONE / not needed.** The identity tables are
+   deployed and applied through the Prisma ledger; `prisma validate` passes.
+2. **Source-identity migration** (`source` columns on attempt/review/seen
+   tables) — backfill-free (0 rows). Optional forward-only hardening; the
+   normalized `question_identities` table already carries provenance, so this is
+   no longer load-bearing.
+3. **Concept-identity** (`UserProgress.conditionId → MedicalContent`) —
+   backfill-free; already enforced at write time. Add the FK + parity test
+   when convenient.
 
-## Rollback strategy
+## Rollback strategy (for the optional future items only)
 
-- Each migration is additive (new table / new nullable column / new FK). Roll
-  back by dropping the added object; no data transformation to reverse because
-  there is no historical data.
-- Take a pre-migration snapshot of `schema.prisma` + a `prisma migrate` entry so
-  the change is a single revertible migration file.
+- Any future item is additive (new nullable column / new FK). Roll back by
+  dropping the added object; no data to reverse (empty tables).
 
-## Tests required
+## Verification performed 2026-06-11
 
-- Before: `prisma validate`; confirm `QuestionIdentity`/`StudySessionQuestion`
-  absent and the guarded code paths still pass the full unit suite (they do
-  today).
-- After: FK/domain guard tests for the new tables; submit-review idempotency +
-  single-writer suites unchanged; progress-aggregation parity test (equal on
-  empty data, re-run post-launch once rows exist).
-
-## Should the migration wait for the 89 manual links?
-
-**No — they are independent.** The 89 unlinked rows are a *content* problem
-(serving pool health) already contained by the serving gate. The P0 migrations
-are *schema/provenance* work on empty learning tables. Sequence the schema-drift
-fix whenever convenient; review the 89 links before launch so the live pool is
-populated. Neither blocks the other.
+- `npx prisma validate` → schema valid.
+- Live introspection by table name: `question_identities` (2197 rows) and
+  `study_session_questions` (0 rows) present with matching columns/indexes/FKs.
+- `_prisma_migrations` shows both backing migrations applied.
 
 ## Recommendation
 
-Do **not** treat these as large/blocking P0s anymore. Reclassify: the dangerous
-"migrate historical learning data" work does not exist (tables are empty). The
-actionable item is the **schema-drift deployment** of `QuestionIdentity` /
-`StudySessionQuestion` while the cost is zero. Await Aaron's approval before
-implementing (migrations touch production schema — Ask-First per CLAUDE.md).
+The identity schema is **already in sync** — no migration to deploy, nothing
+blocked. The two concept-identity items are backfill-free, write-time-enforced,
+and non-blocking; pursue them as routine hardening, not as launch-gating P0s.
