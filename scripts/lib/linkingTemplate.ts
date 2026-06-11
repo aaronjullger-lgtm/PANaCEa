@@ -45,6 +45,14 @@ export interface LinkingTemplateRow {
   embeddedConditionName: string | null;
   /** Candidate links surfaced by the audit — suggestions only, never auto-applied. */
   candidates: LinkingCandidate[];
+  /**
+   * Optimistic-concurrency fingerprint of the clinically relevant source
+   * fields at review time (see computeSourceFingerprint). The apply script
+   * recomputes it from the live row and skips/quarantines on mismatch so a
+   * stale decision is never applied. Absent on legacy templates — link/retire
+   * rows without a fingerprint are skipped, not applied.
+   */
+  sourceFingerprint?: string;
 
   // ── Reviewer-filled fields (blank in a fresh template) ──
   reviewedConditionId: string;
@@ -67,6 +75,7 @@ export interface LinkingTemplateSourceRow {
   difficulty: string | null;
   embeddedConditionName: string | null;
   candidates: LinkingCandidate[];
+  sourceFingerprint?: string;
 }
 
 /** Build a fresh (unreviewed) template row. Deterministic for a given input. */
@@ -83,6 +92,7 @@ export function buildLinkingTemplateRow(row: LinkingTemplateSourceRow): LinkingT
     difficulty: row.difficulty,
     embeddedConditionName: row.embeddedConditionName,
     candidates: row.candidates.map((c) => ({ ...c })),
+    ...(row.sourceFingerprint ? { sourceFingerprint: row.sourceFingerprint } : {}),
     reviewedConditionId: '',
     reviewedMedicalContentId: '',
     reviewDecision: '',
@@ -251,4 +261,160 @@ export function validateTemplate(
     else summary.invalid.push({ row, errors: result.errors });
   }
   return summary;
+}
+
+// ─── Optimistic-concurrency fingerprints ────────────────────────────────────
+
+/**
+ * The clinically relevant source fields a review decision depends on. If any
+ * of these change between review and apply, the decision is stale.
+ */
+export interface FingerprintSource {
+  stem: string;
+  options: string[];
+  correctAnswer: string | null;
+  rationale: string | null;
+  /** validationStatus (PreGen) or `${lifecycleStatus}/${qaStatus}` (Question). */
+  status: string | null;
+  conditionId: string | null;
+  medicalContentId: string | null;
+}
+
+export function normalizeOptionalText(v: unknown): string | null {
+  return typeof v === 'string' && v.trim().length > 0 ? v.trim() : null;
+}
+
+/** Mirrors the option normalization used when serving/auditing questionData. */
+export function normalizeOptionsForFingerprint(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.map((o) =>
+      typeof o === 'string'
+        ? o
+        : String(
+            (o as { value?: string; text?: string; label?: string })?.value ??
+              (o as { text?: string })?.text ??
+              (o as { label?: string })?.label ??
+              ''
+          )
+    );
+  }
+  if (raw && typeof raw === 'object') {
+    return Object.keys(raw as Record<string, unknown>)
+      .sort()
+      .map((k) => String((raw as Record<string, unknown>)[k] ?? ''));
+  }
+  return [];
+}
+
+/** FNV-1a over a canonical JSON encoding. Stable across runs and platforms. */
+export function computeSourceFingerprint(source: FingerprintSource): string {
+  const canonical = JSON.stringify([
+    source.stem.trim(),
+    source.options.map((o) => o.trim()),
+    source.correctAnswer?.trim() ?? null,
+    source.rationale?.trim() ?? null,
+    source.status ?? null,
+    source.conditionId ?? null,
+    source.medicalContentId ?? null,
+  ]);
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < canonical.length; i += 1) {
+    hash ^= canonical.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return `fnv1a:${(hash >>> 0).toString(16).padStart(8, '0')}:${canonical.length}`;
+}
+
+/** Build a FingerprintSource from a raw PreGeneratedQuestion row. */
+export function buildPreGeneratedFingerprintSource(row: {
+  questionData: unknown;
+  validationStatus: string | null;
+  conditionId: string | null;
+  medicalContentId: string | null;
+}): FingerprintSource {
+  const data = (row.questionData ?? {}) as Record<string, unknown>;
+  return {
+    stem: normalizeOptionalText(data.question) ?? normalizeOptionalText(data.vignette) ?? '',
+    options: normalizeOptionsForFingerprint(data.options ?? data.answers ?? data.choices),
+    correctAnswer:
+      normalizeOptionalText(data.correctAnswer) ??
+      (typeof data.correctAnswerIndex === 'number' ? String(data.correctAnswerIndex) : null),
+    rationale:
+      normalizeOptionalText(data.rationale) ??
+      normalizeOptionalText(data.explanation) ??
+      (data.rationale && typeof data.rationale === 'object' ? JSON.stringify(data.rationale) : null),
+    status: row.validationStatus ?? null,
+    conditionId: row.conditionId ?? null,
+    medicalContentId: row.medicalContentId ?? null,
+  };
+}
+
+/** Build a FingerprintSource from a raw canonical Question row. */
+export function buildQuestionFingerprintSource(row: {
+  question: string | null;
+  vignette: string | null;
+  options: unknown;
+  correctAnswer: string | null;
+  explanation: string | null;
+  lifecycleStatus: string | null;
+  qaStatus: string | null;
+  conditionId: string | null;
+  medicalContentId: string | null;
+}): FingerprintSource {
+  return {
+    stem: normalizeOptionalText(row.question) ?? normalizeOptionalText(row.vignette) ?? '',
+    options: normalizeOptionsForFingerprint(row.options),
+    correctAnswer: normalizeOptionalText(row.correctAnswer),
+    rationale: normalizeOptionalText(row.explanation),
+    status: `${row.lifecycleStatus ?? ''}/${row.qaStatus ?? ''}`,
+    conditionId: row.conditionId ?? null,
+    medicalContentId: row.medicalContentId ?? null,
+  };
+}
+
+// ─── Apply-time eligibility (pure; the apply script enforces it) ────────────
+
+export type ApplyEligibility =
+  | 'apply'
+  | 'skip_no_fingerprint'
+  | 'skip_stale_source'
+  | 'skip_source_missing'
+  | 'skip_already_linked'
+  | 'apply_idempotent_noop';
+
+/**
+ * Decide whether a validated link/retire row may still be applied, given the
+ * live source row's recomputed fingerprint and current linkage. Stale or
+ * changed rows are SKIPPED (and stay quarantined), never applied.
+ */
+export function evaluateApplyEligibility(
+  row: LinkingTemplateRow,
+  live: {
+    exists: boolean;
+    fingerprint: string | null;
+    conditionId: string | null;
+    medicalContentId: string | null;
+  }
+): ApplyEligibility {
+  if (!live.exists) return 'skip_source_missing';
+  if (!row.sourceFingerprint) return 'skip_no_fingerprint';
+  if (live.fingerprint !== row.sourceFingerprint) return 'skip_stale_source';
+
+  const decision = row.reviewDecision;
+  if (decision === 'link_condition') {
+    if (live.conditionId && live.conditionId === row.reviewedConditionId.trim()) {
+      return 'apply_idempotent_noop';
+    }
+    if (live.conditionId || live.medicalContentId) return 'skip_already_linked';
+    return 'apply';
+  }
+  if (decision === 'link_medical_content') {
+    if (live.medicalContentId && live.medicalContentId === row.reviewedMedicalContentId.trim()) {
+      return 'apply_idempotent_noop';
+    }
+    if (live.conditionId || live.medicalContentId) return 'skip_already_linked';
+    return 'apply';
+  }
+  // retire — fingerprint match already proves status/linkage unchanged.
+  return 'apply';
 }

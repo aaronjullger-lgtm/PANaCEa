@@ -33,7 +33,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { prisma, disconnectPrisma } from './helpers/prisma-client';
 import {
+  buildPreGeneratedFingerprintSource,
+  buildQuestionFingerprintSource,
+  computeSourceFingerprint,
+  evaluateApplyEligibility,
   validateTemplate,
+  type ApplyEligibility,
   type LinkingTemplateRow,
 } from './lib/linkingTemplate';
 
@@ -126,9 +131,65 @@ async function main(): Promise<void> {
     reviewedBy: string;
   }> = [];
 
+  /**
+   * Optimistic concurrency: recompute the source fingerprint from the LIVE
+   * row and skip anything that changed since review (or lacks a fingerprint).
+   * Stale decisions are never applied — the row stays quarantined.
+   */
+  const checkEligibility = async (row: LinkingTemplateRow): Promise<ApplyEligibility> => {
+    if (row.source === 'pre_generated') {
+      const live = await prisma.preGeneratedQuestion.findUnique({
+        where: { id: row.id },
+        select: {
+          questionData: true,
+          validationStatus: true,
+          conditionId: true,
+          medicalContentId: true,
+        },
+      });
+      return evaluateApplyEligibility(row, {
+        exists: Boolean(live),
+        fingerprint: live ? computeSourceFingerprint(buildPreGeneratedFingerprintSource(live)) : null,
+        conditionId: live?.conditionId ?? null,
+        medicalContentId: live?.medicalContentId ?? null,
+      });
+    }
+    const live = await prisma.question.findUnique({
+      where: { id: row.id },
+      select: {
+        question: true,
+        vignette: true,
+        options: true,
+        correctAnswer: true,
+        explanation: true,
+        lifecycleStatus: true,
+        qaStatus: true,
+        conditionId: true,
+        medicalContentId: true,
+      },
+    });
+    return evaluateApplyEligibility(row, {
+      exists: Boolean(live),
+      fingerprint: live ? computeSourceFingerprint(buildQuestionFingerprintSource(live)) : null,
+      conditionId: live?.conditionId ?? null,
+      medicalContentId: live?.medicalContentId ?? null,
+    });
+  };
+
   for (const row of summary.toApply) {
     const decision = row.reviewDecision;
     let action = 'dry-run (no mutation)';
+
+    const eligibility = await checkEligibility(row);
+    if (eligibility !== 'apply') {
+      const skipAction =
+        eligibility === 'apply_idempotent_noop'
+          ? 'already applied (idempotent no-op)'
+          : `SKIPPED (${eligibility}) — decision not applied; row remains quarantined`;
+      outcomes.push({ source: row.source, id: row.id, decision, action: skipAction, reviewedBy: row.reviewedBy });
+      console.log(`  [${row.source}] ${row.id}: ${decision} → ${skipAction}`);
+      continue;
+    }
 
     if (APPLY) {
       if (row.source === 'pre_generated') {

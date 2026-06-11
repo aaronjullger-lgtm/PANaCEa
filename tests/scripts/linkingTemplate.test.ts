@@ -3,6 +3,10 @@ import {
   REVIEW_DECISIONS,
   buildLinkingTemplate,
   buildLinkingTemplateRow,
+  buildPreGeneratedFingerprintSource,
+  buildQuestionFingerprintSource,
+  computeSourceFingerprint,
+  evaluateApplyEligibility,
   validateReviewedRow,
   validateTemplate,
   type LinkingTemplateRow,
@@ -220,5 +224,124 @@ describe('REVIEW_DECISIONS', () => {
       'keep_quarantined',
       'needs_more_information',
     ]);
+  });
+});
+
+describe('computeSourceFingerprint + builders', () => {
+  const pregenRow = {
+    questionData: {
+      question: 'Stem?',
+      options: ['A. one', 'B. two'],
+      correctAnswer: 'A',
+      rationale: 'Because one.',
+    },
+    validationStatus: 'approved',
+    conditionId: null,
+    medicalContentId: null,
+  };
+
+  it('is stable for identical input', () => {
+    const a = computeSourceFingerprint(buildPreGeneratedFingerprintSource(pregenRow));
+    const b = computeSourceFingerprint(buildPreGeneratedFingerprintSource({ ...pregenRow }));
+    expect(a).toBe(b);
+    expect(a).toMatch(/^fnv1a:[0-9a-f]{8}:\d+$/);
+  });
+
+  it.each([
+    ['stem', { questionData: { ...pregenRow.questionData, question: 'Changed?' } }],
+    ['correct answer', { questionData: { ...pregenRow.questionData, correctAnswer: 'B' } }],
+    ['explanation', { questionData: { ...pregenRow.questionData, rationale: 'Different.' } }],
+    ['status', { validationStatus: 'rejected' }],
+    ['linkage', { conditionId: 'cond-x' }],
+  ] as const)('changes when %s changes', (_label, override) => {
+    const before = computeSourceFingerprint(buildPreGeneratedFingerprintSource(pregenRow));
+    const after = computeSourceFingerprint(
+      buildPreGeneratedFingerprintSource({ ...pregenRow, ...override } as typeof pregenRow)
+    );
+    expect(after).not.toBe(before);
+  });
+
+  it('normalizes object-form options deterministically for Question rows', () => {
+    const fp1 = computeSourceFingerprint(
+      buildQuestionFingerprintSource({
+        question: 'Q?',
+        vignette: null,
+        options: { B: 'two', A: 'one' },
+        correctAnswer: 'A',
+        explanation: 'exp',
+        lifecycleStatus: 'ACTIVE',
+        qaStatus: 'APPROVED',
+        conditionId: null,
+        medicalContentId: null,
+      })
+    );
+    const fp2 = computeSourceFingerprint(
+      buildQuestionFingerprintSource({
+        question: 'Q?',
+        vignette: null,
+        options: { A: 'one', B: 'two' },
+        correctAnswer: 'A',
+        explanation: 'exp',
+        lifecycleStatus: 'ACTIVE',
+        qaStatus: 'APPROVED',
+        conditionId: null,
+        medicalContentId: null,
+      })
+    );
+    expect(fp1).toBe(fp2);
+  });
+});
+
+describe('evaluateApplyEligibility', () => {
+  const fp = 'fnv1a:00000001:10';
+  const linkRow = (overrides: Partial<LinkingTemplateRow> = {}): LinkingTemplateRow =>
+    reviewedRow({
+      reviewDecision: 'link_condition',
+      reviewedConditionId: 'cond-hf',
+      reviewedBy: 'ai',
+      sourceFingerprint: fp,
+      ...overrides,
+    });
+  const liveUnlinked = { exists: true, fingerprint: fp, conditionId: null, medicalContentId: null };
+
+  it('applies when the live fingerprint matches and the row is still unlinked', () => {
+    expect(evaluateApplyEligibility(linkRow(), liveUnlinked)).toBe('apply');
+  });
+
+  it('skips when the source row is missing', () => {
+    expect(evaluateApplyEligibility(linkRow(), { ...liveUnlinked, exists: false })).toBe('skip_source_missing');
+  });
+
+  it('skips link rows without a fingerprint (legacy template)', () => {
+    expect(evaluateApplyEligibility(linkRow({ sourceFingerprint: undefined }), liveUnlinked)).toBe(
+      'skip_no_fingerprint'
+    );
+  });
+
+  it('skips when the source changed since review', () => {
+    expect(
+      evaluateApplyEligibility(linkRow(), { ...liveUnlinked, fingerprint: 'fnv1a:deadbeef:11' })
+    ).toBe('skip_stale_source');
+  });
+
+  it('treats an already-applied identical link as an idempotent no-op', () => {
+    expect(
+      evaluateApplyEligibility(linkRow(), { ...liveUnlinked, conditionId: 'cond-hf' })
+    ).toBe('apply_idempotent_noop');
+  });
+
+  it('skips when the row got linked to something else after review', () => {
+    expect(
+      evaluateApplyEligibility(linkRow(), { ...liveUnlinked, conditionId: 'cond-other' })
+    ).toBe('skip_already_linked');
+  });
+
+  it('applies retire when the fingerprint still matches', () => {
+    expect(
+      evaluateApplyEligibility(
+        reviewedRow({ reviewDecision: 'retire', reviewNotes: 'bad', reviewedBy: 'ai', sourceFingerprint: fp }),
+        liveUnlinked
+      )
+    ).toBe('apply');
   });
 });

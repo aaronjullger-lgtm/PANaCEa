@@ -25,6 +25,9 @@ import path from 'node:path';
 import { prisma, disconnectPrisma } from './helpers/prisma-client';
 import {
   buildLinkingTemplate,
+  buildPreGeneratedFingerprintSource,
+  buildQuestionFingerprintSource,
+  computeSourceFingerprint,
   type LinkingCandidate,
   type LinkingTemplateRow,
   type LinkingTemplateSourceRow,
@@ -94,7 +97,15 @@ async function main(): Promise<void> {
 
   const pregen = await prisma.preGeneratedQuestion.findMany({
     where: { validationStatus: 'approved', conditionId: null, medicalContentId: null },
-    select: { id: true, system: true, difficulty: true, questionData: true },
+    select: {
+      id: true,
+      system: true,
+      difficulty: true,
+      questionData: true,
+      validationStatus: true,
+      conditionId: true,
+      medicalContentId: true,
+    },
   });
 
   const questions = await prisma.question.findMany({
@@ -110,6 +121,10 @@ async function main(): Promise<void> {
       correctAnswer: true,
       explanation: true,
       difficulty: true,
+      lifecycleStatus: true,
+      qaStatus: true,
+      conditionId: true,
+      medicalContentId: true,
     },
   });
 
@@ -134,6 +149,7 @@ async function main(): Promise<void> {
       difficulty: str(q.difficulty),
       embeddedConditionName: embeddedName,
       candidates: candidatesFor(system, subcategory, embeddedName),
+      sourceFingerprint: computeSourceFingerprint(buildPreGeneratedFingerprintSource(q)),
     });
   }
 
@@ -152,6 +168,7 @@ async function main(): Promise<void> {
       difficulty: str(q.difficulty),
       embeddedConditionName: null,
       candidates: candidatesFor(system, subcategory, null),
+      sourceFingerprint: computeSourceFingerprint(buildQuestionFingerprintSource(q)),
     });
   }
 
