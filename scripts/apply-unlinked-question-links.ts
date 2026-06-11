@@ -25,6 +25,8 @@
  *   npx tsx scripts/apply-unlinked-question-links.ts            # dry-run
  *   npx tsx scripts/apply-unlinked-question-links.ts --apply    # mutate (non-prod)
  *   npx tsx scripts/apply-unlinked-question-links.ts --apply --allow-production
+ *   npx tsx scripts/apply-unlinked-question-links.ts \
+ *     --template reports/unlinked-question-ai-reviewed-template.json   # AI-reviewed input
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -35,7 +37,15 @@ import {
   type LinkingTemplateRow,
 } from './lib/linkingTemplate';
 
-const TEMPLATE_PATH = path.resolve(process.cwd(), 'reports/unlinked-question-linking-template.json');
+const DEFAULT_TEMPLATE_PATH = path.resolve(
+  process.cwd(),
+  'reports/unlinked-question-linking-template.json'
+);
+const templateIdx = process.argv.indexOf('--template');
+const TEMPLATE_PATH =
+  templateIdx >= 0 && process.argv[templateIdx + 1]
+    ? path.resolve(process.cwd(), process.argv[templateIdx + 1]!)
+    : DEFAULT_TEMPLATE_PATH;
 const REPORT_PATH = path.resolve(
   process.cwd(),
   'reports/unlinked-question-link-application-report.json'

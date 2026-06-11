@@ -157,3 +157,65 @@ exclusions (per CLAUDE.md) and building UI is out of this sprint's scope. For
 89 one-time rows the JSON template + dry-run apply script is the correct
 lightweight path now; revisit an admin panel only if unlinked content recurs at
 volume.
+
+---
+
+## Sprint update (2026-06-11): gated AI review pipeline (manual bottleneck removed)
+
+The product owner does not want to hand-review all 89 rows. The manual
+template/apply workflow is retained as the fallback and audit trail, but the
+review itself is now automated behind strict gates:
+
+### Pipeline (scripts/lib/aiReviewPipeline.ts + scripts/ai-review-unlinked-questions.ts)
+
+Per row: review packet (clinical fields only — no review fields, no user data)
+→ two independent reviewer passes via the existing `lib/ai` gateway
+(`gateway.callStructured`, Zod-parsed, never raw text):
+1. **Clinical-content reviewer** — identifies the tested concept, checks
+   stem/answer/explanation support, flags unsafe content.
+2. **Taxonomy/linkage reviewer** — maps to an existing candidate conditionId
+   only; cannot invent IDs.
+Then a **skeptical verifier** pass that tries to disprove the proposal
+(lookalikes, broad-category traps, specificity, answer/explanation mismatch)
+and can veto.
+
+### Gates (all required for a prepared link)
+
+target agreement between both reviewers · target in the packet candidate list ·
+explanation present · no verifier veto · verifier specificity + consistency ·
+all three confidences ≥ 0.85 · live DB target validation (link impossible
+without a database) · structural validation via the existing
+`validateTemplate`. Any safety concern forbids linking (retire only on
+unanimous retire + no veto); reviewer disagreement, malformed model output, or
+missing metadata → `keep_quarantined` (the default).
+
+### Outputs
+
+- `reports/unlinked-question-ai-review.json` — full audit trail (assessments,
+  gates passed/failed per row)
+- `reports/unlinked-question-ai-reviewed-template.json` — apply-ready template;
+  ONLY rows that passed all gates carry link targets
+- `reports/unlinked-question-ai-review.md` — summary
+
+Mutation path unchanged: `scripts/apply-unlinked-question-links.ts` (now
+accepts `--template <path>`; dry-run default, `--apply` + `--allow-production`
+gates intact).
+
+### Safe-mode run in this container (no GEMINI_API_KEY, no DATABASE_URL)
+
+`npx tsx scripts/ai-review-unlinked-questions.ts --mock`:
+89/89 `keep_quarantined`, 0 prepared links, 0 malformed — the conservative
+floor by construction. The reviewed template validates through the apply
+validator as 89 report-only / 0 invalid / 0 to-apply. Live mode without
+`GEMINI_API_KEY` fails with explicit missing-env output.
+
+### To run the real review (Aaron's machine, one command — no per-row approval)
+
+```
+# .env must provide GEMINI_API_KEY and DATABASE_URL/DIRECT_DATABASE_URL
+npx tsx scripts/ai-review-unlinked-questions.ts --limit 5   # spot-check first
+npx tsx scripts/ai-review-unlinked-questions.ts             # full run
+npx tsx scripts/apply-unlinked-question-links.ts \
+  --template reports/unlinked-question-ai-reviewed-template.json   # dry-run
+# review the dry-run report, then add --apply (+ --allow-production for prod)
+```
