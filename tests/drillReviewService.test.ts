@@ -1167,6 +1167,65 @@ describe('submitDrillReview', () => {
       expect(result.fsrsSkippedReason).toBe('rapid_guess');
     });
 
+    it('does not report a persisted schedule when the UserProgress write fails', async () => {
+      // Failure injection: the FSRS schedule is computed, then the durable
+      // UserProgress write throws. The result must NOT claim a phantom schedule
+      // — it surfaces fsrsSkippedReason='fsrs_update_failed' so the caller knows
+      // the review did not advance scheduling (the card stays due).
+      const input: SubmitDrillReviewInput = {
+        questionId,
+        selectedAnswer: 'Correct Answer',
+        timeSpentMs: 25000,
+        sessionType: 'targeted',
+        telemetry: { duration_ms: 25000, rapid_guess: false, session_id: 's-1' },
+      };
+      const question = {
+        id: questionId,
+        conditionId,
+        medicalContentId,
+        system: 'CV',
+        questionData: {
+          options: [
+            { value: 'Correct Answer', text: 'Correct' },
+            { value: 'Wrong Answer', text: 'Wrong' },
+          ],
+          correctAnswer: 'Correct Answer',
+        },
+      };
+
+      const fsrsCard = {
+        stability: 12.5,
+        difficulty: 0.3,
+        state: 2,
+        elapsed_days: 5.0,
+        scheduled_days: 10.0,
+        reps: 3,
+        lapses: 0,
+        last_review: new Date(Date.now() - 5 * 86400000),
+      };
+      (prisma.userProgress.findUnique as Mock).mockResolvedValue({ fsrsCard });
+      (prisma.medicalContent.findFirst as Mock).mockResolvedValue({ conditionId, system: 'CV' });
+      (prisma.questionAttempt.findFirst as Mock).mockResolvedValue(null);
+      (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_123' });
+      (prisma.reviewLog.create as Mock).mockResolvedValue({});
+      const fsrsInstance = { next: vi.fn(), calculateRetrievability: vi.fn() };
+      vi.mocked(FSRS).mockImplementation(function () {
+        return fsrsInstance as unknown as FSRS;
+      });
+      fsrsInstance.next.mockReturnValue({ card: { ...fsrsCard, stability: 15.0, difficulty: 0.28 } });
+      fsrsInstance.calculateRetrievability.mockReturnValue(0.85);
+
+      (updateUserProgressWithHistory as Mock).mockRejectedValueOnce(
+        new Error('connection reset during UserProgress write')
+      );
+
+      const result = await submitDrillReview(prisma, userId, input, question);
+
+      expect(result.success).toBe(true);
+      expect(result.fsrsSchedule).toBeUndefined();
+      expect(result.fsrsSkippedReason).toBe('fsrs_update_failed');
+    });
+
     it('logs A/B conversion events for completed reviews', async () => {
       (resolveAssignments as Mock).mockResolvedValueOnce({
         scheduling_retention_target: { variantName: 'control', config: {} },

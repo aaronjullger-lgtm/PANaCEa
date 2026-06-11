@@ -2473,6 +2473,12 @@ export async function submitDrillReview(
         logger?.warn?.('Failed to update UserProgress', {
           error: progressError instanceof Error ? progressError.message : String(progressError),
         });
+        // The durable scheduling write failed after the FSRS schedule was
+        // computed. Do NOT report a schedule that was never persisted: clearing
+        // it makes the final fsrsSkippedReason resolve to 'fsrs_update_failed'
+        // so the client/telemetry can see the review did not advance scheduling
+        // (the card simply stays due) instead of trusting a phantom success.
+        fsrsSchedule = undefined;
       }
     }
   }
