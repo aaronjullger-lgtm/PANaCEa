@@ -72,14 +72,17 @@
 
 ### Protected Endpoints (Auth Required)
 
-| Endpoint                    | Auth | Rate Limit | Zod Validation |
-| --------------------------- | ---- | ---------- | -------------- |
-| `/api/questions/session`    | ✅   | questions  | ⚠️ Partial     |
-| `/api/questions/review`     | ✅   | standard   | ⚠️ Partial     |
-| `/api/user/stats`           | ✅   | standard   | ❌             |
-| `/api/user/stability-trend` | ✅   | standard   | ❌             |
-| `/api/analytics/session`    | ✅   | standard   | ❌             |
-| `/api/drills/*`             | ✅   | gemini     | ⚠️ Partial     |
+| Endpoint                     | Auth | Rate Limit | Zod Validation |
+| ---------------------------- | ---- | ---------- | -------------- |
+| `/api/questions/session`     | ✅   | questions  | ✅ GET/POST schemas |
+| `/api/questions/fetch`       | ✅   | questions  | ✅ body schema |
+| `/api/questions/review`      | ✅   | standard   | ⚠️ Partial     |
+| `/api/user/stats`            | ✅   | standard   | ❌             |
+| `/api/user/stability-trend`  | ✅   | standard   | ❌             |
+| `/api/analytics/session`     | ✅   | standard   | ❌             |
+| `/api/drills/submit-review`  | ✅   | 120/min    | ✅ shared schema |
+| `/api/drills/submit-reviews` | ✅   | 60/min     | ✅ shared batch schema |
+| `/api/drills/*`              | ✅   | gemini     | ⚠️ Mixed       |
 
 ### Admin Endpoints (Admin Auth Required)
 
@@ -155,22 +158,29 @@
 
 - ⚠️ **Zod not universally applied** - Some endpoints lack input validation
 
-### Recommended Additions
+### Current Zod Examples
 
 ```typescript
-// Example: Session endpoint needs validation
-const SessionRequestSchema = z.object({
-  count: z.number().min(1).max(50).default(20),
+// /api/questions/session GET validates query params.
+const SessionGetSchema = z.object({
+  count: z.string().optional(),
   system: z.string().optional(),
-  difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+  mode: z.string().optional(),
+  simulationStrict: z.string().optional().transform((v) => v === 'true' || v === '1'),
+  eorMode: z.string().optional().transform((v) => v === 'true' || v === '1'),
+  eorDeadline: z.string().optional(),
+  sessionLane: z.enum(['main', 'eor', 'drill']).optional(),
 });
+
+// /api/drills/submit-review imports DrillSubmitReviewRequestSchema from
+// lib/api/schemas/drills.ts; the batch endpoint validates an array of it.
 ```
 
 ### Priority Endpoints for Validation
 
-1. `/api/questions/session` - Count and filter params
-2. `/api/drills/submit-review` - Rating and answer data
-3. `/api/feedback/submit` - User input sanitization
+1. `/api/feedback/submit` - User input sanitization
+2. Remaining non-submission `/api/drills/*` endpoints - normalize validation coverage
+3. `/api/user/stats` and `/api/user/stability-trend` - read endpoint params
 
 ---
 

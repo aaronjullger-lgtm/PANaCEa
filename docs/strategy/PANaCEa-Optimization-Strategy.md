@@ -84,7 +84,7 @@ Every optimization should map to a real workflow: cramming before EOR exams, dri
 | Dimension | Assessment |
 |-----------|-----------|
 | **User-facing job** | Focused practice on specific question types or weak areas |
-| **Current bottleneck** | All 11 drill hooks use `useDrillFSRS` → `/api/drills/submit-review` (good). DrillShell.tsx wraps all drills. Content selection may not be optimally personalized |
+| **Current bottleneck** | Active drill hooks use `useDrillFSRS` → `/api/drills/submit-review` for single submissions, while offline/sync batches use `/api/drills/submit-reviews`. DrillShell.tsx wraps all drills. Content selection may not be optimally personalized |
 | **AI needed?** | **Partial** — drill question selection can use embeddings for confusion-pair targeting; drill content itself should be pre-generated |
 | **Best method** | Deterministic selection (FSRS due dates + confusion-pair graph) + pre-cached content |
 | **Latency sensitivity** | **High** — drill sessions feel snappy or they feel broken |

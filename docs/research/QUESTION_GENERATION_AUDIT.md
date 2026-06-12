@@ -222,15 +222,19 @@ The question generation system has **four tiers** of generation, **two variant p
 **Role:** Primary answer submission endpoint for both main sessions and drills.
 
 **Flow:**
-1. Validate request (Zod schema)
-2. Resolve question via `resolveReviewQuestion()`
+1. Validate request with `DrillSubmitReviewRequestSchema`
+2. Resolve question identity via `resolveReviewQuestion()` using
+   `questionSource`, `canonicalQuestionId`, and `sourceQuestionId`
 3. Call `submitDrillReview()` (core pipeline)
 4. On incorrect: `ensureDueVariant()` (fire-and-forget)
-5. Schedule concept review via `scheduleConceptReview()`
-6. Return FSRS schedule + implicit metrics
+5. Mark reservoir item consumed when telemetry carries `session_id`
+6. Return FSRS schedule, implicit metrics, rapid-guess state, next-review
+   convenience data, and optional drill performance feedback
 
 **Issues found:**
 - `ensureDueVariant()` is called **fire-and-forget** with `.catch()` — errors are logged but don't fail the request. This is intentional and correct (non-blocking variant generation).
+- The endpoint intentionally does **not** call legacy concept schedulers; canonical
+  review scheduling is owned by `drillReviewService`.
 
 ### 5.2 `lib/services/drillReviewService.ts` (1291 lines)
 **Role:** Core submission pipeline — the most complex file in the system.
@@ -250,9 +254,8 @@ The question generation system has **four tiers** of generation, **two variant p
 **FSRS Gate (multi-layered, correct):**
 ```
 shouldUpdateFSRS =
-  sessionType !== 'cram' AND
-  sessionType !== 'rapid_recall' AND
-  question.conditionId exists AND
+  sessionType IN ('main', 'drill', 'targeted', omitted) AND
+  (question.conditionId OR question.medicalContentId exists) AND
   NOT isRapidGuess
 ```
 

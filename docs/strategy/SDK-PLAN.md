@@ -17,8 +17,8 @@ This means:
 
 | Domain | Prefix | Endpoints in Slice | Why First |
 |--------|--------|-------------------|-----------|
-| **Drills** | `/api/drills/*` | `submit-review` | Highest-traffic write path; used by all 11+ drill hooks |
-| **Sessions** | `/api/study/session/*` | `generate` | Critical session-start path |
+| **Drills** | `/api/drills/*` | `submit-review`, `submit-reviews` | Highest-traffic write path; used by all drill hooks and offline/sync queues |
+| **Sessions** | `/api/questions/session`, `/api/study/session/*` | `GET/POST questions/session`, `generate` | Critical session-start path; question identity must survive client transforms |
 | **SRS** | `/api/srs/*` | `due`, `submit`, `sync` | Core spaced-repetition loop |
 | **User** | `/api/user/*` | `profile`, `stats`, `fsrs-params`, `preferences` | Read on every page load |
 | **Content** | `/api/content/*`, `/api/library/*` | `search`, `semantic-search` | Library and search flows |
@@ -27,6 +27,9 @@ This means:
 
 ```
 POST /api/drills/submit-review        → drillsClient.submitReview(payload)
+POST /api/drills/submit-reviews       → drillsClient.submitReviews(batch)
+GET  /api/questions/session           → questionsClient.fetchSession(params)
+POST /api/questions/fetch             → questionsClient.fetchPoolQuestions(filters)
 POST /api/study/session/generate      → sessionsClient.generate(opts)
 GET  /api/srs/due                     → srsClient.getDueItems()
 POST /api/srs/submit                  → srsClient.submitReview(payload)
@@ -60,16 +63,24 @@ lib/sdk/
 | # | File | Current Pattern | SDK Replacement |
 |---|------|-----------------|-----------------|
 | 1 | `hooks/useDrillFSRS.ts:225` | Raw `fetch('/api/drills/submit-review', ...)` with inline auth | `drillsClient.submitReview(payload)` |
-| 2 | `hooks/useSessionGenerator.ts:80` | Raw `fetch('/api/study/session/generate', ...)` | `sessionsClient.generate(opts)` |
-| 3 | `hooks/useSRSItems.ts:45` | Raw `fetch('/api/srs/due', ...)` | `srsClient.getDueItems()` |
-| 4 | `hooks/useFSRSOptimizationCheck.ts:64` | Raw `fetch('/api/user/fsrs-params', ...)` | `userClient.getFSRSParams()` |
-| 5 | `hooks/useSemanticSearch.ts:122` | Raw `fetch('/api/library/semantic-search', ...)` | `contentClient.semanticSearch(query)` |
+| 2 | `services/core/mainSessionService.ts` | Raw `fetch('/api/questions/session?...')` with manual envelope unwrapping | `questionsClient.fetchSession(params)` |
+| 3 | `services/client/questionApi.ts` | Raw `fetch('/api/questions/fetch', ...)` and local pre-generated identity transform | `questionsClient.fetchPoolQuestions(filters)` |
+| 4 | `hooks/useSessionGenerator.ts:80` | Raw `fetch('/api/study/session/generate', ...)` | `sessionsClient.generate(opts)` |
+| 5 | `hooks/useSRSItems.ts:45` | Raw `fetch('/api/srs/due', ...)` | `srsClient.getDueItems()` |
+| 6 | `hooks/useFSRSOptimizationCheck.ts:64` | Raw `fetch('/api/user/fsrs-params', ...)` | `userClient.getFSRSParams()` |
+| 7 | `hooks/useSemanticSearch.ts:122` | Raw `fetch('/api/library/semantic-search', ...)` | `contentClient.semanticSearch(query)` |
 
 ### Architecture Decisions
 
 **Auth strategy:** The SDK core accepts a `getToken: () => Promise<string | null>` function at construction time. This keeps Clerk as an injected dependency — no React hook coupling inside the SDK. Each hook passes its `getToken` once when creating/calling the client.
 
 **Response unwrapping:** The SDK normalizes the inconsistent server patterns (`{ data }` vs `{ success, data }` vs bare object) into a consistent `Result<T, E>` type so call sites never have to guess.
+
+**Question identity preservation:** Session and pool question clients must keep
+`questionSource`, `canonicalQuestionId`, and `sourceQuestionId` intact. These
+fields route `/api/drills/submit-review(s)` to the correct source table
+(`Question`, `PreGeneratedQuestion`, or generated/seed fallback) and prevent
+successful-looking submissions that cannot persist durable review state.
 
 **Error model:** A typed `ApiError` class with `status`, `code`, `message`, and optional `details` — thrown on non-2xx. Call sites can catch and inspect without parsing JSON.
 
@@ -79,7 +90,7 @@ lib/sdk/
 
 ### Scope Boundary
 
-This first slice covers **10 endpoints** across **5 domains** and migrates **5 call sites**. After proving the pattern, the remaining ~170 endpoints can be folded in domain-by-domain without changing the SDK core.
+This first slice covers **12 endpoints** across **5 domains** and migrates **7 call sites**. After proving the pattern, the remaining ~170 endpoints can be folded in domain-by-domain without changing the SDK core.
 
 ## Next Endpoints to Fold In (post-MVP)
 
@@ -88,7 +99,7 @@ This first slice covers **10 endpoints** across **5 domains** and migrates **5 c
 | P1 | Drills | `contrastive/generate`, `contrastive/submit`, `pharm`, `elaboration/*` |
 | P1 | User | `behavior-metrics`, `calibration`, `topic-progress/*`, `confusion-pairs` |
 | P2 | Analytics | `profile`, `session`, `calibration`, `confusion-pairs`, `peer-stats` |
-| P2 | Questions | `session`, `pool`, `flag`, `condition-drill` |
+| P2 | Questions | `pool`, `flag`, `condition-drill` |
 | P3 | Conditions | `search`, `[conditionId]`, `pearls` |
 | P3 | OSCE | `live/*`, `chat`, `stats`, `analytics` |
 | P4 | Admin | `taxonomies`, `media/*`, `staging/*`, `pool-health` |

@@ -40,8 +40,8 @@
 ### 2C: Sanitize Error Responses
 **File:** `functions/api/drills/submit-review.ts`
 
-- [ ] **2c-i.** Replace `details: error instanceof Error ? error.message : String(error)` with generic message at line ~228
-- [ ] **2c-ii.** Add `console.error` for the full error before the generic response
+- [x] **2c-i.** Singular `/api/drills/submit-review` now returns generic failure messages with structured error codes (`INTERNAL_ERROR`, `DATABASE_ERROR`, `SUBMISSION_TIMEOUT`).
+- [x] **2c-ii.** Full error detail is retained in secure server logs via the endpoint logger, not exposed to clients.
 
 ---
 
