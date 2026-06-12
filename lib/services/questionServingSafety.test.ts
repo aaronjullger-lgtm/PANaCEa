@@ -21,10 +21,11 @@ describe('withProgressLinkage', () => {
     expect(where.AND).toEqual([{ difficulty: 'medium' }, PROGRESS_LINKAGE_FILTER]);
   });
 
-  it('requires conditionId or medicalContentId so served questions can persist reviews', () => {
-    expect(PROGRESS_LINKAGE_FILTER).toEqual({
-      OR: [{ conditionId: { not: null } }, { medicalContentId: { not: null } }],
-    });
+  it('requires conditionId so served questions match what the review writer can schedule', () => {
+    // The FSRS writer's progress reads are keyed on conditionId; serving must
+    // not admit rows the writer cannot schedule (medicalContentId-only rows
+    // are excluded until the writer is re-keyed — 0 such rows exist live).
+    expect(PROGRESS_LINKAGE_FILTER).toEqual({ conditionId: { not: null } });
   });
 
   it('composes with canonical question safety', () => {

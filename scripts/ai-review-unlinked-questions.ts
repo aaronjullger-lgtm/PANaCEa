@@ -152,6 +152,9 @@ async function buildLiveReviewers(): Promise<Reviewers> {
   };
 }
 
+/** Set when the prisma helper was imported, so main() can disconnect its pool. */
+let prismaCleanup: (() => Promise<void>) | null = null;
+
 /** Load live Condition/MedicalContent ids when a DB is reachable; else null. */
 async function loadAggregationContext(): Promise<AggregationContext> {
   if (!process.env.DATABASE_URL && !process.env.DIRECT_DATABASE_URL) {
@@ -160,7 +163,8 @@ async function loadAggregationContext(): Promise<AggregationContext> {
     );
     return { knownConditionIds: null, knownMedicalContentIds: null };
   }
-  const { prisma } = await import('./helpers/prisma-client');
+  const { prisma, disconnectPrisma } = await import('./helpers/prisma-client');
+  prismaCleanup = disconnectPrisma;
   const [conditions, content] = await Promise.all([
     prisma.condition.findMany({ select: { id: true } }),
     prisma.medicalContent.findMany({ select: { id: true } }),
@@ -295,7 +299,13 @@ async function main(): Promise<void> {
   console.log(`📝 Reports:\n  ${REVIEW_JSON}\n  ${REVIEWED_TEMPLATE}\n  ${REVIEW_MD}`);
 }
 
-main().catch((err) => {
-  console.error('AI review failed:', err);
-  process.exitCode = 1;
-});
+main()
+  .catch((err) => {
+    console.error('AI review failed:', err);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    // Close the pg pool when the prisma helper was loaded (live mode);
+    // otherwise the open pool keeps the process alive after the run.
+    if (prismaCleanup) await prismaCleanup();
+  });

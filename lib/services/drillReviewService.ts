@@ -396,10 +396,13 @@ export interface SubmitDrillReviewResult {
   };
   /**
    * Why FSRS scheduling did not run. Undefined when fsrsSchedule is present.
-   * 'missing_condition_linkage' means the question carries no conditionId, so
-   * the answer persisted as a QuestionAttempt but produced no ReviewLog or
-   * scheduling update — clients/ops must be able to see this rather than
-   * treating success:true as proof of a durable review.
+   * 'missing_condition_linkage' means the question carries no conditionId —
+   * the FSRS pipeline's progress-state reads are keyed on conditionId, so the
+   * answer persisted as a QuestionAttempt but produced no ReviewLog or
+   * scheduling update. Serving excludes such rows (withProgressLinkage
+   * requires conditionId); this reason should only appear for legacy/offline
+   * submissions. 'fsrs_update_failed' means the schedule was computed but the
+   * durable write failed — the card simply stays due.
    */
   fsrsSkippedReason?:
     | 'session_type_excluded'

@@ -120,7 +120,13 @@ export function buildLinkingTemplate(
       const fresh = buildLinkingTemplateRow(row);
       const prior = previousByKey.get(`${row.source}::${row.id}`);
       if (!prior) return fresh;
-      return {
+      // For rows that were ALREADY REVIEWED, keep the fingerprint captured at
+      // review time (or none, if the legacy review had none — apply then skips
+      // it). Refreshing it from the current source would let a stale decision
+      // sail through the apply-time concurrency check after the content
+      // changed — exactly what the fingerprint exists to prevent.
+      const reviewed = (prior.reviewDecision ?? '') !== '';
+      const merged: LinkingTemplateRow = {
         ...fresh,
         reviewedConditionId: prior.reviewedConditionId ?? '',
         reviewedMedicalContentId: prior.reviewedMedicalContentId ?? '',
@@ -129,6 +135,11 @@ export function buildLinkingTemplate(
         reviewedBy: prior.reviewedBy ?? '',
         reviewedAt: prior.reviewedAt ?? '',
       };
+      if (reviewed) {
+        if (prior.sourceFingerprint) merged.sourceFingerprint = prior.sourceFingerprint;
+        else delete merged.sourceFingerprint;
+      }
+      return merged;
     });
 }
 

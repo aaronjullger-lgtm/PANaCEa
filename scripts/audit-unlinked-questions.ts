@@ -60,8 +60,13 @@ async function main(): Promise<void> {
   const conditions = await prisma.condition.findMany({
     select: { id: true, name: true, system: true, subcategory: true },
   });
-  const medicalContentConditionIds = new Set(
-    (await prisma.medicalContent.findMany({ select: { conditionId: true } })).map((m) => m.conditionId)
+  // Map Condition.id → MedicalContent.id (NOT the condition id itself —
+  // link_medical_content_candidate must suggest a MedicalContent.id).
+  const medicalContentIdByConditionId = new Map(
+    (await prisma.medicalContent.findMany({ select: { id: true, conditionId: true } })).map((m) => [
+      m.conditionId,
+      m.id,
+    ])
   );
 
   const byName = new Map<string, string[]>();
@@ -156,8 +161,8 @@ async function main(): Promise<void> {
         ? bySubcat.get(`${r.system}::${r.subcategory.toLowerCase()}`) ?? []
         : [];
     const medicalContentIdByCondition =
-      nameMatches.length === 1 && medicalContentConditionIds.has(nameMatches[0]!)
-        ? nameMatches[0]!
+      nameMatches.length === 1
+        ? medicalContentIdByConditionId.get(nameMatches[0]!) ?? null
         : null;
     const context: UnlinkedCandidateContext = {
       conditionIdsByName: nameMatches,

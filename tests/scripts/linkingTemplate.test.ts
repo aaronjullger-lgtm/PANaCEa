@@ -72,6 +72,42 @@ describe('buildLinkingTemplate', () => {
     ]);
   });
 
+  it('preserves the review-time fingerprint for reviewed rows across regeneration', () => {
+    const previous = [
+      reviewedRow({
+        id: 'pg-1',
+        reviewDecision: 'link_condition',
+        reviewedConditionId: 'cond-hf',
+        reviewedBy: 'ai',
+        sourceFingerprint: 'fnv1a:0ld00000:10',
+      }),
+      reviewedRow({ id: 'pg-2', sourceFingerprint: 'fnv1a:0ld00000:10' }), // unreviewed
+    ];
+    const rows = buildLinkingTemplate(
+      [
+        sourceRow({ id: 'pg-1', sourceFingerprint: 'fnv1a:fresh000:11' }),
+        sourceRow({ id: 'pg-2', sourceFingerprint: 'fnv1a:fresh000:11' }),
+      ],
+      previous
+    );
+    // Reviewed row keeps the fingerprint captured at review time so a stale
+    // decision can never pass the apply-time concurrency check.
+    expect(rows.find((r) => r.id === 'pg-1')!.sourceFingerprint).toBe('fnv1a:0ld00000:10');
+    // Unreviewed row picks up the fresh fingerprint.
+    expect(rows.find((r) => r.id === 'pg-2')!.sourceFingerprint).toBe('fnv1a:fresh000:11');
+  });
+
+  it('drops the fingerprint for reviewed legacy rows that never had one (apply will skip them)', () => {
+    const previous = [
+      reviewedRow({ id: 'pg-1', reviewDecision: 'retire', reviewNotes: 'bad', reviewedBy: 'ai' }),
+    ];
+    const rows = buildLinkingTemplate(
+      [sourceRow({ id: 'pg-1', sourceFingerprint: 'fnv1a:fresh000:11' })],
+      previous
+    );
+    expect(rows[0]!.sourceFingerprint).toBeUndefined();
+  });
+
   it('preserves reviewer-filled fields across regeneration', () => {
     const previous = [
       reviewedRow({

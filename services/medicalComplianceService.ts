@@ -739,6 +739,7 @@ export class MedicalComplianceService {
       .find((req) => req.id === requirementId);
 
     if (requirement) {
+      // debug logging stripped (645af44); requirement lookup kept for future handling
     }
   }
 

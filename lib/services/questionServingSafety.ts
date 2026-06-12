@@ -38,17 +38,23 @@ export function withProductionPregeneratedSafety<TWhere extends WhereInput>(
 /**
  * Progress-linkage gate for learner-facing serving.
  *
- * submitDrillReview can only persist ReviewLog/UserProgress/FSRS state when the
- * question carries a conditionId or medicalContentId. Serving an unlinked
- * question makes every answer a silent scheduling no-op (success returned, no
- * durable review state). Production probe 2026-06-10: 70/1429 approved
- * PreGeneratedQuestion and 19/331 ACTIVE Question rows lacked linkage.
+ * The canonical review writer (drillReviewService) can only run its FSRS/
+ * ReviewLog/UserProgress pipeline for questions with a conditionId — its
+ * progress-state reads are keyed on conditionId (resolveProgressConditionId
+ * then maps it to MedicalContent.id for the write). Serving must therefore
+ * not admit rows the writer cannot schedule: every answer to such a question
+ * is a silent scheduling no-op (success returned, no durable review state).
+ * Production probe 2026-06-10: 70/1429 approved PreGeneratedQuestion and
+ * 19/331 ACTIVE Question rows lacked conditionId; 0 rows were
+ * medicalContentId-only, so requiring conditionId matches the live data
+ * exactly. Re-widen to medicalContentId-only deliberately once the writer's
+ * progress reads are re-keyed (concept-identity work).
  *
  * Apply at serving sites only — NOT in the review resolver, which must still
  * resolve previously served unlinked questions.
  */
 export const PROGRESS_LINKAGE_FILTER = {
-  OR: [{ conditionId: { not: null } }, { medicalContentId: { not: null } }],
+  conditionId: { not: null },
 } as const;
 
 export function withProgressLinkage<TWhere extends WhereInput>(
