@@ -18,7 +18,7 @@ This means:
 | Domain | Prefix | Endpoints in Slice | Why First |
 |--------|--------|-------------------|-----------|
 | **Drills** | `/api/drills/*` | `submit-review` | Highest-traffic write path; used by all 11+ drill hooks |
-| **Sessions** | `/api/study/session/*` | `generate` | Critical session-start path |
+| **Questions/Sessions** | `/api/questions/*` | `session`, `fetch` | Critical session-start and Quick Review question-serving paths |
 | **SRS** | `/api/srs/*` | `due`, `submit`, `sync` | Core spaced-repetition loop |
 | **User** | `/api/user/*` | `profile`, `stats`, `fsrs-params`, `preferences` | Read on every page load |
 | **Content** | `/api/content/*`, `/api/library/*` | `search`, `semantic-search` | Library and search flows |
@@ -27,7 +27,9 @@ This means:
 
 ```
 POST /api/drills/submit-review        → drillsClient.submitReview(payload)
-POST /api/study/session/generate      → sessionsClient.generate(opts)
+GET  /api/questions/session           → questionsClient.fetchSession(params)
+POST /api/questions/session           → questionsClient.fetchSession(body)
+POST /api/questions/fetch             → questionsClient.fetchPreGenerated(body)
 GET  /api/srs/due                     → srsClient.getDueItems()
 POST /api/srs/submit                  → srsClient.submitReview(payload)
 GET  /api/user/profile                → userClient.getProfile()
@@ -45,7 +47,7 @@ lib/sdk/
 ├── core.ts                 ← Base client: auth, fetch, error handling, retry
 ├── types.ts                ← Shared response envelope, error types
 ├── drillsClient.ts         ← Drills domain (submit-review)
-├── sessionsClient.ts       ← Session generation domain
+├── questionsClient.ts      ← Question serving/session domain
 ├── srsClient.ts            ← SRS due/submit/sync domain
 ├── userClient.ts           ← User profile/stats/prefs domain
 ├── contentClient.ts        ← Content search domain
@@ -60,10 +62,13 @@ lib/sdk/
 | # | File | Current Pattern | SDK Replacement |
 |---|------|-----------------|-----------------|
 | 1 | `hooks/useDrillFSRS.ts:225` | Raw `fetch('/api/drills/submit-review', ...)` with inline auth | `drillsClient.submitReview(payload)` |
-| 2 | `hooks/useSessionGenerator.ts:80` | Raw `fetch('/api/study/session/generate', ...)` | `sessionsClient.generate(opts)` |
-| 3 | `hooks/useSRSItems.ts:45` | Raw `fetch('/api/srs/due', ...)` | `srsClient.getDueItems()` |
-| 4 | `hooks/useFSRSOptimizationCheck.ts:64` | Raw `fetch('/api/user/fsrs-params', ...)` | `userClient.getFSRSParams()` |
-| 5 | `hooks/useSemanticSearch.ts:122` | Raw `fetch('/api/library/semantic-search', ...)` | `contentClient.semanticSearch(query)` |
+| 2 | `services/core/mainSessionService.ts` | Raw `fetch('/api/questions/session?...', ...)` | `questionsClient.fetchSession(params)` |
+| 3 | `services/client/questionApi.ts` | Raw `fetch('/api/questions/fetch', ...)` | `questionsClient.fetchPreGenerated(body)` |
+| 4 | `hooks/useSRSItems.ts:45` | Raw `fetch('/api/srs/due', ...)` | `srsClient.getDueItems()` |
+| 5 | `hooks/useFSRSOptimizationCheck.ts:64` | Raw `fetch('/api/user/fsrs-params', ...)` | `userClient.getFSRSParams()` |
+| 6 | `hooks/useSemanticSearch.ts:122` | Raw `fetch('/api/library/semantic-search', ...)` | `contentClient.semanticSearch(query)` |
+
+`questionsClient` must preserve `questionSource`, `canonicalQuestionId`, and `sourceQuestionId` on returned questions so subsequent `drillsClient.submitReview()` calls resolve the correct source table.
 
 ### Architecture Decisions
 
@@ -79,7 +84,7 @@ lib/sdk/
 
 ### Scope Boundary
 
-This first slice covers **10 endpoints** across **5 domains** and migrates **5 call sites**. After proving the pattern, the remaining ~170 endpoints can be folded in domain-by-domain without changing the SDK core.
+This first slice covers **12 endpoints** across **5 domains** and migrates **6 call sites**. After proving the pattern, the remaining ~170 endpoints can be folded in domain-by-domain without changing the SDK core.
 
 ## Next Endpoints to Fold In (post-MVP)
 

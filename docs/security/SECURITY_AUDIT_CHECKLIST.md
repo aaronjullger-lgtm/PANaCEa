@@ -72,14 +72,16 @@
 
 ### Protected Endpoints (Auth Required)
 
-| Endpoint                    | Auth | Rate Limit | Zod Validation |
-| --------------------------- | ---- | ---------- | -------------- |
-| `/api/questions/session`    | ✅   | questions  | ⚠️ Partial     |
-| `/api/questions/review`     | ✅   | standard   | ⚠️ Partial     |
-| `/api/user/stats`           | ✅   | standard   | ❌             |
-| `/api/user/stability-trend` | ✅   | standard   | ❌             |
-| `/api/analytics/session`    | ✅   | standard   | ❌             |
-| `/api/drills/*`             | ✅   | gemini     | ⚠️ Partial     |
+| Endpoint                     | Auth | Rate Limit | Zod Validation |
+| ---------------------------- | ---- | ---------- | -------------- |
+| `/api/questions/session`     | ✅   | standard   | ✅ GET query + POST body |
+| `/api/questions/fetch`       | ✅   | standard   | ✅             |
+| `/api/questions/review`      | ✅   | standard   | ⚠️ Partial     |
+| `/api/user/stats`            | ✅   | standard   | ❌             |
+| `/api/user/stability-trend`  | ✅   | standard   | ❌             |
+| `/api/analytics/session`     | ✅   | standard   | ❌             |
+| `/api/drills/submit-review`  | ✅   | 120/min    | ✅ canonical schema |
+| `/api/drills/*`              | ✅   | varies     | ⚠️ Partial     |
 
 ### Admin Endpoints (Admin Auth Required)
 
@@ -158,7 +160,7 @@
 ### Recommended Additions
 
 ```typescript
-// Example: Session endpoint needs validation
+// Example: remaining read endpoints should validate query params
 const SessionRequestSchema = z.object({
   count: z.number().min(1).max(50).default(20),
   system: z.string().optional(),
@@ -168,8 +170,8 @@ const SessionRequestSchema = z.object({
 
 ### Priority Endpoints for Validation
 
-1. `/api/questions/session` - Count and filter params
-2. `/api/drills/submit-review` - Rating and answer data
+1. `/api/questions/review` - Count and filter params
+2. Remaining `/api/drills/*` generation/helper routes - route-specific request bodies
 3. `/api/feedback/submit` - User input sanitization
 
 ---
