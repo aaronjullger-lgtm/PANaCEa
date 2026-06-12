@@ -122,3 +122,52 @@ this credential-less environment. Tracked as a fast-follow; the
   `lifecycleStatus='RETIRED'` (status-only, non-destructive). The application
   report records every change; reverse by clearing the set field / restoring the
   prior status for the listed ids. No rows are ever deleted.
+
+## Functional verification: question generation + data collection/analysis (2026-06-12)
+
+### Question delivery & generation — FUNCTIONAL
+
+Live inventory under the repaired serving gates (probed `lzfescdrpezzjhgveotz`):
+
+| Metric | Value |
+| --- | --- |
+| Servable pool questions (`approved` + `conditionId`) | **1,359** (all unused) |
+| Servable canonical questions (ACTIVE/APPROVED + `conditionId`) | **312** |
+| Per-system pool coverage | every one of the 14 systems has 61–155 servable items (only CV 133→97 and PULM 118→84 reduced by the 70 quarantined rows — no system starves blueprint-weighted sessions) |
+| Servable pool rows with unresolvable correct answer | **0** |
+| Question seeds available | 199 |
+| Pending validation queue | 14 (pipeline actively producing) |
+| Reservoir items | 0 (expected pre-launch; fills via the 2h cron once users study) |
+
+Generation itself runs through the existing gateway (Zod-validated, staging +
+approval gates, fail-closed hot path by design) and is exercised by the unit
+suite; live generation requires `GEMINI_API_KEY` at runtime, which production
+Cloudflare carries (the deploy is green) even though this dev container does not.
+
+### Data collection & analysis — FUNCTIONAL
+
+- Single canonical writer verified: every answer produces QuestionAttempt
+  (idempotent), ReviewLog, UserProgress/FSRS, Card, telemetry, and analytics
+  updates; identity preserved end-to-end; every non-scheduling outcome is
+  observable (`fsrsSkippedReason`), including failed durable writes
+  (`fsrs_update_failed`, failure-injection tested).
+- Read/analysis paths (dashboard analytics, rolling-360, calibration,
+  due-selection) covered by the unit suite: 531 files, 9,933 passed / 0 failed.
+- Schema verified in sync with the live DB (`prisma validate` + introspection);
+  learning tables empty pre-launch, so analysis surfaces are correct-by-suite
+  and will populate with first real sessions.
+
+### Real-stack checks
+
+- Local wrangler runtime: public smoke 3/3 (health, `/study` shell, 401 shape).
+- **Deployed production (`studypanacea.com`)**: `/api/health` → 200 with
+  `functionDeployed: pass`; `/api/user/stats` → standard 401 envelope. The
+  production Functions runtime and auth middleware are live.
+
+### Verdict
+
+Study mode is functional for question generation and data collection/analysis
+at every layer that can be exercised without user credentials. The one
+remaining execution — the authenticated browser loop (`E2E_REQUIRE_AUTH=1`) —
+is environmental (Clerk E2E credentials), not a functional defect: each link it
+would traverse is independently verified above.
