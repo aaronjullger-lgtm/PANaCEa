@@ -73,10 +73,10 @@ function LandingHeader({ onSignIn, onSignUp }: { onSignIn: () => void; onSignUp:
           </span>
           <span className="flex flex-col leading-none">
             <span className="font-poppins text-base font-semibold text-atlas-white">
-              StudyPanacea
+              PANaCEa
             </span>
             <span className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-atlas-cyan">
-              PANCE Command Center
+              Clinical Learning Engine
             </span>
           </span>
         </a>
@@ -223,7 +223,7 @@ function AuthDialog({ authMode, onClose }: { authMode: AuthMode; onClose: () => 
       <DialogContent className="theme-diagnostic-atlas w-[calc(100vw-2rem)] max-w-xl overflow-hidden border-atlas-border bg-[color-mix(in_srgb,var(--atlas-bg-elevated)_94%,transparent)] p-0 text-atlas-white shadow-atlas-glass sm:rounded-2xl">
         <DialogHeader className="border-b border-atlas-border px-6 py-5 pr-14 text-left">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-atlas-cyan">
-            StudyPanacea access
+            PANaCEa access
           </p>
           <DialogTitle
             id="panacea-auth-title"
@@ -260,10 +260,10 @@ function LandingFooter({ onSignUp }: { onSignUp: () => void }) {
     <footer className="border-t border-atlas-border px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 text-sm text-atlas-muted md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="font-poppins text-base font-semibold text-atlas-white">StudyPanacea</p>
+          <p className="font-poppins text-base font-semibold text-atlas-white">PANaCEa</p>
           <p className="mt-2 max-w-xl">
-            A premium PANCE prep command center for question practice, image training, weak-area
-            targeting, and readiness analytics.
+            The adaptive Clinical Learning Engine for PA learners — turning study behavior,
+            blueprint risk, and retention into one precise next action.
           </p>
         </div>
         <button
@@ -423,7 +423,7 @@ export function LandingPage() {
                 Start the next study block with a readiness scan, not a guess.
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-atlas-muted sm:text-base">
-                StudyPanacea turns today’s weak system, image-read confidence, and review debt into
+                PANaCEa turns today’s weak system, image-read confidence, and review debt into
                 one focused PANCE study prescription.
               </p>
 

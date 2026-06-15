@@ -579,7 +579,7 @@ export function DashboardPreview({ onOpenDashboard }: { onOpenDashboard: () => v
               <div className="flex flex-col gap-4 rounded-3xl border border-atlas-border bg-atlas-background/70 p-4 backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-atlas-cyan">
-                    StudyPanacea readiness command center
+                    PANaCEa readiness command center
                   </p>
                   <h3 className="mt-2 font-poppins text-2xl font-semibold text-atlas-white">
                     Diagnostic Atlas OS study surface

@@ -676,7 +676,7 @@ function StorySignalPanel() {
     {
       label: 'Clinical Diagnosis',
       value: 'Weak System Cluster',
-      detail: 'StudyPanacea groups repeated errors by organ system, task type, and review timing.',
+      detail: 'PANaCEa groups repeated errors by organ system, task type, and review timing.',
     },
     {
       label: 'Output',
