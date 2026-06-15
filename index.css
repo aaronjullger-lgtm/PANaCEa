@@ -1071,6 +1071,9 @@ a,
   --atlas-accent-pulse-pink: #fb7185;
   --atlas-success-green: #34d399;
   --atlas-warning-amber: #fbbf24;
+  /* Muted gold — reserved as a sparse, high-value signal (readiness threshold,
+     the selected next action). Used intentionally, never as a luxury gradient. */
+  --atlas-accent-gold: #d8b25a;
   --atlas-text-muted: #a9bad0;
   --atlas-text-subtle: #7890aa;
   --atlas-clinical-white: #f8fbff;

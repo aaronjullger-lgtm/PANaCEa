@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { ClinicalImageTraining } from './ClinicalImageTraining';
 import { DiagnosticScrollStory } from './DiagnosticScrollStory';
 import { Hero } from './Hero';
+import { StudyPrescription } from './StudyPrescription';
 import { TrainingModesDock } from './TrainingModesDock';
 import { CTA_ASSURANCES, NAV_LINKS, WORKFLOW_STEPS } from './content';
 
@@ -362,7 +363,10 @@ export function LandingPage() {
 
       <main id="landing-main">
         <Hero onStartStudying={openSignUp} />
-        <StoryConnector from="Scan" to="Diagnose" />
+        <StoryConnector from="Observe" to="Prescribe" />
+
+        <StudyPrescription onStart={openSignUp} />
+        <StoryConnector from="Prescribe" to="Diagnose" />
 
         <DiagnosticScrollStory />
         <StoryConnector from="Diagnose" to="Train" />

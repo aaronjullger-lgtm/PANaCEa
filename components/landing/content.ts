@@ -20,10 +20,10 @@ import type { MetricVitalStatus } from '@/components/studypanacea/MetricVital';
 import type { OrganSystemBadgeState } from '@/components/studypanacea/OrganSystemBadge';
 
 export const NAV_LINKS = [
-  { label: 'Readiness Scanner', href: '#hero' },
+  { label: 'The Engine', href: '#hero' },
+  { label: 'Next Action', href: '#study-prescription' },
   { label: 'Diagnostic Path', href: '#diagnostic-story' },
   { label: 'Training Dock', href: '#training-modes' },
-  { label: 'Image Lab', href: '#image-lab' },
   { label: 'Command Center', href: '#analytics-preview' },
 ] as const;
 
@@ -1024,6 +1024,78 @@ export const HERO_TRUST_INDICATORS = [
   { label: 'Image-read training', detail: 'synthetic viewer drills' },
   { label: 'Weak-area Rx', detail: 'one next block first' },
 ] as const;
+
+/**
+ * The Clinical Learning Engine — the signature visual's narrative loop.
+ * Each stage maps to one phase of the adaptive cycle and one motion-grammar
+ * beat. The canvas in ClinicalLearningEngine.tsx renders these; the legend
+ * makes the meaning explicit so the visual never reads as an unexplained
+ * particle field.
+ */
+export type EngineStageId =
+  | 'signal'
+  | 'reasoning'
+  | 'risk'
+  | 'prescription'
+  | 'update';
+
+export type EngineStage = {
+  id: EngineStageId;
+  index: string;
+  label: string;
+  caption: string;
+  /** semantic motif this beat expresses */
+  motif: string;
+  tone: 'cyan' | 'blue' | 'violet' | 'pulse' | 'success' | 'gold';
+};
+
+export const ENGINE_STAGES: EngineStage[] = [
+  {
+    id: 'signal',
+    index: '01',
+    label: 'Observe behavior',
+    caption:
+      'Correctness, response time, answer changes, and confusion patterns enter the model as living signals — no self-rated buttons.',
+    motif: 'Waveform cadence',
+    tone: 'cyan',
+  },
+  {
+    id: 'reasoning',
+    index: '02',
+    label: 'Map to clinical systems',
+    caption:
+      'Signals resolve onto organ systems, blueprint domains, and reasoning pathways between related diagnoses.',
+    motif: 'Reasoning nodes',
+    tone: 'blue',
+  },
+  {
+    id: 'risk',
+    index: '03',
+    label: 'Detect fragile knowledge',
+    caption:
+      'Retention decay, review debt, and blueprint risk shift a domain into focus before the exam exposes it.',
+    motif: 'Blueprint rings',
+    tone: 'pulse',
+  },
+  {
+    id: 'prescription',
+    index: '04',
+    label: 'Prescribe one action',
+    caption:
+      'Competing interventions collapse into a single, time-boxed next-best study action — the Study Prescription.',
+    motif: 'Clinical focus frame',
+    tone: 'gold',
+  },
+  {
+    id: 'update',
+    index: '05',
+    label: 'Learn from the response',
+    caption:
+      'Your result feeds back in, the model settles into a revised state, and readiness updates measurably.',
+    motif: 'Memory traces',
+    tone: 'success',
+  },
+];
 
 export const PLACEHOLDER_CAPABILITIES = [
   { label: '3D scanner scene', icon: Layers3 },

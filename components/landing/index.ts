@@ -1,5 +1,7 @@
 export { LandingPage } from './LandingPage';
 export { Hero } from './Hero';
+export { ClinicalLearningEngine } from './ClinicalLearningEngine';
+export { StudyPrescription } from './StudyPrescription';
 export { FloatingDiagnosticLabels } from './FloatingDiagnosticLabels';
 export { DiagnosticScrollStory } from './DiagnosticScrollStory';
 export { TrainingModesDock } from './TrainingModesDock';
