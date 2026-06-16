@@ -52,13 +52,15 @@ visual. Trust indicators and illustrative vitals retained.
 were all deliberately rejected in favor of a lighter native canvas.
 
 ## Verification
-- `tsc --noEmit` — new/changed landing files clean. (One pre-existing error in the now-orphaned
-  `HeroCanvas.tsx:84` predates this work — confirmed by stash diff.)
+- `tsc --noEmit` — new/changed landing files clean. (The orphaned `HeroCanvas.tsx` /
+  `FloatingDiagnosticLabels.tsx` carried a pre-existing strict-mode error and have since been
+  removed, see below.)
 - `npm run build` — ✓ built in ~30s, no new large chunks from landing changes.
 - `vitest run components/landing/__tests__` — 2/2 pass.
 - Visual review at 1440 / 834 / 390 px + reduced-motion — screenshots committed.
 
 ## Follow-ups (by impact)
-1. Remove orphaned `HeroCanvas.tsx` + `FloatingDiagnosticLabels` (unused after the hero swap) — left in place pending owner confirmation per repo deletion policy.
+1. ~~Remove orphaned `HeroCanvas.tsx` + `FloatingDiagnosticLabels`~~ — **done**; both deleted
+   after confirming no remaining importers (also clears their pre-existing strict-mode error).
 2. Generate the optional A2/A3 Higgsfield assets when the workspace has credits beyond the free tier.
 3. Optionally add the hero plate in `.avif` for further byte savings.
