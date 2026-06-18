@@ -2659,10 +2659,10 @@ export async function submitDrillReview(
     ? undefined
     : !countForFSRS
       ? 'session_type_excluded'
-      : isRapidGuess
-        ? 'rapid_guess'
-        : !question.conditionId
-          ? 'missing_condition_linkage'
+      : !question.conditionId
+        ? 'missing_condition_linkage'
+        : isRapidGuess
+          ? 'rapid_guess'
           : 'fsrs_update_failed';
 
   return {

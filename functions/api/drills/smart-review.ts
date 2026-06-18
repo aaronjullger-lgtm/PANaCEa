@@ -11,6 +11,7 @@ import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 import {
   withProductionPregeneratedSafety,
   withProductionQuestionSafety,
+  withProgressLinkage,
 } from '../../../lib/services/questionServingSafety';
 import { resolveCorrectAnswerIndex } from '../../../lib/answerLetterMap';
 import type { Prisma } from '@prisma/client';
@@ -103,9 +104,11 @@ export const onRequestGet = authenticatedEndpoint(SmartReviewSchema, async (cont
     const [preGeneratedQuestions, canonicalQuestions] = await Promise.all([
       conditionIds.length
         ? prisma.preGeneratedQuestion.findMany({
-            where: withProductionPregeneratedSafety({
-              conditionId: { in: conditionIds },
-            }) as Prisma.PreGeneratedQuestionWhereInput,
+            where: withProgressLinkage(
+              withProductionPregeneratedSafety({
+                conditionId: { in: conditionIds },
+              })
+            ) as Prisma.PreGeneratedQuestionWhereInput,
             orderBy: { generatedAt: 'desc' },
             take: 100,
             select: {
@@ -119,9 +122,11 @@ export const onRequestGet = authenticatedEndpoint(SmartReviewSchema, async (cont
         : [],
       conditionIds.length
         ? prisma.question.findMany({
-            where: withProductionQuestionSafety({
-              conditionId: { in: conditionIds },
-            }) as Prisma.QuestionWhereInput,
+            where: withProgressLinkage(
+              withProductionQuestionSafety({
+                conditionId: { in: conditionIds },
+              })
+            ) as Prisma.QuestionWhereInput,
             orderBy: { createdAt: 'desc' },
             take: 100,
             select: {
