@@ -145,22 +145,26 @@ GET / api / media / list;
 ### Fetching Questions for a User
 
 ```typescript
-// Frontend code
+// Frontend code — userId is derived server-side from the Clerk JWT (never send it in the body)
+const token = await getToken();
 const response = await fetch('/api/questions/fetch', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  },
   body: JSON.stringify({
-    userId: currentUser.id,
     system: 'CV', // Cardiovascular
     difficulty: 'medium',
     limit: 10,
   }),
 });
 
-const { questions, source, needsGeneration } = await response.json();
+const { data } = await response.json();
+const { questions, source, needsGeneration } = data;
 
-// source: "database" (questions from repository)
-// source: "database_and_generation_needed" (needs more questions)
+// source: "database"
+// needsGeneration: true when the pool returned fewer than `limit` production-safe rows
 ```
 
 ### Recording Question Viewed
