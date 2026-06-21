@@ -286,6 +286,9 @@ typecheck-errors.txt
 # Claude worktrees (local IDE state)
 .claude/worktrees/
 
+# Git worktrees
+.worktrees/
+
 # AI agent configuration - developer tooling, not source code
 .clinerules
 .cursorrules
