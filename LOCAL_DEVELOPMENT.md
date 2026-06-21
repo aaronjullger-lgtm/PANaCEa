@@ -2,6 +2,10 @@
 
 > Single source of truth for running PANaCEa on your local machine.
 
+## Overview
+
+PANaCEa is an AI-powered PANCE/PANRE exam preparation platform. This runbook covers how to set up the project locally, configure the required services, run the dev servers, execute tests, and troubleshoot common issues.
+
 ## Prerequisites
 
 - **Node.js**: `>=22.0.0` (the repo pins `22` in `.node-version` and `.nvmrc`).
