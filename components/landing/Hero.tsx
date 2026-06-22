@@ -99,7 +99,7 @@ function HeroCanvasFallback({ ambientVideo = false }: { ambientVideo?: boolean }
         <video
           className="absolute inset-0 h-full w-full object-cover opacity-70"
           src="/assets/hero-scanner-ambient.mp4"
-          poster="/assets/hero-scanner-bg.png"
+          poster="/assets/hero-scanner-bg.webp"
           autoPlay
           muted
           loop
@@ -172,7 +172,7 @@ function HeroScannerPanel({ reducedMotion }: { reducedMotion: boolean }) {
         >
           <div className="relative min-h-[27rem] overflow-hidden bg-atlas-background-soft sm:min-h-[34rem] lg:min-h-[37rem]">
             <img
-              src="/assets/hero-scanner-bg.png"
+              src="/assets/hero-scanner-bg.webp"
               alt=""
               aria-hidden="true"
               className="absolute inset-0 h-full w-full object-cover opacity-60"

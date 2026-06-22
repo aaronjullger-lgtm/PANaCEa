@@ -76,22 +76,13 @@ file, never call Higgsfield from the running app.
 6. Download the completed video into `public/assets/`.
 
 **Status as of this doc:**
-- Still image: `public/assets/hero-scanner-bg.png` (job
-  `5f53a801-7a11-49ea-8815-be15446a4e3b`, model `nano_banana_2`, 2k 16:9,
-  8.6MB — **unoptimized**, see note below).
+- Still image: `public/assets/hero-scanner-bg.webp` (job
+  `5f53a801-7a11-49ea-8815-be15446a4e3b`, model `nano_banana_2`, 2k 16:9
+  source; resized to 1600px wide and re-encoded WebP q78 via the repo's
+  existing `sharp` devDependency — 8.2MB raw PNG -> 61KB).
 - Ambient video: `public/assets/hero-scanner-ambient.mp4` (job
   `eb481df2-0279-4eeb-964f-6ae4269f98ed`, `seedance_2_0`, 8s/720p/16:9, no
   audio, ~3MB) — completed and downloaded.
-
-**Known follow-up (not done in this pass):** `hero-scanner-bg.png` is an
-8.6MB raw PNG straight from the generator — too heavy to ship as-is given
-this repo's perf discipline (PWA, code-splitting, etc.). This dev container
-had no `sharp`/`cwebp`/`imagemagick`/`ffmpeg` available to recompress it
-in-session. Before shipping, convert to WebP/AVIF and downscale to the
-actual rendered size (the hero panel never exceeds ~1100px wide in
-practice) — should land well under 200KB. Don't add a new prod dependency
-for this; a one-off local conversion (or Cloudflare Images/Vite's built-in
-asset pipeline) is enough.
 
 **Where it's wired in:** `Hero.tsx` → `HeroScannerPanel`, as a poster
 image / fallback background sitting *behind* the existing `HeroCanvas`
