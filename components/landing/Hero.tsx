@@ -92,9 +92,21 @@ function entranceProps(prefersReducedMotion: boolean, delay = 0) {
   };
 }
 
-function HeroCanvasFallback() {
+function HeroCanvasFallback({ ambientVideo = false }: { ambientVideo?: boolean }) {
   return (
     <div className="relative h-full min-h-[25rem] overflow-hidden sm:min-h-[31rem]">
+      {ambientVideo ? (
+        <video
+          className="absolute inset-0 h-full w-full object-cover opacity-70"
+          src="/assets/hero-scanner-ambient.mp4"
+          poster="/assets/hero-scanner-bg.png"
+          autoPlay
+          muted
+          loop
+          playsInline
+          aria-hidden="true"
+        />
+      ) : null}
       <div className="absolute inset-0 atlas-medical-grid opacity-30" aria-hidden="true" />
       <div className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full border border-atlas-cyan/30 bg-atlas-cyan/5 shadow-[0_0_90px_-48px_var(--atlas-accent-cyan)]" />
       <div className="absolute left-1/2 top-[49%] h-52 w-32 -translate-x-1/2 -translate-y-1/2 rounded-[45%] border border-atlas-cyan/40 bg-atlas-glass" />
@@ -144,6 +156,7 @@ function ScannerStatusRail() {
 function HeroScannerPanel({ reducedMotion }: { reducedMotion: boolean }) {
   const canRenderCanvas = useCanRenderHeroCanvas();
   const renderCanvas = canRenderCanvas && !reducedMotion;
+  const showAmbientVideo = !renderCanvas && !reducedMotion;
 
   return (
     <motion.div {...entranceProps(reducedMotion, 0.14)} className="relative">
@@ -158,6 +171,14 @@ function HeroScannerPanel({ reducedMotion }: { reducedMotion: boolean }) {
           className="relative z-10"
         >
           <div className="relative min-h-[27rem] overflow-hidden bg-atlas-background-soft sm:min-h-[34rem] lg:min-h-[37rem]">
+            <img
+              src="/assets/hero-scanner-bg.png"
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-cover opacity-60"
+              loading="eager"
+              decoding="async"
+            />
             <div className="absolute inset-0 atlas-medical-grid opacity-20" aria-hidden="true" />
 
             <div className="absolute inset-x-4 top-4 z-30 hidden flex-wrap gap-2 sm:flex lg:hidden">
@@ -170,7 +191,7 @@ function HeroScannerPanel({ reducedMotion }: { reducedMotion: boolean }) {
                   <LazyHeroCanvas reducedMotion={reducedMotion} />
                 </Suspense>
               ) : (
-                <HeroCanvasFallback />
+                <HeroCanvasFallback ambientVideo={showAmbientVideo} />
               )}
             </div>
 
