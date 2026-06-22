@@ -5,6 +5,7 @@ export { DiagnosticScrollStory } from './DiagnosticScrollStory';
 export { TrainingModesDock } from './TrainingModesDock';
 export { ClinicalImageTraining } from './ClinicalImageTraining';
 export { DashboardPreview } from './DashboardPreview';
+export { PlatformDifferentiators } from './PlatformDifferentiators';
 export {
   ANALYTICS_METRICS,
   CLINICAL_IMAGE_CASES,
@@ -23,7 +24,9 @@ export {
   IMAGE_FINDINGS,
   NAV_LINKS,
   ORGAN_SYSTEMS,
+  PANCE_REASONING_STAT,
   PLACEHOLDER_CAPABILITIES,
+  PLATFORM_DIFFERENTIATORS,
   TRAINING_MODES,
   WORKFLOW_STEPS,
 } from './content';

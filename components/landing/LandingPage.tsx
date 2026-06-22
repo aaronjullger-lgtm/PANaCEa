@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { ClinicalImageTraining } from './ClinicalImageTraining';
 import { DiagnosticScrollStory } from './DiagnosticScrollStory';
 import { Hero } from './Hero';
+import { PlatformDifferentiators } from './PlatformDifferentiators';
 import { TrainingModesDock } from './TrainingModesDock';
 import { CTA_ASSURANCES, NAV_LINKS, WORKFLOW_STEPS } from './content';
 
@@ -375,8 +376,11 @@ export function LandingPage() {
 
         <Suspense fallback={<DashboardPreviewFallback onOpenDashboard={openSignUp} />}>
           <DashboardPreview onOpenDashboard={openSignUp} />
+          <StoryConnector from="Measure" to="Why" />
+
+          <PlatformDifferentiators />
         </Suspense>
-        <StoryConnector from="Measure" to="Begin" />
+        <StoryConnector from="Why" to="Begin" />
 
         <SectionShell id="start" aria-labelledby="final-cta-title" className="pb-12 sm:pb-16">
           <MedicalGlassCard scannerAccent className="mx-auto max-w-6xl overflow-hidden p-0">

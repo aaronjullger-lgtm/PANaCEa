@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
+  AlertTriangle,
   Brain,
   Camera,
   ChartNoAxesCombined,
@@ -9,6 +10,7 @@ import {
   Layers3,
   LineChart,
   Microscope,
+  Network,
   ShieldCheck,
   Sparkles,
   Stethoscope,
@@ -1032,3 +1034,62 @@ export const PLACEHOLDER_CAPABILITIES = [
   { label: 'Readiness trend chart', icon: LineChart },
   { label: 'Study prescription dock', icon: Zap },
 ] as const;
+
+export type PlatformDifferentiator = {
+  id: string;
+  claim: string;
+  mechanism: string;
+  icon: LucideIcon;
+};
+
+export const PLATFORM_DIFFERENTIATORS: PlatformDifferentiator[] = [
+  {
+    id: 'implicit-confidence',
+    claim: "Confidence isn't self-reported. It's measured.",
+    mechanism:
+      'Confidence is derived from response latency, hesitation, and answer-switching, then calibrated to each learner’s ability level. There are no self-rated buttons.',
+    icon: Brain,
+  },
+  {
+    id: 'connected-concept-map',
+    claim: 'Every question builds one connected concept map, not a card pile.',
+    mechanism:
+      'Each item maps to a clinical concept node, so mastery transfers across novel question phrasings instead of staying tied to one memorized card.',
+    icon: Network,
+  },
+  {
+    id: 'clinical-reasoning',
+    claim: 'Built to train clinical reasoning, not recall.',
+    mechanism:
+      'Dual-process training and illness-script formation build pattern recognition on top of retrieval practice, instead of running memorization drills.',
+    icon: Stethoscope,
+  },
+  {
+    id: 'calculated-review-timing',
+    claim: 'Review timing is calculated, not guessed.',
+    mechanism:
+      'FSRS v6 spaced repetition schedules each review near the point where modeled retrievability is about to drop, instead of running a fixed daily deck.',
+    icon: TimerReset,
+  },
+  {
+    id: 'overconfidence-detection',
+    claim: 'Dangerous overconfidence gets caught before exam day.',
+    mechanism:
+      'A high-confidence-but-wrong response pattern is detected and routed into targeted re-teaching instead of passing through as a correct answer.',
+    icon: AlertTriangle,
+  },
+  {
+    id: 'blueprint-weighted-practice',
+    claim: 'Practice time tracks the actual exam, not a guess at it.',
+    mechanism:
+      'Every organ system and task category is weighted to the 2025 NCCPA PANCE blueprint (Cardiovascular 11%, Diagnosis 18%, Clinical Intervention 16%, and more), so time spent maps to real exam yield.',
+    icon: Target,
+  },
+];
+
+export const PANCE_REASONING_STAT = {
+  value: '34%',
+  label: 'of the PANCE tests reasoning, not recall',
+  detail:
+    'Formulating the most likely diagnosis (18%) and clinical intervention (16%) are the two largest task categories on the 2025 NCCPA blueprint — both require synthesis, not memorization.',
+} as const;
