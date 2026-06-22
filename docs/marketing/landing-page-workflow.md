@@ -129,6 +129,26 @@ already in place (≥1024px viewport, `deviceMemory >= 4`,
 PNG poster is shown with `HeroCanvasFallback()`'s existing CSS-only treatment;
 never autoplay heavy video on a gated-out device.
 
+### 3a. SEO/social-meta dangling-reference fixes (no new assets generated)
+
+Found by auditing `index.html` / `robots.txt` against what actually exists on
+disk — both were genuine pre-existing bugs, not hypothetical:
+
+- `public/og-image.png` (new, 1200x630 PNG): `index.html`'s `og:image` /
+  `twitter:image` tags pointed at `/og-image.png`, which never existed —
+  every social link preview (Slack, X, Discord, iMessage) was broken. Fixed
+  by cropping the existing on-brand hero still
+  (`public/assets/hero-scanner-bg.webp`) to spec via `sharp`, rather than
+  generating new art — avoids AI-text-hallucination risk and stays visually
+  consistent with the Hero.
+- `public/sitemap.xml` (new): `robots.txt` declared
+  `Sitemap: https://studypanacea.com/sitemap.xml`, but the file didn't exist.
+  Fixed with a minimal, accurate sitemap containing only the root URL —
+  confirmed via `App.tsx` that the app has no separate public routes
+  (`LandingPage` renders conditionally for unauthenticated users, not at
+  distinct paths), so no `/privacy`, `/terms`, `/pricing` etc. entries were
+  fabricated.
+
 ## 4. Copy rules (from the Value-Prop + UI Research docs)
 
 **Banned phrases** — never use:
