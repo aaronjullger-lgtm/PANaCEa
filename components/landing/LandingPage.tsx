@@ -382,8 +382,23 @@ export function LandingPage() {
         </Suspense>
         <StoryConnector from="Why" to="Begin" />
 
-        <SectionShell id="start" aria-labelledby="final-cta-title" className="pb-12 sm:pb-16">
-          <MedicalGlassCard scannerAccent className="mx-auto max-w-6xl overflow-hidden p-0">
+        <section
+          id="start"
+          aria-labelledby="final-cta-title"
+          className="relative scroll-mt-24 overflow-hidden px-4 py-14 pb-12 sm:px-6 sm:py-20 sm:pb-16 lg:px-8 lg:py-24"
+        >
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 opacity-[0.14]"
+            style={{
+              backgroundImage: "url('/assets/cta-scanlock.webp')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-atlas-background via-transparent to-atlas-background" />
+          <div className="relative mx-auto max-w-7xl">
+            <MedicalGlassCard scannerAccent className="mx-auto max-w-6xl overflow-hidden p-0">
             <div className="grid gap-3 border-b border-atlas-border bg-atlas-background/55 p-4 text-left sm:grid-cols-3 sm:p-5">
               {WORKFLOW_STEPS.map((step, index) => {
                 const Icon = step.icon;
@@ -460,7 +475,8 @@ export function LandingPage() {
               </div>
             </div>
           </MedicalGlassCard>
-        </SectionShell>
+          </div>
+        </section>
       </main>
 
       <LandingFooter onSignUp={openSignUp} />

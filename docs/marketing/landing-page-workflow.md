@@ -107,6 +107,19 @@ file, never call Higgsfield from the running app.
   decorative background layer behind the section, with a top/bottom
   `atlas-background` gradient mask so it never competes with card text —
   not a second motion centerpiece, purely static.
+- Final-CTA background: `public/assets/cta-scanlock.webp` (job
+  `3c502169-9e9b-4d2d-910a-8c7635a00dd8`, model `nano_banana_flash`
+  fallback from requested `nano_banana_2`, 1k 16:9 / 1376x768, prompt
+  encoded the atlas hex values plus a scan-lock crosshair/confirmation-ring
+  motif — distinct from the EKG-heart (Hero) and neural-network
+  (Differentiators) motifs already used, to mark the page's final
+  conversion moment as its own visual beat; 1 credit) — resized/re-encoded
+  WebP q78 (949KB PNG -> 33.5KB). Wired into the final CTA section in
+  `LandingPage.tsx` (previously a bare `SectionShell`, now a custom
+  `<section>` so it can host the absolute background layer) as a
+  low-opacity (`opacity-[0.14]`) decorative layer with the same top/bottom
+  gradient mask pattern as Differentiators — purely static, no new motion
+  centerpiece.
 
 **Where it's wired in:** `Hero.tsx` → `HeroScannerPanel`, as a poster
 image / fallback background sitting *behind* the existing `HeroCanvas`
