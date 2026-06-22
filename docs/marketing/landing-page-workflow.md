@@ -84,8 +84,19 @@ file, never call Higgsfield from the running app.
   source; resized to 1600px wide and re-encoded WebP q78 via the repo's
   existing `sharp` devDependency — 8.2MB raw PNG -> 61KB).
 - Ambient video: `public/assets/hero-scanner-ambient.mp4` (job
-  `eb481df2-0279-4eeb-964f-6ae4269f98ed`, `seedance_2_0`, 8s/720p/16:9, no
-  audio, ~3MB) — completed and downloaded.
+  `dc235159-0334-4b01-8a3d-0e1160c58e1d`, `cinematic_studio_video_v2`,
+  `genre: 'intimate'`, `mode: 'pro'`, sourced from the hero still job
+  `5f53a801-7a11-49ea-8815-be15446a4e3b` as `start_image`, 8s/24fps/16:9,
+  no audio. Regenerated to replace an earlier `seedance_2_0` pass that read
+  as generic ambient motion rather than cinematic — this version dollies in
+  on the translucent-anatomy/EKG-trace motif instead. Downloaded at
+  1928x1076/14.3Mbps, re-encoded via the repo's `ffmpeg` toolchain to
+  1280x720 H.264 (`-crf 27 -preset slow`, no audio, `+faststart`) — 14.3MB
+  raw -> 868KB.
+  A second candidate (`kling3_0`, job `4c8f4ad8-6388-48f2-bdbf-3451511ec818`,
+  sourced from the differentiators-network still) was generated and
+  compared but rejected for Hero use: off-brand orange/amber accent color
+  and no thematic tie to the EKG/anatomy motif already established there.
 - Differentiators background: `public/assets/differentiators-network.webp`
   (job `dcc9a4f2-e9ee-4b5e-9c35-e480c25e043b`, model `nano_banana_2`
   fallback from requested `nano_banana_pro`, 1k 16:9 / 1376x768, prompt
