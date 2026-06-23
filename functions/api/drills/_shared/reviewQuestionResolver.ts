@@ -60,22 +60,21 @@ export async function resolveReviewQuestion(
         : null;
   const preferCanonicalQuestion = params.questionSource === 'question' && canonicalQuestionId;
 
-  const preGenerated = preferCanonicalQuestion
-    ? null
-    : await prisma.preGeneratedQuestion.findFirst({
-        where: withProductionPregeneratedSafety({ id: sourceQuestionId }),
-        select: {
-          id: true,
-          questionData: true,
-          conditionId: true,
-          medicalContentId: true,
-          system: true,
-          difficulty: true,
-          questionType: true,
-        },
-      } as Prisma.PreGeneratedQuestionFindFirstArgs);
+  const findPreGenerated = async (): Promise<ResolveReviewQuestionResult | null> => {
+    const preGenerated = await prisma.preGeneratedQuestion.findFirst({
+      where: withProductionPregeneratedSafety({ id: sourceQuestionId }),
+      select: {
+        id: true,
+        questionData: true,
+        conditionId: true,
+        medicalContentId: true,
+        system: true,
+        difficulty: true,
+        questionType: true,
+      },
+    } as Prisma.PreGeneratedQuestionFindFirstArgs);
 
-  if (preGenerated) {
+    if (!preGenerated) return null;
     return {
       question: {
         ...preGenerated,
@@ -85,6 +84,11 @@ export async function resolveReviewQuestion(
       },
       source: 'pre_generated',
     };
+  };
+
+  if (!preferCanonicalQuestion) {
+    const preGeneratedResult = await findPreGenerated();
+    if (preGeneratedResult) return preGeneratedResult;
   }
 
   const mainQuestion = await prisma.question.findFirst({
@@ -126,6 +130,15 @@ export async function resolveReviewQuestion(
       },
       source: 'main_question',
     };
+  }
+
+  // Clients without explicit identity infer questionSource 'question' from any
+  // non-derived id — including PreGeneratedQuestion ids served as session pool
+  // questions. When that canonical claim misses, recover via PreGeneratedQuestion
+  // before degrading to the lossy attempt fallback.
+  if (preferCanonicalQuestion) {
+    const preGeneratedResult = await findPreGenerated();
+    if (preGeneratedResult) return preGeneratedResult;
   }
 
   const recentAttempt = await prisma.questionAttempt.findFirst({

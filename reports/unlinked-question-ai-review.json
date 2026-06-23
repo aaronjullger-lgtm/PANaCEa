@@ -1,0 +1,3313 @@
+{
+  "ranAt": "2026-06-11T13:32:16.705Z",
+  "mode": "mock",
+  "reviewedBy": "ai-review-pipeline:v1 (clinical+taxonomy+verifier)",
+  "summary": {
+    "total": 89,
+    "byDecision": {
+      "link_condition": 0,
+      "link_medical_content": 0,
+      "retire": 0,
+      "keep_quarantined": 89,
+      "needs_more_information": 0
+    },
+    "preparedLinks": 0,
+    "malformedRows": 0
+  },
+  "malformed": [],
+  "outcomes": [
+    {
+      "id": "q-exp-cv-002",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-cv-005",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-cv-008",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-cv-009",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-cv-010",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-cv-013",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-pulm-003",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-pulm-004",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-pulm-005",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-pulm-006",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-pulm-007",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-pulm-008",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-pulm-009",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-pulm-010",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-pulm-014",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-exp-pulm-015",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-001",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-002",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-003",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-004",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-005",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-006",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-007",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-008",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-009",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-010",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-011",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-012",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-013",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-014",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-015",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-016",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-017",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-018",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-019",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-020",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-021",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-022",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-023",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-024",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-025",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-026",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-027",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-028",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-029",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-cv-030",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-001",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-002",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-003",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-004",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-005",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-006",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-007",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-008",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-009",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-011",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-012",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-013",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-014",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-015",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-016",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-017",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-018",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-019",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-020",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-021",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-022",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-023",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-024",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "q-tax-pulm-025",
+      "source": "pre_generated",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "0f0943f0-554e-4d64-a5bf-3743be56ccb1",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "10af0c57-1292-4471-b6dc-7543096f7f36",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "1cd2ec1b-49e5-49ba-9bf9-729d659cc949",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "1ea26eef-4226-4ce0-b720-202ef256c3dd",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "2100e60c-7d56-46d4-81dc-b34a2631a880",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "2da7dfba-8d19-4ffa-95d6-2670624c5af3",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "3a3bc46d-06b6-421a-b60f-0fbd1f36a881",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "4d832ebc-132c-4988-a698-4f4aa940278b",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "565166cf-90af-4b31-8174-528ceb8da395",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "6bd42ead-89c6-4579-af15-768aa6b71c2e",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "7aafe940-84a1-451f-be40-108aef7d2216",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "7b6a0cbd-6326-46fa-891d-719211245f15",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "abb6faf0-bab8-449c-8724-c46a629ed2b7",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "c34f6d43-1692-493d-9318-215cf48ae619",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "d047e334-0167-4dc6-b658-588f6b328e33",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "e04e71d9-6c1f-4e24-b212-3ea650e5858e",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "f4356a2c-954c-4a45-9f8b-f2436407ceaa",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "fd6b0ccc-c6f4-49c3-ab7f-ffce066423fc",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    },
+    {
+      "id": "ff8ff056-2b7e-4644-b982-6ebb2f2810bd",
+      "source": "question",
+      "assessments": {
+        "clinical": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "taxonomy": {
+          "proposedDecision": "keep_quarantined",
+          "proposedTargetId": null,
+          "confidence": 0,
+          "clinicalRationale": "Mock mode: no model available; conservative default.",
+          "safetyConcern": false,
+          "concernNotes": ""
+        },
+        "verifier": {
+          "veto": true,
+          "vetoReason": "Mock mode: verifier always vetoes.",
+          "specificityOk": false,
+          "answerExplanationConsistent": false,
+          "confidence": 0
+        }
+      },
+      "decision": "keep_quarantined",
+      "reviewedConditionId": null,
+      "reviewedMedicalContentId": null,
+      "gatesPassed": [],
+      "gatesFailed": [
+        "link_agreement"
+      ],
+      "notes": "No link agreement (clinical: keep_quarantined, taxonomy: keep_quarantined); quarantined."
+    }
+  ]
+}

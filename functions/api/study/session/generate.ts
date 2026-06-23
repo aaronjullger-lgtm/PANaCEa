@@ -51,6 +51,7 @@ import { resolveOrCreateUserRecord } from '../../_shared/user-resolver';
 import {
   withProductionPregeneratedSafety,
   withProductionQuestionSafety,
+  withProgressLinkage,
 } from '../../../../lib/services/questionServingSafety';
 
 // ─── Schema ────────────────────────────────────────────────────────────────
@@ -669,7 +670,7 @@ async function fetchFallbackPregeneratedQuestions(
   }
 
   const rows = await prisma.preGeneratedQuestion.findMany({
-    where,
+    where: withProgressLinkage(where),
     select: {
       id: true,
       questionData: true,

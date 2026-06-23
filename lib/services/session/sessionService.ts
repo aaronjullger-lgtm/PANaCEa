@@ -24,6 +24,7 @@ import {
 import {
   withProductionPregeneratedSafety,
   withProductionQuestionSafety,
+  withProgressLinkage,
 } from '../questionServingSafety';
 
 // Interfaces moved from session.ts to be used in the service
@@ -111,6 +112,14 @@ export interface EnrichedQuestion {
   pearls: string[];
   difficulty: string;
   source: 'pool' | 'main' | 'generated' | 'seed';
+  /**
+   * Review-pipeline identity. `questionSource` tells the submit-review resolver
+   * which table `sourceQuestionId` belongs to; without it the client infers
+   * 'question' from any non-derived id, which mis-routes pool/seed submissions.
+   */
+  questionSource: 'question' | 'pre_generated' | 'seed' | 'generated';
+  canonicalQuestionId: string | null;
+  sourceQuestionId: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -572,7 +581,7 @@ export class SessionService {
     // For large counts, limit to reasonable size to prevent timeouts
     const fetchLimit = Math.min(count + 20, 50); // Max 50 questions per fetch
     const poolQuestions = await this.prisma.preGeneratedQuestion.findMany({
-      where,
+      where: withProgressLinkage(where) as Prisma.PreGeneratedQuestionWhereInput,
       take: fetchLimit,
       orderBy: { generatedAt: 'desc' }, // Prefer newer questions
     });
@@ -635,6 +644,9 @@ export class SessionService {
         pearls: (data.pearls || []) as string[],
         difficulty: q.difficulty,
         source: 'pool',
+        questionSource: 'pre_generated',
+        canonicalQuestionId: null,
+        sourceQuestionId: q.id,
         metadata: { generatedAt: q.generatedAt },
       });
       seenIds.add(q.id);
@@ -729,6 +741,9 @@ export class SessionService {
         pearls: [],
         difficulty: seed.difficulty,
         source: 'seed',
+        questionSource: 'seed',
+        canonicalQuestionId: null,
+        sourceQuestionId: id,
         metadata: { seedId: seed.id },
       };
     } catch (error) {
@@ -784,7 +799,7 @@ export class SessionService {
     // Optimize: fetch only what we need plus a small buffer, not count * 3
     const fetchLimit = Math.min(count + 15, 30); // Max 30 questions per fetch
     const dbQuestions = await this.prisma.question.findMany({
-      where,
+      where: withProgressLinkage(where) as Prisma.QuestionWhereInput,
       take: fetchLimit,
       orderBy: { timesSeen: 'asc' },
       include: {
@@ -834,6 +849,9 @@ export class SessionService {
         pearls: [],
         difficulty: q.difficulty || 'medium',
         source: 'main',
+        questionSource: 'question',
+        canonicalQuestionId: q.id,
+        sourceQuestionId: q.id,
       });
       seenIds.add(q.id);
       questionIdsToUpdate.push(q.id);
