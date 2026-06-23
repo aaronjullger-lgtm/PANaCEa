@@ -54,18 +54,17 @@ The codebase contains **three distinct synchronization systems**:
 - **Method:** POST `/api/sync`
 - **Features:**
   - Batch processing with Cloudflare limits (25 items per batch)
-  - Conflict detection and resolution
+  - Timestamp-based 3-way merge conflict resolution
+  - Local deletion tracking via `localDeletions` timestamp map
   - Transient error retry logic
   - Comprehensive data validation with Zod schemas
 - **Data Types Supported:**
   - Performance records
   - SRS items
   - Saved questions
-  - User achievements
-  - Daily streaks
 
 #### **Secondary Endpoints:**
-- `GET /api/sync` - Download cloud data
+- `GET /api/sync` - Download cloud data (performance records, SRS items, saved questions)
 - Various operation-specific endpoints for direct sync
 
 ## 2. Strengths Identified
