@@ -51,6 +51,7 @@ All your study data syncs automatically:
 - ✅ Performance records (quiz history)
 - ✅ Spaced repetition schedules (SRS)
 - ✅ Missed questions queue
+- ✅ Drill review submissions (single + batch queue support)
 - ✅ Flagged questions
 - ✅ Study statistics and progress
 - ✅ Learning streaks
@@ -173,6 +174,67 @@ Request: {
   // ...other optional profile fields
 }
 Response: { success: boolean; profile: object; message: string }
+```
+
+### `POST /api/questions/attempt`
+
+Used by offline answer sync (`SyncManager.syncAnswers`) to persist queued question attempts.
+
+```typescript
+Request: {
+  Authorization: 'Bearer <token>';
+  body: {
+    questionId: string;
+    wasCorrect?: boolean;
+    isCorrect?: boolean;
+    timeSpentMs?: number;
+    system?: string;
+    conditionId?: string;
+    mode?: 'session';
+    isMainSession?: boolean;
+    selectedAnswer?: 0 | 1 | 2 | 3 | 'A' | 'B' | 'C' | 'D';
+    rating?: 1 | 2 | 3 | 4;
+    telemetryJson?: Record<string, unknown>;
+    answerChangedCount?: number;
+    durationMs?: number;
+  };
+}
+Response: {
+  success: boolean;
+  attemptId: string;
+  stats: {
+    totalQuestionsAnswered: number;
+    correctAnswers: number;
+    overallAccuracy: number;
+  };
+}
+```
+
+### `POST /api/drills/submit-reviews`
+
+Used by offline review sync (`SyncManager.syncReviews`) to flush queued drill reviews in batch.
+
+```typescript
+Request: Array<{
+  questionId: string;
+  selectedAnswer: string | number;
+  timeSpentMs: number;
+  timeToFirstClick?: number;
+  answerSwitches?: number;
+  totalDwellTime?: number;
+  timezone?: string;
+  wakeTimeHHMM?: string;
+  telemetry?: Record<string, unknown>;
+  sessionType?: 'main' | 'cram' | 'rapid_recall';
+}>;
+
+Response: Array<{
+  questionId: string;
+  success: boolean;
+  source?: 'pre_generated' | 'main_question' | 'question_attempt' | 'missing';
+  error?: string;
+  data?: Record<string, unknown>;
+}>;
 ```
 
 ## Development
@@ -354,7 +416,7 @@ Planned features:
 - [ ] Data visualization dashboard
 - [ ] Team/group features
 - [ ] Advanced sync strategies (delta sync)
-- [ ] Offline queue with retry logic
+- [x] Offline queue with retry logic (answers, pearl actions, and reviews)
 - [ ] Real-time sync with WebSockets
 
 ## Contributing
