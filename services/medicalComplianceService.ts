@@ -731,15 +731,23 @@ export class MedicalComplianceService {
    * Schedule compliance review
    */
   async scheduleReview(requirementId: string, reviewer: string, dueDate: Date): Promise<void> {
-
-    // In a real implementation, this would create a review task in the database
-    // For now, just log it
     const requirement = this.standards
       .flatMap((std) => std.requirements)
       .find((req) => req.id === requirementId);
 
-    if (requirement) {
+    if (!requirement) {
+      return;
     }
+
+    this.complianceStatus.set(`${requirement.standardId}-${requirement.id}`, {
+      standardId: requirement.standardId,
+      requirementId: requirement.id,
+      status: 'partial',
+      evidence: [`Review scheduled for ${dueDate.toISOString()} by ${reviewer}`],
+      lastChecked: new Date(),
+      nextCheck: dueDate,
+      issues: [],
+    });
   }
 
   /**
