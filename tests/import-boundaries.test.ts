@@ -63,3 +63,36 @@ describe('functions/** import boundaries', () => {
     ).toEqual([]);
   });
 });
+
+// Production source must never import from the quarantined _trash/ directory.
+const TRASH_IMPORT = /(?:from|require\()\s*['"][^'"]*_trash\//;
+
+describe('production source never imports from _trash/', () => {
+  const PROD_DIRS = ['components', 'lib', 'services', 'hooks', 'pages', 'store', 'functions', 'src'];
+
+  it('has no _trash imports across production source dirs', () => {
+    const offenders: string[] = [];
+    for (const dir of PROD_DIRS) {
+      let files: string[] = [];
+      try {
+        files = walk(join(REPO_ROOT, dir), ['.ts', '.tsx']);
+      } catch {
+        continue; // dir may not exist
+      }
+      for (const file of files) {
+        const src = readFileSync(file, 'utf8');
+        for (const line of src.split('\n')) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('//') || trimmed.startsWith('*')) continue;
+          if (TRASH_IMPORT.test(trimmed)) {
+            offenders.push(`${file.replace(REPO_ROOT + '/', '')}: ${trimmed}`);
+          }
+        }
+      }
+    }
+    expect(
+      offenders,
+      `Production source must not import from _trash/. Offenders:\n${offenders.join('\n')}`
+    ).toEqual([]);
+  });
+});
