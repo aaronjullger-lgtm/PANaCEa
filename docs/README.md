@@ -26,7 +26,7 @@ Welcome to the PANaCEa documentation! This index helps you quickly find the info
 
 ### For API Surface
 
-1. **[API Overview](api/API_OVERVIEW.md)** - Current request/response contracts for updated endpoints
+1. **[API Overview](api/API_OVERVIEW.md)** - Request/response contracts for SRS due, push subscribe, SOAP analytics, second-chance review, admin, and OSCE endpoints
 
 ---
 
@@ -45,7 +45,7 @@ Learn about PANaCEa's system design:
 
 Backend endpoint contracts and API behavior docs:
 
-- **[API Overview](api/API_OVERVIEW.md)** - Updated admin and OSCE endpoint contracts (`/api/admin/check-access`, `/api/admin/stats`, `/api/osce/complete`, `/api/osce/stats`)
+- **[API Overview](api/API_OVERVIEW.md)** - Updated endpoint contracts for SRS due (`/api/srs/due`), push subscribe (`/api/push/subscribe`), SOAP analytics (`/api/analytics/soap-note`), second-chance review (`/api/reviews/second-chance`), admin, and OSCE routes
 
 ---
 
