@@ -191,7 +191,7 @@ jobs:
             --compatibility-date=2025-12-15 \
             --compatibility-flags=nodejs_compat &
           sleep 20
-          BASE_URL=http://localhost:8788 npx playwright test e2e/api-health.spec.ts --project=chromium
+          BASE_URL=http://localhost:8788 npm run verify:health
         env:
           CI: true
 
