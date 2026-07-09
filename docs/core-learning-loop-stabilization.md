@@ -30,6 +30,8 @@ GET /api/srs/due  (authenticatedEndpoint + Zod query schema)
   catch → 200 { items:[], totalDue:0, error } // resilient, no 500
 ```
 
+**Contract reference:** `docs/api/API_OVERVIEW.md` (`GET /api/srs/due`).
+
 ---
 
 ## 2. Answer submission → ReviewLog write → FSRS update

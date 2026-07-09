@@ -53,7 +53,7 @@ The bundle's older security audit and the newer specialists agree the security *
 | Item | Status |
 |---|---|
 | Committed `pk_live_`/anon/DSN in `wrangler.toml` | Documented in `docs/wrangler-config-remediation-plan.md` (owner rotation) |
-| No `SECURITY.md` / `dependabot.yml` | Proposed (repo-config; low risk) — owner to accept |
+| No `SECURITY.md` / `dependabot.yml` | `SECURITY.md` added (2026 audit stabilization pass); `dependabot.yml` still proposed |
 | Prod dep upgrades (react-router/clerk/nodemailer) | Approval-gated (breaking-risk) |
 | No LICENSE | `docs/license-decision-needed.md` (owner picks) |
 

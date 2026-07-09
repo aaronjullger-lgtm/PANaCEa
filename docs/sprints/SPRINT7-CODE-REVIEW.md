@@ -164,16 +164,11 @@ This means the push reminder cron:
 
 **Minimal fix:** Replace `authenticatedEndpoint()` with the standard `CRON_SECRET` bearer token check used by all other cron endpoints (`reservoir-maintenance.ts`, `generate-daily-plans.ts`, etc.).
 
-### **[CRITICAL] PushSubscription model missing from Prisma schema**
+### **[RESOLVED] PushSubscription model**
 
-The `push/subscribe.ts` endpoint references `prisma.pushSubscription` for storing push tokens, but **no `PushSubscription` model exists in `prisma/schema.prisma`**. This means:
-- Push notification subscriptions cannot be stored
-- The push-reminders cron's cleanup logic (lines 184–188) will fail
-- The entire push notification system is non-functional
+`PushSubscription` now exists in `prisma/schema.prisma` (`userId`, `endpoint`, `p256dh`, `auth`, `@@unique([userId, endpoint])`). `POST/DELETE /api/push/subscribe` upserts/deletes subscriptions and toggles `UserPreferences.pushNotifications`. Request contracts: `docs/api/API_OVERVIEW.md`.
 
-The only push-related field in the schema is `pushNotifications: Boolean @default(false)` in `UserPreferences` — a toggle with no backing subscription storage.
-
-**Minimal fix:** Create a Prisma migration adding the `PushSubscription` model with fields for `endpoint`, `p256dh`, `auth`, `userId`, `createdAt`, and an `expiresAt` TTL column. Add an index on `userId` and a cleanup query in the nightly health check cron.
+**Remaining gap:** push-reminders cron auth may still require `CRON_SECRET` instead of user JWT (see critical item above). TTL cleanup for stale subscriptions is still optional follow-up.
 
 ### Streak auto-freeze offline handling
 
@@ -227,11 +222,9 @@ Users will likely interpret "642 at 38% confidence" as a precise prediction with
 
 ### [CRITICAL] — Fix immediately
 
-**C1. PushSubscription model missing from Prisma schema**
-- Root cause: Model was referenced in code but never added to `schema.prisma`
-- Affected files: `functions/api/push/subscribe.ts`, `functions/api/cron/push-reminders.ts`, `prisma/schema.prisma`
-- Minimal fix: Create migration adding `PushSubscription` model with `endpoint`, `p256dh`, `auth`, `userId`, `createdAt`, `expiresAt`
-- Follow-up: Add TTL cleanup to nightly health check cron
+**C1. PushSubscription model missing from Prisma schema** — **RESOLVED**
+- `PushSubscription` is now in `prisma/schema.prisma`; `POST/DELETE /api/push/subscribe` contracts in `docs/api/API_OVERVIEW.md`
+- Follow-up (optional): TTL cleanup for stale subscriptions in nightly health check cron
 
 **C2. Three new drills have no route registrations**
 - Root cause: Components built but routing boilerplate not added
