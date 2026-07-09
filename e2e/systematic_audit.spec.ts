@@ -41,11 +41,17 @@ async function waitForAppReady(page: Page) {
  */
 async function isAuthenticated(page: Page): Promise<boolean> {
   try {
-    const dashboardVisible = await page
-      .locator('text=/dashboard|command center|study/i')
+    return await page
+      .locator(
+        [
+          '[data-testid="command-center-workspace"]',
+          'header:has-text("Search conditions")',
+          'nav a[href="/study"]',
+          'button:has-text(/start|begin|build session/i)',
+        ].join(', ')
+      )
       .first()
       .isVisible({ timeout: 2000 });
-    return dashboardVisible;
   } catch {
     return false;
   }
