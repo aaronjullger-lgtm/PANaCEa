@@ -26,6 +26,29 @@ export interface StructuredRationaleInput {
 }
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D', 'E'] as const;
+type OptionLetter = (typeof OPTION_LETTERS)[number];
+
+function getWhyIncorrectText(
+  rationale: StructuredRationaleInput,
+  letter: OptionLetter
+): string | undefined {
+  switch (letter) {
+    case 'A':
+      return rationale.whyIncorrectA;
+    case 'B':
+      return rationale.whyIncorrectB;
+    case 'C':
+      return rationale.whyIncorrectC;
+    case 'D':
+      return rationale.whyIncorrectD;
+    case 'E':
+      return rationale.whyIncorrectE;
+    default: {
+      const _exhaustive: never = letter;
+      return _exhaustive;
+    }
+  }
+}
 
 /**
  * Render the full structured rationale into a single formatted text block.
@@ -49,8 +72,7 @@ export function renderStructuredRationale(rationale: StructuredRationaleInput): 
   // 3. Why Each Distractor Is Wrong (teaching moment)
   const whyIncorrectLines: string[] = [];
   for (const letter of OPTION_LETTERS) {
-    const key = `whyIncorrect${letter}` as keyof StructuredRationaleInput;
-    const text = cleanText(rationale[key]);
+    const text = cleanText(getWhyIncorrectText(rationale, letter));
     if (text) {
       whyIncorrectLines.push(`Why option ${letter} is incorrect: ${text}`);
     }
@@ -101,8 +123,7 @@ export function renderDistractorRationale(
 
   for (let i = 0; i < OPTION_LETTERS.length; i++) {
     const letter = OPTION_LETTERS[i]!;
-    const key = `whyIncorrect${letter}` as keyof StructuredRationaleInput;
-    const text = cleanText(rationale[key]);
+    const text = cleanText(getWhyIncorrectText(rationale, letter));
     if (!text) continue;
 
     const isUserChoice = userAnswerIndex !== undefined && i === userAnswerIndex;

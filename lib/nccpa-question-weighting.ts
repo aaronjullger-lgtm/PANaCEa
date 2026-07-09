@@ -373,16 +373,16 @@ export function getDistributionSummary(sessionSize: number = 40): string {
 /**
  * Sample usage example
  */
-export function exampleUsage() {
-
-  // 40-question session
+export function exampleUsage(): void {
   const sessionSize = 40;
   const distribution = calculateSessionDistribution(sessionSize);
+  // Documentation example: distribution maps organ systems to question counts.
+  void [...distribution.entries()].reduce<Record<string, number>>((acc, [system, count]) => {
+    acc[system] = count;
+    return acc;
+  }, {});
 
-  for (const [system, count] of distribution) {
-  }
-
-  const selected = selectWeightedSystems(5);
+  void selectWeightedSystems(5);
 
   const testCounts = new Map([
     ['CV', 5],
@@ -391,5 +391,6 @@ export function exampleUsage() {
   ]);
   const validation = validateSessionDistribution(testCounts, 40);
   if (!validation.valid) {
+    void validation.violations;
   }
 }
