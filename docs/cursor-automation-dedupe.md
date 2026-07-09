@@ -45,3 +45,19 @@ Audit of overlap/conflict/staleness across the agent-config surfaces, and what w
 - Documented the autonomy-vs-safety reconciliation so the rule set is internally consistent.
 - Preserved all pre-existing rules/skills and `.cursorrules` (compat only); nothing was deleted.
 - Switched `.gitignore` from ignoring all of `.cursor/` to a selective unignore so curated config is tracked while `.cursor/mcp.json` and hook logs stay out of git.
+
+## Validation (this pass)
+
+Run on this branch after the changes:
+
+| Command | Result | Introduced by this PR? |
+|---------|--------|------------------------|
+| `npm run typecheck` | ❌ 2 errors, **both** in `lib/study/renderStructuredRationale.ts` | No — pre-existing on `main`; this PR adds only docs/config/JS hooks (outside the TS `include`). |
+| `npm run lint` | ❌ 254 problems = **3 errors** (all `no-empty`) + 251 warnings (under the 2000 gate) | No — same 3 pre-existing `no-empty` errors. |
+| `npm run test:critical` | ✅ 143 passed | — |
+| `npm test` | ✅ 527 files, 9849 passed (1 skipped) | — |
+| `npm run build` | ✅ pass | — |
+| Frontmatter/JSON check | ✅ 22 `.mdc` rules + 29 skills valid; `hooks.json`/`mcp.example.json` valid JSON | — |
+| Hook self-tests | ✅ deny/ask/allow incl. secret-file guards | — |
+
+**Why it's safe to leave the failures for a separate PR:** both the typecheck and lint errors exist on `main` in application code untouched by this PR (this change is agent-config only). Fixing them would be unrelated app-code churn and out of scope for the Cursor automation setup. They are documented here and in `docs/cursor-automation-audit.md`.
