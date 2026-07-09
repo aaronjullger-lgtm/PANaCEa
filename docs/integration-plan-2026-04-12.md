@@ -114,7 +114,7 @@ Three work streams are needed:
    - Build `HabitProfile` from `UserStudyPhenotype` + `UserProgress` + `DailyUserAnalytics`
    - Call `generateCandidateNotifications()` → `throttleNotifications()`
    - Dispatch via Web Push API (requires `web-push` package — ⚠️ production dependency, needs Aaron's approval)
-2. Create `functions/api/notifications/subscribe.ts` — stores push subscription
+2. Push subscription store: `functions/api/push/subscribe.ts` (`POST`/`DELETE` `/api/push/subscribe`; see `docs/api/API_OVERVIEW.md`)
 3. Create `functions/api/notifications/preferences.ts` — quiet hours, max frequency
 4. Add Prisma models: `PushSubscription`, `NotificationLog` (⚠️ migration — needs Aaron's approval)
 
