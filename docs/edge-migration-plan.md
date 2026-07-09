@@ -61,7 +61,8 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 
 | Group | Endpoints | Count | Notes |
 |-------|-----------|-------|-------|
-| Games | GET/POST wordle (2), GET/POST grand-rounds (2) | 4 | Not in App.tsx routing |
+| Games | GET/POST wordle (2) | 2 | ✅ Ported to `functions/api/games/wordle/`; Grand Rounds still dormant |
+| Grand Rounds | GET/POST grand-rounds (2) | 2 | Not in App.tsx routing |
 | Pearls | POST extract, GET daily, GET user, GET favorites, POST useful, POST search, GET stats | 7 | Not called by frontend |
 | Adaptive | GET recommendations, GET next-action, GET profile, POST feedback | 4 | Not called by frontend |
 | Audit | GET content-audit | 1 | Admin-only |

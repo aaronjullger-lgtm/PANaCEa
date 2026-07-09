@@ -27,7 +27,7 @@
 - ✅ Win/loss states work
 - ✅ Can share results
 
-**Note:** API endpoint `/api/games/wordle/*` not implemented in CF, so may use local demo or show error. Check console for API calls.
+**Note:** Production Wordle uses `GET /api/games/wordle/daily` and `POST /api/games/wordle/guess` (authenticated). See `docs/api/API_OVERVIEW.md` for the response contract.
 
 ---
 
@@ -305,7 +305,6 @@ Open DevTools Console and check for:
 ## Known Issues/Expected Behavior
 
 ### APIs Not Implemented (Expected)
-- `/api/games/wordle/*` - Medical Wordle uses demo data
 - `/api/social/*` - Study Groups hidden, won't be called
 - `/api/questions/polypharmacy-drill` - Falls back to demo case if not found
 

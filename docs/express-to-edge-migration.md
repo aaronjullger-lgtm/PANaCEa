@@ -109,7 +109,8 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 
 | Express Route | Status | Notes |
 |---|---|---|
-| `/api/games/*` (Wordle, Grand Rounds) | 💤 DORMANT | Not in App.tsx routing |
+| `GET/POST /api/games/wordle/*` | ✅ PORTED | `functions/api/games/wordle/{daily,guess}.ts` — edge Prisma via `wordleService` |
+| `/api/games/*` (Grand Rounds) | 💤 DORMANT | Not in App.tsx routing |
 | `/api/pearls/*` | 💤 DORMANT | Not called by frontend |
 | `/api/adaptive/*` | 💤 DORMANT | Not called by frontend |
 | `/api/audit/content-audit` | 💤 DORMANT | Admin-only |

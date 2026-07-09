@@ -6,12 +6,99 @@ This document tracks the request/response contracts for the most recently change
 
 | Method | Path | Description |
 |---|---|---|
+| GET | `/api/games/wordle/daily` | Returns today's Medical Wordle challenge and the caller's in-progress state. |
+| POST | `/api/games/wordle/guess` | Submits a guess for today's Wordle and returns updated game state. |
 | GET | `/api/admin/check-access` | Verifies whether the authenticated user currently has admin access. |
 | GET | `/api/admin/stats` | Returns admin dashboard platform metrics (users, activity, flags, top systems). |
 | POST | `/api/osce/complete` | Marks an OSCE session complete (idempotent) and optionally persists analytics to `CaseFile`. |
 | GET | `/api/osce/stats` | Returns OSCE-only performance metrics and trend data from completed sessions with scores. |
 
 ## Endpoint Contracts
+
+### `GET /api/games/wordle/daily`
+
+**Auth:** Required (`Authorization: Bearer <clerk_token>`)
+
+**Request body:** None
+
+**Success response (`200 OK`)**
+
+```json
+{
+  "ok": true,
+  "success": true,
+  "data": {
+    "id": "string",
+    "date": "2026-07-09",
+    "word": {
+      "id": "string",
+      "buzzword": "string",
+      "condition": "string",
+      "system": "string",
+      "subcategory": "string | null",
+      "explanation": "string | null"
+    },
+    "userState": {
+      "guesses": ["string"],
+      "status": "playing",
+      "attemptsLeft": 6,
+      "maxAttempts": 6
+    }
+  },
+  "traceId": "string",
+  "timestamp": "2026-07-09T00:00:00.000Z"
+}
+```
+
+`userState.status` is one of `playing`, `won`, or `lost`. `maxAttempts` is always `6`.
+
+**Error responses**
+
+- `400` → `{ "ok": false, "error": { "code": "VALIDATION_FAILED", "message": "..." }, "success": false }` (e.g. no buzzwords configured)
+- `401` → unauthenticated
+- `500` → `{ "ok": false, "error": { "code": "INTERNAL_ERROR", "message": "Failed to load Wordle challenge" }, "success": false }`
+
+**Notes**
+
+- Edge handler: `functions/api/games/wordle/daily.ts`
+- Business logic: `services/core/wordleService.ts` (`getDailyWordForUser`)
+- Creates `DailyWordle` and `UserWordleState` rows on first access for the UTC calendar day.
+- Uses `createEdgePrismaClient` + `safePrismaDisconnect` in a `finally` block.
+
+---
+
+### `POST /api/games/wordle/guess`
+
+**Auth:** Required (`Authorization: Bearer <clerk_token>`)
+
+**Request body**
+
+```json
+{
+  "guess": "ASPIRIN"
+}
+```
+
+`guess` must be alphabetic only and match the target buzzword length (case-insensitive; stored uppercase).
+
+**Success response (`200 OK`)**
+
+Same envelope and `data` shape as `GET /api/games/wordle/daily` (updated `userState` after the guess is recorded).
+
+**Error responses**
+
+- `400` → `{ "ok": false, "error": { "code": "VALIDATION_FAILED", "message": "..." }, "success": false }`
+  - Common messages: `Guess is required`, `Guesses must only contain alphabetic characters`, `Guess must be N letters long`, `You have already completed today's Wordle`
+- `401` → unauthenticated
+- `500` → `{ "ok": false, "error": { "code": "INTERNAL_ERROR", "message": "Failed to submit Wordle guess" }, "success": false }`
+
+**Notes**
+
+- Edge handler: `functions/api/games/wordle/guess.ts`
+- Business logic: `services/core/wordleService.ts` (`submitWordleGuess`)
+- Frontend hook: `hooks/useWordleGame.ts`
+
+---
 
 ### `GET /api/admin/check-access`
 

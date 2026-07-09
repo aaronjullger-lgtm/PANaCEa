@@ -70,7 +70,7 @@ Engaging features to maintain daily user engagement and build study habits.
 - Color-coded feedback (green/yellow/gray)
 - Hints based on drug class or body system
 - Consistent daily words (same for all users)
-- Progress saved locally
+- Progress persisted per user via `/api/games/wordle/*` (requires sign-in)
 
 **Categories:**
 
@@ -80,11 +80,24 @@ Engaging features to maintain daily user engagement and build study habits.
 
 **Files:**
 
-- Data: `data/modes/dailyRitualsData.ts`
+- Data: `data/modes/dailyRitualsData.ts` (local/demo fallback)
 - Component: `components/modes/MedicalWordleMode.tsx`
+- Hook: `hooks/useWordleGame.ts`
+- API: `functions/api/games/wordle/daily.ts`, `functions/api/games/wordle/guess.ts`
+- Service: `services/core/wordleService.ts`
 - Config: Added to `config/training-modes.ts`
 
 **Usage:**
+
+```typescript
+// Authenticated production flow (via hook)
+import { useWordleGame } from '@/hooks/useWordleGame';
+
+const { game, guesses, status, submitGuess } = useWordleGame();
+// Calls GET /api/games/wordle/daily and POST /api/games/wordle/guess
+```
+
+Local/demo fallback without auth:
 
 ```typescript
 import { getTodaysMedicalWordle } from '@/data/modes/dailyRitualsData';

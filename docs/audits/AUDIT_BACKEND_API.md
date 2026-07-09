@@ -37,6 +37,8 @@ PANaCEa's backend is a ~200-endpoint Cloudflare Pages Functions API. The middlew
 | `/api/osce/session` | POST | Create OSCE session | `OSCEMode` | Zod (body) | `authenticatedEndpoint` | LOW |
 | `/api/osce/chat` | POST | Save OSCE messages | `OSCEChat` | Zod (body) | `authenticatedEndpoint` | LOW |
 | `/api/osce/complete` | POST | Complete OSCE session | `OSCEComplete` | Zod (body) | `authenticatedEndpoint` | LOW |
+| `/api/games/wordle/daily` | GET | Today's Wordle challenge + user state | `useWordleGame` | None | `authenticatedEndpoint` | LOW |
+| `/api/games/wordle/guess` | POST | Submit Wordle guess | `useWordleGame` | Zod (`guess`) | `authenticatedEndpoint` | LOW |
 | `/api/gemini/stream` | POST | AI streaming (SSE) | `useGeminiStream` | Zod + size check | Raw auth | LOW — well-handled |
 | `/api/dashboard/stats` | GET | Dashboard metrics | `DashboardPage` | Zod | `authenticatedEndpoint` | MEDIUM — mixed IDs |
 | `/api/webhooks/clerk` | POST | User lifecycle | Clerk | Svix signature | Webhook verify | **HIGH** — cascade delete |

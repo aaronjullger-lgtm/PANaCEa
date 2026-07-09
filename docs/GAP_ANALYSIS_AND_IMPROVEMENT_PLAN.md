@@ -85,13 +85,13 @@ There is **no** `functions/api/social/` directory. These endpoints exist only in
 
 ---
 
-### 2.3 Games / Wordle API Missing in Production (Medium Impact)
+### 2.3 Games / Wordle API (Resolved)
 
-**Location:** `src/hooks/useWordleGame.ts`
+**Location:** `hooks/useWordleGame.ts`, `functions/api/games/wordle/`
 
-**Gap:** Hook calls `/api/games/wordle/daily` and `/api/games/wordle/guess`. There is no `functions/api/games/` in Cloudflare. Medical Wordle is marked dormant in `routes/index.ts` and may not be mounted in App.
+**Status:** Edge handlers are live at `GET /api/games/wordle/daily` and `POST /api/games/wordle/guess` (see `docs/api/API_OVERVIEW.md`). Service logic lives in `services/core/wordleService.ts` with edge-safe Prisma injection.
 
-**Recommendation:** If Wordle is part of the product, add `functions/api/games/wordle/` (daily, guess) and wire auth. If not, remove or feature-flag the Wordle entry point so users don’t hit 404s.
+**Remaining gap:** Medical Wordle may still be marked dormant in legacy `routes/index.ts` or lack a dedicated URL route in App routing. Verify Training Menu / mode routing if users cannot reach the feature.
 
 ---
 
@@ -179,7 +179,7 @@ Treat as tech debt; fix when touching those flows or when they affect user-facin
 
 **From `routes/index.ts`:**
 
-- `/api/games` – Medical Wordle; not used in App (dormant).
+- `/api/games/wordle/*` – Medical Wordle; edge handlers exist; UI routing may still be limited.
 - `/api/pearls` – Express only; CF uses `/api/user/pearls` (see 2.1).
 - `/api/adaptive` – Not called by frontend (dormant).
 - `/api/recommendations` – **Used** by `RecommendationFeed`; CF has `functions/api/recommendations/` ✅.
@@ -234,7 +234,7 @@ No major structural gap; continue applying existing patterns to new code.
 
 4. **404 handling:** Add explicit 404 route/view for unknown paths.
 5. **Infographic:** Either ship real infographic generation or clearly mark placeholder in UI and roadmap.
-6. **Games/Wordle:** Either add `functions/api/games/wordle/*` or remove/feature-flag Wordle so no 404s.
+6. **Games/Wordle routing:** Confirm Medical Wordle is reachable from Training Menu / mode routes (API is implemented).
 
 ### P2 – Polish & Consistency
 
@@ -260,7 +260,7 @@ No major structural gap; continue applying existing patterns to new code.
 | Social | No `functions/api/social/`; StudyGroupDashboard 404s | P0 | Implement API or hide UI |
 | Routing | No 404 for unknown paths | P1 | Add 404 route/view |
 | Smart Scribe | Infographic returns placeholder SVG | P1 | Real implementation or label placeholder |
-| Games | No CF `/api/games/wordle` | P1 | Add API or remove/flag Wordle |
+| Games | Wordle API ported; verify UI routing | P2 | Confirm mode route + Training Menu entry |
 | Study session API | review/focused return 501 | P2 | Implement or document |
 | Avatar | UserAvatar type missing xp | P2 | Schema + type update |
 | Placeholders | Clinical Eye, ImagingViewer, emails, etc. | P2–P3 | Replace or document |
