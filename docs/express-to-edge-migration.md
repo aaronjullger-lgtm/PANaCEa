@@ -83,8 +83,11 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 | `POST /api/analytics/reactions` | `functions/api/analytics/reactions.ts` | ✅ PORTED |
 | `POST /api/analytics/weakness` | `functions/api/analytics/weakness.ts` | ✅ PORTED |
 | `POST /api/analytics/confusion` | `functions/api/analytics/confusion.ts` | ✅ PORTED |
-| `POST /api/analytics/soap-note` | `functions/api/analytics/soap-note.ts` | ✅ PORTED |
+| `POST /api/analytics/soap-note` | `functions/api/analytics/soap-note.ts` | ✅ PORTED (Zod `.strict()` bounds: `caseId`, finite `totalScore`, keyed `breakdown`) |
 | `GET /api/analytics/performance-deltas` | `functions/api/analytics/performance-deltas.ts` | ✅ PORTED |
+| `POST /api/push/subscribe` | `functions/api/push/subscribe.ts` | ✅ PORTED (upsert Web Push subscription + enable `pushNotifications`) |
+| `DELETE /api/push/subscribe` | `functions/api/push/subscribe.ts` | ✅ PORTED (remove subscription; disable preference when none remain) |
+| `POST /api/reviews/second-chance` | `functions/api/reviews/second-chance.ts` | ✅ PORTED (subdomain-level due review; `count` 1–25, `examType` PANCE/PANRE/EOR) |
 | `GET /api/achievements` | — | ❌ MISSING |
 | `GET /api/performance` | — | ❌ MISSING |
 | `POST /api/performance` | — | ❌ MISSING |

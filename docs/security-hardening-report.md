@@ -58,3 +58,18 @@ The bundle's older security audit and the newer specialists agree the security *
 | No LICENSE | `docs/license-decision-needed.md` (owner picks) |
 
 **Net:** security core confirmed mature; deploy traceability fixed; dependency remediation blocked by an unrelated peer conflict and correctly gated with exact steps. No secrets touched; no type/validation/auth weakening.
+
+---
+
+## 6. Mutation-endpoint validation bounds (added)
+
+Three high-risk mutation routes received explicit Zod `.strict()` bounds (contracts unchanged for valid payloads; malformed/oversized input rejected with `400`):
+
+| Route | Bounds |
+|---|---|
+| `POST /api/push/subscribe` | `endpoint` URL ≤2048; `keys.p256dh`/`auth` ≤512; unknown fields rejected |
+| `DELETE /api/push/subscribe` | `endpoint` URL ≤2048; `.strict()` |
+| `POST /api/analytics/soap-note` | `caseId` 1–200 chars; finite `totalScore` 0–100 000; keyed `breakdown`; `.strict()` on body |
+| `POST /api/reviews/second-chance` | `count` 1–25; `examType` enum; `scopeFilter` string caps; `.strict()` |
+
+Schemas are exported for regression tests in `functions/api/__tests__/validation-hardening.test.ts`. Request/response shapes: `docs/api/API_OVERVIEW.md`.
