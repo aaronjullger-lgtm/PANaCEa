@@ -28,6 +28,15 @@ export interface StructuredRationaleInput {
 const OPTION_LETTERS = ['A', 'B', 'C', 'D', 'E'] as const;
 
 /**
+ * Keys of the `whyIncorrect{A..E}` distractor fields. All are optional `string`
+ * fields on {@link StructuredRationaleInput}, so indexing `rationale[key]` with
+ * this type yields `string | undefined` — safe to pass to {@link cleanText}.
+ * (Casting to the full `keyof StructuredRationaleInput` would widen the indexed
+ * access to include the `string[]` / object-array fields and break the type.)
+ */
+type WhyIncorrectKey = `whyIncorrect${(typeof OPTION_LETTERS)[number]}`;
+
+/**
  * Render the full structured rationale into a single formatted text block.
  * Includes: Bottom Line → Why Correct → Why Each Distractor Is Wrong → Clinical Pearl → High-Yield Info.
  */
@@ -49,7 +58,7 @@ export function renderStructuredRationale(rationale: StructuredRationaleInput): 
   // 3. Why Each Distractor Is Wrong (teaching moment)
   const whyIncorrectLines: string[] = [];
   for (const letter of OPTION_LETTERS) {
-    const key = `whyIncorrect${letter}` as keyof StructuredRationaleInput;
+    const key = `whyIncorrect${letter}` as WhyIncorrectKey;
     const text = cleanText(rationale[key]);
     if (text) {
       whyIncorrectLines.push(`Why option ${letter} is incorrect: ${text}`);
@@ -101,7 +110,7 @@ export function renderDistractorRationale(
 
   for (let i = 0; i < OPTION_LETTERS.length; i++) {
     const letter = OPTION_LETTERS[i]!;
-    const key = `whyIncorrect${letter}` as keyof StructuredRationaleInput;
+    const key = `whyIncorrect${letter}` as WhyIncorrectKey;
     const text = cleanText(rationale[key]);
     if (!text) continue;
 

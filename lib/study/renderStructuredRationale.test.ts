@@ -125,6 +125,16 @@ describe('renderDistractorRationale', () => {
     expect(result).toContain('Remember');
   });
 
+  it('includes the fifth distractor (option E) when present', () => {
+    const result = renderDistractorRationale(
+      makeFullRationale({
+        whyIncorrectE: 'Incorrect because pericarditis shows diffuse ST elevation with PR depression, not the localized inferior pattern seen here.',
+      })
+    );
+    expect(result).toContain('Option E is incorrect because');
+    expect(result).toContain('pericarditis');
+  });
+
   it('marks the user choice distinctly', () => {
     const result = renderDistractorRationale(makeFullRationale(), 2); // chose C
     expect(result).toContain('Your answer (C) was wrong because');
