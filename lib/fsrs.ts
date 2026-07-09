@@ -231,22 +231,23 @@ export function isParamsOnCurrentScale(w: number[] | null | undefined): boolean 
   // Accepts v6 (21) and v7-alpha (29). Length outside these is malformed.
   if (!Array.isArray(w)) return false;
   if (w.length !== 21 && w.length !== 29) return false;
+  // EVERY weight must be a finite number. A non-finite required weight (e.g. a
+  // missing/NaN w[6]) would otherwise pass this gate and reach the scheduler,
+  // where `w[6] ?? 0` silently disables difficulty mean-reversion (or a NaN
+  // propagates through stability/difficulty). Reject the whole array so the
+  // caller falls back to canonical defaults. (CODE-001)
+  for (let i = 0; i < w.length; i++) {
+    const v = w[i];
+    if (v == null || !Number.isFinite(v)) return false;
+  }
   const w19 = w[19];
   const w20 = w[20];
-  if (w19 == null || w20 == null) return false;
-  if (!Number.isFinite(w19) || !Number.isFinite(w20)) return false;
   // Canonical v6 bounds (matches PARAM_BOUNDS in both optimizers post-fix).
   if (w19 < 0.01 || w19 > 1.0) return false;
   if (w20 < 0.1 || w20 > 5.0) return false;
-  // For v7-alpha (29 params), also verify w[21..28] are finite. No strict
-  // bounds yet because the 8-parameter curve is still an open research
-  // question; the optimizer enforces bounds at fit time.
-  if (w.length === 29) {
-    for (let i = 21; i < 29; i++) {
-      const v = w[i];
-      if (v == null || !Number.isFinite(v)) return false;
-    }
-  }
+  // For v7-alpha (29 params) w[21..28] finiteness is covered by the loop above.
+  // No strict bounds yet because the 8-parameter curve is still an open
+  // research question; the optimizer enforces bounds at fit time.
   return true;
 }
 
@@ -394,6 +395,18 @@ export class FSRS {
     }
     // Future: v6 → v7 migration (29 params, 8-parameter forgetting curve)
     // if (w.length === 21) { w.push(...FSRS7_DEFAULT_CURVE_PARAMS); }
+
+    // Defense-in-depth (CODE-001): guarantee no non-finite required weight ever
+    // reaches the scheduler, regardless of how FSRS was constructed. A missing
+    // or NaN w[6] would silently zero out difficulty mean-reversion (delta_d =
+    // w[6] ?? 0) or propagate NaN. Repair per-element from canonical defaults so
+    // legitimate optimized weights are preserved while corrupt slots are healed.
+    for (let i = 0; i < defaultParameters.w.length; i++) {
+      const v = w[i];
+      if (v == null || !Number.isFinite(v)) {
+        w[i] = defaultParameters.w[i]!;
+      }
+    }
 
     return {
       ...params,
