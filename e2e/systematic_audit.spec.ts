@@ -291,6 +291,13 @@ test.describe('Phase 2B: Reference Library', () => {
     await page.goto(`${BASE_URL}/study/reference`);
     await waitForAppReady(page);
 
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      logFinding('REFERENCE_LIBRARY', '/study/reference', 'WARN', 'Authentication required');
+      test.skip();
+      return;
+    }
+
     // Primary Action: Search or browse clinical content
     const hasSearch = await page
       .locator('input[type="search"], input[placeholder*="search" i], [role="searchbox"]')
@@ -381,6 +388,13 @@ test.describe('Phase 2B: Reference Library', () => {
     await page.goto(`${BASE_URL}/study/reference`);
     await waitForAppReady(page);
 
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      logFinding('REFERENCE_LIBRARY', '/study/reference (mobile)', 'WARN', 'Authentication required');
+      test.skip();
+      return;
+    }
+
     const hasHScroll = await hasHorizontalScrollbar(page);
 
     if (hasHScroll) {
@@ -404,6 +418,13 @@ test.describe('Phase 2C: Toolkit Hub (Calculators)', () => {
 
     await page.goto(`${BASE_URL}/study/toolkit`);
     await waitForAppReady(page);
+
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      logFinding('TOOLKIT', '/study/toolkit', 'WARN', 'Authentication required');
+      test.skip();
+      return;
+    }
 
     // Primary Action: Access clinical calculators
     const hasCalculators = await page
@@ -517,6 +538,12 @@ test.describe('Phase 2D: SRS Flashcard System', () => {
     await page.goto(BASE_URL);
     await waitForAppReady(page);
 
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      test.skip();
+      return;
+    }
+
     // Navigate to flashcards
     const flashcardLink = page.locator('text=/flashcard|SRS/i').first();
     if (await flashcardLink.isVisible({ timeout: 3000 })) {
@@ -524,7 +551,7 @@ test.describe('Phase 2D: SRS Flashcard System', () => {
       await page.waitForTimeout(1500);
 
       // Try to flip a card
-      const flipButton = page.locator('button:has-text(/flip|show|reveal/i)').first();
+      const flipButton = page.locator('button').filter({ hasText: /flip|show|reveal/i }).first();
 
       if (await flipButton.isVisible({ timeout: 3000 })) {
         await flipButton.click();
