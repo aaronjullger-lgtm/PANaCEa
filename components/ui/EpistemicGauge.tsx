@@ -221,6 +221,12 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
         {/* Background track */}
         <div
           className={`w-full ${sizeClasses[size].gauge} bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden`}
+          role="meter"
+          aria-valuenow={Math.min(100, displayValue)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuetext={`${displayValue}%, ${calibrationLevel.label}, based on ${dataPoints} data points`}
+          aria-label={label ?? 'Confidence gauge'}
         >
           {/* Filled portion */}
           <motion.div
@@ -231,8 +237,8 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
           />
         </div>
 
-        {/* Value display */}
-        <div className="flex items-center justify-between mt-1">
+        {/* Value display — decorative; value is exposed via the meter role above */}
+        <div className="flex items-center justify-between mt-1" aria-hidden="true">
           <span
             className={`font-semibold text-[var(--color-text-primary)] ${sizeClasses[size].text}`}
           >
@@ -307,6 +313,7 @@ export const EpistemicRadialGauge: React.FC<
       className={`relative inline-flex flex-col items-center ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
       style={{ opacity }}
+      aria-label={`${label ? `${label}: ` : ''}${displayValue}%, ${calibrationLevel.label}, based on ${dataPoints} data points`}
       {...(onClick
         ? {
             role: 'button',
@@ -318,12 +325,14 @@ export const EpistemicRadialGauge: React.FC<
               }
             },
           }
-        : {})}
+        : { role: 'img' })}
     >
       <svg
         width={(radius + strokeWidth) * 2}
         height={(radius + strokeWidth) * 2}
         className="transform -rotate-90"
+        aria-hidden="true"
+        focusable="false"
       >
         {/* Background circle */}
         <circle

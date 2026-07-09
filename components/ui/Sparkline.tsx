@@ -34,6 +34,8 @@ export interface SparklineProps {
   formatValue?: (value: number) => string;
   /** Optional reference range to shade normal limits */
   referenceRange?: [number, number];
+  /** Accessible text alternative for the chart (WCAG 1.1.1). Auto-summarized if omitted. */
+  ariaLabel?: string;
 }
 
 export function Sparkline({
@@ -50,6 +52,7 @@ export function Sparkline({
   showLastValue = false,
   formatValue = (v) => v.toFixed(1),
   referenceRange,
+  ariaLabel,
 }: SparklineProps) {
   // Defensive: sanitize data - filter out NaN, Infinity, and convert all values to numbers
   const sanitizedData = (data ?? []).map((v) => Number(v)).filter((v) => Number.isFinite(v));
@@ -126,6 +129,8 @@ export function Sparkline({
       : '';
 
   const lastValue = sanitizedData[sanitizedData.length - 1] ?? 0;
+  const chartAriaLabel =
+    ariaLabel ?? `Trend sparkline, ${sanitizedData.length} points, latest ${formatValue(lastValue)}`;
   const inRange = referenceRange
     ? lastValue >= referenceRange[0] && lastValue <= referenceRange[1]
     : true;
@@ -136,7 +141,7 @@ export function Sparkline({
 
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>
-      <svg width={width} height={height} className="sparkline">
+      <svg width={width} height={height} className="sparkline" role="img" aria-label={chartAriaLabel}>
         {referenceRange && (
           <rect
             x={padding}
@@ -205,6 +210,8 @@ export interface SparklineBarProps {
   max?: number;
   className?: string;
   barGap?: number;
+  /** Accessible text alternative for the chart (WCAG 1.1.1). Auto-summarized if omitted. */
+  ariaLabel?: string;
 }
 
 export function SparklineBar({
@@ -216,6 +223,7 @@ export function SparklineBar({
   max: maxProp,
   className = '',
   barGap = 1,
+  ariaLabel,
 }: SparklineBarProps) {
   // Defensive: sanitize data - filter out NaN, Infinity, and convert all values to numbers
   const sanitizedData = (data ?? []).map((v) => Number(v)).filter((v) => Number.isFinite(v));
@@ -235,7 +243,13 @@ export function SparklineBar({
   const barWidth = (width - (sanitizedData.length - 1) * barGap) / sanitizedData.length;
 
   return (
-    <svg width={width} height={height} className={`sparkline-bar ${className}`}>
+    <svg
+      width={width}
+      height={height}
+      className={`sparkline-bar ${className}`}
+      role="img"
+      aria-label={ariaLabel ?? `Bar sparkline, ${sanitizedData.length} bars`}
+    >
       {sanitizedData.map((value, index) => {
         const barHeight = Math.max(0, ((value - min) / range) * height);
         const x = index * (barWidth + barGap);
