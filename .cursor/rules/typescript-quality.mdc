@@ -1,0 +1,34 @@
+---
+description: TypeScript quality standards for .ts/.tsx files.
+globs: "**/*.ts,**/*.tsx,**/*.mts,**/*.cts"
+alwaysApply: false
+---
+
+# TypeScript quality
+
+Scope: all TypeScript source. TS is in strict mode (`noImplicitAny`, `strictNullChecks`, `noUncheckedIndexedAccess`, `noImplicitReturns`).
+
+## Conventions
+
+- Prefer explicit types on exported/public APIs; let inference handle locals.
+- Avoid `any`. If unavoidable, justify it in a comment and prefer `unknown` + narrowing.
+- Respect `noUncheckedIndexedAccess`: array/record access may be `undefined` — guard it.
+- Use named exports. Keep imports at the top of the file (no inline `import()` in bodies without a documented circular-dependency reason).
+- For `switch` over discriminated unions/enums, add a `never` exhaustiveness check in `default`.
+- Do not add narration comments (`// increment counter`). Comment only non-obvious intent.
+
+## Anti-hallucination checks
+
+- Verify a type/function is actually exported before importing it; do not invent module members.
+- Do not add packages that aren't in `package.json`. If a new dependency seems required, stop and flag it (production deps need approval).
+
+## Commands to run before claiming success
+
+- `npm run typecheck` (or `npm run typecheck:ci`) — must pass for files you changed.
+- `npm run lint` on affected paths (repo gate is `--max-warnings 2000`; do not add new errors).
+
+## Common failure modes
+
+- OOM during typecheck — the project relies on `NODE_OPTIONS=--max-old-space-size=4096` for full `tsc`; the npm scripts already set what they need.
+- Editing generated files (`node_modules/.prisma`, `dist/`) — never.
+- Assuming a value is non-null because it "should" be — respect the strict null flags.

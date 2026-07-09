@@ -1,0 +1,35 @@
+---
+description: Testing and verification standards — how to prove a change works before claiming success. Load when writing/running tests or before completing any code change.
+alwaysApply: false
+---
+
+# Testing & verification
+
+Do not claim a change is done, fixed, or passing without running the relevant checks and showing evidence.
+
+## Verification ladder (run what applies to your change)
+
+1. **Typecheck:** `npm run typecheck` (or `npm run typecheck:ci`).
+2. **Lint:** `npm run lint` (repo gate `--max-warnings 2000`; do not introduce new errors). Note: 3 pre-existing `no-empty` errors exist on `main` — don't attribute those to yourself, and don't "fix" unrelated files to silence them.
+3. **Unit tests:** `npm test` (full) or `npm run test:critical` (fast FSRS/core subset) for quick loops.
+4. **Build:** `npm run build` for anything affecting the bundle/config.
+5. **E2E (when UI/flows change):** `npm run test:e2e` (needs `npx playwright install` once). Smoke: `npm run test:smoke`.
+
+## Writing tests
+
+- Framework: **Vitest** (`jsdom`). Tests live in `tests/` and colocated `*.test.ts(x)`.
+- Cover new/changed logic, especially FSRS, services in `lib/`, and Edge handlers in `functions/`.
+- Deterministic fixtures: no reliance on array insertion order; use fixed IDs, not random UUIDs; account for floating-point in FSRS math.
+- **Never delete or skip tests to make a build pass.** If a test is genuinely obsolete, explain why.
+- Do not weaken assertions or mock away the behavior under test.
+
+## Anti-hallucination checks
+
+- Actually run the command; paste the real output. Do not summarize a run you didn't perform.
+- If a check fails for a pre-existing reason unrelated to your change, say so explicitly and link the evidence.
+
+## What to report
+
+- Which commands you ran and their pass/fail status.
+- For UI changes, screenshots or a browser walkthrough (see visual QA skills).
+- Files changed and any remaining risks.

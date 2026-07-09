@@ -1,0 +1,40 @@
+---
+description: Architecture boundaries — Edge runtime rules, Prisma singleton, client/server split, and FSRS ownership. Load when touching functions/, lib/, components/, or prisma/.
+alwaysApply: true
+---
+
+# Architecture boundaries
+
+Non-negotiable structural rules. Violating these breaks the Edge deploy or the FSRS pipeline.
+
+## Client vs server split
+
+- **Never import Prisma or `lib/prisma` / `lib/db` into client/browser code.** A Vite plugin stubs `@prisma/client` in the browser; importing it in `components/`, `src/`, or hooks will break the bundle.
+- `lib/` = server/shared. `src/lib/` = frontend-only. Do not move server/Prisma code into `src/lib/`.
+- Components live in root `components/` (import via `@/components/...`). Do not add new components under `src/components/`.
+
+## Cloudflare Edge runtime (`functions/api/`)
+
+- **Forbidden in Edge code:** Node built-ins (`fs`, `path`, `os`, `process.cwd()`), and `process.env`.
+- Read env via `context.env.*`, not `process.env`.
+- Use the Edge Prisma singleton from `functions/api/_shared/prisma-edge.ts`; **always** call `safePrismaDisconnect(prisma)` in a `finally` block.
+- Endpoints export `onRequestGet` / `onRequestPost` (Pages Functions), wrap logic in try/catch, and return structured JSON `{ error: string }` on failure. Do not use Express `req`/`res` patterns in `functions/`.
+- Validate inputs with Zod.
+
+## FSRS / spaced repetition ownership
+
+- SRS review writes are owned by `lib/services/drillReviewService.ts`. Legacy `/api/srs/*` routes are compatibility adapters only — do not add new write paths there.
+- New drills must submit through the `useDrillFSRS` hook → `submit-review` endpoint.
+- Rating is **binary implicit only**: Again (0) / Good (1). Never introduce Hard/Easy or user-facing self-rating buttons.
+- Only `MAIN` and `DRILL` session types trigger FSRS updates (not Cram/rapid_recall).
+
+## Before claiming success
+
+- If you touched Edge functions: `npm run typecheck` must pass and no `process.env` / Node built-ins remain.
+- If you touched client code: confirm no Prisma import leaked in (`npm run build` must succeed).
+
+## Common failure modes
+
+- Adding `process.env` in an Edge function (works locally in Express, fails on Cloudflare).
+- Forgetting `safePrismaDisconnect` → connection exhaustion.
+- Importing server code into a component → build/runtime break.

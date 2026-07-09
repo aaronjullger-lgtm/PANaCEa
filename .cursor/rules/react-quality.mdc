@@ -1,0 +1,40 @@
+---
+description: React 19 + Vite component quality (this repo is React SPA, not Next.js).
+globs: "**/*.tsx,**/*.jsx"
+alwaysApply: false
+---
+
+# React + Vite quality
+
+Scope: React components/hooks. **This is a React 19 SPA on Vite + React Router 7 — not Next.js.** Do not use `next/*`, server components, or file-based `app/` routing.
+
+## Conventions
+
+- Functional components with typed props (explicit `interface`/`type`). No `any` props.
+- Hooks obey the rules of hooks; keep the `eslint-plugin-react-hooks` clean.
+- Keep components small and composable. Put mock/sample data in a dedicated file, not inside presentation components.
+- Data fetching uses TanStack Query; client state uses Zustand. Don't hand-roll fetch caches.
+- Add **loading, empty, and error** states for any async UI. Use the existing `EmptyState`, `SkeletonLoader`, and `Loader` components rather than reinventing them.
+- Lazy-load heavy sections (charts, 3D) with `React.lazy` + `Suspense`.
+
+## Motion & accessibility
+
+- Gate every animation behind `useReducedMotion()` and provide a static fallback.
+- Interactive elements need visible `focus-visible` styles and `min-h-[44px]` touch targets.
+- Icon-only buttons need `aria-label`; decorative icons need `aria-hidden="true"`.
+- Follow the existing design system in `.cursor/rules/ui-design-system.mdc` (Stormy Slate tokens; no raw hex, no `bg-black`).
+
+## Anti-hallucination checks
+
+- Confirm a component/hook exists and its prop shape before using it (`@/components/...`, `@/hooks/...`).
+- Do not modify shared primitives (`GlassCard`, `button`, `index.css` globals) without explicit approval — changes cascade site-wide.
+
+## Commands to run before claiming success
+
+- `npm run typecheck` and `npm run lint`.
+- For visual changes, verify in a browser (see the `verifying-in-browser` / `visual-qa-testing` skills) — never claim a UI change works without a screenshot.
+
+## Common failure modes
+
+- `opacity: 0` in `initial` for persistent dashboard sections can stall in dev/StrictMode → use `y` transforms (see design-system rule).
+- Editing `LandingPage.tsx` inline styles — they are a Tailwind-purge safety net; keep them.

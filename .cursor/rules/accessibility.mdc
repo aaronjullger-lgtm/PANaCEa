@@ -1,0 +1,32 @@
+---
+description: Accessibility (WCAG) standards for UI work.
+globs: "**/components/**/*.tsx,**/src/**/*.tsx"
+alwaysApply: false
+---
+
+# Accessibility
+
+Scope: any UI component or page. Complements the design system in `.cursor/rules/ui-design-system.mdc`.
+
+## Requirements
+
+- **Contrast:** meet WCAG AA (4.5:1 for normal text). Use design tokens; gold text on light must use `--color-accent-button`, not `--color-accent`.
+- **Focus:** every interactive element has a visible focus indicator (`focus-visible:ring-2 ring-[var(--color-accent)] ring-offset-2 outline-none` or the `.focus-ring` class).
+- **Touch targets:** `min-h-[44px]` (and adequate width) on interactive elements.
+- **Names:** `aria-label` on icon-only controls; `aria-hidden="true"` on decorative icons; label all form inputs (`<label htmlFor>` or `aria-label`).
+- **Semantics:** use native elements (`button`, `a`, `nav`, headings in order). Only add ARIA roles when a native element can't do the job.
+- **Keyboard:** all actions reachable and operable by keyboard; manage focus in modals/drawers; provide skip-to-content where relevant.
+- **Reduced motion:** gate animations behind `useReducedMotion()`; provide static fallbacks.
+- **Live regions:** use polite live regions for async status/toasts.
+
+## Verification (do not claim a11y without evidence)
+
+- Prefer an automated pass: the repo has `@axe-core/playwright` and `npm run test:e2e:a11y` (`playwright.ci-a11y.config.ts`). Run it for changed pages when feasible.
+- For manual checks, use the `accessibility-auditing` skill (keyboard traversal + contrast + screen-reader names) and capture findings.
+
+## Common failure modes
+
+- Adding global `transition-*` on `a, button, [role="button"]` — this breaks Framer Motion site-wide. Never do it.
+- Removing focus outlines for aesthetics.
+- Placeholder-as-label (no accessible name).
+- Color as the only signal for state.

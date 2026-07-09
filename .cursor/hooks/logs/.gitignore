@@ -1,0 +1,3 @@
+# Keep this directory in git, ignore the log files written by hooks.
+*
+!.gitignore

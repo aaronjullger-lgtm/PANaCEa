@@ -1,0 +1,45 @@
+---
+description: Supabase/Postgres + Prisma safety — RLS, secrets, connection strings, and migration safety. Load when touching prisma/, functions/api/, lib/services, or Supabase/DB code.
+globs: "**/prisma/**,**/functions/api/**,**/lib/**/*.ts"
+alwaysApply: false
+---
+
+# Supabase / Prisma security
+
+Scope: database access, Prisma schema/migrations, Supabase clients, and Edge endpoints that read/write data.
+
+## Connections & secrets
+
+- Never hardcode connection strings, service-role keys, or API keys. Use env / `context.env.*`.
+- `DATABASE_URL` (Edge) is a Prisma Accelerate `prisma://` URL; `DIRECT_DATABASE_URL` is a direct `postgres://` URL for CLI/scripts/migrations. Do not swap them.
+- **Never point local work at a production database.** Use a dev/branch database. Do not run write scripts against prod.
+- `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS — server-only, never expose it to the client (no `VITE_` prefix).
+
+## Row-Level Security (RLS)
+
+- Do not weaken, disable, or bypass RLS to make a feature or test pass.
+- New user-scoped tables should have RLS enabled and policies scoped to the authenticated user.
+- Treat auth/RLS/middleware changes as high-risk: call them out explicitly and prefer review.
+
+## Migrations
+
+- **Never** run destructive operations: `prisma migrate reset`, `db push --force-reset`, `DROP`/`TRUNCATE`, or anything that deletes data.
+- Migrations must be additive or explicitly reversible with no data loss.
+- **Production migrations require human approval.** Do not apply `migrate deploy` against prod on your own.
+- Prefer `npm run db:migrate:dev` against a local/dev DB; `npm run db:push` only for throwaway local DBs.
+- Follow Prisma schema conventions: define both sides of relations, timestamps, `@@index` on hot query fields.
+
+## Query hygiene
+
+- `select` only needed fields (assume remote DB). Watch for N+1.
+- Always `safePrismaDisconnect(prisma)` in `finally` for Edge functions.
+
+## Commands to verify
+
+- `npm run db:generate` after schema edits, then `npm run typecheck`.
+- `npm run db:validate` for integrity checks where applicable.
+
+## Common failure modes
+
+- Committing a real connection string / key (the repo has a secret-scan commit guard — do not try to bypass it).
+- Editing `schema.prisma` without regenerating the client → type drift.
