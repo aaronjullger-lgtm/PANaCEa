@@ -111,6 +111,8 @@ playwright/*.json
 
 # Allow token-tracking service (not a secret)
 !functions/api/_shared/tokenTracking.ts
+!lib/services/tokenMatchCache.ts
+!lib/services/tokenMatchCache.test.ts
 
 # Environment files with various extensions
 .env.*

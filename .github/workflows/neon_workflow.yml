@@ -45,17 +45,24 @@ jobs:
       || github.event.action == 'reopened')
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
     steps:
       - name: Get branch expiration date as an env variable (2 weeks from now)
         id: get_expiration_date
         run: echo "EXPIRES_AT=$(date -u --date '+14 days' +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
+      - name: Skip Neon preview when configuration is unavailable
+        if: env.NEON_API_KEY == '' || env.NEON_PROJECT_ID == ''
+        run: echo "Skipping Neon preview branch because NEON_API_KEY or NEON_PROJECT_ID is unavailable."
       - name: Create Neon Branch
+        if: env.NEON_API_KEY != '' && env.NEON_PROJECT_ID != ''
         id: create_neon_branch
         uses: neondatabase/create-branch-action@v6
         with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
+          project_id: ${{ env.NEON_PROJECT_ID }}
           branch_name: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
-          api_key: ${{ secrets.NEON_API_KEY }}
+          api_key: ${{ env.NEON_API_KEY }}
           expires_at: ${{ env.EXPIRES_AT }}
 
   # The step above creates a new Neon branch.
@@ -100,10 +107,17 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
     steps:
+      - name: Skip Neon cleanup when configuration is unavailable
+        if: env.NEON_API_KEY == '' || env.NEON_PROJECT_ID == ''
+        run: echo "Skipping Neon preview cleanup because NEON_API_KEY or NEON_PROJECT_ID is unavailable."
       - name: Delete Neon Branch
+        if: env.NEON_API_KEY != '' && env.NEON_PROJECT_ID != ''
         uses: neondatabase/delete-branch-action@v3
         with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
+          project_id: ${{ env.NEON_PROJECT_ID }}
           branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
-          api_key: ${{ secrets.NEON_API_KEY }}
+          api_key: ${{ env.NEON_API_KEY }}
