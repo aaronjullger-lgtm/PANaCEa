@@ -105,6 +105,7 @@ Use this checklist with **browser DevTools**, **Console Ninja** (or equivalent),
 - `POST /api/user/update-fsrs-params` – update params
 - `POST /api/srs/submit` – submit SRS review
 - `GET /api/srs/due`, `GET /api/srs/stats`, `GET /api/srs/sync` – due count, stats, sync
+  - `/api/srs/due` returns `items`, `totalDue`, `timestamp` (and optional `error` on degraded DB failure — always `200`, never `500`); see `docs/api/API_OVERVIEW.md`
 
 **Stats & display**
 

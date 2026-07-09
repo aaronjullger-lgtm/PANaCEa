@@ -11,7 +11,7 @@
 ## 1. Due-card retrieval — `/api/srs/due` (#227)
 
 **Audit claim:** 500 error breaks the unified dashboard.
-**Current code (`functions/api/srs/due.ts`):** reads the **canonical** stores (`Card` + `UserTopicProgress` + `UserProgress`), filters to `lifecycleStatus=ACTIVE`/`qaStatus=APPROVED` cards, dedups overlapping condition/task rows (`suppressDuplicateDueRows`), sorts by due-date then priority, and — critically — its `catch` returns an **empty, resilient 200 payload** (`{ items: [], totalDue: 0, error: '…' }`), **never a 500**.
+**Current code (`functions/api/srs/due.ts`):** reads the **canonical** stores (`Card` + `UserTopicProgress` + `UserProgress`), filters to `lifecycleStatus=ACTIVE`/`qaStatus=APPROVED` cards, dedups overlapping condition/task rows (`suppressDuplicateDueRows`), sorts by due-date then priority, and — critically — its `catch` returns an **empty, resilient 200 payload** (`{ items: [], totalDue: 0, error: '…' }`), **never a 500**. Full request/response contract: `docs/api/API_OVERVIEW.md`.
 
 **Verification:** `functions/api/srs/{due,submit,submit-compat}.test.ts` → **23 tests pass**.
 
