@@ -41,10 +41,10 @@ import type { PlacedOrder, ExamFinding, OrderCategory } from '@/types/osce-enhan
 import {
   OrderPanel,
   ExamPanel,
-  RapportMeter,
   ScoreReport,
   OSCELiveSession,
   OSCEHistoryPanel,
+  EncounterLogSidebar,
   EncounterTimer,
   VitalsStrip,
   PhaseStepper,
@@ -82,7 +82,7 @@ import {
 } from '@/services/ai';
 import { streamGeminiText } from '@/lib/utils/streamingClient';
 import { Sparkline } from '@/components/ui/Sparkline';
-import { ChatSkeleton, InlineButtonSpinner } from '@/components/loading';
+import { InlineButtonSpinner } from '@/components/loading';
 import { EncounterLoadingView } from './EncounterLoadingView';
 import { EncounterLandingView } from './EncounterLandingView';
 import { EncounterResultsView } from './EncounterResultsView';
@@ -1190,109 +1190,26 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
   // Active Interview View - Clinical White/Navy Theme
   if (viewState === 'active' && currentCase && session) {
-    // Sidebar content for EncounterWorkstation (Rapport + Encounter Log)
+    // Sidebar content for EncounterWorkstation (Rapport + Encounter Log).
+    // Presentational block extracted to <EncounterLogSidebar/>.
     const sidebarJsx = (
-      <>
-        {showRapportMeter && enhancedOSCE.state.isSessionActive && (
-          <motion.div initial={{ y: -10 }} animate={{ y: 0 }}>
-            <RapportMeter
-              meter={enhancedOSCE.state.rapportMeter}
-              emotionalState={enhancedOSCE.state.emotionalState ?? undefined}
-              personality={enhancedOSCE.state.personality ?? undefined}
-              compact
-            />
-          </motion.div>
-        )}
-        <motion.div
-          initial={{ x: 20 }}
-          animate={{ x: 0 }}
-          className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md h-[600px] flex flex-col min-w-[250px] break-words"
-        >
-          <h3 className="text-lg font-semibold mb-4 text-data-neutral">Encounter Log</h3>
-          <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-            {session.questions.map((q: { questionText: string; response: string }, idx: number) => (
-              <div key={`hist-${idx}`} className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral">
-                <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
-                  <MessageSquare className="w-3 h-3" /> History
-                </div>
-                <p className="text-[var(--color-text-inverse)] font-semibold">Q: {q.questionText}</p>
-                <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
-                  A: {getTranslatedText(q.response, languageMode)}
-                </p>
-              </div>
-            ))}
-            {physicalFindings.map((f, idx) => (
-              <div key={`phys-${idx}`} className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral">
-                <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
-                  <Stethoscope className="w-3 h-3" /> Physical Exam
-                </div>
-                <p className="text-[var(--color-text-inverse)] font-semibold">Exam: {f.maneuver}</p>
-                <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
-                  Finding: {f.finding}
-                </p>
-              </div>
-            ))}
-            {diagnosticResults.map((d, idx) => {
-              const trendData = generateTrendData(d.result);
-              return (
-                <div key={`diag-${idx}`} className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral">
-                  <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
-                    <ClipboardList className="w-3 h-3" /> Diagnostic
-                  </div>
-                  <p className="text-[var(--color-text-inverse)] font-semibold">{d.testName}</p>
-                  {isFidelityModeActive && clinicalFidelity.rawLabValues && trendData && (
-                    <div className="flex items-center gap-1 h-6 mt-1">
-                      {trendData.map((val, ti) => (
-                        <div
-                          key={ti}
-                          className="w-1.5 bg-[var(--color-accent)] rounded-full opacity-70"
-                          style={{ height: `${Math.max(4, Math.min(24, (val / Math.max(...trendData)) * 24))}px` }}
-                        />
-                      ))}
-                    </div>
-                  )}
-                  <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
-                    {d.result} — {d.interpretation}
-                  </p>
-                </div>
-              );
-            })}
-            {diagnosisFeedback && (
-              <div className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest"
-                  style={{ color: diagnosisFeedback.isCorrect ? 'var(--color-success)' : 'var(--color-error)' }}>
-                  <ClipboardList className="w-3 h-3" /> Diagnosis Submitted
-                </div>
-                <p className="text-[var(--color-text-inverse)] font-semibold">{userDiagnosis}</p>
-                <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
-                  {diagnosisFeedback.isCorrect ? 'Correct!' : `Expected: ${diagnosisFeedback.correctDiagnosis ?? 'N/A'}`}
-                </p>
-              </div>
-            )}
-            {isTyping && (
-              <div className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral animate-pulse">
-                <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
-                  <MessageSquare className="w-3 h-3" />
-                  {TYPING_STATUS_MESSAGES[typingStatusIndex]}
-                </div>
-                <div className="flex gap-1 items-center h-4">
-                  <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-              </div>
-            )}
-            {isLoading && session.questions.length === 0 && (
-              <ChatSkeleton />
-            )}
-            {session.questions.length === 0 && physicalFindings.length === 0 && diagnosticResults.length === 0 && !isLoading && (
-              <p className="text-[var(--color-text-secondary)] text-center py-8 italic">
-                Start the encounter by asking about the patient's history.
-              </p>
-            )}
-          </div>
-        </motion.div>
-      </>
+      <EncounterLogSidebar
+        showRapport={showRapportMeter && enhancedOSCE.state.isSessionActive}
+        rapportMeter={enhancedOSCE.state.rapportMeter}
+        rapportEmotionalState={enhancedOSCE.state.emotionalState ?? undefined}
+        rapportPersonality={enhancedOSCE.state.personality ?? undefined}
+        session={session}
+        physicalFindings={physicalFindings}
+        diagnosticResults={diagnosticResults}
+        languageMode={languageMode}
+        isFidelityModeActive={isFidelityModeActive}
+        clinicalFidelity={clinicalFidelity}
+        diagnosisFeedback={diagnosisFeedback}
+        userDiagnosis={userDiagnosis}
+        isTyping={isTyping}
+        typingStatusMessage={TYPING_STATUS_MESSAGES[typingStatusIndex] ?? ''}
+        isLoading={isLoading}
+      />
     );
 
     return (

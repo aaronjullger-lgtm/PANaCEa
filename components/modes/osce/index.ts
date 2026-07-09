@@ -15,3 +15,5 @@ export { VitalsStrip } from './VitalsStrip';
 export { PhaseStepper } from './PhaseStepper';
 export type { EncounterPhase as PhaseStepperPhase } from './PhaseStepper';
 export { EncounterWorkstation } from './EncounterWorkstation';
+export { EncounterLogSidebar } from './EncounterLogSidebar';
+export type { EncounterLogSidebarProps } from './EncounterLogSidebar';
