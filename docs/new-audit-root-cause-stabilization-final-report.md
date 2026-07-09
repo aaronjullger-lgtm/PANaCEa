@@ -13,7 +13,7 @@ The 20-doc audit bundle rated PANaCEa "C+ / 65–70% ready" with ~10 "critical" 
 
 ## 3. Duplicate / stale / contradictory findings
 - **Duplicates:** `sec00–06`+`agent.final`+`agent.outline`+`.docx` = one combined report from the 4 specialists; `INFRASTRUCTURE_READINESS`/`Feature_Completeness` = Deep-audit sub-reports; two identical methodology plans.
-- **Stale/disproven (code-verified):** (a) "No production code writes ReviewLog" → **wired**; (b) `/api/srs/due` 500 → **hardened, 23 tests pass**; (c) "Question frontend missing" → `QuizView.tsx` exists; (d) regex XSS sanitizer "prod hole" → **legacy/dev-only**; (e) several viz components "lack ARIA" → `RadialProgress`/`TrendSparkline` already accessible.
+- **Stale/disproven (code-verified):** (a) "No production code writes ReviewLog" → **wired**; (b) `/api/srs/due` 500 → **hardened** (resilient empty 200 on errors; contract pinned in `functions/api/srs/due.test.ts`; see `docs/api/API_OVERVIEW.md`); (c) "Question frontend missing" → `QuizView.tsx` exists; (d) regex XSS sanitizer "prod hole" → **legacy/dev-only**; (e) several viz components "lack ARIA" → `RadialProgress`/`TrendSparkline` already accessible.
 - **Contradiction (readiness 40→70%/C+):** resolved to "advanced but pre-launch"; auth/security/tests/CI/schema are mature and real.
 
 ## 4. Current repo state discovered

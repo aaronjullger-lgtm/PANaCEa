@@ -14,7 +14,7 @@
 | PANCE readiness timeline | `.../command-center/PanceReadinessTimelineWidget.tsx` | ✅ | "mock readiness" badge + explanatory note; falls back only when `!readiness.available`. |
 | Today study prescription | `.../command-center/TodayStudyPrescriptionWidget.tsx` | ✅/🟡 | real logic with fallback path; owner-tracked persistence gap. |
 | FSRS v7-alpha | `lib/fsrs-v7.ts`, `lib/fsrs-version-selector.ts` | 🧪 | `forgettingCurve: 'placeholder'`; **v6 is default**, no implicit migration. |
-| Adaptive question selection | (no standalone service) | 🟡 | selection via `/api/srs/due` + `study/session/generate`; dedicated service not built. |
+| Adaptive question selection | (no standalone service) | 🟡 | selection via `/api/srs/due` + `study/session/generate`; see `docs/api/API_OVERVIEW.md` for due-queue contract. |
 | Progressive difficulty | `lib/services/progressiveDifficultyService.ts` | 🟡 | present; not fully wired into quiz flow. |
 | Rotation profile / PANRE | `lib/fsrs/eorScheduler.ts`, config | 🟡 | EOR present; no `RotationProfileService`; PANRE strategic/absent. |
 | AI tutor / GraphRAG live wiring | `components/.../AITutorDrawer.tsx`, `lib/services/search/graphRag.ts` | 🟡 | UI + services real; live calls need `GEMINI_API_KEY`/DB (infra-gated). |

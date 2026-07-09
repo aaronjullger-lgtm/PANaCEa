@@ -83,7 +83,7 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 | `POST /api/analytics/reactions` | `functions/api/analytics/reactions.ts` | ✅ PORTED |
 | `POST /api/analytics/weakness` | `functions/api/analytics/weakness.ts` | ✅ PORTED |
 | `POST /api/analytics/confusion` | `functions/api/analytics/confusion.ts` | ✅ PORTED |
-| `POST /api/analytics/soap-note` | `functions/api/analytics/soap-note.ts` | ✅ PORTED |
+| `POST /api/analytics/soap-note` | `functions/api/analytics/soap-note.ts` | ✅ PORTED (Zod `.strict()` validation; see `docs/api/API_OVERVIEW.md`) |
 | `GET /api/analytics/performance-deltas` | `functions/api/analytics/performance-deltas.ts` | ✅ PORTED |
 | `GET /api/achievements` | — | ❌ MISSING |
 | `GET /api/performance` | — | ❌ MISSING |
@@ -93,6 +93,15 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 | `GET /api/recommendations` | `functions/api/recommendations/index.ts` | ✅ PORTED |
 | `POST /api/recommendations/generate` | `functions/api/recommendations/index.ts` | ✅ PORTED |
 | `PATCH /api/recommendations/:id/dismiss` | `functions/api/recommendations/index.ts` | ✅ PORTED |
+
+### Push, Reviews & SRS (edge-native)
+
+| Route | Edge Equivalent | Status |
+|---|---|---|
+| `POST /api/push/subscribe` | `functions/api/push/subscribe.ts` | ✅ EDGE-NATIVE |
+| `DELETE /api/push/subscribe` | `functions/api/push/subscribe.ts` | ✅ EDGE-NATIVE |
+| `POST /api/reviews/second-chance` | `functions/api/reviews/second-chance.ts` | ✅ EDGE-NATIVE |
+| `GET /api/srs/due` | `functions/api/srs/due.ts` | ✅ EDGE-NATIVE (canonical FSRS progress read model) |
 
 ### OSCE & AI
 
