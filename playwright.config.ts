@@ -110,17 +110,17 @@ export default defineConfig({
       },
     },
 
-    // Cross-browser smoke (Firefox, WebKit) - api-health + a11y for Roo browser matrix
+    // Cross-browser smoke: browser-only checks. API health runs under the Wrangler config.
     {
       name: 'firefox-smoke',
-      testMatch: /(api-health|a11y-regression)\.spec\.ts/,
+      testMatch: /a11y-regression\.spec\.ts/,
       use: {
         ...devices['Desktop Firefox'],
       },
     },
     {
       name: 'webkit-smoke',
-      testMatch: /(api-health|a11y-regression)\.spec\.ts/,
+      testMatch: /a11y-regression\.spec\.ts/,
       use: {
         ...devices['Desktop Safari'],
       },

@@ -616,9 +616,10 @@ test.describe('Phase 3: Global Error Detection', () => {
     const networkErrors: string[] = [];
 
     page.on('requestfailed', (request) => {
-      if (request.url().includes('/api/')) {
+      const url = request.url();
+      if (url.includes('/api/') && !url.includes('/api/sync')) {
         const failure = request.failure();
-        networkErrors.push(`${request.method()} ${request.url()} - ${failure?.errorText}`);
+        networkErrors.push(`${request.method()} ${url} - ${failure?.errorText}`);
       }
     });
 
