@@ -424,3 +424,67 @@ describe('GET /api/srs/due', () => {
     expect(result.data.totalDue).toBe(0);
   });
 });
+
+// Dashboard consumer contract (Implementation Expansion Pass — Phase 2).
+// Locks the response shape the dashboard/study-queue depends on so it cannot
+// silently drift. Runs with mocked prisma/auth — no real Clerk/Supabase.
+describe('GET /api/srs/due — dashboard response contract', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-07T12:00:00Z'));
+    mockPrisma.card.findMany.mockResolvedValue([]);
+    mockPrisma.userTopicProgress.findMany.mockResolvedValue([]);
+    mockPrisma.userProgress.findMany.mockResolvedValue([]);
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-1' });
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it('always exposes the stable top-level keys dashboard callers read', async () => {
+    const result = await captured.handler(makeContext());
+    expect(result.data).toEqual(
+      expect.objectContaining({
+        items: expect.any(Array),
+        totalDue: expect.any(Number),
+        timestamp: expect.any(String),
+      })
+    );
+    // Empty state is a 200-shaped payload, never a thrown 500.
+    expect(result.status).toBeUndefined();
+  });
+
+  it('each due item carries the keys the study-queue launcher needs', async () => {
+    mockPrisma.card.findMany.mockResolvedValue([
+      makeCardProgress({ due: new Date('2026-04-01T12:00:00Z') }),
+    ]);
+    const result = await captured.handler(makeContext());
+    expect(result.data.items).toHaveLength(1);
+    const item = result.data.items[0];
+    for (const key of [
+      'id',
+      'source',
+      'questionId',
+      'conditionId',
+      'dueDate',
+      'overdueDays',
+      'priority',
+    ]) {
+      expect(item).toHaveProperty(key);
+    }
+    expect(typeof item.dueDate).toBe('string'); // ISO string, JSON-safe for the client
+    expect(typeof item.priority).toBe('number');
+  });
+
+  it('degraded (error) payload still matches the consumer contract (no 500)', async () => {
+    mockPrisma.user.findUnique.mockRejectedValue(new Error('db down'));
+    const result = await captured.handler(makeContext());
+    expect(result.data).toEqual(
+      expect.objectContaining({
+        items: [],
+        totalDue: 0,
+        timestamp: expect.any(String),
+      })
+    );
+    expect(result.status).toBeUndefined();
+  });
+});
