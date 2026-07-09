@@ -414,6 +414,27 @@ PATCH  /api/admin/users/:userId/role      - Update user role (superadmin only)
 GET    /api/admin/stats                   - Platform statistics (admin only)
 ```
 
+### Push notification endpoints (current)
+
+```
+POST   /api/push/subscribe                - Store Web Push subscription (auth required)
+DELETE /api/push/subscribe                - Remove subscription by endpoint (auth required)
+```
+
+See `docs/api/API_OVERVIEW.md` for request bodies and validation bounds.
+
+### Review endpoints (current)
+
+```
+POST   /api/reviews/second-chance         - Build blueprint-weighted second-chance review set (auth required)
+```
+
+### Analytics endpoints (current)
+
+```
+POST   /api/analytics/soap-note           - Persist OSCE SOAP grading analytics (auth required)
+```
+
 ---
 
 ## Frontend Components

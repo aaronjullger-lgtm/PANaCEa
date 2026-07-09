@@ -39,6 +39,7 @@ The bundle's older security audit and the newer specialists agree the security *
 
 - **Flagged file `lib/middleware/validation.ts`** (regex `sanitizeString`, "dev-only" warning) is imported **only** by legacy `server.ts` (Express dev server, not deployed) and `_trash/old-routes/*`. It is **not** on the production Cloudflare path.
 - Production input handling = `functions/api/_shared/validation.ts` (`sanitizeString` strips `<>`, `javascript:`, event handlers) **plus** Zod `.strict()` schemas on every mutation endpoint (0 audit:zod failures). React escapes output by default.
+- **Phase 4 validation hardening** (high-risk mutation endpoints): exported schemas and bounds tests in `functions/api/__tests__/validation-hardening.test.ts` for `POST /api/analytics/soap-note`, `POST|DELETE /api/push/subscribe`, and `POST /api/reviews/second-chance`. Request/response contracts: `docs/api/API_OVERVIEW.md`.
 - **DOMPurify migration:** `dompurify` is present only **transitively** (not a direct dependency), so adopting it directly is a **new production dependency → approval-gated**. Recommended IF/when any endpoint renders user-authored HTML: add `dompurify` (or `isomorphic-dompurify`), sanitize at render, and add adversarial (mXSS) tests. No production endpoint currently renders raw user HTML, so risk is low.
 - **Action taken:** none required on the production path; documented. (Legacy `server.ts` is dev-only and slated for retirement per `deployment/README.md`.)
 
