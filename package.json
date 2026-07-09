@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:server": "node --env-file=.env --watch --import tsx server.ts",
-    "dev:all": "concurrently \"npm run dev:server\" \"npm run dev\"",
+    "dev:server": "node scripts/dev/express-retired.mjs",
+    "dev:server:legacy": "node --env-file=.env --watch --import tsx server.ts",
+    "dev:all": "node scripts/dev/express-retired.mjs",
     "dev:wrangler": "npm run pages:dev",
     "pages:build": "npm run build",
     "pages:serve": "wrangler pages dev dist --compatibility-date=2025-12-15 --compatibility-flag=nodejs_compat",
