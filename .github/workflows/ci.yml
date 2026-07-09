@@ -70,6 +70,7 @@ jobs:
 
       - name: Run Coverage (critical subsystems)
         run: npm run test:coverage -- --reporter=default
+        timeout-minutes: 5
         continue-on-error: true
 
       - name: Upload build artifacts
