@@ -236,3 +236,165 @@ Polished, ready-to-run prompts using a fuller schema (trigger · inspect · comm
 - **Auto-change:** replace with tokens/primitives in leaf components.
 - **Report-only:** changes needing shared-primitive edits or new tokens (approval).
 - **Output:** drift list + fixes applied + items needing approval.
+
+---
+
+# Orchestrated multi-agent automations (v3, loop-safe)
+
+Advanced prompts that drive the agent **orchestration system** (`docs/agent-workflow-orchestration.md`, `.cursor/agents/`, `.cursor/workflows/`). Every prompt is **loop-safe**: a hard loop limit, explicit allowed/forbidden commands, and human-approval gates. All follow `docs/agent-safety-checklist.md` and `.cursor/memory/do-not-repeat.md`. Known pre-existing failures (2 typecheck in `renderStructuredRationale.ts`, 3 `no-empty` lint) are baseline — don't attribute them to the run.
+
+## 1. Agent Orchestrated Feature Build
+- **Trigger:** "build <small feature>" on a feature branch.
+- **Agents:** Orchestrator → Planner → Implementation → UI/UX QA* → Reviewer → Security* → Documentation.
+- **Loop limit:** 2 repair attempts (then escalate via `self-improvement-loop`).
+- **Commands allowed:** `npm run typecheck|lint|test|test:critical|build`, `npm run dev`, `git status|diff`.
+- **Commands forbidden:** deploys, migrations, `npm audit fix --force`, prod/destructive, secret access.
+- **Evidence:** ladder output + `git diff --stat` + screenshots (UI, light+dark).
+- **May edit:** planned source files, tests, docs/memory.
+- **Report-only:** shared primitives, auth/RLS, DB schema, prod config.
+- **Final report:** `feature-build.workflow.md` template (+ `agent-final-report-rubric.md`).
+- **Approval gates:** new prod dep, auth/RLS/DB, prod config.
+
+## 2. Multi-Agent PR Review
+- **Trigger:** PR opened/updated.
+- **Agents:** Orchestrator → Reviewer + Security* + UI/UX QA* + Test/Debug* (parallel lenses via subagents).
+- **Loop limit:** 1 pass (+1 re-review after fixes).
+- **Commands allowed:** `git diff`, secret scan, verification ladder for the change type.
+- **Commands forbidden:** edits during review-only, deploys/migrations.
+- **Evidence:** findings by file/line + command results.
+- **May edit:** nothing (review-only) unless asked.
+- **Report-only:** entire diff.
+- **Final report:** `pr-review.workflow.md` template; verdict pass/block.
+- **Approval gates:** merge is human; flag auth/RLS/secret/DB items.
+
+## 3. Self-Healing Test Failure Triage
+- **Trigger:** red CI/suite.
+- **Agents:** Orchestrator → Test/Debug → Implementation → Reviewer.
+- **Loop limit:** **2** repair attempts, diagnosis-first; then escalate.
+- **Commands allowed:** `npm test`, `npx vitest run <file>`, `npm run typecheck|lint|build`.
+- **Commands forbidden:** deleting/skipping tests, `@ts-ignore`/lint-disable, blind reinstalls, prod/destructive.
+- **Evidence:** before/after pass counts + root-cause grouping + attempt log.
+- **May edit:** source/shared mocks, tests (add/repair).
+- **Report-only:** pre-existing/unrelated failures.
+- **Final report:** `test-failure-triage.workflow.md` template.
+- **Approval gates:** root cause in auth/RLS/schema.
+
+## 4. Weekly Agent Memory Refresh
+- **Trigger:** weekly.
+- **Agents:** Orchestrator → Documentation → Reviewer.
+- **Loop limit:** 1.
+- **Commands allowed:** read-only + secret scan.
+- **Commands forbidden:** anything mutating code/data.
+- **Evidence:** entries added/updated/removed + dedupe actions.
+- **May edit:** `.cursor/memory/*`, durable docs.
+- **Report-only:** conflicting guidance needing a human decision.
+- **Final report:** `agent-memory-refresh.workflow.md` template.
+- **Approval gates:** none (flag conflicts).
+
+## 5. Weekly Design-System Drift Review
+- **Trigger:** weekly / on UI PRs.
+- **Agents:** Orchestrator → UI/UX QA → Reviewer.
+- **Loop limit:** 1.
+- **Commands allowed:** `npm run dev`, `rg` hex scan, `npm run lint|typecheck`.
+- **Commands forbidden:** shared-primitive edits, new deps, prod/destructive.
+- **Evidence:** screenshots (light+dark) + hex-scan output.
+- **May edit:** leaf components (token/spacing fixes).
+- **Report-only:** shared-primitive/new-token changes.
+- **Final report:** drift list + fixes + approval items.
+- **Approval gates:** shared primitives, new deps.
+
+## 6. Weekly Security Regression Audit
+- **Trigger:** weekly / on `functions/api` or auth PRs.
+- **Agents:** Orchestrator → Security → Reviewer.
+- **Loop limit:** 1 (report-first).
+- **Commands allowed:** secret scan, `npm run typecheck`, read-only inspection.
+- **Commands forbidden:** editing auth/RLS, prod/destructive, secret printing.
+- **Evidence:** secret-scan output + per-endpoint authz map.
+- **May edit:** nothing by default (report-first); additive hardening only with approval.
+- **Report-only:** all auth/RLS/secret findings.
+- **Final report:** `security-review.workflow.md` template (+ `security-review-rubric.md`).
+- **Approval gates:** any auth/RLS/secret change.
+
+## 7. Cloudflare Functions Safety Review
+- **Trigger:** changes under `functions/api/`.
+- **Agents:** Orchestrator → Security → Reviewer → Test/Debug*.
+- **Loop limit:** 2 (for build fixes).
+- **Commands allowed:** `npm run typecheck|build`, `rg -n "process\.env" functions/api`.
+- **Commands forbidden:** deploys, prod/destructive.
+- **Evidence:** Edge-safety scan + authz/validation notes.
+- **May edit:** endpoint code within Edge rules (additive authz/validation w/ approval).
+- **Report-only:** auth/RLS changes.
+- **Final report:** `cloudflare-functions-review.workflow.md` template.
+- **Approval gates:** auth/RLS, deploy.
+
+## 8. Supabase/Prisma Safety Review
+- **Trigger:** changes to `prisma/` or DB code.
+- **Agents:** Orchestrator → Database Safety → Security → Reviewer.
+- **Loop limit:** 1.
+- **Commands allowed:** `npm run db:generate|typecheck|db:validate`.
+- **Commands forbidden:** **any** migration apply/reset, `db push`, prod DB access, destructive SQL.
+- **Evidence:** schema-compiles + additivity + RLS assessment.
+- **May edit:** `schema.prisma` / draft migration SQL (not applied).
+- **Report-only:** anything destructive/non-additive, RLS, prod targets.
+- **Final report:** `database-change-review.workflow.md` template (+ `database-change-rubric.md`).
+- **Approval gates:** applying migrations, RLS changes, prod access.
+
+## 9. Dependency Upgrade Risk Review
+- **Trigger:** dependency-bump PR / periodic.
+- **Agents:** Orchestrator → Reviewer → Security.
+- **Loop limit:** 1.
+- **Commands allowed:** `npm install`, `npm audit` (report), `npm run typecheck|build|test`, `npm run build:check-size`.
+- **Commands forbidden:** `npm audit fix --force`, hand-editing lockfile, adding prod deps without approval.
+- **Evidence:** advisories + version diffs + bundle delta.
+- **May edit:** lockfile via `npm install` for approved changes.
+- **Report-only:** new prod deps.
+- **Final report:** `dependency-update-review.workflow.md` template.
+- **Approval gates:** any production dependency.
+
+## 10. Release Readiness Council
+- **Trigger:** release request.
+- **Agents:** Orchestrator → Release Readiness + Security + Reviewer.
+- **Loop limit:** 1 (assessment only).
+- **Commands allowed:** `npm run typecheck:ci|lint|test|build|env:check:compat-date`, secret scan.
+- **Commands forbidden:** **any** deploy/migration; nothing mutating.
+- **Evidence:** full ladder (pre-existing vs introduced) + secret scan + Edge scan.
+- **May edit:** the readiness report only.
+- **Report-only:** everything.
+- **Final report:** `predeploy-readiness.workflow.md` template; Go/No-Go.
+- **Approval gates:** the deploy itself + prod migrations (always human).
+
+## 11. UI Polish Swarm
+- **Trigger:** "polish these screens".
+- **Agents:** Orchestrator → UI/UX QA (lead) → Implementation → Reviewer; parallelize screens via subagents.
+- **Loop limit:** 1 per screen.
+- **Commands allowed:** `npm run dev`, `rg` hex scan, `npm run lint|typecheck`.
+- **Commands forbidden:** shared-primitive edits, new deps, prod/destructive.
+- **Evidence:** before/after screenshots (light+dark) per screen.
+- **May edit:** leaf components.
+- **Report-only:** shared-primitive/dep needs.
+- **Final report:** `ui-polish.workflow.md` template per screen + `ui-quality-rubric.md`.
+- **Approval gates:** shared primitives, new deps.
+
+## 12. Broken Import Sweep
+- **Trigger:** after refactors / monthly.
+- **Agents:** Orchestrator → Test/Debug → Implementation → Reviewer.
+- **Loop limit:** 2 (for fixes).
+- **Commands allowed:** `npm run typecheck|build`, `rg`.
+- **Commands forbidden:** deleting files, inventing stub modules, prod/destructive.
+- **Evidence:** broken imports fixed + dead-file candidates.
+- **May edit:** import statements/paths.
+- **Report-only:** dead-file candidates, missing modules (`routes/`, `tokenMatchCache.ts`).
+- **Final report:** `broken-import-sweep.workflow.md` template.
+- **Approval gates:** deleting files, restoring missing modules.
+
+## 13. Agent Retrospective and Rule Suggestion
+- **Trigger:** after a complex/failed task or monthly.
+- **Agents:** Orchestrator → Documentation → Reviewer.
+- **Loop limit:** 1.
+- **Commands allowed:** read-only + secret scan.
+- **Commands forbidden:** mutating code/data; creating speculative rules.
+- **Evidence:** retrospective entry + any memory updates + repeated-pattern evidence for a proposed rule.
+- **May edit:** `.cursor/memory/*`; propose (not force) a new rule/skill only if a pattern repeated ≥2×.
+- **Report-only:** proposed rule/hook changes (human decides).
+- **Final report:** retrospective + proposed improvements + rationale.
+- **Approval gates:** adopting any new rule/hook that affects many files or safety gates.

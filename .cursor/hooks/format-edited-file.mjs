@@ -21,6 +21,18 @@ const FORMATTABLE = new Set([
   '.json', '.css', '.scss', '.md', '.mdx', '.html', '.yml', '.yaml',
 ]);
 
+// Sensitive paths: editing these should go through the right workflow / approval.
+// This is a NON-BLOCKING advisory logged for the audit trail (afterFileEdit
+// cannot message the agent or block; see docs/proposed-agent-hooks.md).
+const SENSITIVE = [
+  { re: /(^|\/)\.env(\.|$)|(^|\/)\.dev\.vars$|\.cursor\/mcp\.json$/i, why: 'secret/env file' },
+  { re: /(^|\/)package-lock\.json$|(^|\/)package\.json$/i, why: 'dependency manifest/lockfile' },
+  { re: /(^|\/)prisma\/(schema\.prisma|migrations\/)/i, why: 'Prisma schema/migration (use database-change-review workflow; migrations need approval)' },
+  { re: /functions\/api\/_shared\/auth\.|(^|\/)middleware|rls|policy/i, why: 'auth/RLS/middleware (use security-review workflow; needs approval)' },
+  { re: /(^|\/)wrangler\.toml$|(^|\/)public\/_headers$/i, why: 'Cloudflare/prod config' },
+  { re: /(^|\/)lib\/fsrs\.ts$|drillReviewService|implicit-metrics/i, why: 'FSRS rating logic (safety-critical; needs approval)' },
+];
+
 const LOG = '.cursor/hooks/logs/format.log';
 
 function log(line) {
@@ -55,7 +67,17 @@ async function main() {
   } catch {
     return;
   }
-  if (!file || !existsSync(file)) return;
+  if (!file) return;
+
+  // Non-blocking advisory when a sensitive file is edited.
+  for (const s of SENSITIVE) {
+    if (s.re.test(file)) {
+      log(`ADVISORY sensitive-file edited (${s.why}): ${file}`);
+      break;
+    }
+  }
+
+  if (!existsSync(file)) return;
   if (!FORMATTABLE.has(extname(file))) return;
 
   const autoformat = process.env.CURSOR_HOOK_AUTOFORMAT === '1';

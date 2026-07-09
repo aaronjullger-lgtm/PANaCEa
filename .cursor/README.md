@@ -7,16 +7,31 @@ Repo-level configuration that makes AI coding agents (Cursor Desktop, IDE, and C
 ```
 .cursor/
 ├── rules/            # .mdc project rules (scoped guidance the agent auto-loads)
-├── skills/           # SKILL.md workflows (QA, verification, onboarding, security)
+├── skills/           # SKILL.md workflows (QA, verification, orchestration, memory)
+├── agents/           # agent role definitions (planner, implementer, reviewer, ...)
+├── workflows/        # reusable multi-phase, multi-agent workflow recipes
+├── memory/           # durable repo memory (facts, failure modes, lessons, history)
+├── training/         # onboarding primers + good/bad worked examples
+├── evals/            # pass/fail rubrics (final report, UI, security, DB, ...)
 ├── commands/         # existing slash commands (audit-*)
-├── hooks.json        # safe agent-loop hooks (guard + format check)
+├── hooks.json        # safe agent-loop hooks (guard + format/advisory check)
 ├── hooks/            # hook scripts (Node) + logs/ (gitignored)
 ├── mcp.example.json  # MCP server templates (no secrets) -> copy to mcp.json (gitignored)
 └── environment.json  # cloud env install config
 ```
 
 Related docs live in `docs/`:
-`cursor-agent-operating-system.md` (**start here** — how it all fits together), `cursor-automation-audit.md`, `cursor-community-research.md`, `cursor-automation-dedupe.md`, `cursor-hooks-notes.md`, `cursor-mcp-cloud-setup.md`, `cursor-cloud-automations.md`, `agent-safety-checklist.md`.
+`agent-workflow-orchestration.md` (**start here for the orchestration system**), `cursor-agent-operating-system.md`, `agent-orchestration-audit.md`, `agent-self-improvement-loop.md`, `proposed-agent-hooks.md`, `cursor-automation-audit.md`, `cursor-community-research.md`, `cursor-automation-dedupe.md`, `cursor-hooks-notes.md`, `cursor-mcp-cloud-setup.md`, `cursor-cloud-automations.md`, `agent-safety-checklist.md`.
+
+## Orchestration layer (agents / workflows / memory / training / evals)
+
+- **Agents** (`.cursor/agents/`) — role definitions: `orchestrator`, `planner`, `implementation`, `reviewer`, `test-debug`, `ui-ux-qa`, `security`, `database-safety`, `documentation`, `release-readiness`. Each states its powers, limits, verification, stop/escalation conditions, and report format.
+- **Workflows** (`.cursor/workflows/`) — 16 multi-phase recipes (feature-build, bug-fix, ui-polish, visual-qa, accessibility-audit, security-review, test-failure-triage, database-change-review, dependency-update-review, predeploy-readiness, pr-review, documentation-refresh, agent-memory-refresh, broken-import-sweep, cloudflare-functions-review, self-improvement-loop). Each: context→plan→implement→self-review→verify→specialist-review→docs/memory→report, with approval gates.
+- **Memory** (`.cursor/memory/`) — durable, concise: `project-facts`, `known-failure-modes`, `agent-lessons-learned`, `design-system-decisions`, `validation-history`, `workflow-retrospectives`, `do-not-repeat`. Updated via `repo-learning-loop`/`repo-memory-update`. No secrets/PII/logs.
+- **Training** (`.cursor/training/`) — primers + good/bad examples loaded as context (not model training).
+- **Evals** (`.cursor/evals/`) — rubrics with automatic-failure conditions used by reviewer/gate skills.
+
+The full map (task→workflow matrix, lead/reviewer agents, approval gates) is `docs/agent-workflow-orchestration.md`.
 
 ## Rules (`.cursor/rules/`)
 
@@ -54,6 +69,7 @@ Loaded automatically when their `description` matches the task, or invoked with 
 - **Verification/QA:** `verifying-in-browser`, `visual-qa-testing`, `ui-polish-pass`, `design-system-enforcement`, `no-ai-slop-visual-audit`, `responsive-testing`, `dark-mode-testing`, `accessibility-auditing`, `form-testing`, `recording-browser-flow-as-test`.
 - **Code safety/review:** `pr-review`, `dependency-review`, `code-mod-safety`, `route-and-import-verification`, `auto-type-checking`, `failure-triage`, `parallel-test-fixing`, `auditing-security`, `mcp-safety-review`.
 - **Onboarding/config:** `codebase-onboarding`, `using-ui-stack`, `suggesting-cursor-rules`, `suggesting-cursor-hooks`.
+- **Orchestration & gates:** `agent-orchestration`, `workflow-selection`, `task-decomposition`, `subagent-review`, `final-reporting`, `human-approval-gate`, `self-improvement-loop`, `repo-learning-loop`, `workflow-retrospective`, `agent-training-refresh`, `design-quality-gate`, `security-quality-gate`, `database-safety-gate`, `release-readiness-gate`.
 
 > These complement (don't duplicate) the domain skills already in `.agents/skills/` and `.claude/skills/`. See `docs/cursor-automation-dedupe.md`.
 

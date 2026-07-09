@@ -308,6 +308,11 @@ mcp_config.json
 !.cursor/skills/
 !.cursor/commands/
 !.cursor/hooks/
+!.cursor/agents/
+!.cursor/workflows/
+!.cursor/memory/
+!.cursor/training/
+!.cursor/evals/
 !.cursor/hooks.json
 !.cursor/mcp.example.json
 !.cursor/README.md
