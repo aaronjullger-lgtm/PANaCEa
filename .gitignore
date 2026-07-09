@@ -103,6 +103,8 @@ playwright/*.json
 !lib/tokens/**
 !components/dashboard/adaptive/model/visualTokens.ts
 !components/dashboard/adaptive/visuals/VisualTokenProvider.tsx
+!lib/services/tokenMatchCache.ts
+!lib/services/tokenMatchCache.test.ts
 *auth_token*
 *access_token*
 *refresh_token*
@@ -224,7 +226,6 @@ heapdump-*.heapsnapshot
 *.quoted
 *.new
 *_backup
-.cursor/memory/
 .ai/
 
 # Temporary validation and conversion scripts
@@ -296,7 +297,9 @@ typecheck-errors.txt
 .roomodes
 .amazonq/
 .cline/
-.cursor/
+.cursor/*
+!.cursor/memory/
+!.cursor/memory/**
 .kiro/
 .roo/
 mcp_config.json

@@ -739,6 +739,8 @@ export class MedicalComplianceService {
       .find((req) => req.id === requirementId);
 
     if (requirement) {
+      // Stub until review tasks are persisted to the database.
+      void { requirementId, reviewer, dueDate, requirementCode: requirement.code };
     }
   }
 
