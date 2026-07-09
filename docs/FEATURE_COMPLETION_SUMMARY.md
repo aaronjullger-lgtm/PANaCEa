@@ -208,8 +208,8 @@ Added `toast` import from sonner and proper timing calculations.
 - Visual indication of placeholder status
 
 ### ✅ Medical Wordle Hidden from Dashboard
-- Commented out Wordle button (API not implemented in CF)
-- Clear comment explaining API gap
+- Commented out Wordle button (historical — API was missing in CF at time of change)
+- **Update (2026-07):** Edge API is live at `/api/games/wordle/daily` and `/api/games/wordle/guess` — see `docs/api/API_OVERVIEW.md`. Re-enable dashboard entry when mode routing is verified.
 
 ### ✅ Settings Modal from Query
 - Added `?modal=settings` support

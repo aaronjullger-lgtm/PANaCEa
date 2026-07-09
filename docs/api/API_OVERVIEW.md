@@ -2,153 +2,233 @@
 
 This document tracks the request/response contracts for the most recently changed API routes.
 
+All endpoints below use the unified API envelope (`functions/api/_shared/api-response.ts`):
+
+- **Success:** `{ ok: true, success: true, data, traceId, timestamp, message? }`
+- **Error:** `{ ok: false, error: { code, message, details? }, traceId, timestamp }`
+
+Clients should read payloads from `data` (see `lib/utils/apiEnvelope.ts` → `unwrapApiEnvelope`).
+
 ## Changed Routes
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/admin/check-access` | Verifies whether the authenticated user currently has admin access. |
-| GET | `/api/admin/stats` | Returns admin dashboard platform metrics (users, activity, flags, top systems). |
-| POST | `/api/osce/complete` | Marks an OSCE session complete (idempotent) and optionally persists analytics to `CaseFile`. |
-| GET | `/api/osce/stats` | Returns OSCE-only performance metrics and trend data from completed sessions with scores. |
+| GET | `/api/diagnostic-puzzle/daily` | Returns today's diagnostic puzzle and the caller's in-progress state. |
+| GET | `/api/diagnostic-puzzle/stats` | Returns lifetime diagnostic puzzle stats (wins, streak, guess distribution). |
+| POST | `/api/diagnostic-puzzle/submit` | Submits a condition guess for today's diagnostic puzzle. |
+| GET | `/api/games/wordle/daily` | Returns today's Medical Wordle buzzword challenge and user progress. |
+| POST | `/api/games/wordle/guess` | Submits a letter guess for today's Medical Wordle. |
 
-## Endpoint Contracts
-
-### `GET /api/admin/check-access`
-
-**Auth:** Required (authenticated endpoint)
-
-**Request body:** None
-
-**Success response (`200 OK`)**
-
-```json
-{
-  "success": true,
-  "hasAccess": true,
-  "role": "admin",
-  "userId": "string",
-  "email": "optional-string"
-}
-```
-
-`role` can be `admin` or `superadmin`.
-
-**Error responses**
-
-- `403` → `{ "success": false, "hasAccess": false, "message": "Forbidden - Admin access required" }`
-- `500` → `{ "error": "Internal server error", "hasAccess": false }`
-
-**Notes**
-
-- Access is resolved in this order: `SUPERADMIN_USER_IDS`/`ADMIN_USER_IDS` env values first, then database role lookup.
+**Implementation:** Edge handlers in `functions/api/diagnostic-puzzle/*` and `functions/api/games/wordle/*`. Business logic in `services/core/diagnosticPuzzleService.ts` and `services/core/wordleService.ts`.
 
 ---
 
-### `GET /api/admin/stats`
+## Endpoint Contracts
 
-**Auth:** Required (admin-authenticated endpoint)
+### `GET /api/diagnostic-puzzle/daily`
 
-**Request body:** None
+**Auth:** Required (`Authorization: Bearer <clerk_jwt>`)
+
+**Query parameters**
+
+| Param | Type | Required | Description |
+|---|---|---|---|
+| `date` | `string` | No | ISO date override (`YYYY-MM-DD`). Defaults to today (UTC). |
 
 **Success response (`200 OK`)**
 
+`data` shape (`DiagnosticPuzzleDailyPayload`):
+
 ```json
 {
-  "success": true,
-  "data": {
-    "totalUsers": 0,
-    "activeUsersToday": 0,
-    "totalStudySessions": 0,
-    "averageAccuracy": 0,
-    "popularSystems": [
-      {
-        "system": "string",
-        "count": 0
-      }
-    ],
-    "pendingFlags": 0
+  "id": "daily-row-uuid",
+  "date": "2026-07-09",
+  "puzzle": {
+    "id": "puzzle-uuid",
+    "conditionId": "condition-uuid",
+    "conditionName": "Pneumonia",
+    "system": "Pulmonary",
+    "title": "Daily case title",
+    "difficulty": 3,
+    "clues": ["Clue revealed so far"],
+    "totalClues": 6
+  },
+  "userState": {
+    "guesses": ["prior guess"],
+    "status": "playing",
+    "cluesRevealed": 2,
+    "attemptsLeft": 5,
+    "maxAttempts": 6
   }
 }
 ```
 
+`userState.status` is `playing` | `won` | `lost`. Clues unlock progressively: clue 1 is always shown; each incorrect guess reveals the next clue (up to 6).
+
 **Error responses**
 
-- `403` → `{ "error": "Admin access required" }`
-- `500` → `{ "error": "Failed to fetch admin stats" }`
+- `400` → validation or `DiagnosticPuzzleServiceError` (e.g. invalid date, no puzzles configured)
+- `404` → `{ "error": "User not found" }`
+- `500` → internal server error
 
 **Notes**
 
-- If `DATABASE_URL` is missing, returns zeroed stats with `note: "Database not configured"`.
+- Daily puzzle selection is deterministic per UTC date (seeded from `DailyDiagnosticPuzzle.date`).
+- Condition matching on submit uses exact name/alias match plus fuzzy Levenshtein matching (≥ 75% similarity).
 
 ---
 
-### `POST /api/osce/complete`
+### `GET /api/diagnostic-puzzle/stats`
 
-**Auth:** Required (authenticated endpoint)
+**Auth:** Required
+
+**Request body:** None
+
+**Success response (`200 OK`)**
+
+```json
+{
+  "total": 12,
+  "wins": 8,
+  "losses": 4,
+  "winRate": 66.67,
+  "streak": 3,
+  "guessDistribution": {
+    "1": 1,
+    "2": 3,
+    "3": 2,
+    "4": 1,
+    "5": 1,
+    "6": 0
+  }
+}
+```
+
+`guessDistribution` keys are guess counts (1–6) for winning games only.
+
+**Error responses**
+
+- `404` → `{ "error": "User not found" }`
+- `500` → internal server error
+
+---
+
+### `POST /api/diagnostic-puzzle/submit`
+
+**Auth:** Required
 
 **Request body**
 
 ```json
 {
-  "body": {
-    "sessionId": "string",
-    "diagnosis": "string (optional)",
-    "treatmentPlan": "string (optional)",
-    "soapComparison": {},
-    "timingAnalytics": {},
-    "infographics": ["string"]
-  }
+  "guess": "pneumonia",
+  "date": "2026-07-09"
 }
 ```
 
-**Success responses**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `guess` | `string` | Yes | Condition name guess (trimmed, lowercased server-side). |
+| `date` | `string` | No | ISO date override; defaults to today (UTC). |
 
-- `200 OK` → `{ "success": true }`
-- `200 OK` (idempotent repeat) → `{ "success": true, "alreadyCompleted": true }`
+**Success response (`200 OK`)**
+
+Same `data` shape as `GET /api/diagnostic-puzzle/daily` with updated `userState` (new guess appended, status may change to `won` or `lost`).
 
 **Error responses**
 
-- `404` → `{ "error": "User not found" }` or `{ "error": "Session not found" }`
-- `500` → `{ "error": "Internal server error" }`
+- `400` → validation failure or service error (e.g. puzzle already completed, empty guess)
+- `404` → `{ "error": "User not found" }`
+- `500` → internal server error
 
 **Notes**
 
-- Creates `CaseFile` on a best-effort basis when `soapComparison` or `timingAnalytics` is provided.
-- `CaseFile` creation failure is logged but does not fail completion.
+- Max 6 guesses per daily puzzle. Winning on guess N reveals N clues; losing after 6 guesses sets `status: "lost"`.
+- Re-submitting after `won` or `lost` returns `400`.
 
 ---
 
-### `GET /api/osce/stats`
+### `GET /api/games/wordle/daily`
 
-**Auth:** Required (authenticated endpoint)
+**Auth:** Required
 
 **Request body:** None
 
 **Success response (`200 OK`)**
 
+`data` shape (`WordleDailyPayload`):
+
 ```json
 {
-  "totalEncounters": 0,
-  "passRate": 0,
-  "averageScore": 0,
-  "averageClinicalReasoningScore": 0,
-  "trend": [
-    {
-      "sessionId": "string",
-      "date": "2026-01-01T00:00:00.000Z",
-      "score": 0,
-      "clinicalReasoningScore": 0
-    }
-  ]
+  "id": "daily-wordle-uuid",
+  "date": "2026-07-09",
+  "word": {
+    "id": "buzzword-uuid",
+    "buzzword": "PERICARDITIS",
+    "condition": "Pericarditis",
+    "system": "Cardiovascular",
+    "subcategory": "Inflammatory",
+    "explanation": "Chest pain relieved by leaning forward"
+  },
+  "userState": {
+    "guesses": ["STENOSIS"],
+    "status": "playing",
+    "attemptsLeft": 5,
+    "maxAttempts": 6
+  }
 }
 ```
 
 **Error responses**
 
-- `404` → `{ "error": "User not found" }`
-- `500` → `{ "error": "Failed to load OSCE stats" }`
+- `400` / `422` → `WordleServiceError` via `fail(ErrorCode.VALIDATION_FAILED, …)` (e.g. no buzzwords configured)
+- `500` → `fail(ErrorCode.INTERNAL_ERROR, …)`
 
 **Notes**
 
-- Metrics are computed from completed `PatientEncounterSession` rows that have an `OsceResult`.
-- Pass threshold is score `>= 70`.
+- Daily word selection is deterministic per UTC date (seeded from `DailyWordle.date`).
+- `buzzword` is the target answer; client UI typically uppercases for display.
+- `subcategory` and `explanation` may be `null`.
+
+---
+
+### `POST /api/games/wordle/guess`
+
+**Auth:** Required
+
+**Request body**
+
+```json
+{
+  "guess": "STENOSIS"
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `guess` | `string` | Yes | Alphabetic guess, trimmed and uppercased server-side. Must match target `buzzword` length. |
+
+**Success response (`200 OK`)**
+
+Same `data` shape as `GET /api/games/wordle/daily` with updated `userState`.
+
+**Error responses**
+
+- `400` / `422` → validation or `WordleServiceError` (wrong length, non-alpha characters, puzzle already completed)
+- `500` → internal server error
+
+**Notes**
+
+- Max 6 attempts. Exact match (case-insensitive after normalization) sets `status: "won"`.
+- Guesses are stored uppercased in `userState.guesses`.
+
+---
+
+## Frontend integration
+
+| Hook | Endpoints |
+|---|---|
+| `hooks/useDiagnosticPuzzle.ts` | `/api/diagnostic-puzzle/daily`, `/submit`, `/stats` |
+| `hooks/useWordleGame.ts` | `/api/games/wordle/daily`, `/api/games/wordle/guess` |
+
+Routes: `/modes/diagnostic-puzzle`, `/modes/medical-wordle` (see `docs/plans/plan_02.md`).

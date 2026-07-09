@@ -27,7 +27,7 @@
 - ✅ Win/loss states work
 - ✅ Can share results
 
-**Note:** API endpoint `/api/games/wordle/*` not implemented in CF, so may use local demo or show error. Check console for API calls.
+**Note:** API endpoints `GET /api/games/wordle/daily` and `POST /api/games/wordle/guess` are implemented in Cloudflare Pages Functions. Requires auth and buzzword seed data in the database. See `docs/api/API_OVERVIEW.md`.
 
 ---
 
@@ -305,7 +305,7 @@ Open DevTools Console and check for:
 ## Known Issues/Expected Behavior
 
 ### APIs Not Implemented (Expected)
-- `/api/games/wordle/*` - Medical Wordle uses demo data
+- ~~`/api/games/wordle/*`~~ — **Implemented** in `functions/api/games/wordle/` (see `docs/api/API_OVERVIEW.md`)
 - `/api/social/*` - Study Groups hidden, won't be called
 - `/api/questions/polypharmacy-drill` - Falls back to demo case if not found
 
