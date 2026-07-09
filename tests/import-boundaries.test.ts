@@ -64,6 +64,42 @@ describe('functions/** import boundaries', () => {
   });
 });
 
+// Client-bundled source must never import the Supabase service-role (admin)
+// client — it bypasses RLS and must stay server/edge only (SEC-003).
+const SERVICE_ROLE_IMPORT =
+  /(?:from|require\()\s*['"][^'"]*(?:lib\/)?supabase\/admin['"]|\bsupabaseAdmin\b|SUPABASE_SERVICE_ROLE_KEY/;
+
+const CLIENT_DIRS = ['components', 'src', 'pages', 'hooks', 'store', 'contexts'];
+
+describe('service-role (Supabase admin) client is server/edge only (SEC-003)', () => {
+  it('is never imported/referenced by client-bundled source', () => {
+    const offenders: string[] = [];
+    for (const dir of CLIENT_DIRS) {
+      let files: string[] = [];
+      try {
+        files = walk(join(REPO_ROOT, dir), ['.ts', '.tsx']);
+      } catch {
+        continue;
+      }
+      for (const file of files) {
+        // The admin module itself is under lib/, not these dirs; scan is safe.
+        const src = readFileSync(file, 'utf8');
+        for (const line of src.split('\n')) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('//') || trimmed.startsWith('*')) continue;
+          if (SERVICE_ROLE_IMPORT.test(trimmed)) {
+            offenders.push(`${file.replace(REPO_ROOT + '/', '')}: ${trimmed}`);
+          }
+        }
+      }
+    }
+    expect(
+      offenders,
+      `Client-bundled code must not touch the service-role client / key (bypasses RLS). Offenders:\n${offenders.join('\n')}`
+    ).toEqual([]);
+  });
+});
+
 // Production source must never import from the quarantined _trash/ directory.
 const TRASH_IMPORT = /(?:from|require\()\s*['"][^'"]*_trash\//;
 
