@@ -379,9 +379,6 @@ export function exampleUsage() {
   const sessionSize = 40;
   const distribution = calculateSessionDistribution(sessionSize);
 
-  for (const [system, count] of distribution) {
-  }
-
   const selected = selectWeightedSystems(5);
 
   const testCounts = new Map([
@@ -390,6 +387,10 @@ export function exampleUsage() {
     ['GI', 3],
   ]);
   const validation = validateSessionDistribution(testCounts, 40);
-  if (!validation.valid) {
-  }
+
+  return {
+    distribution: Array.from(distribution.entries()),
+    selected,
+    validation,
+  };
 }
