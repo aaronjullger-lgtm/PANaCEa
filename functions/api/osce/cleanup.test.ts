@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { onRequestDelete } from './cleanup';
+import { onRequestDelete, onRequestPost } from './cleanup';
 import { resolveUserByClerkId } from '../_shared/resolveUser';
 
 const mockPrisma = {
@@ -85,6 +85,26 @@ describe('DELETE /api/osce/cleanup', () => {
     expect(await response.json()).toEqual({ error: 'Session not found' });
     expect(mockPrisma.patientEncounterSession.updateMany).toHaveBeenCalledWith({
       where: { id: 'session_victim', userId: 'user_1' },
+      data: { messages: [] },
+    });
+  });
+
+  it('enforces ownership for POST body cleanup requests', async () => {
+    const response = await onRequestPost({
+      ...baseContext,
+      request: new Request('https://studypanacea.com/api/osce/cleanup', {
+        method: 'POST',
+        body: JSON.stringify({ sessionId: 'session_from_body' }),
+      }),
+    } as any);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      deleted: 1,
+      message: 'Cleared chat messages for session session_from_body',
+    });
+    expect(mockPrisma.patientEncounterSession.updateMany).toHaveBeenCalledWith({
+      where: { id: 'session_from_body', userId: 'user_1' },
       data: { messages: [] },
     });
   });
