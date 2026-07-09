@@ -47,5 +47,6 @@ interface StandardizedRationale {
 ## References in Codebase
 
 - **Types:** `components/questions/ExplanationPanel.tsx` (StructuredRationale), `src/types/index.ts` (Question).
+- **Text rendering:** `lib/study/renderStructuredRationale.ts` — `renderStructuredRationale`, `renderBriefRationale`, `renderDistractorRationale`, `resolveStructuredRationale`.
 - **Generation:** `functions/api/questions/generate-enhanced.ts`, `services/ai/geminiService.ts`.
 - **Display:** `components/session/QuizView.tsx`, `components/questions/ExplanationPanel.tsx`.

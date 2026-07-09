@@ -88,8 +88,9 @@ Body: {
 // Get chat history
 GET /api/osce/history?sessionId={sessionId}&limit=100
 
-// Clean up after encounter
+// Clean up after encounter (clears messages[] only for sessions owned by the caller)
 DELETE /api/osce/cleanup?sessionId={sessionId}
+POST /api/osce/cleanup?sessionId={sessionId}   // also accepts { sessionId } in JSON body
 ```
 
 **Usage:**

@@ -132,7 +132,7 @@ Gemini 3 introduces **Thinking** (controlled via `thinking_level`), which is the
 3. **Step 3 (Query):** When a student asks a question, use `models.generateContent` (or `POST /api/library/query`) referencing `cachedContent`. The LLM must return citations in the format `{{Page:X}}` (single page) or `{{Pages:N-M}}` (range). Frontend matches this to the Adobe JSON bounds to draw a yellow highlight box on page X in the PDF viewer.
 
 **Endpoints / scripts:**
-- **Ingest (Step 1):** Node/offline: Adobe PDF Extract → `structuredData.json` → Supabase; set `adobeDataPath`. (Or use `functions/api/content/library/ingest.ts` if wired.)
+- **Ingest (Step 1):** Node/offline: Adobe PDF Extract → `structuredData.json` → Supabase; set `adobeDataPath`. In-app: `POST /api/content/library/extract` then poll `GET /api/content/library/extract?jobId=...&resourceId=...`, or call `POST /api/content/library/ingest` with `{ resourceId, structuredData }`. Extract and ingest write routes require CMS role (`EDITOR`+).
 - **Cache (Step 2):** `npx tsx scripts/library/ingest-cache.ts --textFile ./path/to/extracted.txt [--resourceId <id>] [--ttl 7200] [--model gemini-2.0-flash]`. Env: `GEMINI_API_KEY`, `DATABASE_URL` (when using `--resourceId`).
 - **Query (Step 3):** `POST /api/library/query` — implementation: `functions/api/library/query.ts`. Body: `{ cachedContent: "cachedContents/xxx", query, maxTokens }`. Returns `answer`, `citations`, `pageNumbers`. System instruction enforces `{{Page:X}}` / `{{Pages:N-M}}`.
 

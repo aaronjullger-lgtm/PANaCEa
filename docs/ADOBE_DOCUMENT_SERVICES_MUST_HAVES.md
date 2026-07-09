@@ -12,9 +12,9 @@ This doc maps product priorities (PDF Extract, PDF Embed, Document Generation, S
 
 | Piece | Status | Notes |
 |-------|--------|-------|
-| **Storage of Extract output** | ✅ | `POST /api/content/library/ingest` accepts `resourceId` + `structuredData`, uploads JSON to Supabase, sets `EducationalResource.adobeDataPath`. |
+| **Storage of Extract output** | ✅ | `POST /api/content/library/ingest` accepts `resourceId` + `structuredData`, uploads JSON to Supabase, sets `EducationalResource.adobeDataPath`. CMS role required. |
 | **Study Companion citations** | ✅ | `POST /api/study/chat` uses `adobeDataPath` to return citation highlight boxes; frontend overlays on PDF. |
-| **Extract-from-PDF in app** | ✅ | `POST /api/content/library/extract` submits PDF to Adobe PDF Services (Extract), returns job ID; `GET /api/content/library/extract/status` polls job, on done downloads result zip, extracts `structuredData.json`, runs ingest. |
+| **Extract-from-PDF in app** | ✅ | `POST /api/content/library/extract` submits PDF to Adobe PDF Services (Extract), returns job ID; `GET /api/content/library/extract?jobId=...&resourceId=...` polls job, on done downloads result zip, extracts `structuredData.json`, uploads to Supabase. Both routes require CMS role (`cmsEndpoint`). |
 | **Offline / large PDFs** | Doc | For very large textbooks (e.g. 400+ pages), use a Node/script pipeline (e.g. `@adobe/pdfservices-node-sdk`) and then call **ingest** with the resulting JSON. |
 
 ### Env
@@ -26,7 +26,7 @@ This doc maps product priorities (PDF Extract, PDF Embed, Document Generation, S
 
 1. **Start extract:** `POST /api/content/library/extract` with `resourceId` and `pdfUrl` (JSON body). Returns `202` with `jobId`, `resourceId`, `statusUrl`.
 2. **Poll until done:** `GET /api/content/library/extract?jobId=...&resourceId=...`. When status is `done`, the server downloads the result zip, extracts `structuredData.json`, uploads to Supabase, updates `adobeDataPath`, and returns `{ status: "done", adobeDataPath }`.
-3. **Optional:** Call **ingest** directly if you already have Extract JSON (e.g. from an offline job).
+3. **Optional:** Call **ingest** directly if you already have Extract JSON (e.g. from an offline job). Requires CMS role.
 
 ### Limits (Adobe)
 
@@ -111,7 +111,7 @@ This doc maps product priorities (PDF Extract, PDF Embed, Document Generation, S
 
 | Priority | Feature | Status | Key env / API |
 |----------|---------|--------|----------------|
-| Essential | PDF Extract | ✅ In-app + ingest | `ADOBE_*`, `/api/content/library/extract`, `/extract/status`, `/ingest` |
+| Essential | PDF Extract | ✅ In-app + ingest | `ADOBE_*`, `POST /api/content/library/extract`, `GET /api/content/library/extract`, `POST /api/content/library/ingest` (CMS auth) |
 | Essential | PDF Embed | ✅ | `VITE_ADOBE_PDF_EMBED_CLIENT_ID`, SmartPDFViewer |
 | High value | Document Generation | ✅ | `ADOBE_*`, optional `DOC_GEN_TEMPLATE_ASSET_ID`, `/api/documents/generate` |
 | Nice-to-have | Sign API | 🔴 | Not started; doc when integrating |
