@@ -72,6 +72,15 @@ jobs:
         run: npm run test:coverage -- --reporter=default
         continue-on-error: true
 
+      - name: Dependency vulnerability audit (advisory)
+        # Advisory for now (does not block merge) so the existing baseline of
+        # mostly dev/build-tooling advisories doesn't wedge CI. Surfaces new/prod
+        # vulnerabilities in logs. Ratchet plan: once the prod-facing advisories
+        # (react-router-dom, @clerk/shared→js-cookie, nodemailer) are resolved,
+        # tighten to `--omit=dev --audit-level=high` and drop continue-on-error.
+        run: npm audit --audit-level=high || true
+        continue-on-error: true
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         if: success()
