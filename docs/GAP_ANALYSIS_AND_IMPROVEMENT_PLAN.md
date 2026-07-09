@@ -85,13 +85,13 @@ There is **no** `functions/api/social/` directory. These endpoints exist only in
 
 ---
 
-### 2.3 Games / Wordle API Missing in Production (Medium Impact)
+### 2.3 Games / Wordle API — Implemented (Resolved)
 
-**Location:** `src/hooks/useWordleGame.ts`
+**Location:** `hooks/useWordleGame.ts`, `functions/api/games/wordle/daily.ts`, `functions/api/games/wordle/guess.ts`
 
-**Gap:** Hook calls `/api/games/wordle/daily` and `/api/games/wordle/guess`. There is no `functions/api/games/` in Cloudflare. Medical Wordle is marked dormant in `routes/index.ts` and may not be mounted in App.
+**Status:** Edge handlers are deployed under `functions/api/games/wordle/`. Medical Wordle is reachable at `/modes/medical-wordle` via `config/training-modes.ts`.
 
-**Recommendation:** If Wordle is part of the product, add `functions/api/games/wordle/` (daily, guess) and wire auth. If not, remove or feature-flag the Wordle entry point so users don’t hit 404s.
+**Remaining risk:** Empty `Buzzword` catalog returns a validation error; seed buzzwords before QA.
 
 ---
 
@@ -234,7 +234,7 @@ No major structural gap; continue applying existing patterns to new code.
 
 4. **404 handling:** Add explicit 404 route/view for unknown paths.
 5. **Infographic:** Either ship real infographic generation or clearly mark placeholder in UI and roadmap.
-6. **Games/Wordle:** Either add `functions/api/games/wordle/*` or remove/feature-flag Wordle so no 404s.
+6. **Games/Wordle:** Verify buzzword seed data and authenticated play on `/modes/medical-wordle` (API exists at `/api/games/wordle/*`).
 
 ### P2 – Polish & Consistency
 
@@ -260,7 +260,7 @@ No major structural gap; continue applying existing patterns to new code.
 | Social | No `functions/api/social/`; StudyGroupDashboard 404s | P0 | Implement API or hide UI |
 | Routing | No 404 for unknown paths | P1 | Add 404 route/view |
 | Smart Scribe | Infographic returns placeholder SVG | P1 | Real implementation or label placeholder |
-| Games | No CF `/api/games/wordle` | P1 | Add API or remove/flag Wordle |
+| Games | Wordle API live at `/api/games/wordle/*` | P2 | Seed buzzwords; verify hook reads unified envelope `data` |
 | Study session API | review/focused return 501 | P2 | Implement or document |
 | Avatar | UserAvatar type missing xp | P2 | Schema + type update |
 | Placeholders | Clinical Eye, ImagingViewer, emails, etc. | P2–P3 | Replace or document |
