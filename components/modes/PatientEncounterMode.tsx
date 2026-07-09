@@ -44,7 +44,6 @@ import {
   RapportMeter,
   ScoreReport,
   OSCELiveSession,
-  OSCEResultsView,
   OSCEHistoryPanel,
   EncounterTimer,
   VitalsStrip,
@@ -142,7 +141,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     currentQuestion, examAction, diagnosticOrder, userDiagnosis, treatmentPlan, newDifferential,
     physicalFindings, diagnosticResults, differentialDiagnoses,
     isLoading, isTyping, loadingStatusIndex, typingStatusIndex, languageMode, loadError,
-    diagnosisFeedback, treatmentFeedback, aar, isPatientInfoExpanded, preceptorFeedback,
+    diagnosisFeedback, treatmentFeedback, isPatientInfoExpanded, preceptorFeedback,
     streamedDebriefText, isStreamingDebrief, enhancedScoreReport, gradeResult, gradeResultLoading,
     showOrderPanel, showExamPanel, showRapportMeter, showLiveSession, showHistoryPanel, emrTab,
     enableCulturalCompetency, enableResourceLimited, aiDifficulty, presetFilters,
@@ -2201,21 +2200,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     );
   }
 
-  if (viewState === 'results' && currentCase && session && session.score) {
-    return (
-      <OSCEResultsView
-        score={session.score}
-        isCorrectDiagnosis={diagnosisFeedback?.isCorrect ?? false}
-        userDiagnosis={userDiagnosis}
-        diagnosisFeedback={diagnosisFeedback}
-        aar={aar}
-        correctDiagnosis={currentCase.correctDiagnosis}
-        idealWorkup={currentCase.idealWorkup}
-        onExit={onExit}
-        onNewCase={handleNewCase}
-      />
-    );
-  }
+  // NOTE: a second `viewState === 'results'` branch previously rendered the
+  // legacy <OSCEResultsView>, but it was unreachable — the EncounterResultsView
+  // branch above returns first for every results state. Removed as dead code.
+  // (OSCEResultsView.tsx remains a remove-candidate; see hidden-feature inventory.)
 
   return null;
 };
