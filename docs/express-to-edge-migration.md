@@ -83,7 +83,7 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 | `POST /api/analytics/reactions` | `functions/api/analytics/reactions.ts` | ✅ PORTED |
 | `POST /api/analytics/weakness` | `functions/api/analytics/weakness.ts` | ✅ PORTED |
 | `POST /api/analytics/confusion` | `functions/api/analytics/confusion.ts` | ✅ PORTED |
-| `POST /api/analytics/soap-note` | `functions/api/analytics/soap-note.ts` | ✅ PORTED |
+| `POST /api/analytics/soap-note` | `functions/api/analytics/soap-note.ts` | ✅ PORTED (Zod bounds: caseId ≤200, finite score 0–100k, `.strict()` body) |
 | `GET /api/analytics/performance-deltas` | `functions/api/analytics/performance-deltas.ts` | ✅ PORTED |
 | `GET /api/achievements` | — | ❌ MISSING |
 | `GET /api/performance` | — | ❌ MISSING |
