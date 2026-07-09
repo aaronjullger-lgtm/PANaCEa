@@ -1,5 +1,22 @@
 # FSRS v6 Schema Implementation - Complete Summary
 
+> ⚠️ **HISTORICAL / SUPERSEDED (schema-migration note, Jan 2026).** This file
+> documents a past schema-migration effort. Several references below are **stale
+> for the current PANaCEa design** and must NOT be used as build guidance:
+> - PANaCEa uses **behaviorally-derived implicit ratings** — there are **no
+>   student-facing Again/Hard/Good/Easy buttons**. Ignore any "add a rating
+>   parameter to review functions" / "update UI components" steps here.
+> - The optimizer is the **Python** service in `gcp-fsrs-optimizer/` (via
+>   `lib/services/fsrsOptimizerService.ts`), **not** a Rust
+>   `@open-spaced-repetition/binding`. The `Float[]` weights feed that.
+> - The engine is the internal `lib/fsrs.ts` (not stock `ts-fsrs`); ReviewLog is
+>   already written in production via `lib/services/reviewLogService.ts`.
+> - The "Next Steps" migration checklist below is historical; the Card/ReviewLog
+>   models and session quarantine are already live.
+>
+> For current, correct guidance see **`docs/FSRS_V6_QUICK_REFERENCE.md`** and
+> **`docs/fsrs-current-state-and-hardening-report.md`**.
+
 ## Executive Summary
 
 All critical FSRS v6 schema improvements have been successfully implemented in `prisma/schema.prisma`. The schema now fully supports:
