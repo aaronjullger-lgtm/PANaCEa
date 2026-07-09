@@ -36,7 +36,7 @@ export function SetupRequiredPage({ message = DEFAULT_MESSAGE }: SetupRequiredPa
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
-      <div className="max-w-lg w-full bg-[var(--color-bg-secondary)] rounded-2xl shadow-xl border border-[var(--color-border)] overflow-hidden">
+      <div className="max-w-lg w-full bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] rounded-2xl shadow-xl border border-[var(--color-border)] overflow-hidden">
         <div className="p-8">
           <div className="inline-flex p-4 bg-data-provisional/20 rounded-full mb-6">
             <Settings className="w-12 h-12 text-data-provisional" />
@@ -44,7 +44,7 @@ export function SetupRequiredPage({ message = DEFAULT_MESSAGE }: SetupRequiredPa
           <h1 className="text-xl font-bold text-[var(--color-text-primary)] mb-3">
             Setup Required
           </h1>
-          <p className="text-[var(--color-text-secondary)] whitespace-pre-line text-sm mb-6">
+          <p className="text-[var(--color-text-primary)] whitespace-pre-line text-sm mb-6">
             {message}
           </p>
           <div className="flex flex-col gap-3">
@@ -52,14 +52,14 @@ export function SetupRequiredPage({ message = DEFAULT_MESSAGE }: SetupRequiredPa
               href="https://dashboard.clerk.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] rounded-lg font-medium transition-opacity w-fit"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent-button)] hover:opacity-90 text-[var(--color-btn-primary-text)] rounded-lg font-medium transition-opacity w-fit"
             >
               <ExternalLink className="w-4 h-4" />
               Open Clerk Dashboard
             </a>
             <button
               onClick={copyCommand}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--color-border)] hover:bg-[var(--color-bg-primary)] rounded-lg font-mono text-sm w-fit transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-primary)] rounded-lg font-mono text-sm w-fit transition-colors"
             >
               {copied ? <Check className="w-4 h-4 text-data-pass" /> : <Copy className="w-4 h-4" />}
               {copied ? 'Copied!' : 'Copy: cp .env.example .env'}

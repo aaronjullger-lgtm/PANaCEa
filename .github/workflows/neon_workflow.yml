@@ -49,8 +49,21 @@ jobs:
       - name: Get branch expiration date as an env variable (2 weeks from now)
         id: get_expiration_date
         run: echo "EXPIRES_AT=$(date -u --date '+14 days' +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
+      - name: Check Neon configuration
+        id: neon_config
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: |
+          if [[ -z "$NEON_API_KEY" || -z "$NEON_PROJECT_ID" ]]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping Neon preview branch because NEON_API_KEY or NEON_PROJECT_ID is not configured."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Create Neon Branch
         id: create_neon_branch
+        if: steps.neon_config.outputs.configured == 'true'
         uses: neondatabase/create-branch-action@v6
         with:
           project_id: ${{ vars.NEON_PROJECT_ID }}
@@ -101,7 +114,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Check Neon configuration
+        id: neon_config
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: |
+          if [[ -z "$NEON_API_KEY" || -z "$NEON_PROJECT_ID" ]]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping Neon preview branch deletion because NEON_API_KEY or NEON_PROJECT_ID is not configured."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Delete Neon Branch
+        if: steps.neon_config.outputs.configured == 'true'
         uses: neondatabase/delete-branch-action@v3
         with:
           project_id: ${{ vars.NEON_PROJECT_ID }}

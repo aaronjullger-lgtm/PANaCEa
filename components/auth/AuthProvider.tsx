@@ -136,8 +136,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         variables: {
           colorBackground: 'var(--color-bg-primary)',
           colorForeground: 'var(--color-text-primary)',
-          colorPrimary: 'var(--color-accent)',
-          colorPrimaryForeground: 'var(--color-text-inverse)',
+          colorPrimary: 'var(--color-accent-button)',
+          colorPrimaryForeground: 'var(--color-btn-primary-text)',
           colorMuted: 'var(--color-bg-secondary)',
           colorMutedForeground: 'var(--color-text-muted)',
           colorInput: 'var(--color-bg-secondary)',
@@ -156,7 +156,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           headerTitle: 'text-[var(--color-text-primary)] font-semibold',
           headerSubtitle: 'text-[var(--color-text-muted)]',
           formButtonPrimary:
-            'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)]',
+            'bg-[var(--color-accent-button)] hover:bg-[var(--color-accent-button)]/90 text-[var(--color-btn-primary-text)]',
           formFieldInput:
             'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]',
           formFieldLabel: 'text-[var(--color-text-primary)]',

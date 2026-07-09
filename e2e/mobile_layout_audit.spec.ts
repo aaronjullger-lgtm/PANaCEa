@@ -27,6 +27,24 @@ async function waitForAppReady(page: Page) {
     .waitFor({ state: 'visible', timeout: 10000 });
 }
 
+async function isAuthenticated(page: Page): Promise<boolean> {
+  try {
+    return await page
+      .locator(
+        [
+          '[data-testid="command-center-workspace"]',
+          'header:has-text("Search conditions")',
+          'nav a[href="/study"]',
+          'button:has-text(/start|begin|build session/i)',
+        ].join(', ')
+      )
+      .first()
+      .isVisible({ timeout: 2000 });
+  } catch {
+    return false;
+  }
+}
+
 /** Detect horizontal overflow on body or main content areas */
 async function checkHorizontalScroll(page: Page): Promise<LayoutViolation[]> {
   return page.evaluate(() => {
@@ -111,6 +129,12 @@ test.describe('Mobile Layout Audit (320px)', () => {
     await page.goto(BASE_URL);
     await waitForAppReady(page);
     await page.waitForTimeout(1500);
+
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      test.skip(true, 'Dashboard mobile layout audit requires an authenticated app shell.');
+      return;
+    }
 
     const violations: LayoutViolation[] = [];
 

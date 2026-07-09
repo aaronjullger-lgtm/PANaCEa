@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 
 type WordleStatus = 'playing' | 'won' | 'lost';
@@ -16,6 +15,8 @@ type NormalizedWordleDate = {
   isoDate: string;
   dateOnly: Date;
 };
+
+type WordlePrismaClient = any;
 
 // Type with included Buzzword relation (explanation nullable per Prisma schema)
 type DailyWordleWithWord = {
@@ -62,6 +63,7 @@ type UserWordleStateRecord = {
 };
 
 const getOrCreateDailyWord = async (
+  prisma: WordlePrismaClient,
   normalized: NormalizedWordleDate
 ): Promise<DailyWordleWithWord> => {
   const existing = await prisma.dailyWordle.findUnique({
@@ -106,6 +108,7 @@ const getOrCreateDailyWord = async (
 };
 
 const getOrCreateUserState = async (
+  prisma: WordlePrismaClient,
   userId: string,
   normalized: NormalizedWordleDate
 ): Promise<UserWordleStateRecord> => {
@@ -177,12 +180,13 @@ const buildPayload = (
 };
 
 export async function getDailyWordForUser(
+  prisma: WordlePrismaClient,
   userId: string,
   date?: string | Date
 ): Promise<WordleDailyPayload> {
   const normalized = normalizeWordleDate(date);
-  const daily = await getOrCreateDailyWord(normalized);
-  const state = await getOrCreateUserState(userId, normalized);
+  const daily = await getOrCreateDailyWord(prisma, normalized);
+  const state = await getOrCreateUserState(prisma, userId, normalized);
   return buildPayload(daily, state);
 }
 
@@ -204,15 +208,16 @@ const normalizeGuess = (guess: string, targetLength: number): string => {
 };
 
 export async function submitWordleGuess(
+  prisma: WordlePrismaClient,
   userId: string,
   guess: string,
   date?: string | Date
 ): Promise<WordleDailyPayload> {
   const normalized = normalizeWordleDate(date);
-  const daily = await getOrCreateDailyWord(normalized);
+  const daily = await getOrCreateDailyWord(prisma, normalized);
   const target = daily.Buzzword.buzzword.toUpperCase();
 
-  const state = await getOrCreateUserState(userId, normalized);
+  const state = await getOrCreateUserState(prisma, userId, normalized);
 
   if (state.status !== 'playing') {
     throw new WordleServiceError("You have already completed today's Wordle");

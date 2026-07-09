@@ -7,6 +7,28 @@ import { defineConfig, devices } from '@playwright/test';
  * Includes authentication setup for Clerk
  */
 
+const hasClerkE2ECredentials = Boolean(
+  process.env.E2E_CLERK_TEST_EMAIL?.trim() &&
+    (process.env.CLERK_SECRET_KEY?.trim() || process.env.E2E_CLERK_TEST_PASSWORD?.trim())
+);
+
+const authenticatedProjects = hasClerkE2ECredentials
+  ? [
+      {
+        name: 'setup',
+        testMatch: /auth\.setup\.ts/,
+      },
+      {
+        name: 'chromium',
+        use: {
+          ...devices['Desktop Chrome'],
+          storageState: 'playwright/.auth/user.json',
+        },
+        dependencies: ['setup'],
+      },
+    ]
+  : [];
+
 export default defineConfig({
   testDir: './e2e',
 
@@ -48,21 +70,7 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    // Setup project for authentication
-    {
-      name: 'setup',
-      testMatch: /auth\.setup\.ts/,
-    },
-
-    {
-      name: 'chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-        // Use saved authentication state
-        storageState: 'playwright/.auth/user.json',
-      },
-      dependencies: ['setup'],
-    },
+    ...authenticatedProjects,
 
     // Unauthenticated tests (for audit and basic checks)
     {
@@ -102,17 +110,17 @@ export default defineConfig({
       },
     },
 
-    // Cross-browser smoke (Firefox, WebKit) - api-health + a11y for Roo browser matrix
+    // Cross-browser smoke: browser-only checks. API health runs under the Wrangler config.
     {
       name: 'firefox-smoke',
-      testMatch: /(api-health|a11y-regression)\.spec\.ts/,
+      testMatch: /a11y-regression\.spec\.ts/,
       use: {
         ...devices['Desktop Firefox'],
       },
     },
     {
       name: 'webkit-smoke',
-      testMatch: /(api-health|a11y-regression)\.spec\.ts/,
+      testMatch: /a11y-regression\.spec\.ts/,
       use: {
         ...devices['Desktop Safari'],
       },

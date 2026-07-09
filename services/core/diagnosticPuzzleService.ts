@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 
 type DiagnosticPuzzleStatus = 'playing' | 'won' | 'lost';
@@ -16,6 +15,8 @@ type NormalizedPuzzleDate = {
   isoDate: string;
   dateOnly: Date;
 };
+
+type DiagnosticPuzzlePrismaClient = any;
 
 // Type with included Condition relation
 type DailyDiagnosticPuzzleWithPuzzle = {
@@ -74,6 +75,7 @@ type UserDiagnosticPuzzleStateRecord = {
 };
 
 const getOrCreateDailyPuzzle = async (
+  prisma: DiagnosticPuzzlePrismaClient,
   normalized: NormalizedPuzzleDate
 ): Promise<DailyDiagnosticPuzzleWithPuzzle> => {
   const existing = await prisma.dailyDiagnosticPuzzle.findUnique({
@@ -127,6 +129,7 @@ const getOrCreateDailyPuzzle = async (
 };
 
 const getOrCreateUserState = async (
+  prisma: DiagnosticPuzzlePrismaClient,
   userId: string,
   normalized: NormalizedPuzzleDate
 ): Promise<UserDiagnosticPuzzleStateRecord> => {
@@ -219,12 +222,13 @@ const buildPayload = (
 };
 
 export async function getDailyPuzzleForUser(
+  prisma: DiagnosticPuzzlePrismaClient,
   userId: string,
   date?: string | Date
 ): Promise<DiagnosticPuzzleDailyPayload> {
   const normalized = normalizePuzzleDate(date);
-  const daily = await getOrCreateDailyPuzzle(normalized);
-  const state = await getOrCreateUserState(userId, normalized);
+  const daily = await getOrCreateDailyPuzzle(prisma, normalized);
+  const state = await getOrCreateUserState(prisma, userId, normalized);
   return buildPayload(daily, state);
 }
 
@@ -276,13 +280,14 @@ const guessMatchesCondition = (guess: string, conditionName: string, aliases: st
 };
 
 export async function submitDiagnosticGuess(
+  prisma: DiagnosticPuzzlePrismaClient,
   userId: string,
   guess: string,
   date?: string | Date
 ): Promise<DiagnosticPuzzleDailyPayload> {
   const normalized = normalizePuzzleDate(date);
-  const daily = await getOrCreateDailyPuzzle(normalized);
-  const state = await getOrCreateUserState(userId, normalized);
+  const daily = await getOrCreateDailyPuzzle(prisma, normalized);
+  const state = await getOrCreateUserState(prisma, userId, normalized);
 
   if (state.status !== 'playing') {
     throw new DiagnosticPuzzleServiceError("You have already completed today's diagnostic puzzle");
@@ -316,7 +321,10 @@ export async function submitDiagnosticGuess(
 }
 
 // Stats & streak functions
-export async function getUserDiagnosticStats(userId: string) {
+export async function getUserDiagnosticStats(
+  prisma: DiagnosticPuzzlePrismaClient,
+  userId: string
+) {
   const states = await prisma.userDiagnosticPuzzleState.findMany({
     where: { userId },
     orderBy: { date: 'desc' },
