@@ -48,6 +48,8 @@ Docs: `docs/dependency-vulnerability-triage.md`, this report.
 - `POST /api/reviews/second-chance` — scopeFilter bounds + `.strict()` (top-level + nested).
 - Verified already-hardened (no change): `grand-rounds/submit`, `scribe/soap/extract`, `knowledge/upload` — consistent with `audit:zod` 0-fail.
 
+Full request/response contracts: **[docs/api/API_OVERVIEW.md](api/API_OVERVIEW.md)**.
+
 ## 10. Security improvements
 - Import-boundary test guarantees the legacy regex sanitizer (`lib/middleware/*`) and `express` can never reach production edge functions.
 - `SECURITY.md` (private disclosure via GitHub advisories; no fabricated contacts).

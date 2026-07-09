@@ -26,7 +26,7 @@ Welcome to the PANaCEa documentation! This index helps you quickly find the info
 
 ### For API Surface
 
-1. **[API Overview](api/API_OVERVIEW.md)** - Current request/response contracts for updated endpoints
+1. **[API Overview](api/API_OVERVIEW.md)** - Current request/response contracts for updated endpoints (admin, OSCE, analytics, push, second-chance review, SRS due)
 
 ---
 
@@ -45,7 +45,7 @@ Learn about PANaCEa's system design:
 
 Backend endpoint contracts and API behavior docs:
 
-- **[API Overview](api/API_OVERVIEW.md)** - Updated admin and OSCE endpoint contracts (`/api/admin/check-access`, `/api/admin/stats`, `/api/osce/complete`, `/api/osce/stats`)
+- **[API Overview](api/API_OVERVIEW.md)** - Current request/response contracts for updated endpoints (admin, OSCE, analytics, push, second-chance review, SRS due)
 
 ---
 
@@ -195,5 +195,5 @@ When adding new documentation:
 
 ---
 
-**Last Updated:** December 25, 2025  
+**Last Updated:** July 9, 2026  
 **Total Documents:** ~80 organized files
