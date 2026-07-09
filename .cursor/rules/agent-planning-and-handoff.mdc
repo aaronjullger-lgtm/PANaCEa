@@ -1,0 +1,37 @@
+---
+description: How to plan multi-step work and hand off cleanly. Load for non-trivial/multi-step tasks, or when resuming/continuing another agent's work.
+alwaysApply: false
+---
+
+# Agent planning & handoff
+
+Scope: any task with 3+ steps, ambiguity, or cross-file impact. Complements `agent-operating-procedure.mdc` (general SOP) and the `agent-task-planning` / `long-running-handoff` skills.
+
+## Plan before editing
+
+- Restate: the goal, the affected subsystem/files, the approach, and the exact verification you will run.
+- Decompose into small, individually-verifiable steps. Prefer isolating research/exploration from edits (read first, then change).
+- Confirm referenced modules exist before planning around them (see `anti-hallucination-imports.mdc`).
+- For large/risky work, use a TODO list and keep exactly one step in progress.
+
+## Non-negotiables
+
+- Do not start broad edits before the plan is clear enough to verify.
+- Keep changes focused to the plan; note scope creep instead of silently expanding.
+- Update the plan as you learn; don't cling to a wrong approach.
+
+## Handoff (end of run or before compaction)
+
+- Record: what changed, commands run + results, current state, next best step, and open blockers/risks.
+- Put it in the right durable file (see `repo-memory-and-context.mdc`), not a throwaway note.
+- Enough that a fresh agent could resume from the note alone.
+
+## Verification
+
+- Every step maps to a check from the verification ladder (see `testing-and-verification.mdc`).
+
+## Failure modes / what not to do
+
+- Jumping to a fix without runtime evidence for non-trivial bugs (use the debug workflow).
+- Leaving a half-done task with no handoff note.
+- Planning around a file/export that doesn't exist.

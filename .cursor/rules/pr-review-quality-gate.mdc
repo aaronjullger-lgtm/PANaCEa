@@ -1,0 +1,34 @@
+---
+description: Quality gate for reviewing or preparing a PR — correctness, scope, tests, security, and evidence. Load when reviewing a PR/diff or before opening one.
+alwaysApply: false
+---
+
+# PR review quality gate
+
+Scope: reviewing a diff or preparing your own PR. Pair with skills `pr-review` and `auditing-security`.
+
+## Gate checklist
+
+- **Scope:** diff matches the stated intent; `git diff --stat` shows only intended files; no unrelated churn or drive-by refactors.
+- **Correctness:** logic is sound; edge cases and error/empty/loading states handled; no obvious regressions.
+- **No hallucinations:** imports/paths/exports resolve (see `anti-hallucination-imports.mdc`).
+- **Tests:** new/changed behavior is covered; no tests deleted/skipped/weakened to pass (see `testing-and-verification.mdc`).
+- **Security:** no secrets in the diff; auth/RLS not weakened; inputs validated (see `security-review.mdc`).
+- **Architecture:** Edge rules respected (`context.env`, `safePrismaDisconnect`, no client Prisma) — see `architecture-boundaries.mdc`.
+- **UI:** design gate + browser evidence (see `visual-design-quality-gate.mdc`, `browser-verification.mdc`).
+- **Docs/memory:** durable context updated if behavior/blockers changed (see `repo-memory-and-context.mdc`).
+
+## Verification commands
+
+- Run the ladder in `testing-and-verification.mdc` for the change type.
+- `git diff <base>...HEAD | rg -in "sk_live|pk_live|whsec_|service_role|postgres://|prisma://|api[_-]?key"` → nothing sensitive.
+
+## What to report
+
+- Findings by severity with file/line, mapped to the checklist; pass/fail per gate; residual risks; whether human review is needed.
+
+## Failure modes / what not to do
+
+- Approving without running/inspecting checks ("LGTM" with no evidence).
+- Requesting changes that weaken a control to make CI green.
+- Editing code during a review-only task unless explicitly asked.

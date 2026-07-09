@@ -1,0 +1,50 @@
+{
+  "//": "SAFE EXAMPLE ONLY — do not put real secrets here. Copy the servers you want into `.cursor/mcp.json` (gitignored) or configure them in the Cursor dashboard for Cloud Agents. See docs/cursor-mcp-cloud-setup.md. Env values shown as ${VARS} must be provided via your environment / Cursor secrets, never committed.",
+  "mcpServers": {
+    "github": {
+      "//": "GitHub MCP (remote). Recommended for issue/PR/code context. Use a fine-grained PAT with least privilege (read-only where possible). Configure the token as a secret in the Cursor dashboard for Cloud Agents — do not inline it.",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${GITHUB_MCP_PAT}"
+      }
+    },
+    "supabase": {
+      "//": "Supabase MCP — DEV/READ-ONLY ONLY. Point at a dev/branch project, never production. Prefer --read-only and a --project-ref scoped to a non-prod project. Provide SUPABASE_ACCESS_TOKEN via env/dashboard secret.",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--read-only",
+        "--project-ref=${SUPABASE_DEV_PROJECT_REF}"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
+      }
+    },
+    "playwright": {
+      "//": "Playwright/browser MCP (local) — for in-browser verification, visual/responsive/a11y QA. Local-only; drives a browser on the machine running the agent. No secrets required.",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "figma": {
+      "//": "Figma MCP (optional) — only if doing design-to-code work. Requires a Figma access token; provide via env/dashboard secret. Remove if design work is not relevant.",
+      "command": "npx",
+      "args": ["-y", "figma-developer-mcp", "--stdio"],
+      "env": {
+        "FIGMA_API_KEY": "${FIGMA_API_KEY}"
+      }
+    },
+    "context7": {
+      "//": "Context/code-docs search MCP (optional) — up-to-date library/API docs for grounding. Uses an API key if you have one; otherwise omit the header. Cloud-safe (read-only docs).",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${CONTEXT7_API_KEY}"
+      }
+    },
+    "sequential-thinking": {
+      "//": "Structured planning/reasoning scratchpad (MCP reference server). No secrets, takes no external actions, cloud-safe. Optional aid for multi-step planning.",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    }
+  }
+}

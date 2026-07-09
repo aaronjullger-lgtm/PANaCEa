@@ -1,0 +1,41 @@
+---
+description: Standard operating procedure for AI agents working in this repo — plan, verify, and report safely.
+alwaysApply: true
+---
+
+# Agent operating procedure
+
+How to work in this repo reliably. Also see `docs/agent-safety-checklist.md`.
+
+## 1. Before editing
+
+- Read the files you will change and the relevant `.cursor/rules/*.mdc`, `AGENTS.md`, and `CLAUDE.md`.
+- Restate the plan for non-trivial work: affected subsystem, files, and the verification you'll run.
+- Confirm referenced modules actually exist (some are missing on `main`). Do not invent files, exports, or packages.
+
+## 2. While editing
+
+- Make focused changes; avoid broad rewrites unless asked. Keep the diff reviewable.
+- Follow the scoped rules (TypeScript, React, Supabase, accessibility, security, design system).
+- Do not modify shared UI primitives, auth/RLS, or FSRS rating logic without explicit approval.
+- Do not add production dependencies, run production migrations, deploy, or touch secrets without approval.
+
+## 3. Before claiming success
+
+Run the checks that match your change and paste real output:
+
+- `npm run typecheck` · `npm run lint` · `npm test` (or `npm run test:critical`) · `npm run build`.
+- UI changes: verify in a browser and capture screenshots — never claim visual QA without evidence.
+- Never delete/skip tests or weaken checks to get to green.
+
+## 4. Report
+
+- Summarize files changed, commands run (with pass/fail), and remaining risks.
+- Call out anything you couldn't verify, and any pre-existing failures you observed (e.g. the known `no-empty` lint errors, broken `dev:all`/`dev:wrangler`).
+
+## Non-negotiables
+
+- Never edit secrets or production credentials; never connect to production DBs/services.
+- Never weaken auth/RLS/security to pass.
+- Never claim success without running the relevant checks.
+- Prefer repo-level, reviewable configuration over hidden/manual steps; when a step must be manual (e.g. Cursor dashboard MCP/secrets), document the exact step.

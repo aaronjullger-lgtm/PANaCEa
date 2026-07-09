@@ -1,0 +1,34 @@
+---
+description: Prevent hallucinated imports, modules, exports, routes, and packages. Load when adding imports or referencing files/symbols.
+globs: "**/*.ts,**/*.tsx,**/*.mts,**/*.cts"
+alwaysApply: false
+---
+
+# Anti-hallucination: imports, files, routes
+
+Scope: any code that imports a module, references a file, uses an export, or adds a package. Focused companion to `project-context.mdc` / `architecture-boundaries.mdc`. Pair with skill `route-and-import-verification`.
+
+## Verify before you reference
+
+- **The file exists.** Search (Grep/Glob) before importing. Several referenced modules are **absent on `main`** — e.g. `routes/`, `lib/services/tokenMatchCache.ts`. Do not import missing modules or "restore" them by inventing content.
+- **The export exists.** Confirm the symbol is actually exported (named export) from the target; don't guess member names.
+- **The alias resolves.** `@/*` → repo root; `@src/*` per config. Check the resolved path is real.
+- **The package exists.** Only import packages present in `package.json` (see `dependency-and-package-safety.mdc`). Don't invent versions or packages.
+- **The route exists.** New routes must be wired into the React Router registry; confirm the route/component is registered, not assumed.
+
+## Non-negotiables
+
+- Don't import Prisma/`lib/prisma` into client code (Vite stubs it) — see `architecture-boundaries.mdc`.
+- Don't reference Next.js APIs or Node built-ins in Edge/client code.
+
+## Verification commands
+
+- `npm run typecheck` (catches missing modules/exports/types).
+- `npm run build` (catches unresolved imports in the bundle).
+- `rg "from ['\"]<module>['\"]"` to confirm real usage/paths.
+
+## Failure modes / what not to do
+
+- "It should exist" — assuming a helper/util/route is present without checking.
+- Copying an import path from a community snippet that doesn't match this repo.
+- Silently creating a stub for a missing module to make a build pass (flag it instead).

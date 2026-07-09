@@ -1,0 +1,43 @@
+---
+description: Security review standards — secrets, auth, input validation, and safe data handling. Load for auth/RLS/endpoint/secret work or when doing a security review.
+alwaysApply: false
+---
+
+# Security review
+
+Scope: authentication, authorization, secrets, API endpoints, and any handling of user or clinical data.
+
+## Secrets
+
+- Never commit secrets, tokens, API keys, or connection strings. The repo has a commit-time secret scanner — do not bypass it (no `pragma: allowlist secret` on real secrets).
+- Read secrets from env / `context.env.*`. Client-exposed values must use the `VITE_` prefix and must be non-sensitive (publishable keys only).
+- Never log secrets, full tokens, or raw PII. Redact in logs.
+
+## Auth & authorization
+
+- Protected Edge endpoints must authenticate (Clerk) and authorize (RBAC via `UserRole`) using the shared middleware (`functions/api/_shared/auth.ts`).
+- Do not weaken, disable, or bypass auth, RLS, or middleware to make code/tests pass.
+- Verify server-side that the caller owns the resource; never trust client-supplied user IDs.
+
+## Input handling
+
+- Validate and coerce all external input with Zod at the boundary.
+- Return structured `{ error: string }` JSON — never leak stack traces, SQL, or internal details to clients.
+- Watch for injection (SQL/prompt), SSRF (server-side fetch of user URLs), and unsafe HTML (`rehype-raw` output must be sanitized).
+
+## AI-specific
+
+- Do not emit medical diagnosis claims in AI tutor/OSCE/content output.
+- Keep API keys server-side; never proxy them to the browser.
+
+## Verification / what to report
+
+- Confirm no secret is present in the diff (`git diff` review).
+- List touched auth/RLS/endpoint surfaces and the authz checks that protect them.
+- Flag anything you could not verify and any residual risk. Prefer human review for auth/RLS/secret changes.
+
+## Common failure modes
+
+- Using `process.env` in Edge code (undefined at runtime) — use `context.env`.
+- Adding a new endpoint without the `authenticatedEndpoint` wrapper.
+- Broadening CORS or CSP (`public/_headers`) without justification.

@@ -1,0 +1,36 @@
+---
+description: Require real browser evidence for UI/route/behavior changes before claiming success.
+globs: "**/*.tsx,**/*.jsx,**/*.css,**/src/**"
+alwaysApply: false
+---
+
+# Browser verification gate
+
+Scope: any change to components, routes, styles, or client behavior. This is a thin gate; the how-to lives in the `verifying-in-browser`, `visual-qa-testing`, `responsive-testing`, and `dark-mode-testing` skills.
+
+## Non-negotiables
+
+- **Never claim a UI/route/behavior change works without running it in a browser and capturing a screenshot.** Reading the diff is not verification.
+- Exercise the real interaction (click/type/submit/navigate), not just page load.
+- Verify the affected screen in both light and dark mode when styling changed.
+
+## How (short)
+
+- Run `npm run dev` (Vite, port 3000). Note: `dev:all`/`dev:wrangler` are broken on `main` (see `docs/cursor-automation-audit.md`).
+- Authenticated views in local dev: use the dev-auth URL documented in `.cursorrules`. Never use production credentials.
+- Use the Playwright/browser MCP or built-in browser testing (see `docs/cursor-mcp-cloud-setup.md`).
+
+## Anti-hallucination checks
+
+- Confirm you loaded the route your change affects (right URL, right component).
+- Don't infer success from a passing build — build success ≠ correct UI.
+
+## Verification
+
+- Screenshot(s) of the working state (and before/after for visual changes).
+- No new console errors in the exercised flow.
+
+## Failure modes / what not to do
+
+- Screenshotting the wrong page or pre-change state.
+- Claiming success when a backend-dependent screen only rendered an empty/error state — verify client behavior and document the backend gap instead.

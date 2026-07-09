@@ -1,0 +1,46 @@
+---
+description: Core PANaCEa project context — stack, commands, and where things live. Load for any non-trivial task in this repo.
+alwaysApply: true
+---
+
+# Project context
+
+**PANaCEa / StudyPanacea** is an AI-powered PANCE/PANRE exam-prep platform for Physician Assistant students: implicit FSRS spaced repetition, clinical drills, OSCE simulations, and readiness analytics.
+
+## Stack (do not assume otherwise)
+
+- **Frontend:** React 19 SPA + **Vite 6** + React Router 7. This is **not** Next.js — there is no `app/` router, no server components, no `next` APIs.
+- **Styling/UI:** TailwindCSS 3.4, Radix UI primitives, Framer Motion / `motion`, Lucide, Recharts/Nivo.
+- **State/data:** Zustand 5, TanStack Query 5, Zod 4.
+- **Backend (prod):** Cloudflare Pages Functions (Edge) in `functions/api/`. The Express `server.ts` is legacy/local only.
+- **DB:** PostgreSQL (Supabase) via Prisma 7. Auth: Clerk. AI: Google Gemini.
+- **Package manager:** npm (Node >= 22).
+
+## Canonical commands (use these exact scripts)
+
+- Install: `npm install`
+- Frontend dev: `npm run dev` (port 3000)
+- Typecheck: `npm run typecheck` (use `npm run typecheck:ci` for the CI scope)
+- Lint: `npm run lint` (fix: `npm run lint:fix`)
+- Format check: `npm run format:check`
+- Unit tests: `npm test` (fast subset: `npm run test:critical`)
+- E2E: `npm run test:e2e` (Playwright)
+- Build: `npm run build`
+
+## Where things live
+
+- `components/` — React UI (canonical; use `@/components/...`).
+- `lib/` — server/shared logic (FSRS, services, db). `src/lib/` — frontend-only utilities.
+- `functions/api/` — production Edge endpoints.
+- `prisma/schema.prisma` — DB source of truth.
+- `hooks/`, `store/`, `types/`, `contexts/`.
+
+## Source-of-truth docs
+
+Read these before large changes: `AGENTS.md`, `CLAUDE.md`, the local dev runbook markdown at the repo root, `APP_FUNCTIONALITY_PLAN.md`, and the existing `.cursor/rules/*.mdc`.
+
+## Anti-hallucination checks
+
+- Confirm a symbol/file exists (search) before importing it — several referenced files are absent on `main` (e.g. `routes/`, `lib/services/tokenMatchCache.ts`). Do not invent modules.
+- The import alias is `@/*` → repo root. Verify the target path resolves.
+- Do not reference Next.js, Node built-ins in Edge functions, or packages not in `package.json`.

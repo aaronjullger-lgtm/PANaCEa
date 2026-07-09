@@ -1,0 +1,39 @@
+---
+description: Where durable project memory lives and how to update it safely. Load when persisting findings, updating docs/status, or handing off context.
+alwaysApply: false
+---
+
+# Repo memory & context
+
+Scope: writing durable context so future sessions/agents don't re-derive everything. Complements skills `saving-workspace-context`, `repo-memory-update`, `long-running-handoff`.
+
+## Where things belong (don't invent new scratch files)
+
+- **Durable cross-tool/agent guidance** → `AGENTS.md` (keep it short; agent memory backfires when bloated).
+- **Cloud runtime caveats** → `AGENTS.md` → `## Cursor Cloud specific instructions`.
+- **Tool-specific deep context** → `CLAUDE.md`.
+- **Recovery status / blockers / next step / verification history** → `APP_FUNCTIONALITY_PLAN.md`.
+- **Agent-config specifics** → `.cursor/` + the `docs/cursor-*.md` files.
+- **One-off session handoff** → a dated note under `docs/` only if nothing above fits.
+
+## Non-negotiables
+
+- Keep entries concise and high-signal: what changed, verified (command + result), current state, next step, risks.
+- Reference existing docs instead of duplicating standard commands.
+- **Never** write secrets, tokens, or connection strings (a commit-time secret scanner blocks them; do not bypass it).
+- Prefer updating an existing section over adding a new near-duplicate one.
+
+## Anti-hallucination checks
+
+- Don't record claims you didn't verify. If a check failed or was skipped, say so.
+- Distinguish "pre-existing" from "introduced by this change" (e.g., the known lint/typecheck failures).
+
+## Verification
+
+- Re-read your entry cold: could a new agent resume from it alone?
+- `git diff | rg -i "sk_live|pk_live|postgres://|prisma://|api[_-]?key"` → nothing sensitive.
+
+## Failure modes / what not to do
+
+- Bloating `AGENTS.md`/`CLAUDE.md` with everything from `.cursor/`.
+- Creating yet another status markdown when `APP_FUNCTIONALITY_PLAN.md` already tracks it.

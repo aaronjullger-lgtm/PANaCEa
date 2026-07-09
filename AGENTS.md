@@ -212,3 +212,15 @@ Skill library maintenance:
 - Update `docs/skills-overview.md` when skills are added, renamed, removed, or repurposed.
 - Update `docs/skills-usage.md` when routing rules change.
 - Run `.agents/skills/skill-routing-and-usage/scripts/audit-skills.sh /Users/aaronullger/GitHub/StudyPANaCEa` after skill edits.
+
+## Cursor agent operating system (quick reference)
+
+A curated Cursor agent setup lives in `.cursor/` (rules, skills, hooks, MCP templates) and `docs/cursor-*.md`. Full map: `docs/cursor-agent-operating-system.md`. High-value durable truths for any agent/tool:
+
+- **Stack truth:** React 19 + Vite 6 + React Router 7 (SPA, **not** Next.js); Cloudflare Pages Functions for the prod API (`functions/api/`, Edge — use `context.env`, not `process.env`); Prisma 7 + Supabase Postgres; Clerk auth; Tailwind/Radix/Framer Motion. Package manager: **npm**, Node 22.
+- **Verification truth:** don't claim success without running the ladder — `npm run typecheck` · `npm run lint` · `npm test` (or `test:critical`) · `npm run build` — and, for UI, browser evidence (screenshots). Never delete/skip/weaken tests to reach green.
+- **Known blockers (pre-existing on `main`):** `dev:all`/`dev:server` and `dev:wrangler` don't run (missing `routes/` and `lib/services/tokenMatchCache.ts`); `npm run lint` has 3 pre-existing `no-empty` errors; `npm run typecheck` has 2 pre-existing errors in `lib/study/renderStructuredRationale.ts`. Use `npm run dev` (port 3000) for the frontend.
+- **Cloud caveats:** secrets are injected as env vars (`DATABASE_URL` is `prisma://` Accelerate; `DIRECT_DATABASE_URL` is `postgres://`); DB scripts need `ssl: { rejectUnauthorized: false }`. Details: `docs/cursor-automation-audit.md`.
+- **No-secrets policy:** never commit secrets/tokens/connection strings; `.cursor/mcp.json` and `.env`/`.dev.vars` stay untracked; a commit-time secret scanner must not be bypassed.
+- **No-production-data policy:** never connect to prod DB/services; MCP servers default to read-only/dev; production migrations/deploys require human approval.
+- **Final report requirement:** end each run with files changed, commands run + pass/fail (pre-existing vs introduced), evidence, residual risks, and manual dashboard steps (see the `cloud-agent-final-report` skill).

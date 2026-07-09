@@ -1,0 +1,34 @@
+---
+description: Pass/fail quality gate for UI work — enforce the PANaCEa design system and avoid generic "AI slop" visuals.
+globs: "**/*.tsx,**/*.jsx,**/*.css"
+alwaysApply: false
+---
+
+# Visual design quality gate
+
+Scope: any UI change. The design spec is authoritative in `ui-design-system.mdc` — this rule is the pass/fail gate, not a restatement. Pair with skills `design-system-enforcement`, `ui-polish-pass`, `no-ai-slop-visual-audit`.
+
+## Must pass before claiming UI is done
+
+- **Tokens only:** no raw hex, no `bg-black`/`text-black`; use Stormy Slate CSS vars. Data-viz colors muted slate, semantic colors only for status.
+- **Primitives reused:** `GlassCard`, `Button`, `EmptyState`, `SkeletonLoader`, etc. — not reinvented. No edits to shared primitive base styles without approval.
+- **Type/spacing/elevation:** follow the scale; `tabular-nums` on numeric columns; `rounded-xl` cards; consistent padding/gaps.
+- **One primary CTA per screen.** Lucide icons only.
+- **Light + dark** both correct; contrast meets AA (gold text uses `--color-accent-button`).
+- **Motion** gated by `useReducedMotion()`.
+
+## No AI slop (product intent — see AGENTS.md)
+
+Reject UI that feels like a generic AI SaaS/template: huge generic gradients, blob backgrounds, stock-photo/robot mascots, random emoji icons, meaningless floating shapes, excessive neon, low-contrast text. PANaCEa should read as a clinical diagnostic workstation.
+
+## Verification
+
+- Browser screenshots (light + dark) per `browser-verification.mdc`.
+- `rg -n "#[0-9a-fA-F]{3,6}"` on changed files → none outside `lib/tokens/`.
+- `npm run lint` (design-token lint runs here) and `npm run typecheck`.
+
+## Failure modes / what not to do
+
+- Adding new UI/animation/3D libraries without approval.
+- Global `transition-*` on `a, button, [role="button"]` (breaks Framer Motion site-wide).
+- Removing `LandingPage.tsx` inline styles (Tailwind-purge safety net).
