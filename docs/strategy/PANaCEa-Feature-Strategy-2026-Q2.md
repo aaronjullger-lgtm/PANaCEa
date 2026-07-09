@@ -276,7 +276,7 @@ A full OSCE simulation system exists with 15 endpoints, a state machine, orderab
 
 **Why it is valuable:** Consistent study habits are the strongest predictor of PANCE success. The push infrastructure and circadian data already exist. Personalized, data-driven reminders are far more effective than generic "time to study" notifications.
 
-**Builds on:** `/api/push/subscribe` (push subscription endpoint), `push-reminders.ts` cron, aggregate session-timing signals, `UserProgress.nextReviewAt` (due dates), `daily-prescription.ts` (personalized study plans), PWA service worker (already registered via `vite-plugin-pwa`). Reminder copy must avoid behavioral surveillance and should translate timing data into calmer plan adaptation.
+**Builds on:** [`/api/push/subscribe`](api/API_OVERVIEW.md#post-apipushsubscribe) (push subscription endpoint), `push-reminders.ts` cron, aggregate session-timing signals, `UserProgress.nextReviewAt` (due dates), `daily-prescription.ts` (personalized study plans), PWA service worker (already registered via `vite-plugin-pwa`). Reminder copy must avoid behavioral surveillance and should translate timing data into calmer plan adaptation.
 
 **SDK needed:** Web Push API (standard, already implied by push infrastructure). May want `web-push` npm package for VAPID key management.
 
