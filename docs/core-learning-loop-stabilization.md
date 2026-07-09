@@ -13,9 +13,11 @@
 **Audit claim:** 500 error breaks the unified dashboard.
 **Current code (`functions/api/srs/due.ts`):** reads the **canonical** stores (`Card` + `UserTopicProgress` + `UserProgress`), filters to `lifecycleStatus=ACTIVE`/`qaStatus=APPROVED` cards, dedups overlapping condition/task rows (`suppressDuplicateDueRows`), sorts by due-date then priority, and — critically — its `catch` returns an **empty, resilient 200 payload** (`{ items: [], totalDue: 0, error: '…' }`), **never a 500**.
 
-**Verification:** `functions/api/srs/{due,submit,submit-compat}.test.ts` → **23 tests pass**.
+**Verification:** `functions/api/srs/{due,submit,submit-compat}.test.ts` → **26 tests pass** (includes dashboard response-contract tests).
 
 **Verdict:** ✅ **Code-resolved.** The 500 root cause (previously an unguarded Prisma/query failure) is gone. Issue #227 can be closed by the owner after they confirm in their environment.
+
+**Contract reference:** [`docs/api/API_OVERVIEW.md`](api/API_OVERVIEW.md#get-apisrsdue) (query params, response shape, degraded empty payload).
 
 ### Flow (current)
 ```
