@@ -739,6 +739,8 @@ export class MedicalComplianceService {
       .find((req) => req.id === requirementId);
 
     if (requirement) {
+      // Stub: persisting a review task (dueDate/reviewer) is a documented
+      // follow-up. Left as a no-op to avoid faking durable scheduling behavior.
     }
   }
 

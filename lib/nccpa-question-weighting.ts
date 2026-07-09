@@ -380,6 +380,10 @@ export function exampleUsage() {
   const distribution = calculateSessionDistribution(sessionSize);
 
   for (const [system, count] of distribution) {
+    // Example only: each [system, count] pair describes how many questions the
+    // weighted distribution allocates to a blueprint system. Inspect in a REPL.
+    void system;
+    void count;
   }
 
   const selected = selectWeightedSystems(5);
@@ -391,5 +395,6 @@ export function exampleUsage() {
   ]);
   const validation = validateSessionDistribution(testCounts, 40);
   if (!validation.valid) {
+    // Example only: a real caller would surface the validation failure here.
   }
 }
