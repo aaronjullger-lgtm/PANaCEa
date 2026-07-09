@@ -480,6 +480,13 @@ test.describe('Phase 2C: Toolkit Hub (Calculators)', () => {
     await page.goto(`${BASE_URL}/study/toolkit`);
     await waitForAppReady(page);
 
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      logFinding('TOOLKIT', '/study/toolkit (mobile)', 'WARN', 'Authentication required');
+      test.skip();
+      return;
+    }
+
     const hasHScroll = await hasHorizontalScrollbar(page);
 
     if (hasHScroll) {
