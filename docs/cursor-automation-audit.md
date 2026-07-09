@@ -58,5 +58,17 @@
 
 - **`npm run dev:all` / `dev:server` are broken on `main`**: `server.ts` imports `./routes`, which does not exist (moved to `_trash/`). Use `npm run dev` for the frontend.
 - **`npm run dev:wrangler` is broken on `main`**: `functions/api/_shared/semantic-cache.ts` imports `@/lib/services/tokenMatchCache`, which does not exist, so the Functions bundle fails.
-- **`npm run lint` currently exits non-zero** from 3 pre-existing `no-empty` errors (plus warnings under the 2000-warning gate). This is a pre-existing condition, not caused by this setup.
+- **`npm run lint` currently exits non-zero** from 3 pre-existing `no-empty` errors (plus warnings under the 2000-warning gate). Pre-existing, not caused by this setup.
+- **`npm run typecheck` currently exits non-zero** from 2 pre-existing errors in `lib/study/renderStructuredRationale.ts` (a tracked app file). Pre-existing, not caused by this setup (this change adds only docs/config/JS hooks, which are outside the TS `include`).
+
+### Validation results for this change
+
+| Command | Result |
+|---------|--------|
+| `npm install` | ✅ pass |
+| `npm run typecheck` | ❌ 2 pre-existing errors (unrelated to this change) |
+| `npm run lint` | ❌ 3 pre-existing `no-empty` errors (unrelated) |
+| `npm test` | ✅ 527 files, 9849 passed (1 skipped) |
+| `npm run build` | ✅ pass |
+| Hook self-tests (`guard-shell.mjs`, `format-edited-file.mjs`) | ✅ deny/ask/allow + format-check behave correctly |
 - Secrets are provided via environment variables / Cursor dashboard, never committed. See `docs/cursor-mcp-cloud-setup.md`.
