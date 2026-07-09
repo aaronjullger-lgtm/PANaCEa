@@ -6,7 +6,7 @@
 import { unzipSync } from 'fflate';
 import { z } from 'zod';
 import { assertAdobeHostAllowed } from '../../_shared/adobeAllowlist';
-import { authenticatedEndpoint } from '../../_shared/middleware';
+import { cmsEndpoint } from '../../_shared/middleware';
 import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import {
   createPdfAsset,
@@ -40,7 +40,7 @@ interface Env {
   SUPABASE_SERVICE_ROLE_KEY?: string;
 }
 
-export const onRequestPost = authenticatedEndpoint(ExtractStartBodySchema, async (context) => {
+export const onRequestPost = cmsEndpoint(ExtractStartBodySchema, async (context) => {
   const { env, auth, validated } = context as {
     env: Env;
     auth: { userId: string };
@@ -111,7 +111,7 @@ const ExtractStatusQuerySchema = z.object({
 });
 
 /** GET ?jobId= & resourceId= – poll until done, then ingest. */
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = cmsEndpoint(
   ExtractStatusQuerySchema,
   async (context) => {
     const { env, auth, validated } = context as {

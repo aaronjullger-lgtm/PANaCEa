@@ -10,7 +10,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint } from '../../_shared/middleware';
+import { cmsEndpoint } from '../../_shared/middleware';
 import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
@@ -31,7 +31,7 @@ interface Env {
   SUPABASE_SERVICE_ROLE_KEY?: string;
 }
 
-export const onRequestPost = authenticatedEndpoint(IngestBodySchema, async (context) => {
+export const onRequestPost = cmsEndpoint(IngestBodySchema, async (context) => {
   const { env, auth, validated } = context as {
     env: Env;
     auth: { userId: string };
