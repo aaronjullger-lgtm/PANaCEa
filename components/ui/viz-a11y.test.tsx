@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { Sparkline, SparklineBar } from './Sparkline';
+import { Sparkline, SparklineBar, TrendIndicator } from './Sparkline';
 import { AnimatedCounter } from './AnimatedCounter';
 import { EpistemicGauge } from './EpistemicGauge';
 
@@ -46,6 +46,26 @@ describe('AnimatedCounter a11y', () => {
     expect(span?.getAttribute('aria-label')).toBe('+42%');
     // Inner visual span is hidden from assistive tech
     expect(container.querySelector('span[aria-hidden="true"]')).toBeTruthy();
+  });
+});
+
+describe('TrendIndicator a11y', () => {
+  it('announces trend direction via screen-reader-only text and hides the glyph', () => {
+    const { container } = render(<TrendIndicator current={80} previous={70} />);
+    // Decorative arrow is hidden from AT
+    expect(container.querySelector('span[aria-hidden="true"]')).toBeTruthy();
+    // Direction word is available to AT
+    expect(container.querySelector('span.sr-only')?.textContent).toContain('Trending up');
+  });
+
+  it('announces a declining trend', () => {
+    const { container } = render(<TrendIndicator current={60} previous={80} />);
+    expect(container.querySelector('span.sr-only')?.textContent).toContain('Trending down');
+  });
+
+  it('announces a stable trend', () => {
+    const { container } = render(<TrendIndicator current={70} previous={70} />);
+    expect(container.querySelector('span.sr-only')?.textContent).toContain('Trend stable');
   });
 });
 

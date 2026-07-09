@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { VisuallyHidden } from '@/components/a11y/VisuallyHidden';
 
 export interface SparklineProps {
   /** Array of numeric values to plot */
@@ -297,10 +298,13 @@ export function TrendIndicator({
       ? 'text-data-pass'
       : 'text-data-fail';
   const arrow = isNeutral ? '→' : isPositive ? '↑' : '↓';
+  const trendWord = isNeutral ? 'Trend stable' : isPositive ? 'Trending up' : 'Trending down';
 
   return (
     <span className={`inline-flex items-center gap-1 text-sm font-medium ${color} ${className}`}>
-      <span>{arrow}</span>
+      {/* Decorative glyph; the direction is announced via VisuallyHidden below. */}
+      <span aria-hidden="true">{arrow}</span>
+      <VisuallyHidden>{trendWord}. </VisuallyHidden>
       <span>{formatValue(current)}</span>
       {showPercentage && !isNeutral && (
         <span className="text-xs">
