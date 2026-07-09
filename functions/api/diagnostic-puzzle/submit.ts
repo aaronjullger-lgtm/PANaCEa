@@ -35,7 +35,7 @@ export const onRequestPost = authenticatedEndpoint(
       }
 
       const { guess, date } = validated.body;
-      const payload = await submitDiagnosticGuess(user.id, guess, date);
+      const payload = await submitDiagnosticGuess(prisma, user.id, guess, date);
 
       log.info('Submitted diagnostic guess', {
         puzzleId: payload.puzzle.id,

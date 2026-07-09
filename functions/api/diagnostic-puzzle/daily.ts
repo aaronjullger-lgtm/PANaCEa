@@ -35,7 +35,7 @@ export const onRequestGet = authenticatedEndpoint(
       }
 
       const date = validated.query.date;
-      const payload = await getDailyPuzzleForUser(user.id, date);
+      const payload = await getDailyPuzzleForUser(prisma, user.id, date);
 
       log.info('Fetched daily diagnostic puzzle', {
         puzzleId: payload.puzzle.id,

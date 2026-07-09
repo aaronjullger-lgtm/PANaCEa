@@ -74,7 +74,7 @@ describe('DiagnosticPuzzleService', () => {
       (prisma.diagnosticPuzzle.count as any).mockResolvedValue(10);
       (prisma.diagnosticPuzzle.findMany as any).mockResolvedValue([mockDaily.DiagnosticPuzzle]);
 
-      const result = await getDailyPuzzleForUser(mockUserId, mockDate);
+      const result = await getDailyPuzzleForUser(prisma, mockUserId, mockDate);
 
       expect(result).toEqual({
         id: 'daily-id',
@@ -139,7 +139,7 @@ describe('DiagnosticPuzzleService', () => {
         updatedAt: new Date(),
       });
 
-      await getDailyPuzzleForUser(mockUserId, mockDate);
+      await getDailyPuzzleForUser(prisma, mockUserId, mockDate);
 
       expect(prisma.dailyDiagnosticPuzzle.create).toHaveBeenCalled();
       expect(prisma.userDiagnosticPuzzleState.create).toHaveBeenCalled();
@@ -189,7 +189,7 @@ describe('DiagnosticPuzzleService', () => {
         status: 'won',
       });
 
-      const result = await submitDiagnosticGuess(mockUserId, 'Pneumonia', mockDate);
+      const result = await submitDiagnosticGuess(prisma, mockUserId, 'Pneumonia', mockDate);
       expect(result.userState.status).toBe('won');
       expect(result.userState.guesses).toEqual(['pneumonia']);
     });
@@ -231,7 +231,7 @@ describe('DiagnosticPuzzleService', () => {
       (prisma.dailyDiagnosticPuzzle.findUnique as any).mockResolvedValue(mockDaily);
       (prisma.userDiagnosticPuzzleState.findUnique as any).mockResolvedValue(mockState);
 
-      await expect(submitDiagnosticGuess(mockUserId, 'Pneumonia', mockDate)).rejects.toThrow(
+      await expect(submitDiagnosticGuess(prisma, mockUserId, 'Pneumonia', mockDate)).rejects.toThrow(
         "You have already completed today's diagnostic puzzle"
       );
     });
@@ -267,7 +267,7 @@ describe('DiagnosticPuzzleService', () => {
       ];
       (prisma.userDiagnosticPuzzleState.findMany as any).mockResolvedValue(mockStates);
 
-      const result = await getUserDiagnosticStats(mockUserId);
+      const result = await getUserDiagnosticStats(prisma, mockUserId);
       expect(result.total).toBe(3);
       expect(result.wins).toBe(2);
       expect(result.losses).toBe(1);
@@ -285,7 +285,7 @@ describe('DiagnosticPuzzleService', () => {
 
     it('should return zero stats for a user with no history', async () => {
       (prisma.userDiagnosticPuzzleState.findMany as any).mockResolvedValue([]);
-      const result = await getUserDiagnosticStats(mockUserId);
+      const result = await getUserDiagnosticStats(prisma, mockUserId);
       expect(result.total).toBe(0);
       expect(result.wins).toBe(0);
       expect(result.losses).toBe(0);

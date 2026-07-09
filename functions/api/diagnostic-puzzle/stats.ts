@@ -29,7 +29,7 @@ export const onRequestGet = authenticatedEndpoint(
         return { status: 404, error: 'User not found' };
       }
 
-      const stats = await getUserDiagnosticStats(user.id);
+      const stats = await getUserDiagnosticStats(prisma, user.id);
 
       log.info('Fetched diagnostic puzzle stats', {
         total: stats.total,
