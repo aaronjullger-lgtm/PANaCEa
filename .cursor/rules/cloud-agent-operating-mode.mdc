@@ -1,0 +1,35 @@
+---
+description: Runtime facts and rules for Cursor Cloud Agents working in this repo (env, secrets, git/PR flow, final report). Load when running as a background/cloud agent.
+alwaysApply: false
+---
+
+# Cloud agent operating mode
+
+Scope: running as a Cursor Cloud/background agent. Adds cloud-specific facts on top of `agent-operating-procedure.mdc` (general SOP); pair with skills `cloud-agent-final-report`, `long-running-handoff`.
+
+## Runtime facts (this repo)
+
+- **Node 22** is present; `npm install` runs `postinstall` → `prisma generate`.
+- **Secrets are injected as env vars** (never committed): `DATABASE_URL` (`prisma://` Accelerate, for Edge), `DIRECT_DATABASE_URL` (`postgres://`, for CLI/scripts), Clerk, Gemini, Supabase, `VITE_*`. Vite reads `VITE_*` from the env; the frontend needs no `.env`.
+- **Frontend dev works:** `npm run dev` (port 3000). **`dev:all`/`dev:server` and `dev:wrangler` are broken on `main`** (missing `routes/` and `lib/services/tokenMatchCache.ts`).
+- **DB scripts:** use `DIRECT_DATABASE_URL`, strip query params, `ssl: { rejectUnauthorized: false }` (Supabase self-signed chain).
+- Full details: `docs/cursor-automation-audit.md`, `AGENTS.md`.
+
+## Non-negotiables
+
+- **Never** add/edit secrets, connect to production DB/services, run production migrations, or deploy without explicit approval.
+- Use dev/branch databases only. A commit-time secret scanner blocks secrets — do not bypass it.
+- Manage git yourself: work on a `cursor/<name>` branch, commit logical units, push, open/update the PR. Do not force-push/amend or leave the branch unless asked.
+- Autonomy for safe/reversible actions; ask/deny for destructive/production/secret actions (the `beforeShellExecution` hook assists but you are responsible).
+
+## Verification & final report (required)
+
+- Run the verification ladder (`testing-and-verification.mdc`) and paste real output.
+- End every run with a final report: files changed, commands run + pass/fail, evidence (screenshots for UI), pre-existing vs. introduced failures, remaining risks, and manual dashboard steps still needed (see `cloud-agent-final-report`).
+- Leave a handoff note in the right durable file (`repo-memory-and-context.mdc`).
+
+## Failure modes / what not to do
+
+- Claiming success without running checks or without browser evidence for UI.
+- Assuming `dev:all`/`dev:wrangler` work; assuming a missing module exists.
+- Committing `.env` / `.cursor/mcp.json` / secrets.

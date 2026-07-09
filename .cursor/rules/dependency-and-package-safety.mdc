@@ -1,0 +1,34 @@
+---
+description: Safe handling of dependencies and package changes (npm, lockfile, supply chain). Load when editing package.json, adding/upgrading deps, or reviewing dependency PRs.
+globs: "**/package.json,**/package-lock.json"
+alwaysApply: false
+---
+
+# Dependency & package safety
+
+Scope: `package.json` / lockfile changes and dependency review. Pair with skill `dependency-review`.
+
+## Non-negotiables
+
+- **Package manager is npm** (`package-lock.json`, Node >= 22). Do not introduce yarn/pnpm/bun lockfiles.
+- **New production dependencies require human approval.** Prefer the existing stack (React/Vite/Tailwind/Radix/Framer Motion/Zustand/TanStack/Zod). Do not add React Three Fiber, drei, GSAP, or alternate UI kits without approval (see `using-ui-stack` skill).
+- Dev-only tooling may be added with care, but flag it.
+- Never hand-edit `package-lock.json`; let npm manage it.
+- Do not run `npm audit fix --force` (can introduce breaking major bumps); report advisories instead.
+- Do not pipe remote install scripts into a shell; do not install from untrusted registries/URLs.
+
+## Anti-hallucination checks
+
+- Confirm a package/version actually exists before adding it; don't invent versions.
+- Check the import is used and Edge-compatible if it lands in `functions/api/` (no Node built-ins).
+
+## Verification commands
+
+- `npm install` (lockfile updates cleanly) → `npm run typecheck` → `npm run build` → `npm test`.
+- For UI libs, confirm bundle impact is acceptable (`npm run build:analyze` / `build:check-size`).
+
+## Failure modes / what not to do
+
+- Adding a heavy dep for a small need instead of using the existing stack.
+- Committing a lockfile change without running install/build.
+- Silently upgrading a major version that breaks the Edge/Prisma constraints.

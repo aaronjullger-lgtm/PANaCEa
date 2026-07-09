@@ -8,7 +8,7 @@ What the committed `.cursor/hooks.json` does, and what you may want to tune. Hoo
 
 | Event | Script | Purpose | failClosed |
 |-------|--------|---------|------------|
-| `beforeShellExecution` | `node .cursor/hooks/guard-shell.mjs` | Advises **deny** on destructive/secret/prod-destroying commands, **ask** on risky ones (force push, deploy, prod migrate, `git add .`), **allow** otherwise. Never runs the command. | `false` (fail-open) |
+| `beforeShellExecution` | `node .cursor/hooks/guard-shell.mjs` | Advises **deny** on destructive/secret/prod-destroying commands (incl. writing/staging `.env` / `.dev.vars` / `.cursor/mcp.json`), **ask** on risky ones (force push, deploy, prod migrate, `git add .`, reading secret files, `printenv`), **allow** otherwise. Never runs the command. | `false` (fail-open) |
 | `afterFileEdit` | `node .cursor/hooks/format-edited-file.mjs` | Runs `prettier --check` on the single edited file and logs the result to `.cursor/hooks/logs/format.log`. Does **not** modify files by default. | `false` |
 
 Both use `failClosed: false` so a broken/slow hook never blocks normal work.
@@ -17,7 +17,10 @@ Both use `failClosed: false` so a broken/slow hook never blocks normal work.
 
 ```bash
 echo '{"command":"rm -rf /"}'            | node .cursor/hooks/guard-shell.mjs   # -> deny
+echo '{"command":"echo X >> .env"}'      | node .cursor/hooks/guard-shell.mjs   # -> deny (secret file write)
+echo '{"command":"git add .dev.vars"}'   | node .cursor/hooks/guard-shell.mjs   # -> deny (stage secret)
 echo '{"command":"git push --force"}'    | node .cursor/hooks/guard-shell.mjs   # -> ask
+echo '{"command":"cat .env"}'            | node .cursor/hooks/guard-shell.mjs   # -> ask (reads secrets)
 echo '{"command":"npm run typecheck"}'   | node .cursor/hooks/guard-shell.mjs   # -> allow
 echo '{"file_path":"README.md"}'         | node .cursor/hooks/format-edited-file.mjs
 ```
@@ -39,6 +42,19 @@ Running typecheck/lint/test/build on **every** edit or stop is slow and can loop
 ```
 
 …where the script simply logs/echoes "run: npm run typecheck && npm run lint && npm test && npm run build". Avoid auto-running the full suite from a hook.
+
+## "Before final response" reminder — why there is no hook for it
+
+The ask to "remind the agent to report commands run and unresolved risks before the final response" is **not** reliably implementable as a hook today:
+
+- `beforeSubmitPrompt` fires on the **user's** prompt submission and is **informational only** (it cannot feed a message back to the agent or block it).
+- `stop` fires when the agent finishes, but its output does not surface a reminder to the model, and blocking `stop` hooks re-run the turn (loop-prone; Cursor also caps consecutive `Stop` blocks). Using it as a "reminder" risks loops for no benefit.
+
+Therefore this requirement is enforced through **rules + skills** instead of a hook: `agent-operating-procedure.mdc` and `cloud-agent-operating-mode.mdc` require a final report, and the `cloud-agent-final-report` skill defines the exact format (commands run, pass/fail, evidence, residual risks, manual steps). Revisit if Cursor adds a feed-back-capable pre-response event.
+
+## Secret-safety guarantees
+
+The guard denies writing/staging `.env`, `.env.*`, `.dev.vars`, and `.cursor/mcp.json`, and asks before reading them or dumping the environment (`printenv`). This is defense-in-depth on top of the commit-time secret scanner and `.gitignore`; it is **not** a substitute for them. The guard is advisory (fail-open) so it never blocks legitimate work if the script errors.
 
 ## Schema uncertainty
 

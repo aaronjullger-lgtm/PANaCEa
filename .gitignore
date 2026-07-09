@@ -296,10 +296,25 @@ typecheck-errors.txt
 .roomodes
 .amazonq/
 .cline/
-.cursor/
 .kiro/
 .roo/
 mcp_config.json
+
+# .cursor/: ignore local/noisy artifacts by default, but TRACK curated agent config.
+# Selective unignore keeps rules/skills/hooks/docs in version control while
+# locking out local-only secrets (.cursor/mcp.json) and generated logs.
+.cursor/*
+!.cursor/rules/
+!.cursor/skills/
+!.cursor/commands/
+!.cursor/hooks/
+!.cursor/hooks.json
+!.cursor/mcp.example.json
+!.cursor/README.md
+!.cursor/environment.json
+# Never track local MCP config (may hold real API keys / DB creds) or hook logs
+.cursor/mcp.json
+.cursor/hooks/logs/
 
 # Defunct deployment configs (superseded by wrangler.toml / Cloudflare Pages)
 ecosystem.config.js

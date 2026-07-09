@@ -60,6 +60,10 @@ const DENY = [
   { re: /\b(curl|wget)\b[^\n|]*\|\s*(sudo\s+)?(bash|sh|zsh)\b/i, msg: 'piping a downloaded script directly into a shell.' },
   // Writing likely-real secrets into tracked files.
   { re: /\b(sk_live_|pk_live_|whsec_)[A-Za-z0-9]/, msg: 'writing what looks like a live secret/key.' },
+  // Writing to / overwriting secret & env files.
+  { re: /(>>?|\btee\b)\s+["']?(\.env(\.[\w.-]+)?|\.dev\.vars|\.cursor\/mcp\.json)\b/i, msg: 'writing to a secret/env file (.env / .dev.vars / .cursor/mcp.json).' },
+  { re: /\bsed\s+-i\b[^\n]*(\.env(\.[\w.-]+)?|\.dev\.vars|\.cursor\/mcp\.json)/i, msg: 'in-place editing a secret/env file.' },
+  { re: /\bgit\s+add\b[^\n]*(\.env(\.[\w.-]+)?|\.dev\.vars|\.cursor\/mcp\.json)/i, msg: 'staging a secret/env file for commit.' },
 ];
 
 // Risky but sometimes valid -> ask
@@ -70,6 +74,9 @@ const ASK = [
   { re: /prisma\s+migrate\s+deploy\b/i, msg: 'applying migrations (verify the target is not production).' },
   { re: /\bnpm\s+publish\b/i, msg: 'publishing a package.' },
   { re: /\bgit\s+add\s+(\.|-A|--all)\b/i, msg: 'staging all files (prefer explicit paths; avoid committing stray/secret files).' },
+  // Reading/printing secret files (avoid echoing secrets into the transcript/logs).
+  { re: /\b(cat|less|more|head|tail|bat|nl|xxd|strings)\b[^\n]*(\.env(\.[\w.-]+)?|\.dev\.vars|\.cursor\/mcp\.json)/i, msg: 'reading a secret/env file (avoid printing secrets).' },
+  { re: /\bprintenv\b/i, msg: 'dumping environment variables (may expose secrets).' },
 ];
 
 async function main() {

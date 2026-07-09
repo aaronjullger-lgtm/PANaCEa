@@ -16,7 +16,7 @@ Repo-level configuration that makes AI coding agents (Cursor Desktop, IDE, and C
 ```
 
 Related docs live in `docs/`:
-`cursor-automation-audit.md`, `cursor-hooks-notes.md`, `cursor-mcp-cloud-setup.md`, `cursor-cloud-automations.md`, `agent-safety-checklist.md`.
+`cursor-agent-operating-system.md` (**start here** — how it all fits together), `cursor-automation-audit.md`, `cursor-community-research.md`, `cursor-automation-dedupe.md`, `cursor-hooks-notes.md`, `cursor-mcp-cloud-setup.md`, `cursor-cloud-automations.md`, `agent-safety-checklist.md`.
 
 ## Rules (`.cursor/rules/`)
 
@@ -33,6 +33,15 @@ Focused `.mdc` files; the agent loads them by scope/description.
 | `accessibility.mdc` | `components/`, `src/` UI. |
 | `testing-and-verification.mdc` | Writing/running tests; before completion. |
 | `security-review.mdc` | Auth/RLS/endpoint/secret work. |
+| `agent-planning-and-handoff.mdc` | Multi-step tasks; planning + handoff. |
+| `repo-memory-and-context.mdc` | Persisting durable context/memory. |
+| `browser-verification.mdc` | UI/route/behavior changes (browser evidence gate). |
+| `visual-design-quality-gate.mdc` | UI pass/fail gate + no-AI-slop. |
+| `pr-review-quality-gate.mdc` | Reviewing/preparing a PR. |
+| `dependency-and-package-safety.mdc` | `package.json`/dependency changes. |
+| `mcp-and-tool-safety.mdc` | Using/enabling MCP or external tools. |
+| `anti-hallucination-imports.mdc` | Adding imports/routes/packages. |
+| `cloud-agent-operating-mode.mdc` | Running as a Cursor Cloud/background agent. |
 | `ui-design-system.mdc` | **Pre-existing, preserved** — Stormy Slate design system. |
 
 Also preserved: `autonomous-behavior.mdc`, `project-conventions.mdc`, `project-roles.mdc`, `panacea-rules.md`.
@@ -41,22 +50,25 @@ Also preserved: `autonomous-behavior.mdc`, `project-conventions.mdc`, `project-r
 
 Loaded automatically when their `description` matches the task, or invoked with `/skill-name`.
 
-`saving-workspace-context`, `suggesting-cursor-rules`, `suggesting-cursor-hooks`, `verifying-in-browser`, `visual-qa-testing`, `responsive-testing`, `dark-mode-testing`, `accessibility-auditing`, `form-testing`, `parallel-test-fixing`, `codebase-onboarding`, `auto-type-checking`, `recording-browser-flow-as-test`, `using-ui-stack`, `auditing-security`.
+- **Workflow/memory:** `agent-task-planning`, `long-running-handoff`, `repo-memory-update`, `saving-workspace-context`, `community-pattern-research`, `cloud-agent-final-report`.
+- **Verification/QA:** `verifying-in-browser`, `visual-qa-testing`, `ui-polish-pass`, `design-system-enforcement`, `no-ai-slop-visual-audit`, `responsive-testing`, `dark-mode-testing`, `accessibility-auditing`, `form-testing`, `recording-browser-flow-as-test`.
+- **Code safety/review:** `pr-review`, `dependency-review`, `code-mod-safety`, `route-and-import-verification`, `auto-type-checking`, `failure-triage`, `parallel-test-fixing`, `auditing-security`, `mcp-safety-review`.
+- **Onboarding/config:** `codebase-onboarding`, `using-ui-stack`, `suggesting-cursor-rules`, `suggesting-cursor-hooks`.
 
-> These complement (don't duplicate) the domain skills already in `.agents/skills/` and `.claude/skills/`.
+> These complement (don't duplicate) the domain skills already in `.agents/skills/` and `.claude/skills/`. See `docs/cursor-automation-dedupe.md`.
 
 ## Hooks (`.cursor/hooks.json`)
 
 Two safe, fail-open hooks (details + tuning in `docs/cursor-hooks-notes.md`):
 
-- `beforeShellExecution` → `guard-shell.mjs`: deny destructive/secret/prod-destroying commands, ask on risky ones, allow otherwise. Never runs the command.
+- `beforeShellExecution` → `guard-shell.mjs`: deny destructive/prod-destroying commands and writing/staging secret files (`.env`/`.dev.vars`/`.cursor/mcp.json`), ask on risky ones (force push, deploy, reading secret files, `printenv`), allow otherwise. Never runs the command.
 - `afterFileEdit` → `format-edited-file.mjs`: Prettier **check** on the edited file (logs to `hooks/logs/`); set `CURSOR_HOOK_AUTOFORMAT=1` to auto-format.
 
 Self-test: `echo '{"command":"rm -rf /"}' | node .cursor/hooks/guard-shell.mjs` → `deny`.
 
 ## MCP (`.cursor/mcp.example.json`)
 
-Template only — **no secrets**. Copy servers you want into `.cursor/mcp.json` (gitignored) or configure them in the Cursor dashboard for Cloud Agents. See `docs/cursor-mcp-cloud-setup.md`. Recommended: GitHub (read-only), Supabase (dev/read-only), Playwright (local), optional Figma/Context7.
+Template only — **no secrets**. Copy servers you want into `.cursor/mcp.json` (gitignored) or configure them in the Cursor dashboard for Cloud Agents. See the curated table in `docs/cursor-mcp-cloud-setup.md`. Recommended now: GitHub (read-only), Supabase (dev/read-only), Playwright (local), Context7, Sequential Thinking; later/optional: Figma, Mermaid/Excalidraw (vet with `mcp-safety-review` first).
 
 ## `.cursorrules` note
 
