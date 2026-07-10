@@ -90,6 +90,7 @@
 | `/api/admin/media/approve` | ✅          | admin      | ✅     |
 | `/api/admin/media/pending` | ✅          | admin      | ✅     |
 | `/api/admin/cache-metrics` | ✅          | admin      | ✅     |
+| `/api/admin/readiness`     | ✅          | admin      | ✅     |
 
 ### Public Endpoints (No Auth Needed)
 
@@ -153,24 +154,13 @@
 
 ### Current Status
 
-- ⚠️ **Zod not universally applied** - Some endpoints lack input validation
-
-### Recommended Additions
-
-```typescript
-// Example: Session endpoint needs validation
-const SessionRequestSchema = z.object({
-  count: z.number().min(1).max(50).default(20),
-  system: z.string().optional(),
-  difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
-});
-```
+- ✅ **Zod hardened on recently changed mutation endpoints** — including `/api/feedback/submit`, `/api/push/subscribe`, `/api/questions/custom-session`, `/api/reviews/second-chance`, `/api/analytics/soap-note`, `/api/admin/media/approve`, and `/api/users/me/daily-plan` (bounded fields, `.strict()` where applicable).
+- ⚠️ **Zod not universally applied** — Some older endpoints still lack input validation.
 
 ### Priority Endpoints for Validation
 
 1. `/api/questions/session` - Count and filter params
-2. `/api/drills/submit-review` - Rating and answer data
-3. `/api/feedback/submit` - User input sanitization
+2. `/api/drills/submit-review` - Rating and telemetry payload bounds
 
 ---
 

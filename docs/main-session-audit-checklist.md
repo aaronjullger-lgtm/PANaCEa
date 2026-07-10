@@ -104,7 +104,8 @@ Use this checklist with **browser DevTools**, **Console Ninja** (or equivalent),
 - `GET/POST /api/user/fsrs-params` – get/optimize FSRS params
 - `POST /api/user/update-fsrs-params` – update params
 - `POST /api/srs/submit` – submit SRS review
-- `GET /api/srs/due`, `GET /api/srs/stats`, `GET /api/srs/sync` – due count, stats, sync
+- `GET /api/srs/due` – canonical due queue (Card / UserProgress; see `docs/api/API_OVERVIEW.md`)
+- `POST /api/srs/submit` – submit SRS review (compatibility adapter; canonical writes go through drill/question attempt pipelines)
 
 **Stats & display**
 
