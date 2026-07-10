@@ -148,26 +148,32 @@ export const customSessionService = {
 };
 ```
 
-#### 3. New API Endpoint (`functions/api/questions/custom-session.ts`)
+#### 3. API Endpoint (`functions/api/questions/custom-session.ts`)
 
 ```typescript
 // POST /api/questions/custom-session
-export async function onRequestPost(context: any) {
-  const { config } = await context.request.json();
+// Auth: authenticatedEndpoint (Clerk token required)
+// Body (.strict):
+{
+  "config": {
+    "systems": ["CV", "PULM"],           // optional, max 50 items
+    "subcategories": ["string"],         // optional, maps to Question.category
+    "conditions": ["conditionId"],       // optional
+    "focusAreas": ["string"],            // optional
+    "difficulty": "same | easier | harder"  // optional
+  },
+  "count": 10                            // optional, 1–50, default 10
+}
 
-  // 1. Query questions from pool matching filters
-  // 2. Apply focus area filters
-  // 3. Return shuffled subset
-
-  // Focus areas map to question metadata tags:
-  // - anatomy → questions about anatomy/physiology
-  // - pathophysiology → questions about disease mechanisms
-  // - diagnosis → questions about clinical presentation, workup
-  // - pharmacology → questions about drug therapy
-  // - management → questions about treatment plans
-  // - procedures → questions about procedures/special tests
+// Response:
+{
+  "questions": [{ id, question, options, correctAnswerIndex, rationale, ... }],
+  "totalAvailable": number,
+  "warning": "optional when pool < requested count"
 }
 ```
+
+**Notes:** Ephemeral session — does not write FSRS or user progress. See `docs/api/API_OVERVIEW.md` for the full contract.
 
 #### 4. New Components
 

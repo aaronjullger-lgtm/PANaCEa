@@ -89,13 +89,15 @@
 | `/api/admin/media/upload`  | ✅          | admin      | ✅     |
 | `/api/admin/media/approve` | ✅          | admin      | ✅     |
 | `/api/admin/media/pending` | ✅          | admin      | ✅     |
+| `/api/admin/readiness`     | ✅          | admin      | ✅     |
 | `/api/admin/cache-metrics` | ✅          | admin      | ✅     |
 
 ### Public Endpoints (No Auth Needed)
 
 | Endpoint           | Purpose        | Rate Limit |
 | ------------------ | -------------- | ---------- |
-| `/api/health`      | Health check   | standard   |
+| `/api/health`      | Liveness only (no diagnostics) | standard   |
+| `/api/admin/readiness` | Operational diagnostics (admin auth) | admin |
 | `/api/conditions`  | Public content | standard   |
 | `/api/reference/*` | Reference data | standard   |
 

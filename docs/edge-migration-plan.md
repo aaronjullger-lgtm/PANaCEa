@@ -3,6 +3,8 @@
 *Generated: April 10, 2026*
 *Source: `routes/*.ts` → `functions/api/*/`*
 
+> **Status note (2026-07):** `POST /api/questions/custom-session` and `GET|POST /api/drills/lab-cases` are ported to `functions/api/`. See `docs/api/API_OVERVIEW.md` for contracts.
+
 ## Summary
 
 Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Express `routes/` directory is legacy (local dev only). This plan covers the **30 remaining unported endpoints** needed to fully deprecate Express.
