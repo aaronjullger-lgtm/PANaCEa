@@ -57,9 +57,11 @@ Docs: `docs/dependency-vulnerability-triage.md`, this report.
 - **Fixed:** coming-soon training-mode cards now announce an honest `aria-label` ("… coming soon, not yet available") instead of "Open …" (they already blocked navigation via `disabled`).
 
 ## 9. API endpoints hardened
+- `POST /api/feedback/submit` — bounded free-text on every persisted field + `.strict()` (see `docs/api/API_OVERVIEW.md`).
 - `POST/DELETE /api/push/subscribe` — URL/key length caps + `.strict()`.
 - `POST /api/analytics/soap-note` — caseId length, finite/bounded score, `.strict()` body.
 - `POST /api/reviews/second-chance` — scopeFilter bounds + `.strict()` (top-level + nested).
+- `GET /api/srs/due` — bounded `limit` query param, optional `progressContext`/`context` filter, resilient empty-state (never `500`).
 - Verified already-hardened (no change): `grand-rounds/submit`, `scribe/soap/extract`, `knowledge/upload` — consistent with `audit:zod` 0-fail.
 
 ## 10. Security improvements
