@@ -31,7 +31,24 @@ setup('authenticate with Clerk', async ({ page }) => {
       console.log('Existing Clerk session detected. Saving storage state.');
     } else if (hasClerkBackendAuth()) {
       console.log('Clerk backend auth available. Signing in via Clerk Backend API (bypasses MFA).');
-      await signInWithClerkBackend(page, credentials!.email, { startPath: '/study' });
+      try {
+        await signInWithClerkBackend(page, credentials!.email, { startPath: '/study' });
+      } catch (backendError) {
+        const message =
+          backendError instanceof Error ? backendError.message : String(backendError);
+        if (credentials?.password) {
+          console.warn(
+            `Clerk backend sign-in failed (${message}). Falling back to browser password sign-in.`
+          );
+          await signInWithClerkCredentials(
+            page,
+            { email: credentials.email, password: credentials.password },
+            { startPath: '/study' }
+          );
+        } else {
+          throw backendError;
+        }
+      }
     } else if (credentials?.password) {
       console.log('E2E Clerk password credentials detected. Signing in via browser form.');
       await signInWithClerkCredentials(
@@ -42,7 +59,7 @@ setup('authenticate with Clerk', async ({ page }) => {
     } else {
       console.log('No E2E Clerk credentials found. Waiting up to 2 minutes for manual login.');
       console.log(
-        'For backend-based sign-in (recommended, bypasses MFA): set CLERK_SECRET_KEY + E2E_CLERK_TEST_EMAIL in .env.'
+        'For backend-based sign-in (recommended, bypasses MFA): set CLERK_SECRET_KEY + test email (E2E_CLERK_TEST_EMAIL or PANACEA_E2E_EMAIL) in .env.'
       );
       console.log(
         'For browser-based sign-in: also set E2E_CLERK_TEST_PASSWORD. ' +

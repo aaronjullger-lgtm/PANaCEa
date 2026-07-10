@@ -43,7 +43,7 @@ Landing (desktop + mobile/reduced-motion), protected-route gating (`/study`, `/v
 typecheck 0 · lint 0 · build ✅ · test:critical 143/143 · **`npm test` 9965 passed / 0 failed / 1 skipped** · **`npm audit --audit-level=moderate` 6** (down from 25 via workers-types/wrangler alignment + `npm audit fix`; remaining are dev-tooling needing breaking upgrades) · UI-smoke 4/4 · axe 12/12 · route sweep 14/14.
 
 ## Unresolved / approval-gated
-`npm audit fix` (ERESOLVE — precondition: bump `@cloudflare/workers-types@^5`), dependency majors (react-router-dom/@clerk→js-cookie/nodemailer), RLS DB policy changes, LICENSE choice, secret/anon-key rotation, staging env, production deploy, and authenticated deep-render browser QA (needs Clerk test user + test `DATABASE_URL`).
+`npm audit fix` (ERESOLVE — precondition: bump `@cloudflare/workers-types@^5`), dependency majors (react-router-dom/@clerk→js-cookie/nodemailer), RLS DB policy changes, LICENSE choice, secret/anon-key rotation, staging env, production deploy. **E2E auth:** accepts `E2E_CLERK_TEST_EMAIL` or `PANACEA_E2E_EMAIL` + `CLERK_SECRET_KEY` (backend sign-in). **DB:** Supabase (`DATABASE_URL`); Neon preview workflow is optional/ignorable if unused.
 
 ## Orphaned-code note
 `TopicTrendChart` (was an orphaned fabricator) is now truthful-by-default. Audit-cited orphans (`lib/sessionInterleaving.ts`, `services/core/enhancedQuestionPool.ts`, `scripts/demo-question-sprint-b.ts`) were already deleted (verified). `lib/toast.ts` is current (delegates to `useToastStore`), not deprecated. QA scripts are documented manual tools (not dead code).

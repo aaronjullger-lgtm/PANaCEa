@@ -17,7 +17,7 @@
 `wrangler.toml` already scaffolds `[env.preview]` (with `VITE_PRIVATE_BETA_LAUNCH=true`) but intentionally omits preview KV namespace ids (comment warns Wrangler validates real hex ids). To stand up staging safely:
 
 1. **Create preview KV namespaces** (owner): `wrangler kv:namespace create RATE_LIMIT_KV --preview` and `... CACHE --preview`; add real `[[env.preview.kv_namespaces]]` ids.
-2. **Set preview secrets** in Cloudflare Dashboard (Preview scope): `CLERK_SECRET_KEY` (test instance), a **non-prod** `DATABASE_URL` (staging Supabase or Neon preview — `neon_workflow.yml` already provisions PR DB branches), `GEMINI_API_KEY` (test/quota-limited).
+2. **Set preview secrets** in Cloudflare Dashboard (Preview scope): `CLERK_SECRET_KEY` (test instance), a **non-prod** `DATABASE_URL` (staging Supabase branch or dedicated preview project — this repo uses Supabase, not Neon; ignore `neon_workflow.yml` unless you adopt Neon), `GEMINI_API_KEY` (test/quota-limited).
 3. **Promotion gate:** deploy `main` → preview first; run `npm run test:e2e:production-smoke` against the preview URL; require green before production `workflow_dispatch`.
 4. **Rollback:** document in `docs/ROLLBACK.md` (referenced by deploy health failure); recommend `wrangler pages deployment` rollback + a generic migration-recovery step (replace the hardcoded `20260502000000_…` id with a parametrized input).
 5. **Tighten health check** to require 200 (treat 503 as failure → trigger rollback).

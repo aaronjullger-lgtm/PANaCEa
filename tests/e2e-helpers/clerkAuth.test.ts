@@ -151,9 +151,9 @@ describe('hasClerkBackendAuth', () => {
 describe('missingClerkE2ECredentialsMessage', () => {
   it('returns guidance about the backend and legacy auth modes', () => {
     const msg = missingClerkE2ECredentialsMessage();
-    expect(msg).toContain('E2E_CLERK_TEST_EMAIL');
+    expect(msg).toMatch(/E2E_CLERK_TEST_EMAIL|PANACEA_E2E_EMAIL/);
     expect(msg).toContain('CLERK_SECRET_KEY');
-    expect(msg).toContain('E2E_CLERK_TEST_PASSWORD');
+    expect(msg).toMatch(/E2E_CLERK_TEST_PASSWORD|PANACEA_E2E_PASSWORD/);
     expect(msg).toContain('bypasses MFA');
   });
 });

@@ -1,5 +1,6 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
 import {
+  getClerkE2ECredentials,
   hasClerkBackendAuth,
   missingClerkE2ECredentialsMessage,
   signInWithClerkBackend,
@@ -114,13 +115,18 @@ test.describe.serial('production smoke: authenticated core study loop', () => {
     if (!hasAuth) {
       test.skip(
         true,
-        'Set CLERK_SECRET_KEY + E2E_CLERK_TEST_EMAIL in .env to run authenticated smoke.'
+        'Set CLERK_SECRET_KEY + test email (E2E_CLERK_TEST_EMAIL or PANACEA_E2E_EMAIL) to run authenticated smoke.'
       );
       return;
     }
 
-    const email = process.env.E2E_CLERK_TEST_EMAIL!;
-    const token = await signInWithClerkBackend(page, email, {
+    const credentials = getClerkE2ECredentials();
+    if (!credentials) {
+      test.skip(true, 'No Clerk E2E credentials resolved.');
+      return;
+    }
+
+    const token = await signInWithClerkBackend(page, credentials.email, {
       startPath: '/study',
     });
     await page.context().storageState({ path: testInfo.outputPath('auth-state.json') });
