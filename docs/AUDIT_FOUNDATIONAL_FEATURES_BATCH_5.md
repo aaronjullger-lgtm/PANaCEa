@@ -49,7 +49,7 @@
 
 **Status:** ✅ Functional
 
-- **POST /api/feedback/submit:** Body `questionId`, `flagType`, `description`, optional questionText/topic/system. Creates feedback/flag record. Used by flag-question flow, FlagQuestionModal.
+- **POST /api/feedback/submit:** Body `questionId` (1–200), `flagType` (`incorrect_fact` | `unclear_question` | `typo` | `outdated` | `other`), `description` (1–2000), optional `questionText` (≤5000), `topic` (≤200), `system` (≤100). Zod `.strict()` rejects unknown fields. Returns `201` with `{ success, feedbackId }`. Creates `QuestionFlag` record. See `docs/api/API_OVERVIEW.md`. Used by flag-question flow, FlagQuestionModal.
 - **Sentry tunnel:** `POST /api/sentry-tunnel` (if present) forwards client errors to Sentry. Used by frontend error reporting.
 - **Gap:** None. Feedback stored in DB; Sentry DSN/keys in env for tunnel.
 

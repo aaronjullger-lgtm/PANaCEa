@@ -60,6 +60,11 @@ Docs: `docs/dependency-vulnerability-triage.md`, this report.
 - `POST/DELETE /api/push/subscribe` — URL/key length caps + `.strict()`.
 - `POST /api/analytics/soap-note` — caseId length, finite/bounded score, `.strict()` body.
 - `POST /api/reviews/second-chance` — scopeFilter bounds + `.strict()` (top-level + nested).
+- `POST /api/feedback/submit` — bounded free-text fields + `.strict()` body (`FeedbackSubmitSchema`).
+- `POST /api/questions/custom-session` — bounded filter arrays + `.strict()` config/body (`CustomSessionSchema`).
+- `GET/POST /api/drills/lab-cases` — generic error responses on DB failure (no stack/connection leakage).
+- `GET /api/srs/due` — resilient empty `200` payload on internal errors (never 500).
+- **Contracts:** see `docs/api/API_OVERVIEW.md` for request/response shapes.
 - Verified already-hardened (no change): `grand-rounds/submit`, `scribe/soap/extract`, `knowledge/upload` — consistent with `audit:zod` 0-fail.
 
 ## 10. Security improvements

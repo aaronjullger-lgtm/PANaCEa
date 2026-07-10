@@ -21,8 +21,8 @@
 
 - **GET /api/srs/next:** Returns next due SRS item (UserTopicProgress “Second Chance” or SRSItem). Authenticated. **Change:** Now uses `source: 'query'` and flat schema `SRSNextQuerySchema` so `mode` comes from query params correctly.
 - **POST /api/srs/submit:** Accepts `questionId`, `rating` (1–4), `isCorrect`, optional `topicProgressId`, `srsItemId`, `telemetry`, `attemptId`. Runs FSRS scheduling, optional Ghost Grader (`analyzeBehaviorGemini`), updates UserTopicProgress/SRSItem. Used by `SrsFlashcardView` and session flow.
-- **GET /api/srs/due:** Returns list of due SRS items (limit 100). Authenticated. Used by `useSRSItems` and dashboard.
-- **Gap:** None. FSRS lib in `lib/fsrs`; Prisma models `SRSItem`, `UserTopicProgress`.
+- **GET /api/srs/due:** Returns canonical FSRS due items from `Card`, `UserTopicProgress`, and `UserProgress` (not legacy `SRSItem`). Query: optional `limit` (1–200, default 100), `progressContext`/`context` (`READINESS` | `TARGETED`). Dedupes overlapping condition/task rows; resilient empty `200` on internal errors (never 500). See `docs/api/API_OVERVIEW.md`. Used by `useSRSItems` and dashboard.
+- **Gap:** None. FSRS lib in `lib/fsrs`; canonical progress stores are `Card`, `UserTopicProgress`, and `UserProgress` (legacy `SRSItem` deprecated).
 
 ---
 
