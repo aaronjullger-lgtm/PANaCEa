@@ -89,13 +89,14 @@
 | `/api/admin/media/upload`  | ✅          | admin      | ✅     |
 | `/api/admin/media/approve` | ✅          | admin      | ✅     |
 | `/api/admin/media/pending` | ✅          | admin      | ✅     |
+| `/api/admin/readiness`     | ✅          | admin      | ✅     |
 | `/api/admin/cache-metrics` | ✅          | admin      | ✅     |
 
 ### Public Endpoints (No Auth Needed)
 
 | Endpoint           | Purpose        | Rate Limit |
 | ------------------ | -------------- | ---------- |
-| `/api/health`      | Health check   | standard   |
+| `/api/health`      | Public liveness only (no DB/env diagnostics) | standard   |
 | `/api/conditions`  | Public content | standard   |
 | `/api/reference/*` | Reference data | standard   |
 
@@ -170,7 +171,7 @@ const SessionRequestSchema = z.object({
 
 1. `/api/questions/session` - Count and filter params
 2. `/api/drills/submit-review` - Rating and answer data
-3. `/api/feedback/submit` - User input sanitization
+3. `/api/feedback/submit` - Zod `.strict()` schema with bounded text fields (see `docs/api/API_OVERVIEW.md`)
 
 ---
 
