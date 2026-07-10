@@ -45,7 +45,7 @@ Learn about PANaCEa's system design:
 
 Backend endpoint contracts and API behavior docs:
 
-- **[API Overview](api/API_OVERVIEW.md)** - Updated admin and OSCE endpoint contracts (`/api/admin/check-access`, `/api/admin/stats`, `/api/osce/complete`, `/api/osce/stats`)
+- **[API Overview](api/API_OVERVIEW.md)** - Request/response contracts for recently hardened routes (admin readiness/media, analytics, branches, drills, feedback, graph, library contextualization, push, custom sessions, second-chance reviews, SRS due, FSRS params, daily plan)
 
 ---
 

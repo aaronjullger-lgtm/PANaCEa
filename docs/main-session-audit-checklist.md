@@ -101,10 +101,15 @@ Use this checklist with **browser DevTools**, **Console Ninja** (or equivalent),
 
 **FSRS / SRS**
 
-- `GET/POST /api/user/fsrs-params` – get/optimize FSRS params
-- `POST /api/user/update-fsrs-params` – update params
-- `POST /api/srs/submit` – submit SRS review
-- `GET /api/srs/due`, `GET /api/srs/stats`, `GET /api/srs/sync` – due count, stats, sync
+- `GET/POST /api/user/fsrs-params` – get/optimize FSRS params (POST body: `{ forceReoptimize?, includeSystemModifiers? }`; rate-limited 30/min on POST)
+- `POST /api/user/update-fsrs-params` – legacy manual param update
+- `POST /api/srs/submit` – submit SRS review (compatibility adapter over `drillReviewService`)
+- `GET /api/srs/due` – canonical due queue (`limit`, `progressContext`/`context` query filters; dedupes Card/TopicProgress/UserProgress)
+- `GET /api/srs/stats`, `GET /api/srs/sync` – legacy stats/sync compatibility routes
+
+**Study plan**
+
+- `GET/POST /api/users/me/daily-plan` – daily plan fetch/create and task actions (`complete`/`skip`/`reschedule`)
 
 **Stats & display**
 
