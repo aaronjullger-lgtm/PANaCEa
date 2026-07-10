@@ -100,7 +100,7 @@ export const onRequestPost = authenticatedEndpoint(
       log.error('Failed to create branch', error);
       return {
         status: 500,
-        error: error instanceof Error ? error.message : 'Failed to create branch',
+        error: 'Failed to create branch. Please try again.',
       };
     } finally {
       await safePrismaDisconnect(prisma);

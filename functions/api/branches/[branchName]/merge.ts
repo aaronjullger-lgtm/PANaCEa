@@ -85,7 +85,7 @@ export const onRequestPost = adminEndpoint(BranchMergeSchema, async (context) =>
 
     return {
       status: 500,
-      error: error instanceof Error ? error.message : 'Failed to merge branch',
+      error: 'Failed to merge branch. Please try again.',
     };
   } finally {
     await safePrismaDisconnect(prisma);
