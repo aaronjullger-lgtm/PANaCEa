@@ -62,7 +62,7 @@ axe: 0 critical / 0 serious WCAG 2.1 AA violations across 9 route groups. Compon
 Landing at 390px with `prefers-reduced-motion: reduce`: renders, correct heading, section assertions pass, **no horizontal overflow**, 0 errors.
 
 ## 15. API contract findings
-Frontend-facing endpoints validated by the mocked automated suite, incl. `/api/srs/due` (stable shape + resilient empty-state, never 500), drills submit-review, questions attempt, dashboard stats/review-queue, push subscribe, second-chance, soap-note (schemas `.strict()` + bounds from a prior pass). No stack traces / secrets in responses (secureLogger + structured errors). 0 failures.
+Frontend-facing endpoints validated by the mocked automated suite, incl. `/api/srs/due` (stable shape + resilient empty-state, never 500), drills submit-review, questions attempt, dashboard stats/review-queue, push subscribe, second-chance, soap-note (schemas `.strict()` + bounds from a prior pass). Contract details: [`docs/api/API_OVERVIEW.md`](api/API_OVERVIEW.md). No stack traces / secrets in responses (secureLogger + structured errors). 0 failures.
 
 ## 16. Remaining blocked flows
 Authenticated deep browser rendering: dashboard widgets with real/empty user data, in-session answer submission → feedback → next-item advance, learning modes UI, admin UI as admin role. All require a Clerk test session + a (test) database.

@@ -38,6 +38,8 @@ GET  /api/content/search?q=           → contentClient.search(query)
 GET  /api/library/semantic-search     → contentClient.semanticSearch(query)
 ```
 
+Wire shapes for hardened routes (`/api/srs/due`, `/api/push/subscribe`, `/api/analytics/soap-note`, `/api/reviews/second-chance`) are documented in [`docs/api/API_OVERVIEW.md`](../api/API_OVERVIEW.md).
+
 ### Files to Create
 
 ```
