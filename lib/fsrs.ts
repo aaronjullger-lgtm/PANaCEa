@@ -242,6 +242,7 @@ export function isParamsOnCurrentScale(w: number[] | null | undefined): boolean 
   }
   const w19 = w[19];
   const w20 = w[20];
+  if (w19 == null || w20 == null) return false;
   // Canonical v6 bounds (matches PARAM_BOUNDS in both optimizers post-fix).
   if (w19 < 0.01 || w19 > 1.0) return false;
   if (w20 < 0.1 || w20 > 5.0) return false;
