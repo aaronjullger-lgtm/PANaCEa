@@ -1,4 +1,6 @@
-# TASK-007 — Zod-harden `POST /api/users/me/daily-plan/complete`
+# TASK-007 — Zod-harden `POST /api/users/me/daily-plan`
+
+**Route:** `POST /api/users/me/daily-plan` (complete/skip/reschedule actions on `functions/api/users/me/daily-plan.ts`)
 
 - **Status:** completed
 - **Date:** 2026-04-16

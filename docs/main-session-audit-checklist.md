@@ -101,10 +101,8 @@ Use this checklist with **browser DevTools**, **Console Ninja** (or equivalent),
 
 **FSRS / SRS**
 
-- `GET/POST /api/user/fsrs-params` – get/optimize FSRS params
-- `POST /api/user/update-fsrs-params` – update params
-- `POST /api/srs/submit` – submit SRS review
-- `GET /api/srs/due`, `GET /api/srs/stats`, `GET /api/srs/sync` – due count, stats, sync
+- `GET/POST /api/user/fsrs-params` – get/optimize FSRS params (see `docs/api/API_OVERVIEW.md`)
+- `GET /api/srs/due` – canonical FSRS due queue (`progressContext` filter optional)
 
 **Stats & display**
 

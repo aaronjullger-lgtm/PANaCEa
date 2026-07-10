@@ -148,26 +148,40 @@ export const customSessionService = {
 };
 ```
 
-#### 3. New API Endpoint (`functions/api/questions/custom-session.ts`)
+#### 3. API Endpoint (`functions/api/questions/custom-session.ts`)
 
-```typescript
-// POST /api/questions/custom-session
-export async function onRequestPost(context: any) {
-  const { config } = await context.request.json();
+**`POST /api/questions/custom-session`** — authenticated, Zod-validated (`.strict()`), no FSRS writes.
 
-  // 1. Query questions from pool matching filters
-  // 2. Apply focus area filters
-  // 3. Return shuffled subset
+Request:
 
-  // Focus areas map to question metadata tags:
-  // - anatomy → questions about anatomy/physiology
-  // - pathophysiology → questions about disease mechanisms
-  // - diagnosis → questions about clinical presentation, workup
-  // - pharmacology → questions about drug therapy
-  // - management → questions about treatment plans
-  // - procedures → questions about procedures/special tests
+```json
+{
+  "body": {
+    "config": {
+      "systems": ["CV", "PULM"],
+      "subcategories": ["arrhythmias"],
+      "conditions": [],
+      "focusAreas": [],
+      "difficulty": "same | easier | harder"
+    },
+    "count": 10
+  }
 }
 ```
+
+Response:
+
+```json
+{
+  "data": {
+    "questions": [{ "id": "...", "question": "...", "options": [], "correctAnswerIndex": 0, "rationale": "..." }],
+    "totalAvailable": 120,
+    "warning": "optional when pool is smaller than requested count"
+  }
+}
+```
+
+Full contract: `docs/api/API_OVERVIEW.md` → `POST /api/questions/custom-session`.
 
 #### 4. New Components
 

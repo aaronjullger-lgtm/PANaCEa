@@ -49,7 +49,7 @@ Reconciliation notes: `docs/implementation/AUDIT_RECONCILIATION.md`
 - **Audit delta:** Converts §5 "145 endpoints fail audit:zod" from an unactionable phantom to a two-line reality list. Future audits now produce signal instead of noise. See `AUDIT_RECONCILIATION.md` for root-cause breakdown.
 - **Follow-ups:** None. If new wrappers are added, append them to `VALIDATED_WRAPPERS`.
 
-### TASK-007 — Zod-harden `POST /api/users/me/daily-plan/complete`
+### TASK-007 — Zod-harden `POST /api/users/me/daily-plan`
 - **Date:** 2026-04-16
 - **Status:** completed
 - **Commit:** (pending this-run commit)
