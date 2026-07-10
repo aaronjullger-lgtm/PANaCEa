@@ -49,7 +49,7 @@
 
 **Status:** ✅ Functional
 
-- **POST /api/feedback/submit:** Body `questionId`, `flagType`, `description`, optional questionText/topic/system. Creates feedback/flag record. Used by flag-question flow, FlagQuestionModal.
+- **POST /api/feedback/submit:** Body `questionId` (1–200), `flagType` (`incorrect_fact` \| `unclear_question` \| `typo` \| `outdated` \| `other`), `description` (1–2000), optional `questionText` (max 5000), `topic` (max 200), `system` (max 100). `.strict()` rejects unknown fields. Creates `QuestionFlag` with `status: pending`. Returns `{ success, feedbackId }` in the envelope `data`. Used by flag-question flow, `FlagQuestionModal`. See `docs/api/API_OVERVIEW.md`.
 - **Sentry tunnel:** `POST /api/sentry-tunnel` (if present) forwards client errors to Sentry. Used by frontend error reporting.
 - **Gap:** None. Feedback stored in DB; Sentry DSN/keys in env for tunnel.
 
