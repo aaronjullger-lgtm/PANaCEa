@@ -48,6 +48,25 @@ boundary: no prod services/secrets). Browser testing therefore used:
   gate on a sandbox-only flake. The a11y coverage itself is **green** (proven via
   manual preview). Blocker class closed with evidence.
 
+## Per-route QA loop (round 3) — landing, sign-in, sign-up
+Detailed checks via `scripts/qa/route-qa.mjs` (UI, console, network, stuck-loader,
+mobile 390px overflow, keyboard-focus reachability). Evidence:
+`docs/qa-evidence/route-qa-landing-auth.json`.
+
+| Route | UI | console | network | stuck-loader | mobile overflow | keyboard focus | Result |
+|-------|----|---------|---------|--------------|-----------------|----------------|--------|
+| `/` (landing) | h1 "Master the PANCE…" (10,761 chars body) | none | none | no | no | reaches `<a>` | ✅ clean |
+| `/sign-in` | renders landing (no dedicated route) | none | none | no | no | reaches `<a>` | ✅ clean |
+| `/sign-up` | renders landing (no dedicated route) | none | none | no | no | reaches `<a>` | ✅ clean |
+
+- **Finding (not a defect):** there are **no dedicated `/sign-in` or `/sign-up`
+  routes** in `config/routes.ts`; direct visits fall through to the landing page.
+  Sign-in is handled **inline by the protected-route gate** (e.g. `/study` shows
+  "Sign in to open your adaptive study plan." — verified in round 1). This is a
+  Clerk-gate routing design choice; adding standalone auth routes would be a
+  product + Clerk-config change (approval-gated), not a bug fix. No repair made.
+- No flow broke → per the loop rule, evidence recorded and continuing.
+
 ## Sequential browser QA sweep (round 2) — 14 routes, all clean
 - **Method:** headless Chromium (`scripts/qa/route-errors.mjs`) against `vite preview`
   with all `/api/**` mocked; captured page errors, console errors, and failed network
