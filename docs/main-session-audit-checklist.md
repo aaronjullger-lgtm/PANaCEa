@@ -106,6 +106,13 @@ Use this checklist with **browser DevTools**, **Console Ninja** (or equivalent),
 - `POST /api/srs/submit` – submit SRS review
 - `GET /api/srs/due`, `GET /api/srs/stats`, `GET /api/srs/sync` – due count, stats, sync
 
+**Analytics / readiness**
+
+- `GET /api/analytics/learner-analysis` – learner cluster, warnings, risk score
+- `GET /api/analytics/readiness-projection?examDate=YYYY-MM-DD` – FSRS exam readiness projection
+- `POST /api/analytics/soap-note` – OSCE SOAP grading analytics
+- `POST /api/reviews/second-chance` – blueprint-weighted second-chance review set
+
 **Stats & display**
 
 - `GET /api/user/stats` – main analytics (UserFriendlyStatsDisplay)
