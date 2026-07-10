@@ -27,32 +27,14 @@ declare global {
   }
 }
 
-export type ClerkE2ECredentials = {
-  email: string;
-  password?: string;
-};
-
-/**
- * Returns E2E credentials if available.
- * With @clerk/testing backend auth, only email + CLERK_SECRET_KEY is required.
- * Password is optional and used only for the legacy browser-based sign-in fallback.
- */
-export function getClerkE2ECredentials(
-  env: NodeJS.ProcessEnv = process.env
-): ClerkE2ECredentials | null {
-  const email = env.E2E_CLERK_TEST_EMAIL?.trim();
-  if (!email) return null;
-  return { email, password: env.E2E_CLERK_TEST_PASSWORD || undefined };
-}
-
-/**
- * Returns true when Clerk backend-based sign-in is available:
- * E2E_CLERK_TEST_EMAIL is set AND CLERK_SECRET_KEY is available.
- * This is the preferred path — it bypasses MFA/second-factor entirely.
- */
-export function hasClerkBackendAuth(env: NodeJS.ProcessEnv = process.env): boolean {
-  return Boolean(env.E2E_CLERK_TEST_EMAIL?.trim() && env.CLERK_SECRET_KEY?.trim());
-}
+// Pure credential resolution lives in ./e2eCredentials (no Playwright imports →
+// unit-testable). Re-exported here so existing importers keep working.
+export {
+  getClerkE2ECredentials,
+  getClerkE2EAdminCredentials,
+  hasClerkBackendAuth,
+  type ClerkE2ECredentials,
+} from './e2eCredentials';
 
 export function missingClerkE2ECredentialsMessage(): string {
   return (
