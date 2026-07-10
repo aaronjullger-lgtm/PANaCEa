@@ -45,7 +45,7 @@ Learn about PANaCEa's system design:
 
 Backend endpoint contracts and API behavior docs:
 
-- **[API Overview](api/API_OVERVIEW.md)** - Updated admin and OSCE endpoint contracts (`/api/admin/check-access`, `/api/admin/stats`, `/api/osce/complete`, `/api/osce/stats`)
+- **[API Overview](api/API_OVERVIEW.md)** - Updated endpoint contracts for the Implementation Expansion Pass (admin readiness/media, analytics, branches, drills, feedback, graph, library, push, custom session, second-chance, FSRS params, daily plan)
 
 ---
 
@@ -195,5 +195,5 @@ When adding new documentation:
 
 ---
 
-**Last Updated:** December 25, 2025  
+**Last Updated:** July 10, 2026  
 **Total Documents:** ~80 organized files

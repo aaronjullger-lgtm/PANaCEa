@@ -61,6 +61,7 @@ Docs: `docs/dependency-vulnerability-triage.md`, this report.
 - `POST /api/analytics/soap-note` — caseId length, finite/bounded score, `.strict()` body.
 - `POST /api/reviews/second-chance` — scopeFilter bounds + `.strict()` (top-level + nested).
 - Verified already-hardened (no change): `grand-rounds/submit`, `scribe/soap/extract`, `knowledge/upload` — consistent with `audit:zod` 0-fail.
+- **Docs:** request/response contracts for all changed routes consolidated in `docs/api/API_OVERVIEW.md`.
 
 ## 10. Security improvements
 - Import-boundary test guarantees the legacy regex sanitizer (`lib/middleware/*`) and `express` can never reach production edge functions.

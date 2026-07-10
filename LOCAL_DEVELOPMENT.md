@@ -129,6 +129,10 @@ npm run dev
 > longer boots; those scripts now print a redirect to `dev:wrangler`. `server.ts`
 > is kept only as a reference artifact (no npm script runs it).
 
+**API contracts:** See [`docs/api/API_OVERVIEW.md`](docs/api/API_OVERVIEW.md) for
+request/response shapes of recently changed endpoints (e.g. `/api/questions/custom-session`,
+`/api/drills/lab-cases`, `/api/users/me/daily-plan`, `/api/push/subscribe`).
+
 ## Run tests
 
 Unit / integration tests:

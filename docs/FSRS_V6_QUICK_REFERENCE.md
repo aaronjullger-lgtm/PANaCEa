@@ -93,6 +93,11 @@ invoked via `lib/services/fsrsOptimizerService.ts` / `lib/fsrs-optimizer-bridge.
 v7-alpha (29 weights) is an experimental, default-off placeholder
 (`lib/fsrs-v7.ts`, `lib/fsrs-version-selector.ts`).
 
+**API:** `GET/POST /api/user/fsrs-params` (`functions/api/user/fsrs-params.ts`) —
+server-side optimization only; reads/writes `PersonalizedFSRSParams` using
+`review_type: 'real'` and `sessionType ∈ {MAIN, DRILL}` history. See
+`docs/api/API_OVERVIEW.md` for request/response contracts.
+
 ## 6. Anti-patterns
 
 - ❌ Rendering "Again / Hard / Good / Easy" buttons for students.
@@ -104,6 +109,7 @@ v7-alpha (29 weights) is an experimental, default-off placeholder
 ## References
 - Engine: `lib/fsrs.ts` · Implicit rating: `lib/implicit-metrics.ts`, `lib/micro-kinetics.ts`
 - Submission: `lib/services/drillReviewService.ts`, `functions/api/drills/submit-review.ts`
+- Personalization API: `functions/api/user/fsrs-params.ts` · Contracts: `docs/api/API_OVERVIEW.md`
 - ReviewLog: `lib/services/reviewLogService.ts` · Optimizer: `gcp-fsrs-optimizer/`
 - State report: `docs/fsrs-current-state-and-hardening-report.md`
 
