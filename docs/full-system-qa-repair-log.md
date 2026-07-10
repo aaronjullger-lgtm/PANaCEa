@@ -48,6 +48,32 @@ boundary: no prod services/secrets). Browser testing therefore used:
   gate on a sandbox-only flake. The a11y coverage itself is **green** (proven via
   manual preview). Blocker class closed with evidence.
 
+## Accessibility QA/repair loop (round 7) — 3 real fixes
+Inspected production-used components (dashboard widgets, study question UI, answer
+feedback, nav, modals, OSCE, drill tiles). Most already pass (evidence below); found
+and fixed **3 real issues**.
+
+**Verified already-accessible (evidence):**
+- `AnswerFeedback`: all action buttons have visible text + `aria-hidden` icons; section
+  `aria-label`; notes textarea labeled.
+- `Modal` primitive: `role=dialog` + `aria-modal` + focus trap/restore + Escape + scroll
+  lock + `aria-label="Close modal"` + 44px target + focus-visible ring.
+- Study modals (`QuizLabCalcModal`, `ClinicalQuickRefPanel` close): labeled close buttons.
+- `IllnessScriptView`, `ClinicalSafety` disclosures already carry `aria-expanded`.
+- axe (round 1): 12/12 on landing/study/practice/progress/drills/osce (0 critical/serious).
+
+**Fixed:**
+1. `ClinicalQuickRefPanel` accordion toggle — added `aria-expanded={open}` + `aria-hidden`
+   on the chevron (disclosure state was not exposed to AT).
+2. `ConditionFamilyView` (Smart Library) family toggle — was an **icon-only button with an
+   aria-hidden chevron → no accessible name at all**; added `aria-expanded` + a descriptive
+   `aria-label` ("Expand/Collapse {family} details").
+3. `SystemComparison` bar/radar view toggles — added `aria-pressed` (active-view state) +
+   `aria-label` + `aria-hidden` icons. Test: `SystemComparison.a11y.test.tsx` (1 — asserts
+   accessible names + aria-pressed toggling).
+
+Validation: `SystemComparison.a11y.test.tsx` 1/1; `npm run build` clean. Commit below.
+
 ## Mock/stub truthfulness loop (round 6)
 Searched production surfaces for fake data shown as real student progress.
 
