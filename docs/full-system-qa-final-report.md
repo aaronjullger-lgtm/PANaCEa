@@ -1,5 +1,27 @@
 # Full-System QA & Repair — Final Report
 
+## 0. Final hard validation (latest — commit `176b8100`)
+
+All commands run on the current branch; **every gate passed, no repairs required.**
+
+| Command | Result |
+|---|---|
+| `npm run typecheck` | ✅ 0 errors |
+| `npm run lint` | ✅ 0 errors (251 warnings, under the 2000 cap) |
+| `npm run build` | ✅ (via `test:ui-smoke:preview`) |
+| `npm run test:critical` | ✅ 143 pass |
+| `npm test` | ✅ **544 files / 9956 passed / 1 skipped / 0 failed** |
+| `npm audit --audit-level=moderate` | ⚠️ 25 vulns (2 crit/11 high/10 mod/2 low) — gated (ERESOLVE; see triage doc) |
+| `test:ui-smoke:preview` (headless Chromium) | ✅ 4/4 routes clean (0 page/console/network errors) |
+| `test:e2e:a11y` (axe critical/serious) | ✅ 12/12 |
+| `scripts/qa/axe-all.mjs` (all severities) | ✅ 0 violations on `/`, `/study`, `/practice`, `/progress` |
+| `scripts/qa/route-errors.mjs` | ✅ 14/14 routes clean |
+| `scripts/qa/route-qa.mjs` | ✅ landing/sign-in/sign-up ok (UI/console/network/mobile/keyboard) |
+
+**Branch:** `cursor/panacea-audit-stabilization-efdd`. **Files changed vs `main`:** 78. **New test files:** 17. **QA tooling added:** `scripts/qa/{axe-all,route-errors,route-qa}.mjs`; evidence in `docs/qa-evidence/`. **Failure-handling:** no command failed, so the ≤2-attempt repair protocol was not triggered.
+
+---
+
 ## 1. Executive summary
 Ran the app in a real headless browser and via the full automated suite, walked the
 product surfaces sequentially, and looked for breakage to repair. **Result: no
