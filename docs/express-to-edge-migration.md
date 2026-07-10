@@ -85,6 +85,17 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 | `POST /api/analytics/confusion` | `functions/api/analytics/confusion.ts` | ✅ PORTED |
 | `POST /api/analytics/soap-note` | `functions/api/analytics/soap-note.ts` | ✅ PORTED |
 | `GET /api/analytics/performance-deltas` | `functions/api/analytics/performance-deltas.ts` | ✅ PORTED |
+
+### Notifications, SRS & Reviews (Edge-only)
+
+| Route | Edge Handler | Status |
+|---|---|---|
+| `GET /api/srs/due` | `functions/api/srs/due.ts` | ✅ EDGE |
+| `POST /api/push/subscribe` | `functions/api/push/subscribe.ts` | ✅ EDGE |
+| `DELETE /api/push/subscribe` | `functions/api/push/subscribe.ts` | ✅ EDGE |
+| `POST /api/reviews/second-chance` | `functions/api/reviews/second-chance.ts` | ✅ EDGE |
+
+See [`docs/api/API_OVERVIEW.md`](api/API_OVERVIEW.md) for request/response contracts.
 | `GET /api/achievements` | — | ❌ MISSING |
 | `GET /api/performance` | — | ❌ MISSING |
 | `POST /api/performance` | — | ❌ MISSING |

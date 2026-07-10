@@ -6,149 +6,302 @@ This document tracks the request/response contracts for the most recently change
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/admin/check-access` | Verifies whether the authenticated user currently has admin access. |
-| GET | `/api/admin/stats` | Returns admin dashboard platform metrics (users, activity, flags, top systems). |
-| POST | `/api/osce/complete` | Marks an OSCE session complete (idempotent) and optionally persists analytics to `CaseFile`. |
-| GET | `/api/osce/stats` | Returns OSCE-only performance metrics and trend data from completed sessions with scores. |
+| GET | `/api/srs/due` | Returns canonical FSRS due items from Card, UserTopicProgress, and UserProgress (compatibility read model). |
+| POST | `/api/analytics/soap-note` | Stores SOAP Note grading analytics for OSCE sessions. |
+| POST | `/api/push/subscribe` | Registers a Web Push subscription for SRS review reminders. |
+| DELETE | `/api/push/subscribe` | Removes a Web Push subscription and disables push when none remain. |
+| POST | `/api/reviews/second-chance` | Builds a subdomain-level, blueprint-weighted second-chance review session. |
 
 ## Endpoint Contracts
 
-### `GET /api/admin/check-access`
+### `GET /api/srs/due`
 
 **Auth:** Required (authenticated endpoint)
 
-**Request body:** None
+**Query parameters**
+
+| Param | Type | Default | Constraints |
+|---|---|---|---|
+| `limit` | string (parsed int) | `100` | Clamped to `1`–`200` |
+| `progressContext` | `READINESS` \| `TARGETED` | — | Optional; filters all canonical due stores |
+| `context` | `READINESS` \| `TARGETED` | — | Alias for `progressContext` |
 
 **Success response (`200 OK`)**
 
 ```json
 {
-  "success": true,
-  "hasAccess": true,
-  "role": "admin",
-  "userId": "string",
-  "email": "optional-string"
-}
-```
-
-`role` can be `admin` or `superadmin`.
-
-**Error responses**
-
-- `403` → `{ "success": false, "hasAccess": false, "message": "Forbidden - Admin access required" }`
-- `500` → `{ "error": "Internal server error", "hasAccess": false }`
-
-**Notes**
-
-- Access is resolved in this order: `SUPERADMIN_USER_IDS`/`ADMIN_USER_IDS` env values first, then database role lookup.
-
----
-
-### `GET /api/admin/stats`
-
-**Auth:** Required (admin-authenticated endpoint)
-
-**Request body:** None
-
-**Success response (`200 OK`)**
-
-```json
-{
+  "ok": true,
   "success": true,
   "data": {
-    "totalUsers": 0,
-    "activeUsersToday": 0,
-    "totalStudySessions": 0,
-    "averageAccuracy": 0,
-    "popularSystems": [
+    "items": [
       {
-        "system": "string",
-        "count": 0
+        "id": "string",
+        "source": "card | user_topic_progress | user_progress",
+        "questionId": "string | null",
+        "questionIdentityId": "string | null",
+        "conditionId": "string | null",
+        "taskType": "string | null",
+        "progressContext": "string | null",
+        "dueDate": "2026-01-01T00:00:00.000Z",
+        "overdueDays": 0,
+        "priority": 0
       }
     ],
-    "pendingFlags": 0
-  }
+    "totalDue": 0,
+    "timestamp": "2026-01-01T00:00:00.000Z",
+    "source": "canonical_fsrs_progress",
+    "progressContext": "READINESS | TARGETED | null",
+    "suppressedDuplicates": 0
+  },
+  "traceId": "string",
+  "timestamp": "2026-01-01T00:00:00.000Z"
 }
 ```
 
-**Error responses**
+**Degraded response (`200 OK`, resilient fallback)**
 
-- `403` → `{ "error": "Admin access required" }`
-- `500` → `{ "error": "Failed to fetch admin stats" }`
-
-**Notes**
-
-- If `DATABASE_URL` is missing, returns zeroed stats with `note: "Database not configured"`.
-
----
-
-### `POST /api/osce/complete`
-
-**Auth:** Required (authenticated endpoint)
-
-**Request body**
+On database errors the handler returns an empty queue instead of HTTP 500:
 
 ```json
 {
-  "body": {
-    "sessionId": "string",
-    "diagnosis": "string (optional)",
-    "treatmentPlan": "string (optional)",
-    "soapComparison": {},
-    "timingAnalytics": {},
-    "infographics": ["string"]
+  "ok": true,
+  "success": true,
+  "data": {
+    "items": [],
+    "totalDue": 0,
+    "timestamp": "2026-01-01T00:00:00.000Z",
+    "error": "Unable to load due items. Please try again."
   }
 }
 ```
 
-**Success responses**
-
-- `200 OK` → `{ "success": true }`
-- `200 OK` (idempotent repeat) → `{ "success": true, "alreadyCompleted": true }`
-
-**Error responses**
-
-- `404` → `{ "error": "User not found" }` or `{ "error": "Session not found" }`
-- `500` → `{ "error": "Internal server error" }`
-
 **Notes**
 
-- Creates `CaseFile` on a best-effort basis when `soapComparison` or `timingAnalytics` is provided.
-- `CaseFile` creation failure is logged but does not fail completion.
+- Reads from `Card`, `UserTopicProgress`, and `UserProgress` (legacy `SRSItem` is deprecated).
+- Due `Card` rows require linked `Question` with `lifecycleStatus: ACTIVE` and `qaStatus: APPROVED`.
+- Broader condition-level due rows are suppressed when a more specific Card or topic row covers the same condition/context.
+- Dashboard consumers depend on stable top-level keys: `items`, `totalDue`, `timestamp`. Each item must include `id`, `source`, `questionId`, `conditionId`, `dueDate`, `overdueDays`, `priority`.
 
 ---
 
-### `GET /api/osce/stats`
+### `POST /api/analytics/soap-note`
 
 **Auth:** Required (authenticated endpoint)
 
-**Request body:** None
+**Request body** (flat or `{ "body": { ... } }` — middleware accepts both)
+
+```json
+{
+  "caseId": "string",
+  "totalScore": 82,
+  "breakdown": {
+    "subjective": 20
+  }
+}
+```
+
+**Validation (`.strict()` on body)**
+
+| Field | Constraints |
+|---|---|
+| `caseId` | Non-empty string, max 200 chars |
+| `totalScore` | Finite number, `0`–`100000` (rejects `NaN`/`Infinity`) |
+| `breakdown` | Record of string keys to arbitrary JSON values |
+| Unknown fields | Rejected |
 
 **Success response (`200 OK`)**
 
 ```json
 {
-  "totalEncounters": 0,
-  "passRate": 0,
-  "averageScore": 0,
-  "averageClinicalReasoningScore": 0,
-  "trend": [
-    {
-      "sessionId": "string",
-      "date": "2026-01-01T00:00:00.000Z",
-      "score": 0,
-      "clinicalReasoningScore": 0
+  "ok": true,
+  "success": true,
+  "data": { "success": true },
+  "traceId": "string",
+  "timestamp": "2026-01-01T00:00:00.000Z"
+}
+```
+
+**Error responses**
+
+- `400` → validation failure (malformed score, empty/oversized `caseId`, unknown fields)
+- `500` → `{ "error": "Failed to store SOAP grading analytics" }`
+
+**Notes**
+
+- `userId` is resolved from the Clerk token; callers do not send it.
+- Persists to `SoapNoteGradingEvent` when the model exists; otherwise logs and still returns success.
+
+---
+
+### `POST /api/push/subscribe`
+
+**Auth:** Required (authenticated endpoint)
+
+**Request body** (flat JSON, `.strict()`)
+
+```json
+{
+  "endpoint": "https://push.example.com/abc",
+  "keys": {
+    "p256dh": "base64-key",
+    "auth": "base64-key"
+  }
+}
+```
+
+**Validation**
+
+| Field | Constraints |
+|---|---|
+| `endpoint` | Valid URL, max 2048 chars |
+| `keys.p256dh` | Non-empty string, max 512 chars |
+| `keys.auth` | Non-empty string, max 512 chars |
+| Unknown fields | Rejected at top level and inside `keys` |
+
+**Success response (`200 OK`)**
+
+```json
+{
+  "ok": true,
+  "success": true,
+  "data": { "message": "Subscription stored" },
+  "traceId": "string",
+  "timestamp": "2026-01-01T00:00:00.000Z"
+}
+```
+
+**Notes**
+
+- Upserts `PushSubscription` on `(userId, endpoint)` and sets `UserPreferences.pushNotifications: true`.
+- See `hooks/usePushNotifications.ts` (client) and `functions/api/cron/push-reminders.ts` (sender).
+
+---
+
+### `DELETE /api/push/subscribe`
+
+**Auth:** Required (authenticated endpoint)
+
+**Request body** (flat JSON, `.strict()`)
+
+```json
+{
+  "endpoint": "https://push.example.com/abc"
+}
+```
+
+**Validation:** `endpoint` must be a valid URL, max 2048 chars. Unknown fields rejected.
+
+**Success response (`200 OK`)**
+
+```json
+{
+  "ok": true,
+  "success": true,
+  "data": { "message": "Subscription removed" },
+  "traceId": "string",
+  "timestamp": "2026-01-01T00:00:00.000Z"
+}
+```
+
+**Notes**
+
+- Deletes the matching subscription for the authenticated user.
+- When no subscriptions remain, sets `UserPreferences.pushNotifications: false`.
+
+---
+
+### `POST /api/reviews/second-chance`
+
+**Auth:** Required (authenticated endpoint)
+
+**Request body** (flat JSON, `.strict()`)
+
+```json
+{
+  "count": 10,
+  "examType": "PANCE",
+  "scopeFilter": {
+    "system": "CV",
+    "conditionId": "optional-condition-id"
+  }
+}
+```
+
+**Validation**
+
+| Field | Constraints |
+|---|---|
+| `count` | Optional integer, `1`–`25` (default `10`) |
+| `examType` | Optional enum: `PANCE`, `PANRE`, `EOR` (default `PANCE`) |
+| `scopeFilter.system` | Optional string, max 100 chars |
+| `scopeFilter.conditionId` | Optional string, max 200 chars |
+| Unknown fields | Rejected at top level and inside `scopeFilter` |
+
+**Success response (`200 OK`)**
+
+```json
+{
+  "ok": true,
+  "success": true,
+  "data": {
+    "selections": [
+      {
+        "questionId": "string",
+        "learningTarget": {
+          "conditionId": "string",
+          "taskType": "string",
+          "system": "string",
+          "stability": 0,
+          "difficulty": 0,
+          "lapses": 0,
+          "isOverdue": true,
+          "priorityScore": 0
+        },
+        "isVariant": false,
+        "isSecondChance": false,
+        "recognitionRisk": 0,
+        "selectionMethod": "unused_variant",
+        "question": {
+          "source": "pre_generated | main_question",
+          "id": "string",
+          "conditionId": "string",
+          "system": "string",
+          "difficulty": "string",
+          "questionType": "string",
+          "questionData": {}
+        }
+      }
+    ],
+    "meta": {
+      "total": 0,
+      "withVariants": 0,
+      "withSecondChance": 0,
+      "examType": "PANCE"
     }
-  ]
+  }
+}
+```
+
+**Empty due queue (`200 OK`)**
+
+```json
+{
+  "ok": true,
+  "success": true,
+  "data": {
+    "selections": [],
+    "message": "No items due for second-chance review."
+  }
 }
 ```
 
 **Error responses**
 
 - `404` → `{ "error": "User not found" }`
-- `500` → `{ "error": "Failed to load OSCE stats" }`
+- `400` → validation failure (out-of-range `count`, invalid `examType`, unknown fields)
+- `500` → `{ "error": "Failed to build second-chance session", "message": "Please try again." }`
 
 **Notes**
 
-- Metrics are computed from completed `PatientEncounterSession` rows that have an `OsceResult`.
-- Pass threshold is score `>= 70`.
+- Powered by `lib/services/secondChanceEngine.ts`; hydrates from `PreGeneratedQuestion` first, then `Question`.
+- Increments `timesServed` on served pre-generated questions (fire-and-forget).

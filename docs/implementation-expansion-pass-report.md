@@ -46,7 +46,9 @@ Docs: `docs/dependency-vulnerability-triage.md`, this report.
 - `POST/DELETE /api/push/subscribe` — URL/key length caps + `.strict()`.
 - `POST /api/analytics/soap-note` — caseId length, finite/bounded score, `.strict()` body.
 - `POST /api/reviews/second-chance` — scopeFilter bounds + `.strict()` (top-level + nested).
+- `GET /api/srs/due` — dashboard response-contract tests lock stable `items`/`totalDue`/`timestamp` shape and resilient empty-state (never HTTP 500 on DB errors).
 - Verified already-hardened (no change): `grand-rounds/submit`, `scribe/soap/extract`, `knowledge/upload` — consistent with `audit:zod` 0-fail.
+- **Contracts:** See [`docs/api/API_OVERVIEW.md`](api/API_OVERVIEW.md) for method, path, validation bounds, and response shapes.
 
 ## 10. Security improvements
 - Import-boundary test guarantees the legacy regex sanitizer (`lib/middleware/*`) and `express` can never reach production edge functions.
