@@ -1,5 +1,19 @@
 # PANaCEa Audit Stabilization — Implementation Expansion Pass
 
+> ## Continuation pass (Phases 5–10) — update
+> Real code/test work completed after the initial pass:
+> - **Phase 5 (security/deps):** added `.github/dependabot.yml` (npm + github-actions, grouped, react-router-dom major gated). SECURITY.md, CI `npm audit`, secret-scan + import-boundary guards already existed.
+> - **Phase 6 (a11y):** full-impact axe scan found + fixed a landing `heading-order` violation (`components/landing/Hero.tsx`: decorative preview `<h3>`→`<p>`). Post-fix `/`, `/study`, `/practice`, `/progress` = **0 axe violations at every severity**. Added `scripts/qa/axe-all.mjs`.
+> - **Phase 7 (dashboard truthfulness):** verified all fallback datasets are tagged `source:'mock'` and widgets render visible mock/"calibrating"/"Mock review" indicators; added `commandCenterMockData.truthfulness.test.ts` (6) as a regression guard. No unlabeled mock data.
+> - **Phase 8 (refactor):** removed the dead/misleading `dev:server:legacy` npm script (`server.ts` imports a missing `./routes` and cannot run); tidied retirement notice + runbook.
+> - **Phase 9 (devops):** CI now runs the headless UI smoke (landing render + protected-route gating) in the a11y job, reusing Chromium + built dist on a separate port.
+> - **Phase 10 (validation):** typecheck 0 errors · lint 0 errors · build ✅ · full suite **538 files / 9933 passed / 0 failed** · npm audit 25 (gated).
+>
+> Files changed: `.github/dependabot.yml`, `components/landing/Hero.tsx`, `scripts/qa/axe-all.mjs`, `components/dashboard/adaptive/page/commandCenterMockData.truthfulness.test.ts`, `package.json`, `scripts/dev/express-retired.mjs`, the local-dev runbook, `.github/workflows/ci.yml`.
+> Blocked/gated: `npm audit fix` (ERESOLVE peer conflict), dependency majors, RLS DB policies, LICENSE, authenticated browser QA (needs Clerk/DB test creds).
+
+
+
 **Branch:** `cursor/panacea-audit-stabilization-efdd` (continues the prior run; base after prior final report `3faf8d7e`).
 **Constraints honored:** no prod connections; no secrets; no migrations/backfills; no auth/RLS/validation/type/test/security weakening; no removed tests; **no explicit FSRS confidence/rating buttons** (implicit/behavioral only); ≤2 repair attempts/failure-class.
 
