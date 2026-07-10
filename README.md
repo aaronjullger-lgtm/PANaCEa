@@ -37,7 +37,7 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 ### 🛠️ Tech Stack
 
 - **Frontend**: React 19, TypeScript, Vite, TailwindCSS, Framer Motion
-- **Backend**: Cloudflare Pages Functions (production); Express (local dev only)
+- **Backend**: Cloudflare Pages Functions (production); Express retired for local dev — use `npm run dev:wrangler`
 - **Database**: PostgreSQL with Prisma ORM
 - **AI**: Google Gemini API
 - **Authentication**: Clerk
@@ -46,8 +46,8 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 ### Architecture (API)
 
 - **Production API:** Cloudflare Pages Functions under `functions/api/`. All deployed requests are served by these edge handlers.
-- **Legacy `routes/`:** The `routes/` directory contains Express route handlers for **local/dev only**. They are **not deployed** to Cloudflare Pages. Use `npm run dev:server` only when testing legacy Express behavior. For production behavior, use `npm run dev:wrangler` or deploy to Pages.
-- **Endpoint contracts:** See `docs/api/API_OVERVIEW.md` for current request/response shapes of actively maintained endpoints (health, Gemini, content library, questions, goals/session, diagnostic puzzle, OSCE grading, admin enrichment).
+- **Legacy `routes/`:** The `routes/` directory is archived (`_trash/old-routes/`). Express is **retired** — it is not deployed and no longer boots locally. Use `npm run dev:wrangler` for production-parity API testing.
+- **Endpoint contracts:** See `docs/api/API_OVERVIEW.md` for current request/response shapes of actively maintained endpoints, including validation-hardened routes (`/api/feedback/submit`, `/api/push/subscribe`, `/api/analytics/soap-note`, `/api/reviews/second-chance`, `/api/questions/custom-session`, `/api/drills/lab-cases`, `/api/srs/due`) plus admin and OSCE grading.
 
 ### Deployment & health (runbook)
 
@@ -321,7 +321,7 @@ npm run db:studio # Opens Prisma Studio - if this works, DB is accessible
 
 ````
 
-**Note:** The Vite dev server (port 3000) proxies `/api/*` and `/geminiProxy` requests to the legacy Express backend (port 3001) when using `npm run dev`/`dev:all`. Maintained Cloudflare Pages Function routes such as `/api/study/*` require `npm run dev:wrangler` or `npm run pages:serve` for production-parity testing.
+**Note:** `npm run dev` serves the Vite frontend only (no API). For full API parity—including `/api/questions/custom-session`, `/api/drills/lab-cases`, `/api/srs/due`, and other Cloudflare Functions—use `npm run dev:wrangler` or `npm run pages:serve`.
 
 ### Database-First Architecture
 

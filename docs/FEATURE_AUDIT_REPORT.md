@@ -159,9 +159,9 @@
 | Organ systems | ✅ Pass | 13 systems (CV, Derm, Endo, HEENT, GI, GU, Heme, ID, MSK, Neuro, Psych, Pulm, Renal, Repro) |
 | Focus areas | ✅ Pass | Anatomy & Physiology, Pathophysiology, Diagnosis, Pharmacology, Management, Procedures & Tests |
 | Select All / Clear | ✅ Pass | Works |
-| Start Session | ❌ Fail | "Failed to fetch questions: 404" – Express lacks `POST /api/questions/custom-session` |
+| Start Session | ✅ CF only | Use `npm run dev:wrangler` — `POST /api/questions/custom-session` is a Cloudflare Function |
 
-**Root cause:** `customSessionService` calls `/api/questions/custom-session`; only CF function exists. Express `routes/questions.ts` has no `/custom-session` route.
+**Root cause:** `customSessionService` calls `/api/questions/custom-session`; only the Cloudflare Function exists. Use `npm run dev:wrangler` for local API parity (Express is retired).
 
 ---
 
@@ -170,9 +170,9 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | Navigation | ✅ Pass | Drill loads from tile click |
-| Question fetch | ❌ Fail | "Database Error: Failed to fetch lab cases: 404" |
+| Question fetch | ✅ CF only | Use `npm run dev:wrangler` — `GET /api/drills/lab-cases` is a Cloudflare Function |
 
-**Root cause:** `labCaseService.fetchLabCases` calls `/api/drills/lab-cases`; Express has no `/api/drills` router. CF has `functions/api/drills/lab-cases.ts`.
+**Root cause:** `labCaseService.fetchLabCases` calls `/api/drills/lab-cases`; only the Cloudflare Function exists. Use `npm run dev:wrangler` for local API parity (Express is retired).
 
 ---
 
@@ -234,8 +234,8 @@
 | Endpoint | CF | Express | Impact |
 |----------|----|---------|--------|
 | `GET /api/questions/pool` | ✅ | ✅ (fixed) | Core PANCE |
-| `POST /api/questions/custom-session` | ✅ | ❌ | Custom Study Builder |
-| `GET /api/drills/lab-cases` | ✅ | ❌ | Lab Interpretation drill |
+| `POST /api/questions/custom-session` | ✅ | ❌ (retired) | Custom Study Builder — use `dev:wrangler` |
+| `GET /api/drills/lab-cases` | ✅ | ❌ (retired) | Lab Interpretation drill — use `dev:wrangler` |
 
 ---
 
@@ -243,8 +243,8 @@
 
 ### High priority
 
-1. Add `POST /api/questions/custom-session` to Express for local dev.
-2. Add `GET /api/drills/lab-cases` (or proxy to `/api/labs/cases`) in Express for Lab Interpretation.
+1. Use `npm run dev:wrangler` for local dev when testing Custom Study Builder or Lab Interpretation (Express routes are retired).
+2. See `docs/api/API_OVERVIEW.md` for current request/response contracts on these endpoints.
 
 ### Medium
 

@@ -68,7 +68,7 @@
 **Status:** ✅ Functional
 
 - **GET /api/drills/code-blue** (`functions/api/drills/code-blue.ts`): Public (publicEndpoint). Query: optional `category` (ACLS | PALS | BLS | Critical Care), `count`. Queries `ACLSQuestion` (or equivalent); returns shuffled `CodeBlueQuestion[]` (id, question, options, correctIndex, explanation, category). Validation via `codeBlueQuerySchema`.
-- **GET/POST /api/drills/lab-cases** (`functions/api/drills/lab-cases.ts`): Authenticated. GET: query params via `labCasesQuerySchema`; returns lab cases from DB transformed to frontend `LabCase` format (clinicalContext, panels, correctDiagnosis, keyFindings, explanation, category, orderableTests). POST: action schema for submitting/mining lab case actions. Uses Prisma and disconnect in `finally`.
+- **GET/POST /api/drills/lab-cases** (`functions/api/drills/lab-cases.ts`): Authenticated. GET: query params via `labCasesQuerySchema` (`category`, `limit` 1–100, `shuffle`); returns lab cases from DB transformed to frontend `LabCase` format. POST: `action: "getDiagnoses"` returns sorted unique diagnoses. Generic error messages on failure (no stack traces). Contract: `docs/api/API_OVERVIEW.md`.
 - **POST /api/drills/related-content** (`functions/api/drills/related-content.ts`): Authenticated. Body: `category` (physiology, anatomy, lab, ecg, procedure, finding), optional `tags`, `conceptId`, `limit`. Fetches related reference content (e.g. PhysiologyConcept, anatomy, lab, etc.) for EnhancedFeedbackPanel. Returns `relatedContent` and `relatedItems`. Validation via `relatedContentSchema`.
 - **Gap:** None. Code-blue is public reference data; lab-cases and related-content are authenticated.
 

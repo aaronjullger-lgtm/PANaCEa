@@ -26,7 +26,7 @@ Welcome to the PANaCEa documentation! This index helps you quickly find the info
 
 ### For API Surface
 
-1. **[API Overview](api/API_OVERVIEW.md)** - Current request/response contracts for updated endpoints
+1. **[API Overview](api/API_OVERVIEW.md)** - Request/response contracts for validation-hardened and core-loop endpoints (`/api/feedback/submit`, `/api/push/subscribe`, `/api/srs/due`, `/api/drills/lab-cases`, `/api/questions/custom-session`, `/api/reviews/second-chance`, `/api/analytics/soap-note`, admin, OSCE)
 
 ---
 
@@ -45,7 +45,7 @@ Learn about PANaCEa's system design:
 
 Backend endpoint contracts and API behavior docs:
 
-- **[API Overview](api/API_OVERVIEW.md)** - Updated admin and OSCE endpoint contracts (`/api/admin/check-access`, `/api/admin/stats`, `/api/osce/complete`, `/api/osce/stats`)
+- **[API Overview](api/API_OVERVIEW.md)** - Request/response contracts for recently hardened endpoints: validation (`/api/feedback/submit`, `/api/push/subscribe`, `/api/analytics/soap-note`, `/api/reviews/second-chance`, `/api/questions/custom-session`), drills (`/api/drills/lab-cases`), SRS (`/api/srs/due`), plus admin and OSCE routes
 
 ---
 
