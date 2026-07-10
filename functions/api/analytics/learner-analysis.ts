@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserId } from '../_shared/user-resolver';
 import type { CloudflareEnv } from '../_shared/types';
 import {
@@ -250,10 +251,12 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
       },
     };
   } catch (error) {
-    console.error('[learner-analysis]', error);
+    createEndpointLogger('/api/analytics/learner-analysis').error('Learner analysis error', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       status: 500,
-      error: error instanceof Error ? error.message : 'Learner analysis failed',
+      error: 'Learner analysis failed. Please try again.',
     };
   } finally {
     await safePrismaDisconnect(prisma);
