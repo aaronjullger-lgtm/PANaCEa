@@ -74,6 +74,7 @@ boundary: no prod services/secrets). Browser testing therefore used:
   `questionText`/`topic`/`system`, and unknown fields rejected.
 - **Validation:** `vitest run functions/api/feedback/submit.test.ts` → 7/7 pass
   (module imports + parses cleanly). Commit `ff5ac974`.
+- **Contract doc:** `docs/api/API_OVERVIEW.md` (`POST /api/feedback/submit`).
 
 ## Net
 No application defects were found on any browser-testable or automated surface.

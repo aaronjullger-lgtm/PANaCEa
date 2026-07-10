@@ -2,87 +2,25 @@
 
 This document tracks the request/response contracts for the most recently changed API routes.
 
+All non-streaming responses use the unified envelope:
+
+- **Success:** `{ "ok": true, "data": { ... }, "traceId": "string", "timestamp": "ISO-8601" }`
+- **Error:** `{ "ok": false, "error": { "code": "string", "message": "string" }, "traceId": "string", "timestamp": "ISO-8601" }`
+
 ## Changed Routes
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/admin/check-access` | Verifies whether the authenticated user currently has admin access. |
-| GET | `/api/admin/stats` | Returns admin dashboard platform metrics (users, activity, flags, top systems). |
-| POST | `/api/osce/complete` | Marks an OSCE session complete (idempotent) and optionally persists analytics to `CaseFile`. |
-| GET | `/api/osce/stats` | Returns OSCE-only performance metrics and trend data from completed sessions with scores. |
+| POST | `/api/analytics/soap-note` | Persists OSCE SOAP-note grading analytics for the authenticated user. |
+| POST | `/api/feedback/submit` | Submits question feedback / content flags (creates a `QuestionFlag` record). |
+| POST | `/api/push/subscribe` | Stores a Web Push subscription for SRS review reminders. |
+| DELETE | `/api/push/subscribe` | Removes a Web Push subscription and disables push when none remain. |
+| POST | `/api/reviews/second-chance` | Builds a subdomain-level, blueprint-weighted second-chance review session. |
+| GET | `/api/srs/due` | Returns canonical FSRS due items from Card, UserTopicProgress, and UserProgress. |
 
 ## Endpoint Contracts
 
-### `GET /api/admin/check-access`
-
-**Auth:** Required (authenticated endpoint)
-
-**Request body:** None
-
-**Success response (`200 OK`)**
-
-```json
-{
-  "success": true,
-  "hasAccess": true,
-  "role": "admin",
-  "userId": "string",
-  "email": "optional-string"
-}
-```
-
-`role` can be `admin` or `superadmin`.
-
-**Error responses**
-
-- `403` → `{ "success": false, "hasAccess": false, "message": "Forbidden - Admin access required" }`
-- `500` → `{ "error": "Internal server error", "hasAccess": false }`
-
-**Notes**
-
-- Access is resolved in this order: `SUPERADMIN_USER_IDS`/`ADMIN_USER_IDS` env values first, then database role lookup.
-
----
-
-### `GET /api/admin/stats`
-
-**Auth:** Required (admin-authenticated endpoint)
-
-**Request body:** None
-
-**Success response (`200 OK`)**
-
-```json
-{
-  "success": true,
-  "data": {
-    "totalUsers": 0,
-    "activeUsersToday": 0,
-    "totalStudySessions": 0,
-    "averageAccuracy": 0,
-    "popularSystems": [
-      {
-        "system": "string",
-        "count": 0
-      }
-    ],
-    "pendingFlags": 0
-  }
-}
-```
-
-**Error responses**
-
-- `403` → `{ "error": "Admin access required" }`
-- `500` → `{ "error": "Failed to fetch admin stats" }`
-
-**Notes**
-
-- If `DATABASE_URL` is missing, returns zeroed stats with `note: "Database not configured"`.
-
----
-
-### `POST /api/osce/complete`
+### `POST /api/analytics/soap-note`
 
 **Auth:** Required (authenticated endpoint)
 
@@ -90,37 +28,261 @@ This document tracks the request/response contracts for the most recently change
 
 ```json
 {
-  "body": {
-    "sessionId": "string",
-    "diagnosis": "string (optional)",
-    "treatmentPlan": "string (optional)",
-    "soapComparison": {},
-    "timingAnalytics": {},
-    "infographics": ["string"]
+  "caseId": "string (1–200 chars)",
+  "totalScore": 0,
+  "breakdown": {
+    "subjective": 20
   }
 }
 ```
 
-**Success responses**
+**Success response (`200 OK`)**
 
-- `200 OK` → `{ "success": true }`
-- `200 OK` (idempotent repeat) → `{ "success": true, "alreadyCompleted": true }`
+```json
+{
+  "ok": true,
+  "data": { "success": true },
+  "traceId": "string",
+  "timestamp": "2026-01-01T00:00:00.000Z"
+}
+```
 
 **Error responses**
 
-- `404` → `{ "error": "User not found" }` or `{ "error": "Session not found" }`
-- `500` → `{ "error": "Internal server error" }`
+- `400` → validation failure (invalid/missing fields, unknown keys, non-finite score)
+- `500` → `{ "error": { "message": "Failed to store SOAP grading analytics" } }`
 
 **Notes**
 
-- Creates `CaseFile` on a best-effort basis when `soapComparison` or `timingAnalytics` is provided.
-- `CaseFile` creation failure is logged but does not fail completion.
+- Schema: `SoapNoteSchema` — `.strict()` body; `caseId` length 1–200; `totalScore` must be finite, 0–100,000; `breakdown` is a string-keyed record.
+- Persists to `SoapNoteGradingEvent` when the model exists; otherwise logs and returns success (graceful no-op).
 
 ---
 
-### `GET /api/osce/stats`
+### `POST /api/feedback/submit`
 
 **Auth:** Required (authenticated endpoint)
+
+**Request body**
+
+```json
+{
+  "questionId": "string (1–200 chars)",
+  "flagType": "incorrect_fact | unclear_question | typo | outdated | other",
+  "description": "string (1–2000 chars)",
+  "questionText": "string (optional, max 5000)",
+  "topic": "string (optional, max 200)",
+  "system": "string (optional, max 100)"
+}
+```
+
+**Success response (`201 Created`)**
+
+```json
+{
+  "ok": true,
+  "data": {
+    "success": true,
+    "feedbackId": "flag-1234567890-abc1234"
+  },
+  "traceId": "string",
+  "timestamp": "2026-01-01T00:00:00.000Z"
+}
+```
+
+**Error responses**
+
+- `400` → validation failure (empty/oversized fields, invalid `flagType`, unknown keys)
+- `404` → `{ "error": "User not found" }`
+- `500` → `{ "error": "Feedback submission failed" }`
+
+**Notes**
+
+- Schema: `FeedbackSubmitSchema` — `.strict()` body; all free-text fields length-bounded because they are persisted to `QuestionFlag`.
+- `incorrect_fact` flags are stored with `priority: "high"`; other types use `priority: "medium"`.
+- Used by the flag-question flow (`FlagQuestionModal`).
+
+---
+
+### `POST /api/push/subscribe`
+
+**Auth:** Required (authenticated endpoint)
+
+**Request body**
+
+```json
+{
+  "endpoint": "https://push.example.com/abc (URL, max 2048 chars)",
+  "keys": {
+    "p256dh": "string (1–512 chars)",
+    "auth": "string (1–512 chars)"
+  }
+}
+```
+
+**Success response (`200 OK`)**
+
+```json
+{
+  "ok": true,
+  "data": { "message": "Subscription stored" },
+  "traceId": "string",
+  "timestamp": "2026-01-01T00:00:00.000Z"
+}
+```
+
+**Error responses**
+
+- `400` → validation failure (non-URL endpoint, oversized endpoint/keys, unknown keys)
+
+**Notes**
+
+- Schema: `subscribeSchema` — `.strict()` top-level and nested `keys` object.
+- Upserts `PushSubscription` by `(userId, endpoint)` and sets `UserPreferences.pushNotifications = true`.
+- See `functions/api/cron/push-reminders.ts` for scheduled delivery.
+
+---
+
+### `DELETE /api/push/subscribe`
+
+**Auth:** Required (authenticated endpoint)
+
+**Request body**
+
+```json
+{
+  "endpoint": "https://push.example.com/abc (URL, max 2048 chars)"
+}
+```
+
+**Success response (`200 OK`)**
+
+```json
+{
+  "ok": true,
+  "data": { "message": "Subscription removed" },
+  "traceId": "string",
+  "timestamp": "2026-01-01T00:00:00.000Z"
+}
+```
+
+**Error responses**
+
+- `400` → validation failure (non-URL endpoint, unknown keys)
+
+**Notes**
+
+- Schema: `unsubscribeSchema` — `.strict()`.
+- Deletes matching `PushSubscription` rows; disables `pushNotifications` when no subscriptions remain.
+
+---
+
+### `POST /api/reviews/second-chance`
+
+**Auth:** Required (authenticated endpoint)
+
+**Request body** (all fields optional; defaults applied)
+
+```json
+{
+  "count": 10,
+  "examType": "PANCE",
+  "scopeFilter": {
+    "system": "CV (optional, max 100 chars)",
+    "conditionId": "string (optional, max 200 chars)"
+  }
+}
+```
+
+| Field | Type | Default | Constraints |
+|---|---|---|---|
+| `count` | integer | `10` | 1–25 |
+| `examType` | enum | `PANCE` | `PANCE`, `PANRE`, `EOR` |
+| `scopeFilter.system` | string | — | max 100 chars |
+| `scopeFilter.conditionId` | string | — | max 200 chars |
+
+**Success response (`200 OK`)**
+
+```json
+{
+  "ok": true,
+  "data": {
+    "selections": [
+      {
+        "questionId": "string",
+        "learningTarget": {
+          "conditionId": "string",
+          "taskType": "string",
+          "system": "string",
+          "stability": 0,
+          "difficulty": 0,
+          "lapses": 0,
+          "isOverdue": true
+        },
+        "isVariant": false,
+        "isSecondChance": false,
+        "recognitionRisk": 0,
+        "selectionMethod": "string",
+        "question": {
+          "source": "pre_generated | main_question",
+          "id": "string",
+          "conditionId": "string",
+          "system": "string",
+          "difficulty": "string",
+          "questionType": "string",
+          "questionData": {}
+        }
+      }
+    ],
+    "meta": {
+      "total": 0,
+      "withVariants": 0,
+      "withSecondChance": 0,
+      "examType": "PANCE"
+    }
+  },
+  "traceId": "string",
+  "timestamp": "2026-01-01T00:00:00.000Z"
+}
+```
+
+**Empty due queue (`200 OK`)**
+
+```json
+{
+  "ok": true,
+  "data": {
+    "selections": [],
+    "message": "No items due for second-chance review."
+  }
+}
+```
+
+**Error responses**
+
+- `400` → validation failure (count out of range, invalid `examType`, unknown keys)
+- `404` → `{ "error": "User not found" }`
+- `500` → `{ "error": "Failed to build second-chance session", "message": "Please try again." }`
+
+**Notes**
+
+- Schema: `SecondChanceRequestSchema` — `.strict()` top-level and nested `scopeFilter`.
+- Hydrates questions from `PreGeneratedQuestion` first, then `Question`.
+- Increments `timesServed` on served pre-generated questions (fire-and-forget).
+
+---
+
+### `GET /api/srs/due`
+
+**Auth:** Required (authenticated endpoint)
+
+**Query parameters**
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `limit` | string (parsed int) | `100` | Clamped to 1–200 |
+| `progressContext` | enum | — | `READINESS` or `TARGETED` (case-insensitive) |
+| `context` | enum | — | Alias for `progressContext` |
 
 **Request body:** None
 
@@ -128,27 +290,50 @@ This document tracks the request/response contracts for the most recently change
 
 ```json
 {
-  "totalEncounters": 0,
-  "passRate": 0,
-  "averageScore": 0,
-  "averageClinicalReasoningScore": 0,
-  "trend": [
-    {
-      "sessionId": "string",
-      "date": "2026-01-01T00:00:00.000Z",
-      "score": 0,
-      "clinicalReasoningScore": 0
-    }
-  ]
+  "ok": true,
+  "data": {
+    "items": [
+      {
+        "id": "string",
+        "source": "card | user_topic_progress | user_progress",
+        "questionId": "string | null",
+        "questionIdentityId": "string | null",
+        "conditionId": "string | null",
+        "taskType": "string | null",
+        "progressContext": "READINESS | TARGETED | null",
+        "dueDate": "2026-01-01T00:00:00.000Z",
+        "overdueDays": 0,
+        "priority": 0
+      }
+    ],
+    "totalDue": 0,
+    "timestamp": "2026-01-01T00:00:00.000Z",
+    "source": "canonical_fsrs_progress",
+    "progressContext": "READINESS | null",
+    "suppressedDuplicates": 0
+  }
 }
 ```
 
-**Error responses**
+**Degraded response (`200 OK`, never `500`)**
 
-- `404` → `{ "error": "User not found" }`
-- `500` → `{ "error": "Failed to load OSCE stats" }`
+When the database is unavailable, returns an empty queue with a user-safe message:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "items": [],
+    "totalDue": 0,
+    "timestamp": "2026-01-01T00:00:00.000Z",
+    "error": "Unable to load due items. Please try again."
+  }
+}
+```
 
 **Notes**
 
-- Metrics are computed from completed `PatientEncounterSession` rows that have an `OsceResult`.
-- Pass threshold is score `>= 70`.
+- Legacy compatibility read model over `Card`, `UserTopicProgress`, and `UserProgress` (not deprecated `SRSItem`).
+- Card rows are filtered to `lifecycleStatus: ACTIVE` and `qaStatus: APPROVED`.
+- Duplicate suppression: broader condition-level due rows are dropped when a more specific Card or UserTopicProgress row already covers the same condition/context.
+- Dashboard contract (stable keys): `items`, `totalDue`, `timestamp` always present; each item includes `id`, `source`, `questionId`, `conditionId`, `dueDate`, `overdueDays`, `priority`.
