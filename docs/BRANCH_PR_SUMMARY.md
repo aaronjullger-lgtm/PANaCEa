@@ -40,7 +40,7 @@ Landing (desktop + mobile/reduced-motion), protected-route gating (`/study`, `/v
 - **Per-mission final reports:** `new-audit-root-cause-stabilization-final-report.md`, `implementation-expansion-pass-report.md`, `repository-audit-implementation-final-report.md`, `full-system-qa-final-report.md` (+ `full-system-qa-repair-log.md`), `agent-orchestration-mission-log.md`.
 
 ## Validation (latest)
-typecheck 0 · lint 0 · build ✅ · test:critical 143 · **`npm test` 9958 passed / 0 failed** · `npm audit` 25 (gated) · UI-smoke 4/4 · axe 12/12 · route sweep 14/14.
+typecheck 0 · lint 0 · build ✅ · test:critical 143 · **`npm test` 9958 passed / 0 failed** · **`npm audit` 6** (down from 25 via workers-types/wrangler alignment + `npm audit fix`; remaining are dev-tooling needing breaking upgrades) · UI-smoke 4/4 · axe 12/12 · route sweep 14/14.
 
 ## Unresolved / approval-gated
 `npm audit fix` (ERESOLVE — precondition: bump `@cloudflare/workers-types@^5`), dependency majors (react-router-dom/@clerk→js-cookie/nodemailer), RLS DB policy changes, LICENSE choice, secret/anon-key rotation, staging env, production deploy, and authenticated deep-render browser QA (needs Clerk test user + test `DATABASE_URL`).
