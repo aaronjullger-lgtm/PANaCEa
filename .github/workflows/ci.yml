@@ -149,6 +149,16 @@ jobs:
           CI: true
           BASE_URL: http://localhost:4173
 
+      - name: UI smoke (landing render + protected-route gating)
+        # Headless-chromium smoke against `vite preview` with all /api/** mocked.
+        # Catches landing render / console-error / failed-network / horizontal-overflow
+        # regressions the axe gate does not cover. Uses the already-built dist and a
+        # separate port to avoid clashing with the a11y preview above.
+        run: node scripts/smoke-ui-preview.mjs
+        env:
+          CI: true
+          PANACEA_SMOKE_PORT: '4184'
+
       - name: Upload a11y report
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
