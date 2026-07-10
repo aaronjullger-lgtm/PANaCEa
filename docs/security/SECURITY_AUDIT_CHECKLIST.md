@@ -78,24 +78,41 @@
 | `/api/questions/review`     | ✅   | standard   | ⚠️ Partial     |
 | `/api/user/stats`           | ✅   | standard   | ❌             |
 | `/api/user/stability-trend` | ✅   | standard   | ❌             |
-| `/api/analytics/session`    | ✅   | standard   | ❌             |
+| `/api/analytics/learner-analysis` | ✅   | standard   | ✅             |
+| `/api/analytics/readiness-projection` | ✅ | standard | ✅             |
+| `/api/analytics/soap-note`  | ✅   | standard   | ✅             |
+| `/api/branches`             | ✅   | standard   | ✅             |
+| `/api/drills/lab-cases`    | ✅   | standard   | ✅             |
 | `/api/drills/*`             | ✅   | gemini     | ⚠️ Partial     |
+| `/api/feedback/submit`      | ✅   | standard   | ✅             |
+| `/api/push/subscribe`       | ✅   | standard   | ✅             |
+| `/api/questions/custom-session` | ✅ | standard | ✅             |
+| `/api/reviews/second-chance` | ✅  | standard   | ✅             |
+| `/api/srs/due`              | ✅   | standard   | ✅             |
+| `/api/user/fsrs-params`     | ✅   | standard   | ✅             |
+| `/api/users/me/daily-plan`  | ✅   | standard   | ✅             |
+| `/api/graph/search`         | ✅   | standard   | ✅             |
+| `/api/graph/path`           | ✅   | standard   | ✅             |
+| `/api/medical-apis/validate-drugs` | ✅ | standard | ✅        |
 
 ### Admin Endpoints (Admin Auth Required)
 
 | Endpoint                   | Admin Check | Rate Limit | Status |
 | -------------------------- | ----------- | ---------- | ------ |
 | `/api/admin/check-access`  | ✅          | admin      | ✅     |
+| `/api/admin/readiness`     | ✅          | admin      | ✅     |
 | `/api/admin/media/upload`  | ✅          | admin      | ✅     |
 | `/api/admin/media/approve` | ✅          | admin      | ✅     |
 | `/api/admin/media/pending` | ✅          | admin      | ✅     |
 | `/api/admin/cache-metrics` | ✅          | admin      | ✅     |
+| `/api/library/contextualize-batch` | ✅  | admin      | ✅     |
+| `/api/branches/:branchName/merge` | ✅   | admin      | ✅     |
 
 ### Public Endpoints (No Auth Needed)
 
 | Endpoint           | Purpose        | Rate Limit |
 | ------------------ | -------------- | ---------- |
-| `/api/health`      | Health check   | standard   |
+| `/api/health`      | Liveness only (no env/DB diagnostics) | standard   |
 | `/api/conditions`  | Public content | standard   |
 | `/api/reference/*` | Reference data | standard   |
 
@@ -170,7 +187,8 @@ const SessionRequestSchema = z.object({
 
 1. `/api/questions/session` - Count and filter params
 2. `/api/drills/submit-review` - Rating and answer data
-3. `/api/feedback/submit` - User input sanitization
+
+**Recently hardened (Zod `.strict()` + bounded fields):** `/api/feedback/submit`, `/api/push/subscribe`, `/api/analytics/soap-note`, `/api/reviews/second-chance`, `/api/questions/custom-session`, `/api/medical-apis/validate-drugs`. See `docs/api/API_OVERVIEW.md`.
 
 ---
 
