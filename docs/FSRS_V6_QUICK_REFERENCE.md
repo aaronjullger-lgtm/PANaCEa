@@ -87,10 +87,11 @@ in new code.
 
 ## 5. Optimizer
 
-Personalized weights are fit by the **Python optimizer** (`gcp-fsrs-optimizer/`,
-invoked via `lib/services/fsrsOptimizerService.ts` / `lib/fsrs-optimizer-bridge.ts`),
-**not** a Rust/`@open-spaced-repetition/binding` package. v6 = 21 weights;
-v7-alpha (29 weights) is an experimental, default-off placeholder
+Personalized weights are fit via `POST /api/user/fsrs-params` (in-process TypeScript
+or Python sidecar when `FSRS_OPTIMIZER_URL` is set). See `functions/api/user/fsrs-params.ts`.
+The **Python optimizer** (`gcp-fsrs-optimizer/`) is also invoked via
+`lib/services/fsrsOptimizerService.ts` / `lib/fsrs-optimizer-bridge.ts`.
+v6 = 21 weights; v7-alpha (29 weights) is an experimental, default-off placeholder
 (`lib/fsrs-v7.ts`, `lib/fsrs-version-selector.ts`).
 
 ## 6. Anti-patterns
@@ -104,6 +105,7 @@ v7-alpha (29 weights) is an experimental, default-off placeholder
 ## References
 - Engine: `lib/fsrs.ts` · Implicit rating: `lib/implicit-metrics.ts`, `lib/micro-kinetics.ts`
 - Submission: `lib/services/drillReviewService.ts`, `functions/api/drills/submit-review.ts`
+- FSRS params API: `functions/api/user/fsrs-params.ts` (`GET` retrieve, `POST` optimize)
 - ReviewLog: `lib/services/reviewLogService.ts` · Optimizer: `gcp-fsrs-optimizer/`
 - State report: `docs/fsrs-current-state-and-hardening-report.md`
 

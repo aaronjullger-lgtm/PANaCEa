@@ -90,12 +90,13 @@
 | `/api/admin/media/approve` | ✅          | admin      | ✅     |
 | `/api/admin/media/pending` | ✅          | admin      | ✅     |
 | `/api/admin/cache-metrics` | ✅          | admin      | ✅     |
+| `/api/admin/readiness`     | ✅          | admin      | ✅     |
 
 ### Public Endpoints (No Auth Needed)
 
 | Endpoint           | Purpose        | Rate Limit |
 | ------------------ | -------------- | ---------- |
-| `/api/health`      | Health check   | standard   |
+| `/api/health`      | Public liveness only (no DB/env diagnostics) | standard   |
 | `/api/conditions`  | Public content | standard   |
 | `/api/reference/*` | Reference data | standard   |
 

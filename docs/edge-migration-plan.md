@@ -46,8 +46,8 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 | 22 | Labs | `/api/labs/tests` | GET | `routes/labs.ts:14` | Prisma only |
 | 23 | Labs | `/api/labs/cases` | GET | `routes/labs.ts:27` | Prisma only |
 | 24 | Labs | `/api/labs/cases/random` | GET | `routes/labs.ts:38` | `$queryRaw` — needs rewrite |
-| 25 | Drills | `/api/drills/lab-cases` | GET | `routes/drills.ts:192` | Auth + complex transform |
-| 26 | Drills | `/api/drills/lab-cases` | POST | `routes/drills.ts:229` | Auth + Prisma |
+| 25 | Drills | `/api/drills/lab-cases` | GET | `routes/drills.ts:192` | ✅ `functions/api/drills/lab-cases.ts` |
+| 26 | Drills | `/api/drills/lab-cases` | POST | `routes/drills.ts:229` | ✅ `functions/api/drills/lab-cases.ts` |
 | 27 | Users | `/api/achievements` | GET | `routes/users.ts:17` | Auth + Prisma |
 | 28 | Users | `/api/performance` | GET/POST | `routes/users.ts:52,94` | Auth + Prisma |
 

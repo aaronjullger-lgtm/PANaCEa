@@ -19,6 +19,7 @@
 - **PUT**: Batch approve/reject multiple media assets (max 100)
 - Updates approvalStatus, folder, and status fields
 - Logs approval actions
+- Returns generic client errors on failure (details logged server-side). See `docs/api/API_OVERVIEW.md`.
 
 #### `/functions/api/admin/media/[id].ts`
 
