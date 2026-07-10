@@ -48,6 +48,18 @@ boundary: no prod services/secrets). Browser testing therefore used:
   gate on a sandbox-only flake. The a11y coverage itself is **green** (proven via
   manual preview). Blocker class closed with evidence.
 
+## Additional cluster — API validation hardening: `feedback/submit`
+- **Verified issue (live):** `POST /api/feedback/submit` persisted several free-text
+  fields to `QuestionFlag` that were **unbounded** (`questionId`, `questionText`,
+  `topic`, `system`) with no `.strict()` — a storage/DoS abuse vector.
+- **Fix:** added max-length bounds to every free-text field + `.strict()` unknown-field
+  rejection; exported the schema for direct testing. Valid feedback unchanged.
+- **Tests:** `functions/api/feedback/submit.test.ts` (7) — valid/minimal pass;
+  empty/oversized `questionId`, invalid `flagType`, description bounds, oversized
+  `questionText`/`topic`/`system`, and unknown fields rejected.
+- **Validation:** `vitest run functions/api/feedback/submit.test.ts` → 7/7 pass
+  (module imports + parses cleanly). Commit `ff5ac974`.
+
 ## Net
 No application defects were found on any browser-testable or automated surface.
 Real browser evidence (public + protected-gating + a11y) is clean; the full
