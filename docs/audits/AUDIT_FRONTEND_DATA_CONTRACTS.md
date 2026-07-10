@@ -425,7 +425,7 @@ const result = raw as DrillFSRSResponse;
 4. Test offline queue replay with main session context
 
 ### Day 3: Contract Standardization (Findings 10-1, 10-5, 10-2)
-1. Document the response envelope convention (handlers return `{ data }`, `toResponse` unwraps)
+1. Document the response envelope convention — **done:** see `docs/api/API_OVERVIEW.md` (`ok`/`fail`, `traceId`, legacy normalization via `unwrapLegacySuccessData`)
 2. Deprecate unused `QuestionResponse` type in `types/api.ts` (add `@deprecated` JSDoc)
 3. Add a shared `ApiEnvelope<T>` type that both helpers conform to
 4. Audit remaining `data?.data ?? data` patterns for correctness

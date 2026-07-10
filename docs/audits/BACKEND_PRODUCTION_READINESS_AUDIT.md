@@ -13,7 +13,7 @@ No confirmed P0 unauthenticated write path was found. One functional P0 was conf
 - Runtime: React + Vite frontend with Cloudflare Pages Functions under `functions/api`.
 - Local-only backend: `server.ts` and `routes/*`; documented as local development only but still easy to confuse with production.
 - Auth: Clerk JWT verification in `functions/api/_shared/auth.ts`; endpoint stacks in `functions/api/_shared/middleware.ts`.
-- API response standard: `functions/api/_shared/api-response.ts` defines `{ ok, success, data/error, traceId, timestamp }`, but adoption is incomplete.
+- API response standard: `functions/api/_shared/api-response.ts` defines `{ ok, success, data/error, traceId, timestamp }` with legacy nested-envelope normalization in `envelopeFromHandlerResult()`; see `docs/api/API_OVERVIEW.md`. Adoption across all raw/unwrapped endpoints is still incomplete.
 - Database: Prisma schema at `prisma/schema.prisma`; Edge client at `functions/api/_shared/prisma-edge.ts`; migrations under `prisma/migrations`.
 - AI: central gateway in `lib/ai/aiGateway.ts`; several older direct Gemini/text JSON paths remain.
 - Core pipeline: `functions/api/study/session/generate.ts` creates sessions; `functions/api/drills/submit-review.ts` delegates to `lib/services/drillReviewService.ts`; `functions/api/questions/attempt.ts` is stats-only compatibility; `lib/services/studyPlanService.ts` and `functions/api/_shared/studyPlanService.ts` both exist.

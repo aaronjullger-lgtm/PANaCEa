@@ -47,7 +47,7 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 
 - **Production API:** Cloudflare Pages Functions under `functions/api/`. All deployed requests are served by these edge handlers.
 - **Legacy `routes/`:** The `routes/` directory contains Express route handlers for **local/dev only**. They are **not deployed** to Cloudflare Pages. Use `npm run dev:server` only when testing legacy Express behavior. For production behavior, use `npm run dev:wrangler` or deploy to Pages.
-- **Endpoint contracts:** See `docs/api/API_OVERVIEW.md` for current request/response shapes of actively maintained endpoints (health, Gemini, content library, questions, goals/session, diagnostic puzzle, OSCE grading, admin enrichment).
+- **Endpoint contracts:** See `docs/api/API_OVERVIEW.md` for the unified response envelope (`ok`/`fail`, `traceId`, error codes) and request/response shapes of actively maintained endpoints (admin, OSCE, health, Gemini, content library, questions, goals/session).
 
 ### Deployment & health (runbook)
 
@@ -273,7 +273,7 @@ PANaCEa/
 
 - [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md) - Production deployment
 - [Environment Setup](docs/deployment/ENV_SETUP_GUIDE.md) - Environment variables and configuration
-- [API Overview](docs/api/API_OVERVIEW.md) - Endpoint contracts
+- [API Overview](docs/api/API_OVERVIEW.md) - Unified response envelope and endpoint contracts
 - [Copilot Instructions](.github/copilot-instructions.md) - AI coding assistant guide
 - [Archived Documentation](docs/archive/INDEX.md) - Historical audit reports and status docs
 

@@ -31,7 +31,7 @@ Five helpers produce three shapes:
 - `middleware.ts toResponse()` → raw flat `data` or `{ error }`
 - `auth.ts createErrorResponse/createSuccessResponse` → mimics a fourth variant
 
-**Resolution:** Introduce `functions/api/_shared/api-response.ts` as single source of truth. Rewire `middleware.ts toResponse()` to use it. Deprecate (but keep as aliases) the others.
+**Resolution:** Introduce `functions/api/_shared/api-response.ts` as single source of truth. Rewire `middleware.ts toResponse()` to use it. Deprecate (but keep as aliases) the others. **Status:** Implemented — see `docs/api/API_OVERVIEW.md` for the canonical envelope contract and legacy normalization behavior.
 
 ### P1 — Error codes scattered
 `error-handler.ts` has class hierarchy (`APIError`, `AuthenticationError`, `ValidationError`, `NotFoundError`, `RateLimitError`) with codes. `enhancedMiddleware.ts` uses `@/lib/errors/appError`. Most handlers return ad-hoc strings.
@@ -86,7 +86,9 @@ Should migrate to `authenticatedEndpoint`:
 - [x] `functions/api/_shared/error-catalog.ts` — stable error codes
 - [x] `middleware.ts toResponse()` rewired through `api-response.ts`
 - [x] Trace ID propagation into body
+- [x] Legacy nested `{ success, data }` handler payloads normalized via `unwrapLegacySuccessData()` before wrapping
 - [x] Tests in `functions/api/_shared/__tests__/`
+- [x] Documented in `docs/api/API_OVERVIEW.md`
 
 ## Follow-up sprints
 
