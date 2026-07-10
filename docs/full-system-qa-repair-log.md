@@ -48,6 +48,35 @@ boundary: no prod services/secrets). Browser testing therefore used:
   gate on a sandbox-only flake. The a11y coverage itself is **green** (proven via
   manual preview). Blocker class closed with evidence.
 
+## Deep core study-loop QA (round 4) — trace + state-transition regression
+Browser end-to-end of the *authenticated* loop is **credential-blocked** (needs a
+Clerk test session + test `DATABASE_URL`). Per the loop rule, I traced the real path
+and added the closest regression coverage for the actual state transitions.
+
+**Traced path (frontend event → API → service → persistence → UI):**
+1. Answer submit: `QuizView` / `useDrillFSRS` → `syncManager` → `POST /api/drills/submit-review`.
+2. Service `lib/services/drillReviewService.ts::submitDrillReview`:
+   correctness → `deriveContinuousRating(telemetry)` (implicit, `lib/implicit-metrics.ts`)
+   → `FSRS.next()` (real engine, `lib/fsrs.ts`) → `createReviewLogEntry` (`review_type:'real'`)
+   → `QuestionAttempt` + `UserProgress`/`Card`.
+3. Next item: `/api/srs/due` (canonical stores) + session generation.
+4. Dashboard/readiness widgets reflect updated state (mock-labeled when no data).
+
+**State-transition coverage (verified, not "looks okay"):**
+| Transition / property | Where verified | Status |
+|---|---|---|
+| New→Learning, Learning→Review, Review→Relearning (individual) | `tests/fsrs.test.ts` | ✅ |
+| **Sequential real-engine round-trip** (New→Learning→Review; stability + due grow on success; Again→Relearning drops stability; binary normalization) | **`tests/fsrs-study-loop-roundtrip.test.ts` (NEW, 3)** | ✅ |
+| Implicit rating from telemetry (no rating buttons); hint/switch penalties; telemetry quality | `lib/implicit-metrics*.test.ts` | ✅ |
+| ReviewLog write (float cols + retrievability) + dashboard signal | `tests/drillReviewService.test.ts` | ✅ |
+| Isolation: cram + rapid-recall skip ReviewLog; OSCE writes none | `drillReviewService.test.ts` + code (`functions/api/osce/**` has 0 ReviewLog refs) | ✅ |
+| Due-card retrieval (canonical, resilient, contract) | `functions/api/srs/due.test.ts` | ✅ |
+| Dashboard truthfulness (no mock-as-real) | `commandCenterMockData.truthfulness.test.ts` | ✅ |
+
+- **No explicit FSRS confidence/rating buttons** exist or were added; rating stays behaviorally derived.
+- **Blocked (credential/env):** browser assertion that feedback DOM appears, the *next* question renders, and refresh persists server state — needs Clerk test user + test DB. Closest regression coverage added instead (round-trip + existing suite).
+- Validation: `tests/fsrs-study-loop-roundtrip.test.ts` 3/3; `test:critical` 143/143. Commit below.
+
 ## Per-route QA loop (round 3) — landing, sign-in, sign-up
 Detailed checks via `scripts/qa/route-qa.mjs` (UI, console, network, stuck-loader,
 mobile 390px overflow, keyboard-focus reachability). Evidence:
