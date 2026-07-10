@@ -170,7 +170,7 @@ const SessionRequestSchema = z.object({
 
 1. `/api/questions/session` - Count and filter params
 2. `/api/drills/submit-review` - Rating and answer data
-3. `/api/feedback/submit` - User input sanitization
+3. `/api/feedback/submit` - Zod `.strict()` validation with bounded free-text fields (`questionId` 1–200, `description` 1–2000, optional `questionText`/`topic`/`system` caps)
 
 ---
 
