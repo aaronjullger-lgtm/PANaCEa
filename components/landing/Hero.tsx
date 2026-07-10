@@ -121,9 +121,11 @@ function ScannerStatusRail() {
           stable
         </span>
       </div>
-      <h3 className="font-poppins text-lg font-semibold leading-tight text-atlas-white">
+      {/* Decorative preview-card label (not a document outline heading) — kept as
+          a styled <p> to avoid an axe heading-order skip on the landing page. */}
+      <p className="font-poppins text-lg font-semibold leading-tight text-atlas-white">
         Cardio and pulmonary image reads before simulation
-      </h3>
+      </p>
       <p className="text-sm leading-6 text-atlas-muted">
         Clear chest-image search order, rhythm checkpoints, and therapy distractors before another timed block.
       </p>
