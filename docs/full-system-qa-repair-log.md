@@ -48,6 +48,31 @@ boundary: no prod services/secrets). Browser testing therefore used:
   gate on a sandbox-only flake. The a11y coverage itself is **green** (proven via
   manual preview). Blocker class closed with evidence.
 
+## Mock/stub truthfulness loop (round 6)
+Searched production surfaces for fake data shown as real student progress.
+
+**Proven NOT production-visible-as-real (no change needed):**
+- Command-center widgets (ReadinessVitals / TodayStudyPrescription / QuestionReviewTable /
+  PanceReadinessTimeline): all fallback data tagged `source:'mock'` + visible "mock"/
+  "calibrating"/"Mock review" indicators (guarded by `commandCenterMockData.truthfulness.test.ts`).
+- `SystemComparison` / `HeatmapCalendar`: rendered in `MenuView` with **real** `stats`
+  props; the exported `generateMock*` helpers are **never called** in production.
+- AI tutor (`AITutorDrawer`): explicitly **mock-aware** — when context `isMock`, the prompt
+  tells the model to treat it as illustrative (does not present mock as real).
+- `EorCountdownCard`: real dates (no mock). Study-groups/social: **hidden** in `MenuView`.
+
+**Fixed (latent fabricator):**
+- `TopicTrendChart` **generated random `Math.random()` performance data** as a real
+  "Performance Trend" chart. It is orphaned (no production importers — verified), so not
+  currently live, but it would ship fake progress if wired. Refactored to accept **real**
+  `data` via props and render an **honest empty state** ("No performance-trend data yet…")
+  when absent — it never fabricates. Removed an unused `PANCE_TOPICS` import.
+  Tests: `TopicTrendChart.test.tsx` (3 — empty state on no/empty data; heading not empty
+  state with real data). Commit below.
+
+**Conclusion:** no production-visible surface shows mock data as real; the one fabricating
+orphan was hardened to be truthful-by-default.
+
 ## API contract QA/repair loop (round 5)
 Focused on frontend-used priority endpoints. Two real fixes + one verified-safe sweep.
 
