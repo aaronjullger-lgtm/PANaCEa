@@ -20,7 +20,7 @@ The prior run was verification-heavy: it restored two red gates and shipped Prog
 ## 4. Files changed (16)
 Code: `functions/api/push/subscribe.ts`, `functions/api/analytics/soap-note.ts`, `functions/api/reviews/second-chance.ts`, `components/a11y/VisuallyHidden.tsx`, `components/a11y/index.ts`, `components/ui/Sparkline.tsx`, `components/dashboard/TrainingMenu.tsx`, `scripts/repo/branch-hygiene-report.mjs`, `package.json`, `SECURITY.md`.
 Tests: `functions/api/__tests__/validation-hardening.test.ts` (new), `tests/import-boundaries.test.ts` (new), `components/a11y/VisuallyHidden.test.tsx` (new), `components/ui/viz-a11y.test.tsx` (extended), `functions/api/srs/due.test.ts` (extended).
-Docs: `docs/dependency-vulnerability-triage.md`, this report.
+Docs: `docs/api/API_OVERVIEW.md`, `docs/dependency-vulnerability-triage.md`, this report.
 
 ## 5. Tests added/updated (~27 new, all green)
 - validation-hardening: 16 · import-boundaries: 3 · VisuallyHidden: 2 · TrendIndicator direction: 3 · due dashboard-contract: 3.

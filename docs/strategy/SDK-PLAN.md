@@ -28,7 +28,7 @@ This means:
 ```
 POST /api/drills/submit-review        → drillsClient.submitReview(payload)
 POST /api/study/session/generate      → sessionsClient.generate(opts)
-GET  /api/srs/due                     → srsClient.getDueItems()
+GET  /api/srs/due                     → srsClient.getDueItems()  (contract: `docs/api/API_OVERVIEW.md`)
 POST /api/srs/submit                  → srsClient.submitReview(payload)
 GET  /api/user/profile                → userClient.getProfile()
 GET  /api/user/stats                  → userClient.getStats()

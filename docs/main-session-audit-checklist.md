@@ -67,7 +67,7 @@ Use this checklist with **browser DevTools**, **Console Ninja** (or equivalent),
 |------|--------|-------------|
 | 5.1 | Trigger GET for FSRS params (e.g. Settings or dashboard) | **GET `/api/user/fsrs-params`** → 200, body has `params` or default message |
 | 5.2 | Submit an SRS review (if UI supports) | **POST `/api/srs/submit`** → 200 |
-| 5.3 | Check due count / SRS stats | **GET `/api/srs/due`**, **GET `/api/srs/stats`** where used → 200; UI shows counts |
+| 5.3 | Check due count / SRS stats | **GET `/api/srs/due`**, **GET `/api/srs/stats`** where used → 200; UI shows counts. `/api/srs/due` returns stable `{ items, totalDue, timestamp }` even on empty/degraded paths (never 500). See `docs/api/API_OVERVIEW.md`. |
 
 ---
 
