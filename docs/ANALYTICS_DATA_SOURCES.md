@@ -19,8 +19,10 @@ Both stay consistent when performance records include `focus` and are synced cor
 
 ## Server-Side: Analytics Dashboard
 
-- **Source:** `/api/user/stats` (and `/api/user/stability-trend`, `/api/analytics/calibration`, etc.).
-- **Data:** Aggregated from `QuestionAttempt` and related tables; by-system accuracy, time, calibration, etc.
+- **Source:** `/api/user/stats` (and `/api/user/stability-trend`, `/api/analytics/calibration`, `/api/analytics/learner-analysis`, `/api/analytics/readiness-projection`, etc.).
+- **Data:** Aggregated from `QuestionAttempt`, `UserProgress`, and related tables; by-system accuracy, time, calibration, learner clustering, and exam readiness projections.
+- **Readiness projection:** `GET /api/analytics/readiness-projection?examDate=YYYY-MM-DD` — FSRS card-level readiness with per-system breakdown (see `docs/api/API_OVERVIEW.md`).
+- **Learner analysis:** `GET /api/analytics/learner-analysis` — behavioral archetype, early warnings, and composite risk score (see `docs/api/API_OVERVIEW.md`).
 
 ## Consistency
 

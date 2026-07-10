@@ -110,7 +110,8 @@ npm run db:studio
 
 Local dev runs on **Cloudflare Pages Functions** (same as production) — this is
 the only path with full API parity (including `/api/questions/custom-session`
-and `/api/drills/lab-cases`).
+and `/api/drills/lab-cases`). See `docs/api/API_OVERVIEW.md` for request/response
+contracts on these and other recently hardened endpoints.
 
 Full app + API (recommended):
 
