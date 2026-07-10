@@ -30,7 +30,7 @@ This document tracks progress on the 5-sprint critical fixes plan addressing sec
 
 - [x] `functions/api/questions/attempt.ts` - Using `QuestionAttemptSchema`
 - [x] `functions/api/drills/submit-review.ts` - Using `DrillSubmitReviewSchema`
-- [x] `functions/api/feedback/submit.ts` - Using `QuestionFeedbackSchema`
+- [x] `functions/api/feedback/submit.ts` - Using `FeedbackSubmitSchema` (bounded fields + `.strict()`)
 - [x] `functions/api/exam/start.ts` - Using `StartExamSchema`
 - [x] `functions/api/exam/complete.ts` - Using `CompleteExamSchema`
 - [x] `functions/api/performance/record.ts` - Using `PerformanceRecordSchema`

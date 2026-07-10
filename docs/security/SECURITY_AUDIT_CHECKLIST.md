@@ -170,7 +170,10 @@ const SessionRequestSchema = z.object({
 
 1. `/api/questions/session` - Count and filter params
 2. `/api/drills/submit-review` - Rating and answer data
-3. `/api/feedback/submit` - User input sanitization
+3. `/api/feedback/submit` - ✅ Hardened: bounded free-text fields + `.strict()` (see `FeedbackSubmitSchema` in `functions/api/feedback/submit.ts` and `docs/api/API_OVERVIEW.md`)
+4. `/api/push/subscribe` - ✅ Hardened: URL/key length caps + `.strict()`
+5. `/api/analytics/soap-note` - ✅ Hardened: caseId length, finite score bounds + `.strict()`
+6. `/api/reviews/second-chance` - ✅ Hardened: count/examType/scopeFilter bounds + `.strict()`
 
 ---
 

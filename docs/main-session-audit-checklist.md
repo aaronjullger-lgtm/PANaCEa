@@ -104,7 +104,7 @@ Use this checklist with **browser DevTools**, **Console Ninja** (or equivalent),
 - `GET/POST /api/user/fsrs-params` – get/optimize FSRS params
 - `POST /api/user/update-fsrs-params` – update params
 - `POST /api/srs/submit` – submit SRS review
-- `GET /api/srs/due`, `GET /api/srs/stats`, `GET /api/srs/sync` – due count, stats, sync
+- `GET /api/srs/due` — returns `{ items, totalDue, timestamp, source, progressContext, suppressedDuplicates }`; each item includes `id`, `source`, `questionId`, `questionIdentityId`, `conditionId`, `dueDate`, `overdueDays`, `priority`. Errors degrade to empty queue (no HTTP 500). Contract: `docs/api/API_OVERVIEW.md`.
 
 **Stats & display**
 
