@@ -341,13 +341,16 @@ const QUALITY_THRESHOLDS = {
 For bulk uploads, use the batch approval endpoint:
 
 ```typescript
-await fetch('/api/media/approve', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+await fetch('/api/admin/media/approve', {
+  method: 'PUT',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${adminToken}`,
+  },
   body: JSON.stringify({
-    action: 'batch-approve',
-    mediaIds: ['id1', 'id2', 'id3', ...],
-    approvedBy: 'admin-user-id',
+    action: 'approve',
+    mediaIds: ['id1', 'id2', 'id3'],
+    reason: 'optional rejection reason when action is reject',
   }),
 });
 ```
