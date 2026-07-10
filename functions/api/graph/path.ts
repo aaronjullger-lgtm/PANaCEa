@@ -118,7 +118,7 @@ export const onRequestPost = authenticatedEndpoint(
       log.error('Graph path error', error);
       return {
         status: 500,
-        error: error instanceof Error ? error.message : 'Path finding failed',
+        error: 'Path finding failed. Please try again.',
       };
     } finally {
       await safePrismaDisconnect(prisma);
