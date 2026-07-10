@@ -157,6 +157,21 @@ describe('api-response: envelopeFromHandlerResult()', () => {
     expect(body.traceId).toBe('trace-1');
   });
 
+  it('normalizes legacy success envelopes before wrapping handler data', async () => {
+    const out = envelopeFromHandlerResult(
+      { status: 200, data: { success: true, data: { items: [1, 2, 3] } } },
+      req,
+      'trace-legacy'
+    );
+
+    expect(out.status).toBe(200);
+    const body = await parse<ApiSuccessEnvelope<{ items: number[] }>>(out);
+    expect(body.ok).toBe(true);
+    expect(body.success).toBe(true);
+    expect(body.data).toEqual({ items: [1, 2, 3] });
+    expect(body.traceId).toBe('trace-legacy');
+  });
+
   it('preserves handler headers while wrapping data', async () => {
     const out = envelopeFromHandlerResult(
       { status: 200, data: { ok: true }, headers: { 'X-Cache-Test': 'yes' } },

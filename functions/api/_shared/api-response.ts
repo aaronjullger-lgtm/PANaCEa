@@ -157,6 +157,22 @@ function buildHeaders(
   return headers;
 }
 
+function unwrapLegacySuccessData(data: unknown): unknown {
+  if (
+    typeof data === 'object' &&
+    data !== null &&
+    'data' in data &&
+    (
+      (('ok' in data) && (data as { ok?: unknown }).ok === true) ||
+      (('success' in data) && (data as { success?: unknown }).success === true)
+    )
+  ) {
+    return (data as { data: unknown }).data;
+  }
+
+  return data;
+}
+
 // ─── Public helpers ──────────────────────────────────────────────────────────
 
 /**
@@ -263,7 +279,7 @@ export function envelopeFromHandlerResult(
     });
   }
 
-  return ok(result.data ?? null, {
+  return ok(unwrapLegacySuccessData(result.data ?? null), {
     status,
     headers: result.headers,
     request,
