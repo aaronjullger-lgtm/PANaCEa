@@ -148,26 +148,38 @@ export const customSessionService = {
 };
 ```
 
-#### 3. New API Endpoint (`functions/api/questions/custom-session.ts`)
+#### 3. API Endpoint (`functions/api/questions/custom-session.ts`)
 
-```typescript
-// POST /api/questions/custom-session
-export async function onRequestPost(context: any) {
-  const { config } = await context.request.json();
+`POST /api/questions/custom-session` — authenticated, Zod-validated. See `docs/api/API_OVERVIEW.md` for the full contract.
 
-  // 1. Query questions from pool matching filters
-  // 2. Apply focus area filters
-  // 3. Return shuffled subset
+**Request**
 
-  // Focus areas map to question metadata tags:
-  // - anatomy → questions about anatomy/physiology
-  // - pathophysiology → questions about disease mechanisms
-  // - diagnosis → questions about clinical presentation, workup
-  // - pharmacology → questions about drug therapy
-  // - management → questions about treatment plans
-  // - procedures → questions about procedures/special tests
+```json
+{
+  "body": {
+    "config": {
+      "systems": ["CV"],
+      "subcategories": ["string"],
+      "conditions": ["string"],
+      "focusAreas": ["string"],
+      "difficulty": "same | easier | harder"
+    },
+    "count": 10
+  }
 }
 ```
+
+**Response**
+
+```json
+{
+  "questions": [{ "id": "...", "question": "...", "options": [], "correctAnswerIndex": 0 }],
+  "totalAvailable": 42,
+  "warning": "optional string when pool is smaller than requested count"
+}
+```
+
+No FSRS writes — ephemeral session only. Filter arrays are capped at 50 entries.
 
 #### 4. New Components
 
