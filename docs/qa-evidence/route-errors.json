@@ -1,0 +1,88 @@
+{
+  "/": {
+    "ok": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": []
+  },
+  "/study": {
+    "ok": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": []
+  },
+  "/practice": {
+    "ok": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": []
+  },
+  "/progress": {
+    "ok": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": []
+  },
+  "/explorer": {
+    "ok": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": []
+  },
+  "/clinical-profile": {
+    "ok": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": []
+  },
+  "/medical-database": {
+    "ok": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": []
+  },
+  "/technique-check": {
+    "ok": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": []
+  },
+  "/daily-challenges": {
+    "ok": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": []
+  },
+  "/gap-analysis": {
+    "ok": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": []
+  },
+  "/study/review": {
+    "ok": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": []
+  },
+  "/study/path": {
+    "ok": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": []
+  },
+  "/visualizer": {
+    "ok": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": []
+  },
+  "/this-route-does-not-exist-404": {
+    "ok": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": []
+  }
+}
+
+SUMMARY: 14/14 routes clean

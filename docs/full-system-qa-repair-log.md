@@ -48,6 +48,21 @@ boundary: no prod services/secrets). Browser testing therefore used:
   gate on a sandbox-only flake. The a11y coverage itself is **green** (proven via
   manual preview). Blocker class closed with evidence.
 
+## Sequential browser QA sweep (round 2) — 14 routes, all clean
+- **Method:** headless Chromium (`scripts/qa/route-errors.mjs`) against `vite preview`
+  with all `/api/**` mocked; captured page errors, console errors, and failed network
+  responses per route. Clerk requests allowlisted.
+- **Routes tested (one at a time):** `/`, `/study`, `/practice`, `/progress`,
+  `/explorer`, `/clinical-profile`, `/medical-database`, `/technique-check`,
+  `/daily-challenges`, `/gap-analysis`, `/study/review`, `/study/path`, `/visualizer`,
+  and an unknown route (`/this-route-does-not-exist-404` → `NotFoundPage`).
+- **Result: 14/14 clean** — 0 page errors, 0 console errors, 0 failed responses on
+  every route (protected routes gate to sign-in cleanly; 404 fallback renders cleanly).
+  Evidence: `docs/qa-evidence/route-errors.json`. No flow broke → no fix required.
+- **Full regression:** `npm test` → 539 files / 9940 passed / 1 skipped / 0 failed;
+  `npm run test:critical` green; typecheck 0 (prior). Authenticated deep-render flows
+  remain blocked on Clerk/DB test creds (unchanged).
+
 ## Additional cluster — API validation hardening: `feedback/submit`
 - **Verified issue (live):** `POST /api/feedback/submit` persisted several free-text
   fields to `QuestionFlag` that were **unbounded** (`questionId`, `questionText`,
