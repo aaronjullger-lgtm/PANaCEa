@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { playwrightWebServerEnv } from './e2e/playwright-web-env';
 
 /**
  * Playwright Configuration for StudyPANaCEa
@@ -9,6 +10,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+  globalSetup: './e2e/global-setup.ts',
 
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -125,5 +127,6 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120000, // 2 minutes to start
+    env: playwrightWebServerEnv(),
   },
 });

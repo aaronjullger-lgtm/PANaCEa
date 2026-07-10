@@ -17,13 +17,19 @@ import { z } from 'zod';
 
 // ─── POST: Subscribe ────────────────────────────────────────────────
 
-const subscribeSchema = z.object({
-  endpoint: z.string().url(),
-  keys: z.object({
-    p256dh: z.string().min(1),
-    auth: z.string().min(1),
-  }),
-});
+// Bounded to reject oversized/malformed payloads (DoS/storage abuse) while
+// preserving the real Web Push contract. `.strict()` rejects unknown fields.
+export const subscribeSchema = z
+  .object({
+    endpoint: z.string().url().max(2048),
+    keys: z
+      .object({
+        p256dh: z.string().min(1).max(512),
+        auth: z.string().min(1).max(512),
+      })
+      .strict(),
+  })
+  .strict();
 
 export const onRequestPost = authenticatedEndpoint(
   subscribeSchema,
@@ -71,9 +77,11 @@ export const onRequestPost = authenticatedEndpoint(
 
 // ─── DELETE: Unsubscribe ────────────────────────────────────────────
 
-const unsubscribeSchema = z.object({
-  endpoint: z.string().url(),
-});
+export const unsubscribeSchema = z
+  .object({
+    endpoint: z.string().url().max(2048),
+  })
+  .strict();
 
 export const onRequestDelete = authenticatedEndpoint(
   unsubscribeSchema,

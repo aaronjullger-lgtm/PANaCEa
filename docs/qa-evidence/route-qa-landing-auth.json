@@ -1,0 +1,35 @@
+{
+  "/": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": [],
+    "heading": "Master the PANCE one clinical case at a time.",
+    "bodyTextLen": 10761,
+    "stuckLoader": false,
+    "keyboardFocusReaches": "A",
+    "mobileOverflow": false,
+    "ok": true
+  },
+  "/sign-in": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": [],
+    "heading": "Master the PANCE one clinical case at a time.",
+    "bodyTextLen": 10761,
+    "stuckLoader": false,
+    "keyboardFocusReaches": "A",
+    "mobileOverflow": false,
+    "ok": true
+  },
+  "/sign-up": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failed": [],
+    "heading": "Master the PANCE one clinical case at a time.",
+    "bodyTextLen": 10761,
+    "stuckLoader": false,
+    "keyboardFocusReaches": "A",
+    "mobileOverflow": false,
+    "ok": true
+  }
+}

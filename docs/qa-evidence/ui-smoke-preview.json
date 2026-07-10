@@ -1,0 +1,61 @@
+{
+  "baseUrl": "http://127.0.0.1:4173",
+  "results": [
+    {
+      "route": "landing-desktop",
+      "heading": "Master the PANCE one clinical case at a time.",
+      "assertionsPassed": [
+        "diagnostic story section",
+        "training modes dock section",
+        "dashboard command-center preview copy",
+        "synthetic clinical image lab copy"
+      ],
+      "headingFailures": [],
+      "assertionFailures": [],
+      "forbiddenModelRequests": [],
+      "hasHorizontalOverflow": false,
+      "pageErrors": [],
+      "consoleErrors": [],
+      "failedResponses": []
+    },
+    {
+      "route": "landing-mobile-reduced-motion",
+      "heading": "Master the PANCE one clinical case at a time.",
+      "assertionsPassed": [
+        "diagnostic story section",
+        "training modes dock section"
+      ],
+      "headingFailures": [],
+      "assertionFailures": [],
+      "forbiddenModelRequests": [],
+      "hasHorizontalOverflow": false,
+      "pageErrors": [],
+      "consoleErrors": [],
+      "failedResponses": []
+    },
+    {
+      "route": "protected-study-route",
+      "heading": "Sign in to open your adaptive study plan.",
+      "assertionsPassed": [],
+      "headingFailures": [],
+      "assertionFailures": [],
+      "forbiddenModelRequests": [],
+      "hasHorizontalOverflow": false,
+      "pageErrors": [],
+      "consoleErrors": [],
+      "failedResponses": []
+    },
+    {
+      "route": "protected-visualizer-route",
+      "heading": "Sign in to open the anatomy visualizer.",
+      "assertionsPassed": [],
+      "headingFailures": [],
+      "assertionFailures": [],
+      "forbiddenModelRequests": [],
+      "hasHorizontalOverflow": false,
+      "pageErrors": [],
+      "consoleErrors": [],
+      "failedResponses": []
+    }
+  ]
+}

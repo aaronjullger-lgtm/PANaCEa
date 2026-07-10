@@ -482,7 +482,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
         onClick={() => handleDrillClick(mode)}
         disabled={isDisabled}
-        aria-label={`Open ${mode.label}`}
+        aria-label={isDisabled ? `${mode.label} — coming soon, not yet available` : `Open ${mode.label}`}
         className={`
           relative p-6 rounded-2xl border overflow-hidden
           text-left transition-colors duration-200

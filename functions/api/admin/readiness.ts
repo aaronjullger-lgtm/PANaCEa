@@ -81,6 +81,8 @@ export const onRequestGet = adminAuthenticatedEndpoint(
             ...diagnostics,
             database: {
               status: 'fail',
+              // leak-ok: admin-only health diagnostics intentionally surface the DB
+              // error detail so an admin can diagnose an unhealthy database.
               message: error instanceof Error ? error.message : String(error),
               name: error instanceof Error ? error.name : 'Unknown',
             },

@@ -110,7 +110,7 @@ export const onRequestPost = adminEndpoint(
       logger.error('Media approval error', error, {
         userId: context.auth.userId,
       });
-      return { status: 500, error: error instanceof Error ? error.message : 'Approval failed' };
+      return { status: 500, error: 'Approval failed. Please try again.' };
     } finally {
       await safePrismaDisconnect(prisma);
     }
@@ -175,7 +175,7 @@ export const onRequestPut = adminEndpoint(
       });
       return {
         status: 500,
-        error: error instanceof Error ? error.message : 'Batch approval failed',
+        error: 'Batch approval failed. Please try again.',
       };
     } finally {
       await safePrismaDisconnect(prisma);

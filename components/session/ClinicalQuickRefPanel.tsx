@@ -47,13 +47,15 @@ function CollapsibleSection({ title, icon, children, defaultOpen = true }: {
   return (
     <div className="last:border-0" style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
       <button
+        type="button"
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         className="w-full flex items-center justify-between p-3 hover:bg-[var(--color-bg-tertiary)] transition-colors duration-200"
       >
         <span className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)]">
           {icon}{title}
         </span>
-        {open ? <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" /> : <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />}
+        {open ? <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" aria-hidden="true" /> : <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" aria-hidden="true" />}
       </button>
       {open && <div className="px-3 pb-3">{children}</div>}
     </div>

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors} from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import { createEndpointLogger } from '../../_shared/secureLogger';
 import { resolveOrCreateUserRecord } from '../../_shared/user-resolver';
 import {
   applyDailyStudyPlanAction,
@@ -104,9 +105,12 @@ export const onRequestPost = authenticatedEndpoint(
           rescheduleDate: rescheduleDate ? new Date(rescheduleDate) : undefined,
         });
       } catch (error) {
+        createEndpointLogger('/api/users/me/daily-plan').error('Study plan action failed', {
+          error: error instanceof Error ? error.message : String(error),
+        });
         return {
           status: 400,
-          error: error instanceof Error ? error.message : 'Invalid study plan action',
+          error: 'Could not apply that study-plan action. Please check the action and try again.',
         };
       }
 

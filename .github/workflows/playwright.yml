@@ -1,7 +1,7 @@
 # purpose: Run the full Playwright end-to-end suite outside the lighter CI smoke lane.
 # owner: Platform / QA
 # trigger strategy: push, pull_request
-# secrets required: none
+# secrets required: CLERK_SECRET_KEY, VITE_CLERK_PUBLISHABLE_KEY, PANACEA_E2E_EMAIL (or E2E_CLERK_TEST_EMAIL)
 # expected runtime: 20-60 minutes
 # failure behavior: Review the Playwright artifact and failing spec output, then rerun after fixing the UI or test regression.
 name: Playwright End-to-End Tests
@@ -42,6 +42,12 @@ jobs:
         run: npx playwright test
         env:
           CI: true
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+          PANACEA_E2E_EMAIL: ${{ secrets.PANACEA_E2E_EMAIL }}
+          PANACEA_E2E_PASSWORD: ${{ secrets.PANACEA_E2E_PASSWORD }}
+          E2E_CLERK_TEST_EMAIL: ${{ secrets.E2E_CLERK_TEST_EMAIL }}
+          E2E_CLERK_TEST_PASSWORD: ${{ secrets.E2E_CLERK_TEST_PASSWORD }}
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:

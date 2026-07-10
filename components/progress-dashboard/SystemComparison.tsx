@@ -93,7 +93,10 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
         </h3>
         <div className="flex items-center gap-1">
           <button
+            type="button"
             onClick={() => setViewMode('bar')}
+            aria-pressed={viewMode === 'bar'}
+            aria-label="Bar chart view"
             className={`p-1.5 rounded-lg transition-colors ${
               viewMode === 'bar'
                 ? 'bg-data-neutral/10 text-data-neutral'
@@ -101,10 +104,13 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
             }`}
             title="Bar chart view"
           >
-            <BarChart3 className="w-4 h-4" />
+            <BarChart3 className="w-4 h-4" aria-hidden="true" />
           </button>
           <button
+            type="button"
             onClick={() => setViewMode('radar')}
+            aria-pressed={viewMode === 'radar'}
+            aria-label="Radar chart view"
             className={`p-1.5 rounded-lg transition-colors ${
               viewMode === 'radar'
                 ? 'bg-data-neutral/10 text-data-neutral'
@@ -112,7 +118,7 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
             }`}
             title="Radar chart view"
           >
-            <Radar className="w-4 h-4" />
+            <Radar className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>

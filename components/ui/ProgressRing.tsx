@@ -4,10 +4,22 @@ interface ProgressRingProps {
   score: number;
   size?: number;
   strokeWidth?: number;
+  /**
+   * Accessible name describing what this progress ring represents
+   * (e.g. "PANCE readiness"). Used to build the progressbar's aria-label.
+   * Defaults to a generic "Progress".
+   */
+  label?: string;
 }
 
-const ProgressRing: React.FC<ProgressRingProps> = ({ score, size = 120, strokeWidth = 10 }) => {
+const ProgressRing: React.FC<ProgressRingProps> = ({
+  score,
+  size = 120,
+  strokeWidth = 10,
+  label,
+}) => {
   const normalizedScore = Math.max(0, Math.min(100, score));
+  const rounded = Math.round(normalizedScore);
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (normalizedScore / 100) * circumference;
@@ -18,9 +30,21 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ score, size = 120, strokeWi
     return 'text-[var(--color-data-pass)]';
   };
 
+  const accessibleName = `${label ? `${label}: ` : ''}${rounded}%`;
+
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg className="transform -rotate-90" width={size} height={size}>
+    <div
+      className="relative"
+      style={{ width: size, height: size }}
+      role="progressbar"
+      aria-valuenow={rounded}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuetext={`${rounded}%`}
+      aria-label={accessibleName}
+    >
+      {/* Decorative visuals — value is exposed via the progressbar ARIA above */}
+      <svg className="transform -rotate-90" width={size} height={size} aria-hidden="true" focusable="false">
         <circle
           className="text-[var(--color-border)]"
           stroke="currentColor"
@@ -46,9 +70,9 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ score, size = 120, strokeWi
           }}
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
         <span className={`text-3xl font-bold ${getScoreColor()}`}>
-          {Math.round(normalizedScore)}%
+          {rounded}%
         </span>
       </div>
     </div>

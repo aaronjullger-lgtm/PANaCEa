@@ -1,0 +1,45 @@
+# Dependabot — automated dependency update PRs.
+# Complements the advisory `npm audit` CI step (ci.yml) with proactive, reviewable
+# bumps. Grouped to reduce PR noise; security updates are surfaced separately by
+# GitHub's security-updates channel. No auto-merge — every bump is reviewed.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+    groups:
+      # Batch low-risk dev/build tooling together.
+      dev-tooling:
+        dependency-type: "development" # pragma: allowlist secret
+        update-types:
+          - "minor"
+          - "patch"
+      # Batch production patch/minor bumps; majors come as individual PRs for review.
+      production-minor-patch:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Majors that need coordinated migration + testing (tracked in
+      # docs/dependency-vulnerability-triage.md). Surface as individual PRs only.
+      - dependency-name: "react-router-dom"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "ci"
+    commit-message:
+      prefix: "ci"

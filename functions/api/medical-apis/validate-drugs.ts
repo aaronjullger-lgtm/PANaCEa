@@ -10,6 +10,7 @@
 
 import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import { validateQuestionDrugs } from '@/lib/services/medical-apis/rxnorm';
 
 const ValidateDrugsSchema = z.object({
@@ -51,10 +52,12 @@ export const onRequestPost = authenticatedEndpoint(
         },
       };
     } catch (error) {
-      console.error('[validate-drugs]', error);
+      createEndpointLogger('/api/medical-apis/validate-drugs').error('Drug validation error', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         status: 500,
-        error: error instanceof Error ? error.message : 'Drug validation failed',
+        error: 'Drug validation failed. Please try again.',
       };
     }
   },

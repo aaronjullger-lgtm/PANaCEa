@@ -11,12 +11,16 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { resolveUserId } from '../_shared/user-resolver';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
-const SoapNoteSchema = z.object({
-  body: z.object({
-    caseId: z.string().min(1),
-    totalScore: z.number(),
-    breakdown: z.record(z.string(), z.unknown()),
-  }),
+// Bounds reject NaN/Infinity and absurd/malformed payloads without changing the
+// legitimate contract (caseId, a finite score, and a keyed breakdown map).
+export const SoapNoteSchema = z.object({
+  body: z
+    .object({
+      caseId: z.string().min(1).max(200),
+      totalScore: z.number().finite().min(0).max(100_000),
+      breakdown: z.record(z.string(), z.unknown()),
+    })
+    .strict(),
 });
 
 export const onRequestPost = authenticatedEndpoint(SoapNoteSchema, async (context) => {

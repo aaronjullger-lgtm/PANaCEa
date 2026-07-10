@@ -249,10 +249,12 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({ performanceData, cu
 
         {/* Filter Toggle */}
         <button
+          type="button"
           onClick={() => setShowFilters(!showFilters)}
+          aria-expanded={showFilters}
           className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)] transition-colors text-sm"
         >
-          <Filter className="w-4 h-4" />
+          <Filter className="w-4 h-4" aria-hidden="true" />
           <span className="font-medium">Filters</span>
           {showFilters ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ChevronDown className="w-4 h-4" aria-hidden="true" />}
         </button>

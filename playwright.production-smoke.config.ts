@@ -4,6 +4,7 @@ const baseURL = process.env.BASE_URL ?? 'http://127.0.0.1:8788';
 
 export default defineConfig({
   testDir: './e2e/production-smoke',
+  globalSetup: './e2e/global-setup.ts',
   outputDir: 'test-results/production-smoke',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,

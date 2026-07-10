@@ -21,19 +21,22 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import { buildSecondChanceReviewSet } from '../../../lib/services/secondChanceEngine';
 import type { ExamType } from '../../../lib/services/blueprintMappingService';
 
-const SecondChanceRequestSchema = z.object({
-  /** Number of review questions to return (1–25, default 10) */
-  count: z.number().int().min(1).max(25).optional().default(10),
-  /** Exam type for blueprint weighting (default PANCE) */
-  examType: z.enum(['PANCE', 'PANRE', 'EOR']).optional().default('PANCE'),
-  /** Optional scope: limit to a specific body system or condition */
-  scopeFilter: z
-    .object({
-      system: z.string().optional(),
-      conditionId: z.string().optional(),
-    })
-    .optional(),
-});
+export const SecondChanceRequestSchema = z
+  .object({
+    /** Number of review questions to return (1–25, default 10) */
+    count: z.number().int().min(1).max(25).optional().default(10),
+    /** Exam type for blueprint weighting (default PANCE) */
+    examType: z.enum(['PANCE', 'PANRE', 'EOR']).optional().default('PANCE'),
+    /** Optional scope: limit to a specific body system or condition */
+    scopeFilter: z
+      .object({
+        system: z.string().max(100).optional(),
+        conditionId: z.string().max(200).optional(),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
 
 export const onRequestPost = authenticatedEndpoint(SecondChanceRequestSchema, async (context) => {
   const { env, auth, validated } = context;
