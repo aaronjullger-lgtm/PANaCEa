@@ -481,9 +481,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </Button>
 
             <div className="border-t border-[var(--color-border)] pt-4">
-              <Button variant="ghost" onClick={this.toggleDetails} className="flex items-center justify-between w-full text-sm">
+              <Button variant="ghost" onClick={this.toggleDetails} aria-expanded={showDetails} className="flex items-center justify-between w-full text-sm">
                 <span>Technical Details</span>
-                {showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {showDetails ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ChevronDown className="w-4 h-4" aria-hidden="true" />}
               </Button>
               {showDetails && (
                 <div className="mt-3 space-y-3">

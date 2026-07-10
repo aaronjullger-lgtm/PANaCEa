@@ -138,11 +138,13 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
           <h3 className="font-semibold text-[var(--color-text-primary)]">Filter Audit Logs</h3>
         </div>
         <button
+          type="button"
           onClick={() => setExpandedFilter(!expandedFilter)}
+          aria-expanded={expandedFilter}
           className="text-sm text-[var(--color-action-primary)] hover:underline flex items-center gap-1"
         >
           {expandedFilter ? 'Hide Filters' : 'Show Filters'}
-          {expandedFilter ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {expandedFilter ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ChevronDown className="w-4 h-4" aria-hidden="true" />}
         </button>
       </div>
       {expandedFilter && (
