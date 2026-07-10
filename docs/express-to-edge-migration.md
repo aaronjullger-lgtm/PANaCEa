@@ -85,6 +85,10 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 | `POST /api/analytics/confusion` | `functions/api/analytics/confusion.ts` | ✅ PORTED |
 | `POST /api/analytics/soap-note` | `functions/api/analytics/soap-note.ts` | ✅ PORTED |
 | `GET /api/analytics/performance-deltas` | `functions/api/analytics/performance-deltas.ts` | ✅ PORTED |
+| `POST /api/push/subscribe` | `functions/api/push/subscribe.ts` | ✅ PORTED |
+| `DELETE /api/push/subscribe` | `functions/api/push/subscribe.ts` | ✅ PORTED |
+| `POST /api/reviews/second-chance` | `functions/api/reviews/second-chance.ts` | ✅ PORTED |
+| `GET /api/srs/due` | `functions/api/srs/due.ts` | ✅ PORTED |
 | `GET /api/achievements` | — | ❌ MISSING |
 | `GET /api/performance` | — | ❌ MISSING |
 | `POST /api/performance` | — | ❌ MISSING |
