@@ -159,9 +159,9 @@
 | Organ systems | ✅ Pass | 13 systems (CV, Derm, Endo, HEENT, GI, GU, Heme, ID, MSK, Neuro, Psych, Pulm, Renal, Repro) |
 | Focus areas | ✅ Pass | Anatomy & Physiology, Pathophysiology, Diagnosis, Pharmacology, Management, Procedures & Tests |
 | Select All / Clear | ✅ Pass | Works |
-| Start Session | ❌ Fail | "Failed to fetch questions: 404" – Express lacks `POST /api/questions/custom-session` |
+| Start Session | ✅ Pass (wrangler) | Use `npm run dev:wrangler` — `POST /api/questions/custom-session` is a Cloudflare Function only (Express retired). See `docs/api/API_OVERVIEW.md`. |
 
-**Root cause:** `customSessionService` calls `/api/questions/custom-session`; only CF function exists. Express `routes/questions.ts` has no `/custom-session` route.
+**Root cause (historical):** Express `routes/questions.ts` never had `/custom-session`. Fixed by retiring Express local dev in favor of wrangler parity (`scripts/dev/express-retired.mjs`).
 
 ---
 
@@ -170,9 +170,9 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | Navigation | ✅ Pass | Drill loads from tile click |
-| Question fetch | ❌ Fail | "Database Error: Failed to fetch lab cases: 404" |
+| Question fetch | ✅ Pass (wrangler) | `GET /api/drills/lab-cases` — Cloudflare Function; use `npm run dev:wrangler`. See `docs/api/API_OVERVIEW.md`. |
 
-**Root cause:** `labCaseService.fetchLabCases` calls `/api/drills/lab-cases`; Express has no `/api/drills` router. CF has `functions/api/drills/lab-cases.ts`.
+**Root cause (historical):** Express had no `/api/drills` router. CF function `functions/api/drills/lab-cases.ts` is the production path.
 
 ---
 
@@ -229,13 +229,19 @@
 
 ---
 
-### 8.8 API Parity Gaps (Express vs. Cloudflare)
+### 8.8 API Parity (Express retired → use wrangler)
 
-| Endpoint | CF | Express | Impact |
-|----------|----|---------|--------|
-| `GET /api/questions/pool` | ✅ | ✅ (fixed) | Core PANCE |
-| `POST /api/questions/custom-session` | ✅ | ❌ | Custom Study Builder |
-| `GET /api/drills/lab-cases` | ✅ | ❌ | Lab Interpretation drill |
+| Endpoint | CF | Local dev | Notes |
+|----------|----|-----------|-------|
+| `GET /api/questions/pool` | ✅ | ✅ via wrangler | Core PANCE |
+| `POST /api/questions/custom-session` | ✅ | ✅ via wrangler | Custom Study Builder |
+| `GET /api/drills/lab-cases` | ✅ | ✅ via wrangler | Lab Interpretation drill |
+| `POST /api/drills/lab-cases` | ✅ | ✅ via wrangler | Diagnosis autocomplete |
+| `POST /api/feedback/submit` | ✅ | ✅ via wrangler | Question flags |
+| `POST/DELETE /api/push/subscribe` | ✅ | ✅ via wrangler | Web Push subscriptions |
+| `GET /api/srs/due` | ✅ | ✅ via wrangler | Canonical FSRS due queue |
+
+Contracts: `docs/api/API_OVERVIEW.md`.
 
 ---
 
@@ -243,8 +249,7 @@
 
 ### High priority
 
-1. Add `POST /api/questions/custom-session` to Express for local dev.
-2. Add `GET /api/drills/lab-cases` (or proxy to `/api/labs/cases`) in Express for Lab Interpretation.
+1. ~~Add Express parity for custom-session / lab-cases~~ — **Resolved:** use `npm run dev:wrangler` for local API parity.
 
 ### Medium
 
