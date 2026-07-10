@@ -22,7 +22,7 @@ Functions, Prisma/Supabase, Clerk auth). Reports of concern include:
 - Authentication / authorization bypass (Clerk, RBAC).
 - Row-Level-Security (RLS) gaps exposing another user's data.
 - Injection (though all DB access is via Prisma; no raw SQL).
-- Input-validation gaps on `functions/api/**` mutation endpoints.
+- Input-validation gaps on `functions/api/**` mutation endpoints. Hardened endpoint contracts are documented in `docs/api/API_OVERVIEW.md`; schema tests live in `functions/api/__tests__/validation-hardening.test.ts`.
 - Secret exposure in source, logs, or client bundles.
 - XSS / content-injection in rendered clinical content.
 
@@ -33,6 +33,7 @@ Functions, Prisma/Supabase, Clerk auth). Reports of concern include:
   is agreed with the reporter where practical.
 - Dependency advisories are surfaced by the CI `npm audit` step and tracked in
   `docs/dependency-vulnerability-triage.md`.
+- API mutation validation contracts: `docs/api/API_OVERVIEW.md`.
 
 ## Supported
 
