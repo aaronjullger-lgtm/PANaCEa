@@ -14,6 +14,7 @@ import {
   ValidatedContext,
 } from '../_shared/middleware';
 import { labCasesQuerySchema, labCasesActionSchema } from '../_shared/zodSchemas';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
 
 // ============================================================================
@@ -478,13 +479,14 @@ export const onRequestGet = authenticatedEndpoint(
         },
       };
     } catch (error) {
-      console.error('Error fetching lab cases:', error);
+      // Log details server-side (redacted); return a generic message so internal
+      // error detail / stack is never leaked to the client.
+      createEndpointLogger('/api/drills/lab-cases').error('Error fetching lab cases', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         status: 500,
-        data: {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to fetch lab cases',
-        },
+        data: { success: false, error: 'Failed to fetch lab cases. Please try again.' },
       };
     } finally {
       await safePrismaDisconnect(prisma);
@@ -529,13 +531,12 @@ export const onRequestPost = authenticatedEndpoint(
         data: { error: 'Invalid action' },
       };
     } catch (error) {
-      console.error('Error processing lab cases request:', error);
+      createEndpointLogger('/api/drills/lab-cases').error('Error processing lab cases request', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         status: 500,
-        data: {
-          success: false,
-          error: error instanceof Error ? error.message : 'Request failed',
-        },
+        data: { success: false, error: 'Request failed. Please try again.' },
       };
     } finally {
       await safePrismaDisconnect(prisma);
