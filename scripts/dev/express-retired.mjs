@@ -10,7 +10,9 @@
  * (including /api/questions/custom-session and /api/drills/lab-cases).
  *
  * This guard fails fast with clear guidance instead of a broken Express boot.
- * (FEAT-001 / FEAT-002)
+ * The raw `tsx server.ts` command is intentionally NOT exposed as an npm script
+ * because it cannot run (missing ./routes); `server.ts` is kept only as a
+ * reference artifact. (FEAT-001 / FEAT-002)
  */
 const msg = `
 ────────────────────────────────────────────────────────────────────────

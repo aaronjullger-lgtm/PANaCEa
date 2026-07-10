@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "dev:server": "node scripts/dev/express-retired.mjs",
-    "dev:server:legacy": "node --env-file=.env --watch --import tsx server.ts",
     "dev:all": "node scripts/dev/express-retired.mjs",
     "dev:wrangler": "npm run pages:dev",
     "pages:build": "npm run build",

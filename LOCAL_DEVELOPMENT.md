@@ -126,8 +126,8 @@ npm run dev
 
 > ⚠️ The legacy Express server (`npm run dev:all` / `npm run dev:server`) is
 > **retired**. Its route system was moved to `_trash/old-routes/`, so it no
-> longer boots; those scripts now print a redirect to `dev:wrangler`. The raw
-> legacy command is preserved as `dev:server:legacy` for reference only.
+> longer boots; those scripts now print a redirect to `dev:wrangler`. `server.ts`
+> is kept only as a reference artifact (no npm script runs it).
 
 ## Run tests
 
