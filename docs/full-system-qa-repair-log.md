@@ -48,6 +48,32 @@ boundary: no prod services/secrets). Browser testing therefore used:
   gate on a sandbox-only flake. The a11y coverage itself is **green** (proven via
   manual preview). Blocker class closed with evidence.
 
+## API contract QA/repair loop (round 5)
+Focused on frontend-used priority endpoints. Two real fixes + one verified-safe sweep.
+
+- **`POST /api/questions/custom-session` (fixed):** filter arrays
+  (`systems`/`subcategories`/`conditions`/`focusAreas`) flow into Prisma `in:`
+  clauses but were unbounded (DoS vector) and the config/body weren't `.strict()`.
+  Added array-length (≤50) + per-string (≤100, non-empty) bounds + `.strict()`;
+  exported schema. Tests: `custom-session.test.ts` (7 — valid/empty/count/enum/
+  oversized-array/oversized-string/unknown-field). Empty-state already returns
+  `{ questions: [], warning }`; auth via `authenticatedEndpoint`.
+- **`GET/POST /api/drills/lab-cases` (significant repair):** both catch blocks
+  **returned the raw `error.message` in the response body** (leaks internal DB/stack
+  detail) and used `console.error`. Now return a generic message and log details via
+  the **redacting** endpoint logger. Tests: `lab-cases.test.ts` (2 — inject a DB error
+  with a fake connection string; assert response is generic and never contains
+  `ECONNREFUSED`/`Prisma`).
+- **Response-leak sweep (verified safe):** audited the widespread
+  `error instanceof Error ? error.message` pattern — the vast majority are **safe
+  server-side `logger.error(...)` calls** followed by a generic `throw new Error(...)`
+  (e.g. `drugs/search`, `content/search`), which the error-handling middleware turns
+  into a structured generic 500. `lab-cases` was the outlier (fixed). No other
+  response-body leak found among the checked frontend endpoints.
+- Validation: `custom-session.test.ts` 7/7 + `lab-cases.test.ts` 2/2. Commit `a064334f`.
+- Already hardened in prior rounds: `push/subscribe`, `analytics/soap-note`,
+  `reviews/second-chance`, `feedback/submit`; `/api/srs/due` contract tests.
+
 ## Deep core study-loop QA (round 4) — trace + state-transition regression
 Browser end-to-end of the *authenticated* loop is **credential-blocked** (needs a
 Clerk test session + test `DATABASE_URL`). Per the loop rule, I traced the real path
