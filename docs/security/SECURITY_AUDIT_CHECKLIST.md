@@ -86,16 +86,19 @@
 | Endpoint                   | Admin Check | Rate Limit | Status |
 | -------------------------- | ----------- | ---------- | ------ |
 | `/api/admin/check-access`  | ✅          | admin      | ✅     |
+| `/api/admin/readiness`     | ✅          | admin      | ✅     |
 | `/api/admin/media/upload`  | ✅          | admin      | ✅     |
 | `/api/admin/media/approve` | ✅          | admin      | ✅     |
 | `/api/admin/media/pending` | ✅          | admin      | ✅     |
 | `/api/admin/cache-metrics` | ✅          | admin      | ✅     |
+| `/api/library/contextualize-batch` | ✅ | admin      | ✅     |
+| `/api/branches/:branchName/merge` | ✅ | admin      | ✅     |
 
 ### Public Endpoints (No Auth Needed)
 
 | Endpoint           | Purpose        | Rate Limit |
 | ------------------ | -------------- | ---------- |
-| `/api/health`      | Health check   | standard   |
+| `/api/health`      | Public liveness only (no DB/env diagnostics) | standard   |
 | `/api/conditions`  | Public content | standard   |
 | `/api/reference/*` | Reference data | standard   |
 

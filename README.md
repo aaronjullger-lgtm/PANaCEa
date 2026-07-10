@@ -47,7 +47,7 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 
 - **Production API:** Cloudflare Pages Functions under `functions/api/`. All deployed requests are served by these edge handlers.
 - **Legacy `routes/`:** The `routes/` directory contains Express route handlers for **local/dev only**. They are **not deployed** to Cloudflare Pages. Use `npm run dev:server` only when testing legacy Express behavior. For production behavior, use `npm run dev:wrangler` or deploy to Pages.
-- **Endpoint contracts:** See `docs/api/API_OVERVIEW.md` for current request/response shapes of actively maintained endpoints (health, Gemini, content library, questions, goals/session, diagnostic puzzle, OSCE grading, admin enrichment).
+- **Endpoint contracts:** See `docs/api/API_OVERVIEW.md` for request/response shapes of recently changed endpoints (admin readiness/media, analytics, branches, drills, feedback, graph, library contextualization, drug validation, push, custom sessions, second-chance reviews, FSRS params, daily plan). Public liveness is `GET /api/health`; operational diagnostics are `GET /api/admin/readiness` (admin auth).
 
 ### Deployment & health (runbook)
 
@@ -175,7 +175,7 @@ For production deployment to Cloudflare Pages:
 | `npm run build`              | Build frontend for production                                |
 | `npm run build:server`       | Build backend for production                                 |
 | `npm test`                   | Run test suite                                               |
-| `npm run verify:health`      | Verify public Cloudflare Pages `/api/health`                 |
+| `npm run verify:health`      | Verify public Cloudflare Pages `GET /api/health` (liveness only) |
 | `npm run test:e2e:production-smoke` | Run production-parity Playwright smoke tests          |
 | `npm run db:studio`          | Open Prisma Studio (database GUI)                            |
 | `npm run migrate:production` | Run database migrations                                      |
@@ -185,7 +185,7 @@ For production deployment to Cloudflare Pages:
 
 ### Production-Parity Smoke Tests
 
-Public route/API health smoke:
+Public route/API health smoke (`GET /api/health` — liveness only; no DB/env diagnostics):
 
 ```bash
 # Terminal 1
@@ -194,6 +194,8 @@ npm run dev:wrangler
 # Terminal 2
 BASE_URL=http://localhost:8788 npm run verify:health
 ```
+
+Admin operational diagnostics: `GET /api/admin/readiness` (requires admin auth token).
 
 Authenticated core-study smoke uses `e2e/production-smoke/core-launch.spec.ts`.
 Set up a dedicated Clerk test user with MFA / Client Trust disabled, then set
@@ -273,7 +275,7 @@ PANaCEa/
 
 - [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md) - Production deployment
 - [Environment Setup](docs/deployment/ENV_SETUP_GUIDE.md) - Environment variables and configuration
-- [API Overview](docs/api/API_OVERVIEW.md) - Endpoint contracts
+- [API Overview](docs/api/API_OVERVIEW.md) - Changed endpoint contracts (`/api/admin/readiness`, analytics, branches, drills, feedback, graph, push, questions, reviews, FSRS, daily plan)
 - [Copilot Instructions](.github/copilot-instructions.md) - AI coding assistant guide
 - [Archived Documentation](docs/archive/INDEX.md) - Historical audit reports and status docs
 
