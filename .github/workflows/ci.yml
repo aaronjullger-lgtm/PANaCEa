@@ -205,17 +205,19 @@ jobs:
 
       - name: Run API health smoke (wrangler pages dev)
         run: |
-          npx wrangler pages dev dist --port 8788 \
+          npx wrangler pages dev dist --port 8788 --ip 127.0.0.1 \
             --compatibility-date=2025-12-15 \
             --compatibility-flags=nodejs_compat &
-          sleep 20
-          BASE_URL=http://localhost:8788 npx playwright test --config=playwright.wrangler.config.ts e2e/api-health.spec.ts --project=api-health
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8788/api/health >/dev/null; then
+              echo "Wrangler ready on 127.0.0.1:8788"
+              break
+            fi
+            sleep 2
+          done
+          BASE_URL=http://127.0.0.1:8788 npx playwright test --config=playwright.wrangler.config.ts e2e/api-health.spec.ts --project=api-health
         env:
           CI: true
-          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-          PANACEA_E2E_EMAIL: ${{ secrets.PANACEA_E2E_EMAIL }}
-          E2E_CLERK_TEST_EMAIL: ${{ secrets.E2E_CLERK_TEST_EMAIL }}
 
   # ─── Gate aggregator ─────────────────────────────────────────────────────────
   # Single status check to pin branch protection to.

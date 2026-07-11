@@ -1,7 +1,7 @@
 # purpose: Run the full Playwright end-to-end suite outside the lighter CI smoke lane.
 # owner: Platform / QA
 # trigger strategy: push, pull_request
-# secrets required: CLERK_SECRET_KEY, VITE_CLERK_PUBLISHABLE_KEY, PANACEA_E2E_EMAIL (or E2E_CLERK_TEST_EMAIL)
+# secrets required: CLERK_SECRET_KEY + publishable key (VITE_CLERK_PUBLISHABLE_KEY or CLERK_PUBLISHABLE_KEY) + test email (PANACEA_E2E_EMAIL or E2E_CLERK_TEST_EMAIL)
 # expected runtime: 20-60 minutes
 # failure behavior: Review the Playwright artifact and failing spec output, then rerun after fixing the UI or test regression.
 name: Playwright End-to-End Tests
@@ -38,16 +38,20 @@ jobs:
         run: npx prisma generate
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
+      - name: Resolve Clerk E2E environment
+        env:
+          SEC_CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          SEC_VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+          SEC_CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          SEC_PANACEA_E2E_EMAIL: ${{ secrets.PANACEA_E2E_EMAIL }}
+          SEC_PANACEA_E2E_PASSWORD: ${{ secrets.PANACEA_E2E_PASSWORD }}
+          SEC_E2E_CLERK_TEST_EMAIL: ${{ secrets.E2E_CLERK_TEST_EMAIL }}
+          SEC_E2E_CLERK_TEST_PASSWORD: ${{ secrets.E2E_CLERK_TEST_PASSWORD }}
+        run: node scripts/repo/resolve-e2e-env.mjs
       - name: Run Playwright tests
         run: npx playwright test
         env:
           CI: true
-          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-          PANACEA_E2E_EMAIL: ${{ secrets.PANACEA_E2E_EMAIL }}
-          PANACEA_E2E_PASSWORD: ${{ secrets.PANACEA_E2E_PASSWORD }}
-          E2E_CLERK_TEST_EMAIL: ${{ secrets.E2E_CLERK_TEST_EMAIL }}
-          E2E_CLERK_TEST_PASSWORD: ${{ secrets.E2E_CLERK_TEST_PASSWORD }}
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
