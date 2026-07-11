@@ -86,6 +86,7 @@
 | Endpoint                   | Admin Check | Rate Limit | Status |
 | -------------------------- | ----------- | ---------- | ------ |
 | `/api/admin/check-access`  | ✅          | admin      | ✅     |
+| `/api/admin/readiness`     | ✅          | admin      | ✅     |
 | `/api/admin/media/upload`  | ✅          | admin      | ✅     |
 | `/api/admin/media/approve` | ✅          | admin      | ✅     |
 | `/api/admin/media/pending` | ✅          | admin      | ✅     |
@@ -170,7 +171,7 @@ const SessionRequestSchema = z.object({
 
 1. `/api/questions/session` - Count and filter params
 2. `/api/drills/submit-review` - Rating and answer data
-3. `/api/feedback/submit` - User input sanitization
+3. `/api/feedback/submit` - Strict Zod validation (bounded text fields, `.strict()` body)
 
 ---
 
