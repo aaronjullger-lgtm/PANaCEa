@@ -46,8 +46,8 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 ### Architecture (API)
 
 - **Production API:** Cloudflare Pages Functions under `functions/api/`. All deployed requests are served by these edge handlers.
-- **Legacy `routes/`:** The `routes/` directory contains Express route handlers for **local/dev only**. They are **not deployed** to Cloudflare Pages. Use `npm run dev:server` only when testing legacy Express behavior. For production behavior, use `npm run dev:wrangler` or deploy to Pages.
-- **Endpoint contracts:** See `docs/api/API_OVERVIEW.md` for current request/response shapes of actively maintained endpoints (health, Gemini, content library, questions, goals/session, diagnostic puzzle, OSCE grading, admin enrichment).
+- **Legacy `routes/`:** The `routes/` directory is retired (moved to `_trash/old-routes/`). Local API parity requires `npm run dev:wrangler` or `npm run pages:serve` — not Express.
+- **Endpoint contracts:** See `docs/api/API_OVERVIEW.md` for request/response shapes of recently hardened routes (admin readiness, analytics, drills, feedback, graph, push, FSRS params, daily plan, custom sessions, and related endpoints).
 
 ### Deployment & health (runbook)
 
