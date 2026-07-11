@@ -5,6 +5,7 @@
  * Follows the Database-First architecture - no static fallbacks.
  */
 
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import type { LabCase, LabCategory } from '@/hooks/game/use-mini-lab-drill';
 
 interface LabCasesResponse {
@@ -18,6 +19,14 @@ interface DiagnosesResponse {
   success: boolean;
   diagnoses: string[];
   error?: string;
+}
+
+export function normalizeLabCasesResponse(json: unknown): LabCasesResponse {
+  return unwrapApiEnvelope<LabCasesResponse>(json);
+}
+
+export function normalizeDiagnosesResponse(json: unknown): DiagnosesResponse {
+  return unwrapApiEnvelope<DiagnosesResponse>(json);
 }
 
 /**
@@ -53,7 +62,7 @@ export async function fetchLabCases(
     throw new Error(`Failed to fetch lab cases: ${response.status}`);
   }
 
-  const data: LabCasesResponse = await response.json();
+  const data = normalizeLabCasesResponse(await response.json());
 
   if (!data.success) {
     throw new Error(data.error || 'Failed to fetch lab cases');
@@ -89,7 +98,7 @@ export async function fetchValidDiagnoses(token?: string | null): Promise<string
     throw new Error(`Failed to fetch diagnoses: ${response.status}`);
   }
 
-  const data: DiagnosesResponse = await response.json();
+  const data = normalizeDiagnosesResponse(await response.json());
 
   if (!data.success) {
     throw new Error(data.error || 'Failed to fetch diagnoses');

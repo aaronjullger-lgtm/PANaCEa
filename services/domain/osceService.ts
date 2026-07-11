@@ -35,7 +35,7 @@ async function parseJsonResponse(response: Response): Promise<any | null> {
 export async function getRandomEncounterCase(
   token?: string | null,
   filters?: { targetSystems?: string[]; difficulty?: string }
-): Promise<any | null> {
+): Promise<PatientEncounterCase | null> {
   try {
     const params = new URLSearchParams();
     if (filters?.targetSystems?.length) {
@@ -54,7 +54,8 @@ export async function getRandomEncounterCase(
       return null;
     }
 
-    return await parseJsonResponse(response);
+    const json = await parseJsonResponse(response);
+    return unwrapApiEnvelope<PatientEncounterCase | null>(json);
   } catch (error) {
     console.error('Error fetching random case:', error);
     return null;
