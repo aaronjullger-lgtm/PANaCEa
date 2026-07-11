@@ -80,6 +80,20 @@
 | `/api/user/stability-trend` | ✅   | standard   | ❌             |
 | `/api/analytics/session`    | ✅   | standard   | ❌             |
 | `/api/drills/*`             | ✅   | gemini     | ⚠️ Partial     |
+| `/api/drills/lab-cases`     | ✅   | standard   | ✅             |
+| `/api/analytics/learner-analysis` | ✅ | standard | ✅         |
+| `/api/analytics/readiness-projection` | ✅ | standard | ✅     |
+| `/api/analytics/soap-note`  | ✅   | standard   | ✅             |
+| `/api/feedback/submit`      | ✅   | standard   | ✅             |
+| `/api/graph/search`         | ✅   | standard   | ✅             |
+| `/api/graph/path`           | ✅   | standard   | ✅             |
+| `/api/medical-apis/validate-drugs` | ✅ | standard | ✅          |
+| `/api/push/subscribe`       | ✅   | standard   | ✅             |
+| `/api/questions/custom-session` | ✅ | questions | ✅           |
+| `/api/reviews/second-chance`| ✅   | standard   | ✅             |
+| `/api/user/fsrs-params`     | ✅   | standard   | ✅             |
+| `/api/users/me/daily-plan`  | ✅   | standard   | ✅             |
+| `/api/branches`             | ✅   | standard   | ⚠️ Partial     |
 
 ### Admin Endpoints (Admin Auth Required)
 
@@ -90,12 +104,14 @@
 | `/api/admin/media/approve` | ✅          | admin      | ✅     |
 | `/api/admin/media/pending` | ✅          | admin      | ✅     |
 | `/api/admin/cache-metrics` | ✅          | admin      | ✅     |
+| `/api/admin/readiness`     | ✅          | admin      | ✅     |
+| `/api/library/contextualize-batch` | ✅ | admin | ✅ |
 
 ### Public Endpoints (No Auth Needed)
 
 | Endpoint           | Purpose        | Rate Limit |
 | ------------------ | -------------- | ---------- |
-| `/api/health`      | Health check   | standard   |
+| `/api/health`      | Liveness only (no env/DB diagnostics) | standard   |
 | `/api/conditions`  | Public content | standard   |
 | `/api/reference/*` | Reference data | standard   |
 

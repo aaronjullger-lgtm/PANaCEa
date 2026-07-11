@@ -45,7 +45,8 @@ Run these tests immediately after any deployment:
 
 | Endpoint   | Test Command       | Expected Status       | ✓/✗ |
 | ---------- | ------------------ | --------------------- | --- |
-| Health     | `curl /api/health` | 200 + status: healthy | [ ] |
+| Health (public) | `curl /api/health` | 200 + `status: ok` (liveness only) | [ ] |
+| Readiness (admin) | `curl -H "Authorization: Bearer …" /api/admin/readiness` | 200 healthy or 503 unhealthy | [ ] |
 | Questions  | (via quiz flow)    | Questions load        | [ ] |
 | User Stats | Check dashboard    | Stats displayed       | [ ] |
 

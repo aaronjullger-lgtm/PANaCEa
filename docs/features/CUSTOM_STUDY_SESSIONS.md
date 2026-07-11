@@ -150,6 +150,8 @@ export const customSessionService = {
 
 #### 3. New API Endpoint (`functions/api/questions/custom-session.ts`)
 
+Canonical request/response contract: **[API Overview — custom-session](../api/API_OVERVIEW.md#post-apiquestionscustom-session)**.
+
 ```typescript
 // POST /api/questions/custom-session
 export async function onRequestPost(context: any) {

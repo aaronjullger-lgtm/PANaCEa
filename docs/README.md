@@ -26,7 +26,7 @@ Welcome to the PANaCEa documentation! This index helps you quickly find the info
 
 ### For API Surface
 
-1. **[API Overview](api/API_OVERVIEW.md)** - Current request/response contracts for updated endpoints
+1. **[API Overview](api/API_OVERVIEW.md)** - Request/response contracts for changed edge endpoints (health/readiness split, analytics, drills, graph, push, FSRS, study plan, and admin)
 
 ---
 
@@ -45,7 +45,7 @@ Learn about PANaCEa's system design:
 
 Backend endpoint contracts and API behavior docs:
 
-- **[API Overview](api/API_OVERVIEW.md)** - Updated admin and OSCE endpoint contracts (`/api/admin/check-access`, `/api/admin/stats`, `/api/osce/complete`, `/api/osce/stats`)
+- **[API Overview](api/API_OVERVIEW.md)** - Changed route contracts including `/api/health` (public liveness), `/api/admin/readiness` (admin diagnostics), analytics (`learner-analysis`, `readiness-projection`, `soap-note`), `/api/drills/lab-cases`, `/api/questions/custom-session`, `/api/reviews/second-chance`, `/api/user/fsrs-params`, `/api/users/me/daily-plan`, push/graph/feedback/branches, and OSCE endpoints
 
 ---
 
