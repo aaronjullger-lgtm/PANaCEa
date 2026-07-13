@@ -12,10 +12,10 @@
 These twelve principles govern every recommendation in this document. They are derived directly from PANaCEa's architecture, its educational mission, and the constraints of running AI-powered medical education at scale on Cloudflare Edge + PostgreSQL + Gemini.
 
 **1. Deterministic first, AI only when it adds irreplaceable value.**
-FSRS, implicit metrics, circadian modulation, confidence calibration, and the 8-step confidence pipeline are already deterministic and fast. This is correct. Never replace a working algorithm with a model call. AI should only enter the path when the task requires natural language understanding, generation, or judgment that no formula can replicate.
+FSRS, implicit metrics, circadian modulation, confidence calibration, and the confidence pipeline are already deterministic and fast. This is correct. Never replace a working algorithm with a model call. AI should only enter the path when the task requires natural language understanding, generation, or judgment that no formula can replicate.
 
 **2. The submission hot path is sacred.**
-`drillReviewService.ts` (803 lines) handles correctness resolution, implicit rating, par-time, circadian adjustment, FSRS update, and database writes with zero AI calls. This is PANaCEa's most latency-sensitive path (target: <200ms p95). No AI model, embedding lookup, or network call should ever be added to this synchronous pipeline. Any enrichment (confusion pairs, sibling propagation, insight generation) must happen asynchronously after the response is returned.
+`drillReviewService.ts` handles correctness resolution, implicit rating, par-time, circadian adjustment, FSRS update, and database writes with zero model calls in the synchronous scheduling path. This is PANaCEa's most latency-sensitive path (target: <200ms p95). No AI model, embedding lookup, or external network call should be added to this synchronous pipeline. Any enrichment that can wait must happen asynchronously after the response is returned.
 
 **3. Use the cheapest method that meets the quality bar.**
 The escalation order is: deterministic rule > cached result > embedding/retrieval > small/fast model > medium reasoning model > frontier model > human review. Move right only when the method to the left demonstrably fails the quality requirement.
@@ -56,7 +56,7 @@ Every optimization should map to a real workflow: cramming before EOR exams, dri
 | Dimension | Assessment |
 |-----------|-----------|
 | **User-facing job** | Complete a timed session of PANCE-style questions with immediate feedback, implicit FSRS scheduling, and progress tracking |
-| **Current bottleneck** | `QuizView.tsx` (2,274 lines) is monolithic; syncManager queues answers to `/api/questions/attempt`; no blocking AI in the path (good); UI consistency debt from hybrid routing |
+| **Current bottleneck** | `QuizView.tsx` remains monolithic; main-session reviews queue through `syncManager.queueReview()` to `/api/drills/submit-reviews`; `/api/questions/attempt` is stats-only compatibility; no blocking AI in the path (good); UI consistency debt from hybrid routing |
 | **AI needed?** | No for core flow. Partial for post-session insights |
 | **Best method** | Deterministic (FSRS + implicit metrics + circadian). Post-session summary can use cached AI |
 | **Latency sensitivity** | **High** — answer submission must be <200ms; question rendering <100ms |
@@ -76,7 +76,7 @@ Every optimization should map to a real workflow: cramming before EOR exams, dri
 | **Latency sensitivity** | **Critical** — runs synchronously in every answer submission |
 | **Cost sensitivity** | **Zero** — no API calls |
 | **Risk if wrong** | **Very high** — mis-scheduling corrupts long-term retention |
-| **Recommended pattern** | Add per-user MVRT calibration (percentile-based rather than fixed thresholds). Add unit tests for edge cases in the 8-step confidence pipeline. Add observability (log rating distributions per user to detect drift) |
+| **Recommended pattern** | Keep `drillReviewService` as the single review writer (see `docs/guides/SESSION_SUBMISSION_PIPELINE.md`). Add per-user MVRT calibration (percentile-based rather than fixed thresholds). Add unit tests for edge cases in the confidence pipeline. Add observability (log rating distributions per user to detect drift) |
 | **Fallback** | If implicit metrics produce anomalous ratings, clamp to nearest valid rating and flag for review |
 
 ### B3. Drill Modes (13 Active Drills)

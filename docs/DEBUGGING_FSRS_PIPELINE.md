@@ -1,29 +1,41 @@
 # Debugging the FSRS Submission Pipeline
 
-This guide covers how to debug production issues in the drill review submission pipeline — the core FSRS path that processes every student answer.
+This guide covers how to debug production issues in the review submission
+pipeline — the core FSRS path that processes learning reviews. For the
+developer-facing contract and entry-point map, see
+[`docs/guides/SESSION_SUBMISSION_PIPELINE.md`](./guides/SESSION_SUBMISSION_PIPELINE.md).
 
 ## Pipeline Overview
 
 ```
-POST /api/drills/submit-review
+Client entry point
+  -> QuizView -> syncManager.queueReview() -> POST /api/drills/submit-reviews
+  -> useDrillFSRS() -> POST /api/drills/submit-review
+  -> legacy due-review UI -> POST /api/srs/submit
+  -> stale queueAnswer item -> POST /api/questions/attempt (stats only; no FSRS)
   ↓
-submit-review.ts (Edge Function)
+submit-review.ts / submit-reviews.ts / srs/submit.ts (Edge Functions)
   → validates request (Zod)
   → resolves user + question
-  → creates PipelineTracer (requestId, userId, questionId)
+  → enforces submission idempotency when idempotencyKey is present
+  → creates PipelineTracer on the singular submit-review route
   ↓
 submitDrillReview() (drillReviewService.ts)
-  1. correctness_resolved   — exact match or option scan
+  1. correctness_resolved    — exact match or option scan
   2. rapid_guess_gate        — MVRT threshold check
-  3. implicit_rating         — behavioral telemetry → continuous grade
-  4. ghost_grader            — honesty heuristic override
+  3. implicit_rating         — behavioral telemetry -> binary Again/Good
+  4. ghost_grader            — behavioral honesty override
   5. fsrs_gate               — skip for cram/rapid_recall/rapid guess
-  6. fsrs_compute            — FSRS v6 scheduling + confidence pipeline
-  7. transactional_write     — ReviewLog + UserProgress + UserTopicProgress (atomic)
+  6. fsrs_compute            — FSRS v6 scheduling + confidence pipeline v4
+  7. durable_writes          — QuestionAttempt, ReviewLog, UserProgress, Card, stats
   8. pipeline_complete       — final summary
   ↓
 Response + attachLogMeta (trace summary attached to request_end log)
 ```
+
+`/api/questions/attempt` is intentionally absent from the FSRS writer path. It
+records compatibility/statistics data for stale offline answers and must not be
+used for ReviewLog, UserProgress, Card, or sibling-propagation writes.
 
 ## Where to Look
 
@@ -101,23 +113,28 @@ The `request_end` log (from requestLogger) includes enriched metadata:
 
 ### "Student's card isn't scheduling correctly"
 
-1. Find the review by userId + questionId in `pipeline:step:pipeline_complete`
-2. Check `pipeline:decision:fsrs_gate` — was FSRS actually updated? (outcome=proceed)
-3. Check `pipeline:decision:rapid_guess_gate` — was it flagged as rapid guess?
-4. Look at `pipeline:span:fsrs_compute` for before/after stability and difficulty
-5. Check if `eorClamped: true` — EOR mode may be clamping the interval
+1. Confirm the request hit `/api/drills/submit-review`,
+   `/api/drills/submit-reviews`, or `/api/srs/submit`. A
+   `/api/questions/attempt` write is stats-only.
+2. Find the review by userId + questionId in `pipeline:step:pipeline_complete`.
+3. Check `pipeline:decision:fsrs_gate` — was FSRS actually updated? (outcome=proceed)
+4. Check `pipeline:decision:rapid_guess_gate` — was it flagged as rapid guess?
+5. Look at `pipeline:span:fsrs_compute` for before/after stability and difficulty.
+6. Check if `eorClamped: true` — EOR mode may be clamping the interval.
 
 ### "Reviews seem to be getting lost"
 
 1. Search for `pipeline:span:transactional_write` with `error` in meta
 2. Check for `pipeline:warn:user_progress_fail` warnings
-3. Look at the `request_end` log — if `fsrsUpdated: false` but sessionType is 'main', the pipeline skipped FSRS
+3. Look at the `request_end` log — if `fsrsUpdated: false` but sessionType is `main`, the pipeline skipped FSRS.
+4. For offline submissions, inspect `syncManager.getStatus()` for pending or dead-lettered reviews and verify queued reviews drain to `/api/drills/submit-reviews`.
+5. For duplicate or missing retries, verify the same queued review reused the same `idempotencyKey`.
 
 ### "Confidence values look wrong"
 
 1. Find `pipeline:span:implicit_rating_derivation` — check `implicitConfidence`, `gradeContinuous`, `hasBaseline`
 2. Check `pipeline:step:ghost_grader` — the `rule` field shows if confidence was overridden
-3. Look at `fsrs_compute` span — `confidenceTelemetry` in the ReviewLog telemetry JSON has the full 8-step pipeline breakdown
+3. Look at `fsrs_compute` span and `ReviewLog.telemetry`. The service now runs confidence pipeline v4: Wave 1/2/3 behavioral signals, Bayesian accumulation, calibration, fatigue, interference, trend, Wilson mastery, hypercorrection, and shadow calibration signals. The persisted telemetry object still contains historical key names in places, so treat `lib/services/drillReviewService.ts` as authoritative when the label and implementation disagree.
 
 ### "Pipeline is slow"
 
@@ -138,8 +155,12 @@ The `warnThrottled()` mechanism deduplicates warnings by key within a 60-second 
 | File | Role |
 |---|---|
 | `lib/observability/pipelineTracer.ts` | PipelineTracer factory — creates trace context |
-| `lib/services/drillReviewService.ts` | Main pipeline — 8 traced steps |
-| `functions/api/drills/submit-review.ts` | Edge endpoint — creates tracer, attaches summary |
+| `lib/services/drillReviewService.ts` | Canonical writer for QuestionAttempt, ReviewLog, UserProgress, Card, stats, and scheduling |
+| `functions/api/drills/submit-review.ts` | Singular Edge endpoint — creates tracer, enforces idempotency, attaches summary |
+| `functions/api/drills/submit-reviews.ts` | Batch Edge endpoint used by offline/main-session queue draining |
+| `functions/api/srs/submit.ts` | Legacy due-review compatibility adapter that delegates to `submitDrillReview()` |
+| `functions/api/questions/attempt.ts` | Stats-only compatibility endpoint; does not update FSRS |
+| `lib/services/sync/syncManager.ts` | Offline queue and batch retry owner for `queueReview()` |
 | `functions/api/_shared/requestLogger.ts` | Request lifecycle logs (request_start/end) |
 | `functions/api/_shared/structuredLogger.ts` | Span timing + Sentry integration |
 | `functions/api/_shared/secureLogger.ts` | Secret redaction layer |

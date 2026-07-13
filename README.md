@@ -48,6 +48,7 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 - **Production API:** Cloudflare Pages Functions under `functions/api/`. All deployed requests are served by these edge handlers.
 - **Legacy `routes/`:** The `routes/` directory contains Express route handlers for **local/dev only**. They are **not deployed** to Cloudflare Pages. Use `npm run dev:server` only when testing legacy Express behavior. For production behavior, use `npm run dev:wrangler` or deploy to Pages.
 - **Endpoint contracts:** See `docs/api/API_OVERVIEW.md` for current request/response shapes of actively maintained endpoints (health, Gemini, content library, questions, goals/session, diagnostic puzzle, OSCE grading, admin enrichment).
+- **Review submissions:** See `docs/guides/SESSION_SUBMISSION_PIPELINE.md` for the canonical answer submission path, FSRS writer contract, offline retry behavior, and `/api/questions/attempt` compatibility constraints.
 
 ### Deployment & health (runbook)
 
@@ -166,20 +167,20 @@ For production deployment to Cloudflare Pages:
 
 ## 📜 Available Scripts
 
-| Command                      | Description                                                  |
-| ---------------------------- | ------------------------------------------------------------ |
-| `npm run dev:all`            | Express + Vite (local dev)                                   |
-| `npm run dev:wrangler`       | Build + Cloudflare Pages Functions (production parity)        |
-| `npm run dev:server`         | Express backend only                                         |
-| `npm run dev`                | Frontend only (proxies /api to Express if running)           |
-| `npm run build`              | Build frontend for production                                |
-| `npm run build:server`       | Build backend for production                                 |
-| `npm test`                   | Run test suite                                               |
-| `npm run verify:health`      | Verify public Cloudflare Pages `/api/health`                 |
-| `npm run test:e2e:production-smoke` | Run production-parity Playwright smoke tests          |
-| `npm run db:studio`          | Open Prisma Studio (database GUI)                            |
-| `npm run migrate:production` | Run database migrations                                      |
-| `npm run orchestrate:full`   | Run automated content pipeline                               |
+| Command                             | Description                                            |
+| ----------------------------------- | ------------------------------------------------------ |
+| `npm run dev:all`                   | Express + Vite (local dev)                             |
+| `npm run dev:wrangler`              | Build + Cloudflare Pages Functions (production parity) |
+| `npm run dev:server`                | Express backend only                                   |
+| `npm run dev`                       | Frontend only (proxies /api to Express if running)     |
+| `npm run build`                     | Build frontend for production                          |
+| `npm run build:server`              | Build backend for production                           |
+| `npm test`                          | Run test suite                                         |
+| `npm run verify:health`             | Verify public Cloudflare Pages `/api/health`           |
+| `npm run test:e2e:production-smoke` | Run production-parity Playwright smoke tests           |
+| `npm run db:studio`                 | Open Prisma Studio (database GUI)                      |
+| `npm run migrate:production`        | Run database migrations                                |
+| `npm run orchestrate:full`          | Run automated content pipeline                         |
 
 ---
 
