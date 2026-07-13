@@ -167,20 +167,20 @@ For production deployment to Cloudflare Pages:
 
 ## 📜 Available Scripts
 
-| Command                      | Description                                                  |
-| ---------------------------- | ------------------------------------------------------------ |
-| `npm run dev:all`            | Express + Vite (local dev)                                   |
-| `npm run dev:wrangler`       | Build + Cloudflare Pages Functions (production parity)        |
-| `npm run dev:server`         | Express backend only                                         |
-| `npm run dev`                | Frontend only (proxies /api to Express if running)           |
-| `npm run build`              | Build frontend for production                                |
-| `npm run build:server`       | Build backend for production                                 |
-| `npm test`                   | Run test suite                                               |
-| `npm run verify:health`      | Verify public Cloudflare Pages `/api/health`                 |
-| `npm run test:e2e:production-smoke` | Run production-parity Playwright smoke tests          |
-| `npm run db:studio`          | Open Prisma Studio (database GUI)                            |
-| `npm run migrate:production` | Run database migrations                                      |
-| `npm run orchestrate:full`   | Run automated content pipeline                               |
+| Command                             | Description                                            |
+| ----------------------------------- | ------------------------------------------------------ |
+| `npm run dev:all`                   | Express + Vite (local dev)                             |
+| `npm run dev:wrangler`              | Build + Cloudflare Pages Functions (production parity) |
+| `npm run dev:server`                | Express backend only                                   |
+| `npm run dev`                       | Frontend only (proxies /api to Express if running)     |
+| `npm run build`                     | Build frontend for production                          |
+| `npm run build:server`              | Build backend for production                           |
+| `npm test`                          | Run test suite                                         |
+| `npm run verify:health`             | Verify public Cloudflare Pages `/api/health`           |
+| `npm run test:e2e:production-smoke` | Run production-parity Playwright smoke tests           |
+| `npm run db:studio`                 | Open Prisma Studio (database GUI)                      |
+| `npm run migrate:production`        | Run database migrations                                |
+| `npm run orchestrate:full`          | Run automated content pipeline                         |
 
 ---
 
