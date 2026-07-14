@@ -46,6 +46,8 @@ export const CLINICAL_TOOLS = [
   fsrsDueCountTool,
 ];
 
+export const CLINICAL_TOOL_NAMES = CLINICAL_TOOLS.map((tool) => tool.name);
+
 /** Tools for the Content Quality & Verification domain. */
 export const QUALITY_TOOLS = [
   contentHealthAuditTool,

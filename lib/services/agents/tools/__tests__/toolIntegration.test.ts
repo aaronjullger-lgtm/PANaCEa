@@ -7,17 +7,14 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  ToolRegistry,
-} from '../../toolRegistry';
-import {
   createDefaultToolRegistry,
   createClinicalToolRegistry,
   createQualityToolRegistry,
   createInfraToolRegistry,
 } from '../index';
-import type { AgentTool } from '../../toolRegistry';
 import {
   CLINICAL_TOOLS,
+  CLINICAL_TOOL_NAMES,
   QUALITY_TOOLS,
   COVERAGE_TOOLS,
   INFRA_TOOLS,
@@ -82,6 +79,17 @@ describe('Domain-Specific Registries', () => {
     expect(names).toContain('fsrs_due_count');
   });
 
+  it('CLINICAL_TOOL_NAMES is the student-safe allow-list', () => {
+    expect(CLINICAL_TOOL_NAMES).toEqual([
+      'clinical_library_search',
+      'user_progress_summary',
+      'fsrs_due_count',
+    ]);
+    expect(CLINICAL_TOOL_NAMES).not.toContain('fsrs_calibration_status');
+    expect(CLINICAL_TOOL_NAMES).not.toContain('database_integrity_check');
+    expect(CLINICAL_TOOL_NAMES).not.toContain('content_health_audit');
+  });
+
   it('QUALITY_TOOLS has exactly 3 tools', () => {
     expect(QUALITY_TOOLS).toHaveLength(3);
     const names = QUALITY_TOOLS.map((t) => t.name);
@@ -119,6 +127,17 @@ describe('Domain-Specific Registries', () => {
   it('createClinicalToolRegistry returns correct registry', () => {
     const registry = createClinicalToolRegistry();
     expect(registry.list()).toHaveLength(3);
+  });
+
+  it('clinical registry rejects sensitive read-only tools', () => {
+    const registry = createClinicalToolRegistry();
+
+    expect(() =>
+      registry.select(['clinical_library_search', 'fsrs_calibration_status'])
+    ).toThrow('Unknown tool: "fsrs_calibration_status"');
+    expect(() =>
+      registry.select(['database_integrity_check'])
+    ).toThrow('Unknown tool: "database_integrity_check"');
   });
 
   it('createQualityToolRegistry returns correct registry', () => {

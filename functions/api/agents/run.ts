@@ -12,7 +12,7 @@
  *  - Edge-runtime safe: no `process.env`, no Node APIs.
  *  - Prisma Edge client with `safePrismaDisconnect` in finally.
  *  - `aiEndpoint` wrapper enforces auth + 25 req/min rate limit.
- *  - Clinical safety: default allowlist is read-only tools.
+ *  - Clinical safety: this student-facing endpoint only registers clinical tools.
  */
 
 import { z } from 'zod';
@@ -29,8 +29,8 @@ import {
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
   runAgent,
-  createDefaultToolRegistry,
-  DEFAULT_TOOL_NAMES,
+  createClinicalToolRegistry,
+  CLINICAL_TOOL_NAMES,
   type AgentRunResult,
   type ToolCategory,
   type ToolExecutionContext,
@@ -48,8 +48,9 @@ const AgentRunRequestSchema = z.object({
 
   /**
    * Optional explicit tool allow-list. When omitted, the endpoint uses the
-   * full DEFAULT_TOOL_NAMES set (clinical_library_search,
-   * user_progress_summary, fsrs_due_count).
+   * student-safe clinical tool set (clinical_library_search,
+   * user_progress_summary, fsrs_due_count). Non-clinical tool names are
+   * rejected because this endpoint registers only clinical tools.
    */
   allowedTools: z
     .array(z.string().min(1).max(64))
@@ -123,11 +124,11 @@ export const onRequestPost = aiEndpoint(
     try {
       prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-      const registry = createDefaultToolRegistry();
+      const registry = createClinicalToolRegistry();
       const allowedTools =
         validated.allowedTools && validated.allowedTools.length > 0
           ? validated.allowedTools
-          : [...DEFAULT_TOOL_NAMES];
+          : [...CLINICAL_TOOL_NAMES];
 
       const allowedCategories: ToolCategory[] =
         (validated.allowedCategories as ToolCategory[] | undefined) ?? ['read'];

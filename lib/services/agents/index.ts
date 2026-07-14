@@ -30,7 +30,9 @@ export {
 } from './geminiAgentClient';
 export {
   createDefaultToolRegistry,
+  createClinicalToolRegistry,
   DEFAULT_TOOL_NAMES,
+  CLINICAL_TOOL_NAMES,
   clinicalLibrarySearchTool,
   userProgressSummaryTool,
   fsrsDueCountTool,
