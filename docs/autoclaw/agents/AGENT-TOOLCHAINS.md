@@ -111,6 +111,22 @@ repo-hygiene ← database_integrity_check
 
 ---
 
+## HTTP API Endpoints
+
+Domain-specific agent routes map to tool registries in `functions/api/agents/`:
+
+| Endpoint | Auth | Tools | Primary actions |
+|---|---|---|---|
+| `POST /api/agents/run` | User (`aiEndpoint`, 25 rpm) | `CLINICAL_TOOLS` (3) | Free-form `message`; optional `allowedTools`, `userContext` |
+| `POST /api/agents/infra-health` | Admin | `INFRA_TOOLS` (2) | `db_integrity`, `fsrs_health`, `full_health` |
+| `POST /api/agents/quality-check` | User | `QUALITY_TOOLS` (3) | `audit_all`, `check_question`, `verify_condition`, `scan_quality` |
+| `POST /api/agents/coverage-audit` | User | `COVERAGE_TOOLS` (2) | `blueprint_coverage`, `drill_coverage`, `full_coverage` |
+| `POST /api/agents/verify-condition` | User | `condition_verify` (+ optional `clinical_library_search`) | `conditionId` or `conditionName`; optional `crossReference` |
+
+Request/response contracts: `docs/api/API_OVERVIEW.md`.
+
+---
+
 ## Tool Registry Configuration
 
 ### Default Registry (10 tools)
