@@ -7,13 +7,13 @@
  *
  * Uses INFRA_TOOLS: database_integrity_check, fsrs_calibration_status.
  *
- * Auth: authenticatedEndpoint (Clerk token required).
+ * Auth: adminAuthenticatedEndpoint (Clerk token + admin role required).
  * Rate limit: 10 req/min.
  */
 
 import { z } from 'zod';
 import {
-  authenticatedEndpoint,
+  adminAuthenticatedEndpoint,
   type AuthenticatedContext,
   type ValidatedContext,
 } from '../../_shared/middleware';
@@ -75,7 +75,7 @@ function buildAgentPrompt(action: Request['action'], req: Request): string {
 
 // ─── Handler ────────────────────────────────────────────────────────────────
 
-export const onRequestPost = authenticatedEndpoint(
+export const onRequestPost = adminAuthenticatedEndpoint(
   RequestSchema,
   async (context: AuthenticatedContext & ValidatedContext<Request>) => {
     const { env, auth, validated, waitUntil } = context;
