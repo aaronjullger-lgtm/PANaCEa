@@ -94,7 +94,7 @@ export const onRequestGet = authenticatedEndpoint(
       log.error('Graph search error', error);
       return {
         status: 500,
-        error: error instanceof Error ? error.message : 'Graph search failed',
+        error: 'Graph search failed. Please try again.',
       };
     } finally {
       await safePrismaDisconnect(prisma);

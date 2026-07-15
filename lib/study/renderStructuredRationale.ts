@@ -160,7 +160,12 @@ export function resolveStructuredRationale(rationale: unknown): StructuredRation
 const HTML_TAG_RE = /<[^>]+>/g;
 const WHITESPACE_RE = /\s+/g;
 
-function cleanText(value?: string): string {
+// Accepts `unknown` because callers index `rationale[key as keyof …]`, whose type
+// widens to the full union (string | string[] | object[]). This helper is a
+// defensive text normalizer: any non-string value yields ''. Typing the param as
+// `unknown` (rather than `string`) makes that guarantee type-safe at every call
+// site without weakening any check.
+function cleanText(value?: unknown): string {
   if (!value || typeof value !== 'string') return '';
   return value.replace(HTML_TAG_RE, ' ').replace(WHITESPACE_RE, ' ').trim();
 }

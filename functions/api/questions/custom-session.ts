@@ -12,13 +12,18 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { withProductionQuestionSafety } from '../../../lib/services/questionServingSafety';
 
-const CustomSessionSchema = z.object({
+// Bound array lengths and per-entry string sizes: these filters flow straight
+// into Prisma `in: [...]` clauses, so unbounded arrays are a DoS vector.
+// Unknown config keys are stripped (clients send the full CustomSessionConfig).
+const filterList = z.array(z.string().min(1).max(100)).max(50);
+
+export const CustomSessionSchema = z.object({
   body: z.object({
     config: z.object({
-      systems: z.array(z.string()).optional(),
-      subcategories: z.array(z.string()).optional(),
-      conditions: z.array(z.string()).optional(),
-      focusAreas: z.array(z.string()).optional(),
+      systems: filterList.optional(),
+      subcategories: filterList.optional(),
+      conditions: filterList.optional(),
+      focusAreas: filterList.optional(),
       difficulty: z.enum(['same', 'easier', 'harder']).optional(),
     }),
     count: z.number().int().min(1).max(50).optional(),

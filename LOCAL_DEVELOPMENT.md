@@ -108,23 +108,26 @@ npm run db:studio
 
 ## Run the app
 
-Start the Vite dev server and Express backend together:
+Local dev runs on **Cloudflare Pages Functions** (same as production) — this is
+the only path with full API parity (including `/api/questions/custom-session`
+and `/api/drills/lab-cases`).
+
+Full app + API (recommended):
 
 ```bash
-npm run dev:all
+npm run dev:wrangler
 ```
 
-Or run just the frontend:
+Or run just the frontend (no API):
 
 ```bash
 npm run dev
 ```
 
-Run just the API server:
-
-```bash
-npm run dev:server
-```
+> ⚠️ The legacy Express server (`npm run dev:all` / `npm run dev:server`) is
+> **retired**. Its route system was moved to `_trash/old-routes/`, so it no
+> longer boots; those scripts now print a redirect to `dev:wrangler`. `server.ts`
+> is kept only as a reference artifact (no npm script runs it).
 
 ## Run tests
 

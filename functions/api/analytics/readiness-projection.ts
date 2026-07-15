@@ -14,6 +14,7 @@
 import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserId } from '../_shared/user-resolver';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import type { CloudflareEnv } from '../_shared/types';
@@ -134,10 +135,14 @@ export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) =
       headers: { 'Cache-Control': 'private, max-age=300' },
     };
   } catch (error) {
-    console.error('[readiness-projection]', error);
+    // Log details server-side (redacted); return a generic client message so the
+    // raw error/stack is never leaked.
+    createEndpointLogger('/api/analytics/readiness-projection').error('Readiness projection error', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       status: 500,
-      error: error instanceof Error ? error.message : 'Readiness projection failed',
+      error: 'Readiness projection failed. Please try again.',
     };
   } finally {
     await safePrismaDisconnect(prisma);

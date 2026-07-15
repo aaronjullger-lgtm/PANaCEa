@@ -1,337 +1,111 @@
-# FSRS v6 Quick Reference Guide
+# FSRS v6 Quick Reference (PANaCEa)
 
-## For Developers: How to Use the New Schema
-
-### 1. Working with Cards (FSRS v6 Compliant)
-
-#### Create a New Card
-```typescript
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
-const card = await prisma.card.create({
-  data: {
-    userId: user.id,
-    questionId: question.id,
-    due: new Date(),
-    stability: 0.0,
-    difficulty: 0.0,
-    state: 0, // 0=New
-  }
-});
-```
-
-#### Query Due Cards
-```typescript
-// Get all cards due today for a user
-const dueCards = await prisma.card.findMany({
-  where: {
-    userId: user.id,
-    due: {
-      lte: new Date(),
-    },
-  },
-  orderBy: {
-    due: 'asc',
-  },
-});
-```
-
-#### Update Card After Review
-```typescript
-import { fsrs, Rating, State } from '@open-spaced-repetition/ts-fsrs';
-
-const f = fsrs();
-const scheduling = f.repeat(card, new Date());
-
-// User selected "Good"
-const updatedCard = await prisma.card.update({
-  where: { id: card.id },
-  data: scheduling[Rating.Good].card,
-});
-```
-
-### 2. Recording Reviews (with Session Type)
-
-#### Record a MAIN Session Review
-```typescript
-await prisma.reviewLog.create({
-  data: {
-    userId: user.id,
-    questionId: question.id,
-    conditionId: condition.id,
-    sessionType: 'MAIN', // Backward compat
-    review_type: 'real', // Algorithm field: "real" vs "cram"
-    rating: 3, // FSRS rating 1-4 (algorithm field)
-    state: card.state,
-    stability: card.stability,
-    difficulty: card.difficulty,
-    wasCorrect: true,
-    duration: 12500, // Milliseconds (algorithm field)
-    review_date: new Date(), // Algorithm field
-  },
-});
-```
-
-#### Record a CRAM Session (excluded from stats)
-```typescript
-await prisma.reviewLog.create({
-  data: {
-    userId: user.id,
-    questionId: question.id,
-    sessionType: 'CRAM',
-    review_type: 'cram',
-    rating: 4,
-    state: 2,
-    wasCorrect: true,
-    stability: 10.0,
-    difficulty: 5.0,
-  },
-});
-```
-
-### 3. Querying Reviews for FSRS Optimization
-
-#### Get MAIN Session Reviews Only
-```typescript
-// CRITICAL: Filter by sessionType or review_type = 'real'
-const mainReviews = await prisma.reviewLog.findMany({
-  where: {
-    userId: user.id,
-    OR: [
-      { review_type: 'real' },
-      { sessionType: 'MAIN' },
-    ],
-  },
-  orderBy: { review_date: 'asc' },
-});
-```
-
-#### Export for Rust Optimizer
-```typescript
-const reviewData = mainReviews.map(r => ({
-  rating: r.rating, // Algorithm field (1-4)
-  elapsed_days: r.elapsedDays || 0,
-  state: r.state,
-}));
-
-// Feed to @open-spaced-repetition/binding
-// const optimizedWeights = await optimizer.optimize(reviewData);
-```
-
-### 4. Using PersonalizedFSRSParams
-
-#### Store Optimized Weights
-```typescript
-await prisma.personalizedFSRSParams.upsert({
-  where: { userId: user.id },
-  update: {
-    w: [0.4, 0.6, 2.4, 5.8, ...], // 21 Float values
-    lastOptimizedAt: new Date(),
-    sampleSize: mainReviews.length,
-  },
-  create: {
-    userId: user.id,
-    w: [0.4, 0.6, 2.4, 5.8, ...],
-  },
-});
-```
-
-#### Retrieve and Use Weights
-```typescript
-const params = await prisma.personalizedFSRSParams.findUnique({
-  where: { userId: user.id },
-});
-
-const f = fsrs({
-  w: params?.w || undefined, // Falls back to default
-});
-```
-
-### 5. Global Content Search (ContentIndex)
-
-#### Populate ContentIndex (Background Job)
-```typescript
-// Run this as a background job or cron
-async function populateContentIndex() {
-  const conditions = await prisma.medicalContent.findMany();
-  
-  for (const condition of conditions) {
-    await prisma.contentIndex.upsert({
-      where: { 
-        entityType_entityId: {
-          entityType: 'Condition',
-          entityId: condition.id,
-        }
-      },
-      update: {
-        title: condition.name,
-        body: `${condition.overview} ${condition.symptoms}`,
-        panceYield: condition.panceYield,
-        system: condition.system,
-      },
-      create: {
-        entityId: condition.id,
-        entityType: 'Condition',
-        title: condition.name,
-        body: `${condition.overview} ${condition.symptoms}`,
-        panceYield: condition.panceYield,
-        system: condition.system,
-      },
-    });
-  }
-}
-```
-
-#### Search Across All Content
-```typescript
-const results = await prisma.contentIndex.findMany({
-  where: {
-    OR: [
-      { title: { contains: searchTerm, mode: 'insensitive' } },
-      { body: { contains: searchTerm, mode: 'insensitive' } },
-    ],
-  },
-  orderBy: {
-    panceYield: 'desc',
-  },
-  take: 20,
-});
-```
-
-## Common Patterns
-
-### Pattern 1: Complete Review Workflow
-```typescript
-async function reviewQuestion(userId: string, questionId: string, rating: Rating) {
-  // 1. Get existing card
-  const card = await prisma.card.findUnique({
-    where: { userId_questionId: { userId, questionId } },
-  });
-  
-  // 2. Calculate next review (FSRS v6)
-  const f = fsrs();
-  const scheduling = f.repeat(card, new Date());
-  const next = scheduling[rating];
-  
-  // 3. Update card
-  await prisma.card.update({
-    where: { id: card.id },
-    data: next.card,
-  });
-  
-  // 4. Log review (MAIN session only)
-  await prisma.reviewLog.create({
-    data: {
-      userId,
-      questionId,
-      sessionType: 'MAIN',
-      review_type: 'real',
-      rating,
-      state: next.card.state,
-      stability: next.card.stability,
-      difficulty: next.card.difficulty,
-      review_date: new Date(),
-    },
-  });
-}
-```
-
-### Pattern 2: Get Due Card Count
-```typescript
-const dueCount = await prisma.card.count({
-  where: {
-    userId: user.id,
-    due: { lte: new Date() },
-  },
-});
-```
-
-### Pattern 3: System-Specific Stats (MAIN only)
-```typescript
-const cardioStats = await prisma.reviewLog.aggregate({
-  where: {
-    userId: user.id,
-    system: 'CV',
-    OR: [{ review_type: 'real' }, { sessionType: 'MAIN' }],
-  },
-  _avg: {
-    difficulty: true,
-    stability: true,
-  },
-  _count: true,
-});
-```
-
-## Migration Checklist
-
-- [ ] Run `npx prisma validate`
-- [ ] Run `npx prisma format`
-- [ ] Create migration: `npx prisma migrate dev --name fsrs_v6_improvements`
-- [ ] Review generated SQL
-- [ ] Test on staging database
-- [ ] Create data migration script for SRSItem → Card
-- [ ] Update `lib/fsrs.ts` to use Card model
-- [ ] Update UI components
-- [ ] Deploy to production
-- [ ] Monitor performance improvements
-- [ ] Remove legacy models after validation
-
-## Anti-Patterns to Avoid
-
-### ❌ DON'T: Include CRAM/RAPID_RECALL in stats
-```typescript
-// BAD - Pollutes FSRS statistics
-const reviews = await prisma.reviewLog.findMany({
-  where: { userId: user.id }, // Missing sessionType filter!
-});
-```
-
-### ✅ DO: Filter by review_type = 'real' or sessionType = 'MAIN'
-```typescript
-// GOOD - Only real/MAIN sessions affect weights
-const reviews = await prisma.reviewLog.findMany({
-  where: { 
-    userId: user.id,
-    OR: [{ review_type: 'real' }, { sessionType: 'MAIN' }],
-  },
-});
-```
-
-### ❌ DON'T: Store clinical data in JSON files
-```typescript
-// BAD - Violates "Strict Database-First" rule
-const conditions = [
-  { name: 'MI', symptoms: [...] },
-  // ...2,195 more items
-];
-```
-
-### ✅ DO: Use database queries
-```typescript
-// GOOD - Database-first pattern
-const conditions = await prisma.medicalContent.findMany({
-  where: { isHighYield: true },
-});
-```
-
-## Performance Tips
-
-1. **Use indexes**: All critical Card/ReviewLog queries are indexed
-2. **Batch updates**: Use `prisma.card.updateMany()` for bulk operations
-3. **Async operations**: Use `Promise.all()` for parallel queries
-4. **Limit results**: Always use `take` for large result sets
-5. **Cache weights**: Store FSRS weights in memory, not per-query
-
-## References
-
-- **FSRS v6 Library**: `@open-spaced-repetition/ts-fsrs`
-- **Optimizer**: `@open-spaced-repetition/binding`
-- **Schema**: `prisma/schema.prisma`
-- **Docs**: `docs/FSRS_V6_SCHEMA_IMPROVEMENTS.md`
+> ⚠️ **PANaCEa does NOT use the stock `ts-fsrs` 4-button API.** There are **no
+> student-facing "Again / Hard / Good / Easy" rating buttons**. Confidence is
+> **behaviorally derived** from implicit telemetry. Use the internal engine at
+> `lib/fsrs.ts` — never `@open-spaced-repetition/ts-fsrs` directly in app code.
+>
+> A previous version of this doc contained stock `ts-fsrs` examples and an
+> explicit-rating workflow. That was **incorrect for PANaCEa** and has been
+> rewritten. See `docs/fsrs-current-state-and-hardening-report.md`.
 
 ---
 
-**Last Updated**: January 23, 2026  
-**Schema Version**: FSRS v6 Compliant
+## 1. The rating model is implicit (no buttons)
+
+- Internal engine: **`lib/fsrs.ts`** (`class FSRS`, `Rating`, `FSRSState`,
+  `defaultParameters`, `loadParametersSafely`, `normalizeRating`).
+- **Binary rating only:** `Rating.Again = 1`, `Rating.Good = 3`. `Rating.Hard (2)`
+  and `Rating.Easy (4)` are **deprecated** and collapsed by `normalizeRating()`
+  (`Hard → Again`, `Easy → Good`). Do not reintroduce them in UI.
+- The rating fed to FSRS is **derived from behavior**, not chosen by the student:
+  - `lib/implicit-metrics.ts` → `deriveContinuousRating(...)` turns response
+    latency, answer switches, hover oscillations, commitment gap, hint usage,
+    etc. into a continuous grade (1.0–4.0), then maps it to the binary
+    `Again`/`Good` used by the scheduler.
+  - `lib/micro-kinetics.ts` and related collectors gather the raw telemetry.
+  - `assessTelemetryQuality()` classifies each signal set as full / partial /
+    minimal so low-quality (e.g. rapid-guess) reviews are handled appropriately.
+
+```ts
+// Correct: internal engine + behaviorally-derived rating.
+import { FSRS, loadParametersSafely, normalizeRating } from '@/lib/fsrs';
+import { deriveContinuousRating } from '@/lib/implicit-metrics';
+
+const params = loadParametersSafely(personalizedParams); // safe fallback to defaults
+const fsrs = new FSRS(params);
+
+const { rating } = deriveContinuousRating(telemetry, /* config */); // implicit
+const { card: nextCard, due } = fsrs.next(currentCard, new Date(), normalizeRating(rating));
+```
+
+## 2. Where review submission is wired (single source of truth)
+
+```
+Client question UI (behavioral telemetry only, NO rating buttons)
+  → POST /api/drills/submit-review        (functions/api/drills/submit-review.ts)
+  → lib/services/drillReviewService.ts
+       • correctness check
+       • deriveContinuousRating(telemetry)  → Again/Good           (lib/implicit-metrics.ts)
+       • FSRS.next(card, now, rating)        → stability/difficulty/state/due   (lib/fsrs.ts)
+       • createReviewLogEntry(...)           → ReviewLog row        (lib/services/reviewLogService.ts)
+       • QuestionAttempt + UserProgress updates
+  → { isCorrect, rating, stability, difficulty, nextReview, retrievability }
+```
+
+The main study session submits through the same service. **Do not** compute
+scheduling on the client or ask the student to self-rate.
+
+## 3. Parameter safety (CODE-001)
+
+- `defaultParameters.w` is the canonical 21-weight v6 array.
+- `isParamsOnCurrentScale(w)` requires **every** weight finite and `w[19]/w[20]`
+  on the v6 scale; off-scale/malformed arrays are rejected.
+- `loadParametersSafely(stored)` returns validated params or falls back to
+  `defaultParameters` — so a corrupt/missing weight (e.g. `w[6]`, the difficulty
+  mean-reversion rate) can never silently disable scheduling behavior.
+- The `FSRS` constructor (`normalizeParameters`) repairs any non-finite required
+  weight from defaults as defense-in-depth.
+
+## 4. Session quarantine (data isolation)
+
+Only real MAIN-loop reviews train the optimizer. `ReviewLog.review_type ∈
+{'real','rapid_guess','cram','practice'}` with `sessionType` classification;
+OSCE / cram / rapid-guess artifacts must never pollute `real` FSRS statistics.
+
+```ts
+// Optimizer / stats reads: real reviews only.
+const reviews = await prisma.reviewLog.findMany({
+  where: { userId, review_type: 'real' },
+  orderBy: { reviewedAt: 'asc' },
+});
+```
+
+All ReviewLog writes go through `createReviewLogEntry()` (validates DB CHECK
+constraints and the `review_type` contract). Never write raw `reviewLog.create`
+in new code.
+
+## 5. Optimizer
+
+Personalized weights are fit by the **Python optimizer** (`gcp-fsrs-optimizer/`,
+invoked via `lib/services/fsrsOptimizerService.ts` / `lib/fsrs-optimizer-bridge.ts`),
+**not** a Rust/`@open-spaced-repetition/binding` package. v6 = 21 weights;
+v7-alpha (29 weights) is an experimental, default-off placeholder
+(`lib/fsrs-v7.ts`, `lib/fsrs-version-selector.ts`).
+
+## 6. Anti-patterns
+
+- ❌ Rendering "Again / Hard / Good / Easy" buttons for students.
+- ❌ Importing `@open-spaced-repetition/ts-fsrs` in app code (use `@/lib/fsrs`).
+- ❌ `new PrismaClient()` in a handler (use the edge singleton / `createEdgePrismaClient`).
+- ❌ Writing `reviewLog.create` directly (use `createReviewLogEntry`).
+- ❌ Including non-`real` reviews in optimizer/statistics queries.
+
+## References
+- Engine: `lib/fsrs.ts` · Implicit rating: `lib/implicit-metrics.ts`, `lib/micro-kinetics.ts`
+- Submission: `lib/services/drillReviewService.ts`, `functions/api/drills/submit-review.ts`
+- ReviewLog: `lib/services/reviewLogService.ts` · Optimizer: `gcp-fsrs-optimizer/`
+- State report: `docs/fsrs-current-state-and-hardening-report.md`
+
+---
+**Status:** current · **Rating model:** implicit / behaviorally derived · **No self-rating buttons.**

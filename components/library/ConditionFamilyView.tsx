@@ -106,7 +106,12 @@ export function ConditionFamilyView({
             <Layers className="w-5 h-5 text-[var(--color-text-muted)]" />
             {data.canonicalName} Family
           </h3>
-          <Button variant="ghost" onClick={() => setExpanded(!expanded)}>
+          <Button
+            variant="ghost"
+            onClick={() => setExpanded(!expanded)}
+            aria-expanded={expanded}
+            aria-label={`${expanded ? 'Collapse' : 'Expand'} ${data.canonicalName} family details`}
+          >
             {expanded ? <ChevronDown className="w-4 h-4" aria-hidden="true" /> : <ChevronRight className="w-4 h-4" aria-hidden="true" />}
           </Button>
         </div>

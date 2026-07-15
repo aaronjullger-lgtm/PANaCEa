@@ -47,12 +47,19 @@ npm run dev
 
 Preferred credential-based setup:
 
-1. Create a dedicated Clerk test user with MFA / Client Trust disabled.
-2. Set local-only values in `.env` or your shell:
+1. Create a dedicated Clerk test user with MFA / Client Trust disabled (or use backend auth via `CLERK_SECRET_KEY`).
+2. Set local-only values in `.env` or your shell (either naming scheme works):
 
 ```env
+# Canonical names
 E2E_CLERK_TEST_EMAIL=test-learner@example.com
 E2E_CLERK_TEST_PASSWORD=replace-with-local-test-password
+
+# Or PANaCEa-local names (resolved with same priority: canonical wins)
+PANACEA_E2E_EMAIL=test-learner@example.com
+PANACEA_E2E_PASSWORD=replace-with-local-test-password
+CLERK_SECRET_KEY=sk_test_...
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
 ```
 
 3. In a new terminal, run:

@@ -11,11 +11,15 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { resolveUserId } from '../_shared/user-resolver';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
-const SoapNoteSchema = z.object({
+// Bounds reject NaN/Infinity and absurd/malformed payloads. Clients may send
+// extra telemetry fields (timestamp, userId); auth userId is resolved server-side.
+export const SoapNoteSchema = z.object({
   body: z.object({
-    caseId: z.string().min(1),
-    totalScore: z.number(),
+    caseId: z.string().min(1).max(200),
+    totalScore: z.number().finite().min(0).max(100_000),
     breakdown: z.record(z.string(), z.unknown()),
+    timestamp: z.string().max(100).optional(),
+    userId: z.string().max(200).optional(),
   }),
 });
 

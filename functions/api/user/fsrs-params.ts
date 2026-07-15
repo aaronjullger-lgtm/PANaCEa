@@ -12,6 +12,7 @@
 
 import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import {
   runFullOptimizationFromReviewLog,
@@ -161,10 +162,12 @@ export const onRequestGet = authenticatedEndpoint(
 
       return { data: response };
     } catch (error) {
-      console.error('[FSRS-Params] GET error:', error);
+      createEndpointLogger('/api/user/fsrs-params').error('FSRS params GET error', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         status: 500,
-        error: error instanceof Error ? error.message : 'Failed to fetch FSRS parameters',
+        error: 'Failed to fetch FSRS parameters. Please try again.',
       };
     } finally {
       await safePrismaDisconnect(prisma);
@@ -397,10 +400,12 @@ export const onRequestPost = authenticatedEndpoint(
         },
       };
     } catch (error) {
-      console.error('[FSRS-Params] POST error:', error);
+      createEndpointLogger('/api/user/fsrs-params').error('FSRS params POST (optimization) error', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         status: 500,
-        error: error instanceof Error ? error.message : 'Optimization failed',
+        error: 'Optimization failed. Please try again.',
       };
     } finally {
       await safePrismaDisconnect(prisma);

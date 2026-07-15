@@ -95,11 +95,19 @@ export function AnimatedCounter({
       ? displayValue.toFixed(decimals)
       : Math.round(displayValue).toString();
 
+  // Announce the stable target value to assistive tech rather than the
+  // rapidly-changing intermediate frames (avoids noisy live-region churn).
+  const finalFormatted =
+    decimals > 0 ? value.toFixed(decimals) : Math.round(value).toString();
+  const accessibleValue = `${prefix}${finalFormatted}${suffix}`;
+
   return (
-    <span className={className}>
-      {prefix}
-      {formatted}
-      {suffix}
+    <span className={className} aria-label={accessibleValue}>
+      <span aria-hidden="true">
+        {prefix}
+        {formatted}
+        {suffix}
+      </span>
     </span>
   );
 }

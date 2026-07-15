@@ -35,4 +35,44 @@ describe('sanitizeForRationale', () => {
     expect(sanitizeForRationale(undefined)).toBe('');
     expect(sanitizeForRationale('')).toBe('');
   });
+
+  // SEC-004 adversarial coverage
+  it('drops data:, vbscript:, and other non-allowlisted href protocols', () => {
+    for (const proto of ['data:text/html,<script>alert(1)</script>', 'vbscript:msgbox(1)', 'file:///etc/passwd']) {
+      const out = sanitizeForRationale(`<a href="${proto}">x</a>`).toLowerCase();
+      expect(out).toContain('<a>'); // tag kept, dangerous href dropped
+      expect(out).not.toContain('href=');
+      expect(out).not.toContain('vbscript:');
+      expect(out).not.toContain('data:text/html');
+    }
+  });
+
+  it('removes mixed-case and spaced script tags', () => {
+    const out = sanitizeForRationale('<ScRiPt>alert(1)</ScRiPt><p>ok</p>').toLowerCase();
+    expect(out).not.toContain('alert(1)');
+    expect(out).not.toContain('<script');
+    expect(out).toContain('ok');
+  });
+
+  it('enforces rel=noopener noreferrer on target=_blank links', () => {
+    const out = sanitizeForRationale('<a href="https://example.com" target="_blank">x</a>');
+    expect(out).toContain('rel="noopener noreferrer"');
+  });
+
+  it('strips disallowed svg/img with event handlers entirely', () => {
+    const out = sanitizeForRationale('<svg onload="alert(1)"></svg><img src=x onerror=alert(1)>').toLowerCase();
+    expect(out).not.toContain('<svg');
+    expect(out).not.toContain('<img');
+    expect(out).not.toContain('onload');
+    expect(out).not.toContain('onerror');
+  });
+
+  it('preserves legitimate medical formatting (sub/sup, lists, headings)', () => {
+    const input = '<h3>Dx</h3><p>Na<sub>+</sub> and O<sup>2</sup></p><ul><li>step</li></ul>';
+    const out = sanitizeForRationale(input);
+    expect(out).toContain('<sub>');
+    expect(out).toContain('<sup>');
+    expect(out).toContain('<li>');
+    expect(out).toContain('<h3>');
+  });
 });

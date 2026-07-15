@@ -20,15 +20,20 @@ import { z } from 'zod';
 // SCHEMAS
 // ============================================================================
 
-const FeedbackSubmitSchema = z.object({
-  body: z.object({
-    questionId: z.string().min(1),
-    flagType: z.enum(['incorrect_fact', 'unclear_question', 'typo', 'outdated', 'other']),
-    description: z.string().min(1).max(2000),
-    questionText: z.string().optional(),
-    topic: z.string().optional(),
-    system: z.string().optional(),
-  }),
+// Bounded lengths on every free-text field (all persisted to QuestionFlag) to
+// reject oversized/abusive payloads; `.strict()` rejects unknown fields. Legit
+// feedback stays well within these limits.
+export const FeedbackSubmitSchema = z.object({
+  body: z
+    .object({
+      questionId: z.string().min(1).max(200),
+      flagType: z.enum(['incorrect_fact', 'unclear_question', 'typo', 'outdated', 'other']),
+      description: z.string().min(1).max(2000),
+      questionText: z.string().max(5000).optional(),
+      topic: z.string().max(200).optional(),
+      system: z.string().max(100).optional(),
+    })
+    .strict(),
 });
 
 // ============================================================================

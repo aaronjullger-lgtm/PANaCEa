@@ -27,38 +27,20 @@ declare global {
   }
 }
 
-export type ClerkE2ECredentials = {
-  email: string;
-  password?: string;
-};
-
-/**
- * Returns E2E credentials if available.
- * With @clerk/testing backend auth, only email + CLERK_SECRET_KEY is required.
- * Password is optional and used only for the legacy browser-based sign-in fallback.
- */
-export function getClerkE2ECredentials(
-  env: NodeJS.ProcessEnv = process.env
-): ClerkE2ECredentials | null {
-  const email = env.E2E_CLERK_TEST_EMAIL?.trim();
-  if (!email) return null;
-  return { email, password: env.E2E_CLERK_TEST_PASSWORD || undefined };
-}
-
-/**
- * Returns true when Clerk backend-based sign-in is available:
- * E2E_CLERK_TEST_EMAIL is set AND CLERK_SECRET_KEY is available.
- * This is the preferred path — it bypasses MFA/second-factor entirely.
- */
-export function hasClerkBackendAuth(env: NodeJS.ProcessEnv = process.env): boolean {
-  return Boolean(env.E2E_CLERK_TEST_EMAIL?.trim() && env.CLERK_SECRET_KEY?.trim());
-}
+// Pure credential resolution lives in ./e2eCredentials (no Playwright imports →
+// unit-testable). Re-exported here so existing importers keep working.
+export {
+  getClerkE2ECredentials,
+  getClerkE2EAdminCredentials,
+  hasClerkBackendAuth,
+  type ClerkE2ECredentials,
+} from './e2eCredentials';
 
 export function missingClerkE2ECredentialsMessage(): string {
   return (
-    'E2E_REQUIRE_AUTH=1 requires E2E_CLERK_TEST_EMAIL.\n' +
+    'E2E_REQUIRE_AUTH=1 requires a test email (E2E_CLERK_TEST_EMAIL or PANACEA_E2E_EMAIL).\n' +
     'For backend-based sign-in (recommended, bypasses MFA): also set CLERK_SECRET_KEY.\n' +
-    'For legacy browser-based sign-in: also set E2E_CLERK_TEST_PASSWORD.'
+    'For legacy browser-based sign-in: also set E2E_CLERK_TEST_PASSWORD or PANACEA_E2E_PASSWORD.'
   );
 }
 
@@ -79,7 +61,7 @@ export async function waitForClerk(page: Page, timeout = 30_000): Promise<void> 
 /**
  * Signs in via Clerk's backend API (@clerk/testing/playwright).
  * This bypasses the browser sign-in UI and MFA/second-factor entirely.
- * Requires CLERK_SECRET_KEY + E2E_CLERK_TEST_EMAIL in the environment.
+ * Requires CLERK_SECRET_KEY + test email (E2E_CLERK_TEST_EMAIL or PANACEA_E2E_EMAIL).
  *
  * Falls back with a clear error if the Clerk Backend API user lookup fails.
  */
@@ -104,7 +86,7 @@ export async function signInWithClerkBackend(
       throw new Error(
         `No Clerk user found with email "${email}". ` +
           'Create a dedicated Clerk test user with this email in the Clerk Dashboard, ' +
-          'or update E2E_CLERK_TEST_EMAIL in .env to match an existing user.'
+          'or update E2E_CLERK_TEST_EMAIL / PANACEA_E2E_EMAIL in .env to match an existing user.'
       );
     }
     throw new Error(`Clerk backend sign-in failed: ${message}`);

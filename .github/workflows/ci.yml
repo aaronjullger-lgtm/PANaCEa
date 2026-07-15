@@ -72,6 +72,15 @@ jobs:
         run: npm run test:coverage -- --reporter=default
         continue-on-error: true
 
+      - name: Dependency vulnerability audit (advisory)
+        # Advisory for now (does not block merge) so the existing baseline of
+        # mostly dev/build-tooling advisories doesn't wedge CI. Surfaces new/prod
+        # vulnerabilities in logs. Ratchet plan: once the prod-facing advisories
+        # (react-router-dom, @clerk/shared→js-cookie, nodemailer) are resolved,
+        # tighten to `--omit=dev --audit-level=high` and drop continue-on-error.
+        run: npm audit --audit-level=high || true
+        continue-on-error: true
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         if: success()
@@ -140,6 +149,16 @@ jobs:
           CI: true
           BASE_URL: http://localhost:4173
 
+      - name: UI smoke (landing render + protected-route gating)
+        # Headless-chromium smoke against `vite preview` with all /api/** mocked.
+        # Catches landing render / console-error / failed-network / horizontal-overflow
+        # regressions the axe gate does not cover. Uses the already-built dist and a
+        # separate port to avoid clashing with the a11y preview above.
+        run: node scripts/smoke-ui-preview.mjs
+        env:
+          CI: true
+          PANACEA_SMOKE_PORT: '4184'
+
       - name: Upload a11y report
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
@@ -186,11 +205,23 @@ jobs:
 
       - name: Run API health smoke (wrangler pages dev)
         run: |
-          npx wrangler pages dev dist --port 8788 \
+          npx wrangler pages dev dist --port 8788 --ip 127.0.0.1 \
             --compatibility-date=2025-12-15 \
             --compatibility-flags=nodejs_compat &
-          sleep 20
-          BASE_URL=http://localhost:8788 npx playwright test e2e/api-health.spec.ts --project=chromium
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8788/api/health >/dev/null; then
+              echo "Wrangler ready on 127.0.0.1:8788"
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo "Wrangler failed to become ready on 127.0.0.1:8788"
+            exit 1
+          fi
+          BASE_URL=http://127.0.0.1:8788 npx playwright test --config=playwright.wrangler.config.ts e2e/api-health.spec.ts --project=api-health
         env:
           CI: true
 

@@ -13,6 +13,7 @@
 import { z } from 'zod';
 import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import { aiGenerateText } from '@/lib/ai-sdk';
 import type { AIProviderEnv } from '@/lib/ai-sdk/providers';
 import {
@@ -139,10 +140,12 @@ export const onRequestPost = adminAuthenticatedEndpoint(BodySchema, async (conte
       },
     };
   } catch (error) {
-    console.error('[contextualize-batch]', error);
+    createEndpointLogger('/api/library/contextualize-batch').error('Batch contextualization error', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       status: 500,
-      error: error instanceof Error ? error.message : 'Batch contextualization failed',
+      error: 'Batch contextualization failed. Please try again.',
     };
   }
 });

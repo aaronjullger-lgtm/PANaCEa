@@ -11,8 +11,16 @@ import {
   missingClerkE2ECredentialsMessage,
 } from '../../e2e/helpers/clerkAuth';
 
+/** Isolated env bag — does not inherit process.env (avoids PANACEA_E2E_* leakage in CI). */
 function env(overrides: Record<string, string | undefined> = {}): NodeJS.ProcessEnv {
-  return { ...process.env, ...overrides };
+  return {
+    E2E_CLERK_TEST_EMAIL: undefined,
+    E2E_CLERK_TEST_PASSWORD: undefined,
+    PANACEA_E2E_EMAIL: undefined,
+    PANACEA_E2E_PASSWORD: undefined,
+    CLERK_SECRET_KEY: undefined,
+    ...overrides,
+  };
 }
 
 describe('getClerkE2ECredentials', () => {
@@ -30,14 +38,22 @@ describe('getClerkE2ECredentials', () => {
 
   it('returns email-only credentials when password is missing (backend auth mode)', () => {
     const creds = getClerkE2ECredentials(
-      env({ E2E_CLERK_TEST_EMAIL: 'test@example.com', E2E_CLERK_TEST_PASSWORD: undefined })
+      env({
+        E2E_CLERK_TEST_EMAIL: 'test@example.com',
+        E2E_CLERK_TEST_PASSWORD: undefined,
+        PANACEA_E2E_PASSWORD: undefined,
+      })
     );
     expect(creds).toEqual({ email: 'test@example.com', password: undefined });
   });
 
   it('returns email-only credentials when password is empty', () => {
     const creds = getClerkE2ECredentials(
-      env({ E2E_CLERK_TEST_EMAIL: 'test@example.com', E2E_CLERK_TEST_PASSWORD: '' })
+      env({
+        E2E_CLERK_TEST_EMAIL: 'test@example.com',
+        E2E_CLERK_TEST_PASSWORD: '',
+        PANACEA_E2E_PASSWORD: undefined,
+      })
     );
     expect(creds).toEqual({ email: 'test@example.com', password: undefined });
   });
@@ -53,7 +69,9 @@ describe('getClerkE2ECredentials', () => {
   });
 
   it('trims whitespace from email', () => {
-    const creds = getClerkE2ECredentials(env({ E2E_CLERK_TEST_EMAIL: '  test@example.com  ' }));
+    const creds = getClerkE2ECredentials(
+      env({ E2E_CLERK_TEST_EMAIL: '  test@example.com  ', PANACEA_E2E_PASSWORD: undefined })
+    );
     expect(creds).toEqual({ email: 'test@example.com', password: undefined });
   });
 });
@@ -133,9 +151,9 @@ describe('hasClerkBackendAuth', () => {
 describe('missingClerkE2ECredentialsMessage', () => {
   it('returns guidance about the backend and legacy auth modes', () => {
     const msg = missingClerkE2ECredentialsMessage();
-    expect(msg).toContain('E2E_CLERK_TEST_EMAIL');
+    expect(msg).toMatch(/E2E_CLERK_TEST_EMAIL|PANACEA_E2E_EMAIL/);
     expect(msg).toContain('CLERK_SECRET_KEY');
-    expect(msg).toContain('E2E_CLERK_TEST_PASSWORD');
+    expect(msg).toMatch(/E2E_CLERK_TEST_PASSWORD|PANACEA_E2E_PASSWORD/);
     expect(msg).toContain('bypasses MFA');
   });
 });
