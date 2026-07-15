@@ -4,7 +4,8 @@
  * Exercises the exported Zod schemas of high-risk mutation endpoints directly:
  * valid input passes, oversized/malformed input is rejected, and unknown fields
  * are rejected (`.strict()`). Endpoint behavior/contracts are unchanged for valid
- * payloads.
+ * payloads. Custom-session and soap-note strip unknown client fields instead of
+ * rejecting production payloads.
  */
 import { describe, it, expect } from 'vitest';
 import { subscribeSchema, unsubscribeSchema } from '../push/subscribe';
@@ -75,9 +76,24 @@ describe('analytics/soap-note SoapNoteSchema', () => {
     ).toBe(false);
   });
 
-  it('rejects unknown fields inside body (.strict)', () => {
+  it('accepts client telemetry fields (timestamp, userId)', () => {
+    const withTelemetry = {
+      body: {
+        ...valid.body,
+        timestamp: new Date().toISOString(),
+        userId: 'user_test_abc',
+      },
+    };
+    expect(SoapNoteSchema.safeParse(withTelemetry).success).toBe(true);
+  });
+
+  it('strips unknown fields instead of rejecting the request', () => {
     const bad = { body: { ...valid.body, evil: true } };
-    expect(SoapNoteSchema.safeParse(bad).success).toBe(false);
+    const result = SoapNoteSchema.safeParse(bad);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.body).not.toHaveProperty('evil');
+    }
   });
 });
 

@@ -208,13 +208,19 @@ jobs:
           npx wrangler pages dev dist --port 8788 --ip 127.0.0.1 \
             --compatibility-date=2025-12-15 \
             --compatibility-flags=nodejs_compat &
+          ready=0
           for i in $(seq 1 30); do
             if curl -sf http://127.0.0.1:8788/api/health >/dev/null; then
               echo "Wrangler ready on 127.0.0.1:8788"
+              ready=1
               break
             fi
             sleep 2
           done
+          if [ "$ready" -ne 1 ]; then
+            echo "Wrangler failed to become ready on 127.0.0.1:8788"
+            exit 1
+          fi
           BASE_URL=http://127.0.0.1:8788 npx playwright test --config=playwright.wrangler.config.ts e2e/api-health.spec.ts --project=api-health
         env:
           CI: true

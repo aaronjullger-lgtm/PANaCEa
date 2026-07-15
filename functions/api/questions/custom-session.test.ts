@@ -5,6 +5,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { CustomSessionSchema } from './custom-session';
+import { DEFAULT_CUSTOM_SESSION_CONFIG } from '@/types/custom-session';
 
 const valid = { body: { config: { systems: ['CV', 'PULM'], difficulty: 'harder' as const }, count: 10 } };
 
@@ -44,12 +45,20 @@ describe('CustomSessionSchema', () => {
     ).toBe(false);
   });
 
-  it('rejects unknown fields on config and body (.strict)', () => {
-    expect(
-      CustomSessionSchema.safeParse({ body: { config: { evil: 1 } } }).success
-    ).toBe(false);
-    expect(
-      CustomSessionSchema.safeParse({ body: { config: {}, evil: 1 } }).success
-    ).toBe(false);
+  it('accepts the production DEFAULT_CUSTOM_SESSION_CONFIG shape', () => {
+    const result = CustomSessionSchema.safeParse({
+      body: { config: DEFAULT_CUSTOM_SESSION_CONFIG, count: 10 },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('strips unknown config fields instead of rejecting the request', () => {
+    const result = CustomSessionSchema.safeParse({
+      body: { config: { systems: ['CV'], questionsPerIncrement: 10, evil: 1 }, count: 5 },
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.body.config).toEqual({ systems: ['CV'] });
+    }
   });
 });

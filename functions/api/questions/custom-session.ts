@@ -14,24 +14,20 @@ import { withProductionQuestionSafety } from '../../../lib/services/questionServ
 
 // Bound array lengths and per-entry string sizes: these filters flow straight
 // into Prisma `in: [...]` clauses, so unbounded arrays are a DoS vector.
-// `.strict()` rejects unknown fields on both the config and the body.
+// Unknown config keys are stripped (clients send the full CustomSessionConfig).
 const filterList = z.array(z.string().min(1).max(100)).max(50);
 
 export const CustomSessionSchema = z.object({
-  body: z
-    .object({
-      config: z
-        .object({
-          systems: filterList.optional(),
-          subcategories: filterList.optional(),
-          conditions: filterList.optional(),
-          focusAreas: filterList.optional(),
-          difficulty: z.enum(['same', 'easier', 'harder']).optional(),
-        })
-        .strict(),
-      count: z.number().int().min(1).max(50).optional(),
-    })
-    .strict(),
+  body: z.object({
+    config: z.object({
+      systems: filterList.optional(),
+      subcategories: filterList.optional(),
+      conditions: filterList.optional(),
+      focusAreas: filterList.optional(),
+      difficulty: z.enum(['same', 'easier', 'harder']).optional(),
+    }),
+    count: z.number().int().min(1).max(50).optional(),
+  }),
 });
 
 export const onRequestPost = authenticatedEndpoint(CustomSessionSchema, async (context) => {
