@@ -33,7 +33,8 @@
     "noUnusedParameters": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "plugins": [{ "name": "workflow" }]
   },
   "include": [
     "src",
@@ -46,6 +47,8 @@
     "config",
     "contexts",
     "types",
+    "workflows",
+    "workflow-server",
     "*.ts",
     "*.tsx"
   ],
