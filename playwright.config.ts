@@ -5,7 +5,7 @@ const hasClerkE2ECredentials = Boolean(
   process.env.E2E_CLERK_TEST_EMAIL?.trim() &&
     (process.env.CLERK_SECRET_KEY?.trim() || process.env.E2E_CLERK_TEST_PASSWORD)
 );
-const runSavedAuthProjects = requireAuth || hasClerkE2ECredentials;
+const runSavedAuthProjects = requireAuth || (!process.env.CI && hasClerkE2ECredentials);
 
 /**
  * Playwright Configuration for StudyPANaCEa
