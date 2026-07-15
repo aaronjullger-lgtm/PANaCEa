@@ -47,6 +47,7 @@ VITE_SUPABASE_URL = "https://lzfescdrpezzjhgveotz.supabase.co"
 VITE_API_URL = "https://studypanacea.com"
 VITE_SENTRY_DSN = "https://bc6b64356dcc893fa25429c1a9666565@o4510664011087872.ingest.us.sentry.io/4510664023212032"
 VITE_PRIVATE_BETA_LAUNCH = "true"
+ENABLE_LEARNER_AGENT = "false"
 
 # CRITICAL: Add these secrets via Cloudflare Dashboard
 # Cloudflare Dashboard > Workers & Pages > [your project] > Settings > Environment Variables
