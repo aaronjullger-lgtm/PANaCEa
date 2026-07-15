@@ -76,6 +76,7 @@ Set `LEARNER_AGENT_WORKER_URL` on the Pages project to the worker URL.
 
 ## Related docs
 
+- [API contracts](../api/API_OVERVIEW.md#learner-agent-endpoint-contracts)
 - [Data ownership](./learner-agent-data-ownership.md)
 - [Runbook](../runbooks/learner-agent.md)
 - [Evaluations](../evaluations/learner-agent-evaluations.md)

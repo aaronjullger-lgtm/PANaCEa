@@ -40,6 +40,8 @@ Balances:
 ## Future automated evals (Sprint 2)
 
 - LLM judge on `POST /api/learner-agent/run` — recommendation text must cite tool output fields
+
+See [API contracts](../api/API_OVERVIEW.md#post-apilearner-agentrun) for the run endpoint shape.
 - Grounding: `retrieve_grounded_content` citations present in explanations
 - Consistency: same context → same `getNextBestAction` id
 

@@ -143,4 +143,4 @@ npm run build
 | Learner context | **new** `lib/services/learner/learnerContextService.ts` |
 | Agent tool loop | Reuse `lib/services/agents/agentRunner.ts` |
 | Durable agent | **new** `workers/learner-agent/` |
-| Pages fallback API | **new** `functions/api/learner-agent/*` |
+| Pages fallback API | **new** `functions/api/learner-agent/*` (see [API contracts](../api/API_OVERVIEW.md#learner-agent-endpoint-contracts)) |

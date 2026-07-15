@@ -31,6 +31,7 @@
 
 - [x] `connect.ts` — auth + connection info
 - [x] `recommendation.ts` — deterministic NBA endpoint
+- [x] `run.ts` — stateless agent turn (Gemini + learner tools)
 - [x] `memory.ts` — list/confirm/delete memories (KV)
 - [x] `session.ts` — start/complete session fallback
 
@@ -62,6 +63,7 @@
 - [x] `docs/runbooks/learner-agent.md`
 - [x] `docs/evaluations/learner-agent-evaluations.md`
 - [x] `docs/configuration/learner-agent-secrets.md`
+- [x] `docs/api/API_OVERVIEW.md` — Learner Agent endpoint contracts
 
 ## Sprint 2 — Integration hardening (follow-up)
 
@@ -100,7 +102,7 @@ npx wrangler deploy --dry-run  # worker
 | Worker | `workers/learner-agent/*` |
 | UI | `components/learnerAgent/*`, `hooks/useLearnerAgent.ts` |
 | Tests | `tests/learner-agent/*` |
-| Docs | `docs/architecture/*`, `docs/runbooks/*`, etc. |
+| Docs | `docs/architecture/*`, `docs/runbooks/*`, `docs/api/API_OVERVIEW.md`, etc. |
 
 ## Risk register
 

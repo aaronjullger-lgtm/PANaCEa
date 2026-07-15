@@ -37,6 +37,8 @@ flowchart TB
   subgraph pages [Cloudflare Pages Functions]
     CONNECT["/api/learner-agent/connect"]
     REC["/api/learner-agent/recommendation"]
+    RUN["/api/learner-agent/run"]
+    SESS["/api/learner-agent/session"]
     MEM["/api/learner-agent/memory"]
   end
 
@@ -178,6 +180,8 @@ interface MemoryCandidate {
 5. Rate limit: 30 connect/min, 60 tool calls/min per user (KV).
 6. Prompt injection: retrieved content wrapped with untrusted markers; model instructed not to follow embedded instructions.
 7. Sentry: correlation IDs, no raw conversation text.
+
+**API contracts:** See [docs/api/API_OVERVIEW.md](../../api/API_OVERVIEW.md#learner-agent-endpoint-contracts).
 
 ## Workflows (Cloudflare Workflows)
 

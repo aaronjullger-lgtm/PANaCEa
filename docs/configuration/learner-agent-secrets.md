@@ -10,7 +10,7 @@
 | `LEARNER_AGENT_WORKER_URL` | If using DO | Base URL for WebSocket connect |
 | `DATABASE_URL` | Yes | Prisma edge client |
 | `CLERK_SECRET_KEY` | Yes | Auth verification |
-| `GEMINI_API_KEY` | For `/run` | Agent model turns |
+| `GEMINI_API_KEY` | For `/api/learner-agent/run` | Agent model turns |
 | `RATE_LIMIT_KV` | Recommended | Connection token storage + rate limits |
 | `CACHE` | Recommended | Learner memory KV |
 
@@ -47,3 +47,7 @@ ENABLE_LEARNER_AGENT=true
 LEARNER_AGENT_WORKER_URL=https://panacea-learner-agent.<account>.workers.dev
 VITE_ENABLE_LEARNER_AGENT=true
 ```
+
+## API reference
+
+Endpoint contracts: [docs/api/API_OVERVIEW.md](../api/API_OVERVIEW.md#learner-agent-endpoint-contracts)

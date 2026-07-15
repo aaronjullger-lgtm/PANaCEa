@@ -46,7 +46,10 @@ Set `LEARNER_AGENT_WORKER_URL` to your wrangler dev origin for WebSocket connect
 3. Deploy Pages: `npm run deploy:local` or CI pipeline
 4. Verify with test account:
    - `GET /api/learner-agent/recommendation`
+   - `POST /api/learner-agent/connect` (WebSocket handshake)
+   - `POST /api/learner-agent/session` with `{ "action": "start", "objective": "..." }`
    - Dashboard panel shows "Next best action"
+   - See [API contracts](../api/API_OVERVIEW.md#learner-agent-endpoint-contracts) for full request/response shapes
 
 ## Production
 
