@@ -5,6 +5,7 @@ import {
   getClerkE2ECredentials,
   hasActiveClerkSession,
   hasClerkBackendAuth,
+  missingClerkE2ECredentialsMessage,
   signInWithClerkBackend,
   signInWithClerkCredentials,
   waitForClerk,
@@ -19,10 +20,21 @@ setup('authenticate with Clerk', async ({ page }) => {
   setup.setTimeout(120000);
 
   const credentials = getClerkE2ECredentials();
+  const requireAuth = process.env.E2E_REQUIRE_AUTH === '1';
 
   try {
     console.log('Starting Playwright authentication setup.');
     console.log(`Auth file path: ${authFile}`);
+
+    if (!credentials) {
+      if (requireAuth) {
+        throw new Error(missingClerkE2ECredentialsMessage());
+      }
+
+      console.log('No Clerk E2E credentials found. Saving unauthenticated storage state.');
+      await page.context().storageState({ path: authFile });
+      return;
+    }
 
     await page.goto('/study', { waitUntil: 'domcontentloaded', timeout: 30000 });
     await waitForClerk(page);

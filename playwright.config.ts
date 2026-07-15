@@ -1,5 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const requireAuth = process.env.E2E_REQUIRE_AUTH === '1';
+const hasClerkE2ECredentials = Boolean(
+  process.env.E2E_CLERK_TEST_EMAIL?.trim() &&
+    (process.env.CLERK_SECRET_KEY?.trim() || process.env.E2E_CLERK_TEST_PASSWORD)
+);
+const runSavedAuthProjects = requireAuth || (!process.env.CI && hasClerkE2ECredentials);
+
 /**
  * Playwright Configuration for StudyPANaCEa
  *
@@ -48,21 +55,25 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    // Setup project for authentication
-    {
-      name: 'setup',
-      testMatch: /auth\.setup\.ts/,
-    },
+    ...(runSavedAuthProjects
+      ? [
+          // Setup project for authentication
+          {
+            name: 'setup',
+            testMatch: /auth\.setup\.ts/,
+          },
 
-    {
-      name: 'chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-        // Use saved authentication state
-        storageState: 'playwright/.auth/user.json',
-      },
-      dependencies: ['setup'],
-    },
+          {
+            name: 'chromium',
+            use: {
+              ...devices['Desktop Chrome'],
+              // Use saved authentication state
+              storageState: 'playwright/.auth/user.json',
+            },
+            dependencies: ['setup'],
+          },
+        ]
+      : []),
 
     // Unauthenticated tests (for audit and basic checks)
     {

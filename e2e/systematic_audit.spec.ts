@@ -40,15 +40,11 @@ async function waitForAppReady(page: Page) {
  * Check if user is authenticated
  */
 async function isAuthenticated(page: Page): Promise<boolean> {
-  try {
-    const dashboardVisible = await page
-      .locator('text=/dashboard|command center|study/i')
-      .first()
-      .isVisible({ timeout: 2000 });
-    return dashboardVisible;
-  } catch {
-    return false;
-  }
+  return page
+    .evaluate(() =>
+      Boolean((window as Window & { Clerk?: { session?: unknown } }).Clerk?.session)
+    )
+    .catch(() => false);
 }
 
 /**
@@ -285,6 +281,13 @@ test.describe('Phase 2B: Reference Library', () => {
     await page.goto(`${BASE_URL}/study/reference`);
     await waitForAppReady(page);
 
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      logFinding('REFERENCE_LIBRARY', '/study/reference', 'WARN', 'Authentication required');
+      test.skip();
+      return;
+    }
+
     // Primary Action: Search or browse clinical content
     const hasSearch = await page
       .locator('input[type="search"], input[placeholder*="search" i], [role="searchbox"]')
@@ -375,6 +378,18 @@ test.describe('Phase 2B: Reference Library', () => {
     await page.goto(`${BASE_URL}/study/reference`);
     await waitForAppReady(page);
 
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      logFinding(
+        'REFERENCE_LIBRARY',
+        '/study/reference (mobile)',
+        'WARN',
+        'Authentication required'
+      );
+      test.skip();
+      return;
+    }
+
     const hasHScroll = await hasHorizontalScrollbar(page);
 
     if (hasHScroll) {
@@ -398,6 +413,13 @@ test.describe('Phase 2C: Toolkit Hub (Calculators)', () => {
 
     await page.goto(`${BASE_URL}/study/toolkit`);
     await waitForAppReady(page);
+
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      logFinding('TOOLKIT', '/study/toolkit', 'WARN', 'Authentication required');
+      test.skip();
+      return;
+    }
 
     // Primary Action: Access clinical calculators
     const hasCalculators = await page
@@ -452,6 +474,13 @@ test.describe('Phase 2C: Toolkit Hub (Calculators)', () => {
     await page.setViewportSize(MOBILE_VIEWPORT);
     await page.goto(`${BASE_URL}/study/toolkit`);
     await waitForAppReady(page);
+
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      logFinding('TOOLKIT', '/study/toolkit (mobile)', 'WARN', 'Authentication required');
+      test.skip();
+      return;
+    }
 
     const hasHScroll = await hasHorizontalScrollbar(page);
 
@@ -510,6 +539,12 @@ test.describe('Phase 2D: SRS Flashcard System', () => {
   test('should interact with flashcard (flip)', async ({ page }) => {
     await page.goto(BASE_URL);
     await waitForAppReady(page);
+
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      test.skip();
+      return;
+    }
 
     // Navigate to flashcards
     const flashcardLink = page.locator('text=/flashcard|SRS/i').first();
