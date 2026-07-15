@@ -378,6 +378,18 @@ test.describe('Phase 2B: Reference Library', () => {
     await page.goto(`${BASE_URL}/study/reference`);
     await waitForAppReady(page);
 
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      logFinding(
+        'REFERENCE_LIBRARY',
+        '/study/reference (mobile)',
+        'WARN',
+        'Authentication required'
+      );
+      test.skip();
+      return;
+    }
+
     const hasHScroll = await hasHorizontalScrollbar(page);
 
     if (hasHScroll) {
@@ -463,6 +475,13 @@ test.describe('Phase 2C: Toolkit Hub (Calculators)', () => {
     await page.goto(`${BASE_URL}/study/toolkit`);
     await waitForAppReady(page);
 
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      logFinding('TOOLKIT', '/study/toolkit (mobile)', 'WARN', 'Authentication required');
+      test.skip();
+      return;
+    }
+
     const hasHScroll = await hasHorizontalScrollbar(page);
 
     if (hasHScroll) {
@@ -520,6 +539,12 @@ test.describe('Phase 2D: SRS Flashcard System', () => {
   test('should interact with flashcard (flip)', async ({ page }) => {
     await page.goto(BASE_URL);
     await waitForAppReady(page);
+
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      test.skip();
+      return;
+    }
 
     // Navigate to flashcards
     const flashcardLink = page.locator('text=/flashcard|SRS/i').first();
