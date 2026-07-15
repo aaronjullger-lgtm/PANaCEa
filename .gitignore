@@ -31,6 +31,10 @@ coverage/
 .env.local
 weekly-report-latest.txt
 content-health-report.json
+.workflow-data/
+.workflow-vitest/
+.output/
+artifacts/workflows/
 
 # Build artifacts missed by original gitignore
 test-output.log
@@ -362,3 +366,4 @@ __pycache__/
 
 # Superpowers in-session plan docs (ephemeral working memory, not source)
 docs/superpowers/plans/
+/.swc
