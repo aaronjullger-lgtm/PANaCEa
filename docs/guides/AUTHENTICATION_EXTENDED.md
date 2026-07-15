@@ -409,6 +409,7 @@ GET    /api/streaks/stats/:userId         - Get detailed streak stats
 
 ```
 GET    /api/admin/check-access            - Verify current admin/superadmin access
+GET    /api/admin/readiness               - Operational diagnostics (admin only; replaces public /api/health internals)
 GET    /api/admin/users                   - List users (admin only)
 PATCH  /api/admin/users/:userId/role      - Update user role (superadmin only)
 GET    /api/admin/stats                   - Platform statistics (admin only)

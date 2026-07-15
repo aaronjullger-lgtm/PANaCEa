@@ -51,8 +51,8 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 | `GET /api/labs/tests` | — | ❌ MISSING |
 | `GET /api/labs/cases` | — | ❌ MISSING |
 | `GET /api/labs/cases/random` | — | ❌ MISSING |
-| `GET /api/drills/lab-cases` | — | ❌ MISSING |
-| `POST /api/drills/lab-cases` | — | ❌ MISSING |
+| `GET /api/drills/lab-cases` | `functions/api/drills/lab-cases.ts` | ✅ PORTED |
+| `POST /api/drills/lab-cases` | `functions/api/drills/lab-cases.ts` | ✅ PORTED |
 
 ### Questions & Sessions
 
@@ -69,7 +69,7 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 | `POST /api/questions/flag` | `functions/api/questions/flag/index.ts` | ✅ PORTED |
 | `POST /api/questions/flag/:id/resolve` | `functions/api/questions/flag/index.ts` | ✅ PORTED |
 | `GET /api/questions/flags` | `functions/api/questions/flag/index.ts` | ✅ PORTED |
-| `POST /api/questions/custom-session` | — | ❌ MISSING |
+| `POST /api/questions/custom-session` | `functions/api/questions/custom-session.ts` | ✅ PORTED |
 | `GET /api/questions/pool` | — | ❌ MISSING |
 | `POST /api/questions/generate` | — | ❌ MISSING |
 | `POST /api/questions/seeds` | `functions/api/questions/seeds/index.ts` | ✅ PORTED |

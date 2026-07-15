@@ -25,7 +25,7 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 | 6 | Questions | `/api/questions/history` | POST | `routes/questions.ts:184` | Validation + service |
 | 7 | Questions | `/api/questions/repository/stats` | GET | `routes/questions.ts:207` | Service import |
 | 8 | Questions | `/api/questions/stats` | GET | `routes/questions.ts:224` | Prisma only |
-| 9 | Questions | `/api/questions/custom-session` | POST | `routes/questions.ts:416` | Auth + Prisma |
+| 9 | Questions | `/api/questions/custom-session` | POST | `routes/questions.ts:416` | ✅ `functions/api/questions/custom-session.ts` |
 | 10 | Questions | `/api/questions/pool` | GET | `routes/questions.ts:529` | Prisma + fallback |
 | 11 | Questions | `/api/questions/generate` | POST | `routes/questions.ts:635` | AI (Gemini) — complex |
 | 12 | OSCE | `/api/osce/cases/random` | GET | `routes/osce.ts:23` | Auth + Prisma |
