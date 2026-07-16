@@ -32,6 +32,32 @@ const MAX_ATTEMPTS = 5;
 const RETRY_DELAY = 2000; // 2 seconds
 const DEBOUNCE_DELAY = 500; // 500ms as per spec
 
+class AuthUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AuthUnavailableError';
+  }
+}
+
+function isAuthUnavailableError(error: unknown): error is AuthUnavailableError {
+  return error instanceof AuthUnavailableError;
+}
+
+function operationRequiresAuth(operation: SyncOperation['operation']): boolean {
+  switch (operation) {
+    case 'save_progress':
+    case 'submit_quiz':
+    case 'update_settings':
+    case 'flag_question':
+    case 'srs_submit':
+      return true;
+    default: {
+      const exhaustive: never = operation;
+      throw new Error(`Unknown operation: ${exhaustive}`);
+    }
+  }
+}
+
 /**
  * Get offline queue from localStorage
  */
@@ -147,12 +173,30 @@ export async function processQueue(token?: string): Promise<void> {
   if (DEBUG_OFFLINE_SYNC)
     offlineSyncLogger.debug(`Processing ${pending.length} pending operations`);
 
+  let authDeferred = false;
+
   for (const op of pending) {
+    if (operationRequiresAuth(op.operation) && !token) {
+      authDeferred = true;
+      offlineSyncLogger.warn(
+        `Auth token unavailable - deferring queued operation: ${op.operation} (${op.id})`
+      );
+      continue;
+    }
+
     try {
       await syncOperation(op, token);
       op.status = 'synced';
       if (DEBUG_OFFLINE_SYNC) offlineSyncLogger.debug(`Synced: ${op.operation} (${op.id})`);
     } catch (error: any) {
+      if (isAuthUnavailableError(error)) {
+        authDeferred = true;
+        offlineSyncLogger.warn(
+          `Auth unavailable - deferring queued operation: ${op.operation} (${op.id})`
+        );
+        continue;
+      }
+
       op.attempts++;
       if (op.attempts >= MAX_ATTEMPTS) {
         // Permanent failure - move to dead letter queue
@@ -173,7 +217,7 @@ export async function processQueue(token?: string): Promise<void> {
 
   // If there are still pending items, schedule another retry
   const stillPending = updatedQueue.filter((op) => op.status === 'pending');
-  if (stillPending.length > 0) {
+  if (stillPending.length > 0 && !authDeferred) {
     setTimeout(() => processQueue(token), RETRY_DELAY);
   }
 }
@@ -188,6 +232,10 @@ async function syncOperation(op: SyncOperation, token?: string): Promise<void> {
     'Content-Type': 'application/json',
   };
 
+  if (operationRequiresAuth(op.operation) && !token) {
+    throw new AuthUnavailableError(`Missing auth token for ${op.operation}`);
+  }
+
   // Attach authentication token if provided
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -198,6 +246,10 @@ async function syncOperation(op: SyncOperation, token?: string): Promise<void> {
     headers,
     body: JSON.stringify(op.data),
   });
+
+  if (response.status === 401 || response.status === 403) {
+    throw new AuthUnavailableError(`HTTP ${response.status}: ${response.statusText}`);
+  }
 
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
