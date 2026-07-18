@@ -212,22 +212,43 @@ export const onRequestPost = (context: CloudflareContext) => {
 
 // ─── Prompt Builders ───────────────────────────────────────────────────────
 
-function formatTranscript(
+export function formatTranscript(
   messages: unknown,
 ): string {
   if (typeof messages === 'string') return messages;
   try {
-    const arr = JSON.parse(JSON.stringify(messages));
+    const arr = Array.isArray(messages) ? messages : JSON.parse(JSON.stringify(messages));
     if (!Array.isArray(arr)) return JSON.stringify(messages);
     return arr
-      .map((m: any) => {
-        const role = m?.role === 'student' ? 'Student' : 'Patient';
-        return `${role}: ${m?.text ?? JSON.stringify(m)}`;
+      .map((message) => {
+        const record = isTranscriptRecord(message) ? message : {};
+        const role = formatTranscriptRole(record.role);
+        const content = formatTranscriptContent(record, message);
+        return `${role}: ${content}`;
       })
       .join('\n');
   } catch {
     return JSON.stringify(messages);
   }
+}
+
+function isTranscriptRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function formatTranscriptRole(role: unknown): string {
+  if (role === 'student' || role === 'user') return 'Student';
+  if (role === 'patient' || role === 'assistant') return 'Patient';
+  if (role === 'system') return 'System';
+  return 'Patient';
+}
+
+function formatTranscriptContent(record: Record<string, unknown>, fallback: unknown): string {
+  if (typeof record.text === 'string') return record.text;
+  if (typeof record.content === 'string') return record.content;
+
+  const serialized = JSON.stringify(fallback);
+  return serialized ?? String(fallback);
 }
 
 function buildSpbenchSystemPrompt(
