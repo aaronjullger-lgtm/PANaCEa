@@ -374,13 +374,9 @@ export function getDistributionSummary(sessionSize: number = 40): string {
  * Sample usage example
  */
 export function exampleUsage() {
-
   // 40-question session
   const sessionSize = 40;
   const distribution = calculateSessionDistribution(sessionSize);
-
-  for (const [system, count] of distribution) {
-  }
 
   const selected = selectWeightedSystems(5);
 
@@ -390,6 +386,11 @@ export function exampleUsage() {
     ['GI', 3],
   ]);
   const validation = validateSessionDistribution(testCounts, 40);
-  if (!validation.valid) {
-  }
+
+  return {
+    sessionSize,
+    distribution: Array.from(distribution.entries()),
+    selected,
+    validation,
+  };
 }
