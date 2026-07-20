@@ -123,7 +123,13 @@ structured error messages and breaks when endpoints migrate from legacy
 - External provider calls from `scripts/` or service integrations parse the
   provider's response shape, not PANaCEa's envelope.
 - To find internal frontend callers that still read raw `response.json()`
-  without an envelope helper, run:
+  without an envelope helper, run the audit in inventory mode:
+
+```bash
+node scripts/audit-api-envelope-callers.mjs
+```
+
+Use the failing form when adding the audit to CI or validating a cleanup branch:
 
 ```bash
 node scripts/audit-api-envelope-callers.mjs --fail-on-findings
