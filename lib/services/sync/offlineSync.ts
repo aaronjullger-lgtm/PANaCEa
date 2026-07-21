@@ -81,6 +81,36 @@ function saveDeadLetterQueue(queue: SyncOperation[]): void {
 }
 
 /**
+ * Retry all permanently failed legacy operations by moving them back to the
+ * pending queue and kicking the normal processor once.
+ */
+export async function retryDeadLetterQueue(token?: string): Promise<number> {
+  const deadLetterQueue = getDeadLetterQueue();
+  if (deadLetterQueue.length === 0) return 0;
+
+  const queue = getQueue();
+  const retried = deadLetterQueue.map((op) => ({
+    ...op,
+    attempts: 0,
+    status: 'pending' as const,
+  }));
+
+  saveQueue([...queue, ...retried]);
+  saveDeadLetterQueue([]);
+  await processQueue(token);
+  return deadLetterQueue.length;
+}
+
+/**
+ * Permanently discard all legacy dead-lettered operations after user consent.
+ */
+export function discardDeadLetterQueue(): number {
+  const deadLetterQueue = getDeadLetterQueue();
+  saveDeadLetterQueue([]);
+  return deadLetterQueue.length;
+}
+
+/**
  * Move failed operation to dead letter queue
  */
 function moveToDeadLetterQueue(op: SyncOperation): void {
