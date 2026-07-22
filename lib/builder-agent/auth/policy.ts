@@ -16,6 +16,10 @@ export function verifyApiKey(
   provided: string | null | undefined,
   expected: string
 ): AuthContext {
+  if (!expected?.trim()) {
+    throw new AuthError('BUILDER_AGENT_API_KEY is not configured', 503);
+  }
+
   if (!provided?.trim()) {
     return { authenticated: false, principal: 'anonymous', permissions: new Set() };
   }

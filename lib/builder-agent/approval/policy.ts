@@ -93,6 +93,9 @@ export function prohibitedWithoutApproval(
   action: 'merge' | 'deploy' | 'infrastructure' | 'credentials',
   run: BuilderRunState
 ): string | null {
+  if (run.dryRun && (action === 'merge' || action === 'deploy')) {
+    return `${action} is disabled while dry-run mode is active`;
+  }
   switch (action) {
     case 'merge':
       return canMerge(run) ? null : 'Merge requires explicit merge approval';

@@ -5,7 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 
 # PANaCEa Builder Agent — Durable Object + Workflow
 # Deploy: cd workers/builder-agent && npm install && npx wrangler deploy
-# Secrets: BUILDER_AGENT_API_KEY, BUILDER_AGENT_WEBHOOK_SECRET (optional)
+# Secrets: BUILDER_AGENT_API_KEY, BUILDER_AGENT_WEBHOOK_SECRET (required for webhooks)
 # Optional integrations: GITHUB_TOKEN, LINEAR_API_KEY, SENTRY_AUTH_TOKEN, SENTRY_ORG, CONTEXT7_API_KEY
 
 [vars]
@@ -13,6 +13,7 @@ BUILDER_AGENT_DEFAULT_REPO = "aaronjullger-lgtm/PANaCEa"
 BUILDER_AGENT_DEFAULT_BRANCH = "main"
 BUILDER_AGENT_DRY_RUN = "true"
 BUILDER_AGENT_SANDBOX_ENABLED = "false"
+BUILDER_AGENT_ALLOWED_WORKSPACES = "panacea"
 WORKER_LABEL = "panacea-builder-agent"
 
 [[durable_objects.bindings]]

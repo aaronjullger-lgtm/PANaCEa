@@ -7,12 +7,12 @@ Document **names only**. Set values via `wrangler secret put` or 1Password injec
 | Variable | Where | Purpose |
 |----------|-------|---------|
 | `BUILDER_AGENT_API_KEY` | Worker secret | Bearer auth for `/api/*` routes |
+| `BUILDER_AGENT_WEBHOOK_SECRET` | Worker secret | HMAC verification for inbound webhooks (`X-Builder-Signature`, `X-Builder-Timestamp`) |
 
 ## Recommended
 
 | Variable | Where | Purpose |
 |----------|-------|---------|
-| `BUILDER_AGENT_WEBHOOK_SECRET` | Worker secret | HMAC verification for inbound webhooks |
 | `BUILDER_AGENT_WEBHOOK_SECRET` | GitHub/Linear/Sentry webhook config | Same value for signature generation |
 
 ## Worker vars (wrangler.toml)
@@ -21,8 +21,9 @@ Document **names only**. Set values via `wrangler secret put` or 1Password injec
 |----------|---------|---------|
 | `BUILDER_AGENT_DEFAULT_REPO` | `aaronjullger-lgtm/PANaCEa` | Target repository |
 | `BUILDER_AGENT_DEFAULT_BRANCH` | `main` | Base branch |
-| `BUILDER_AGENT_DRY_RUN` | `true` | When true, no live GitHub writes |
+| `BUILDER_AGENT_DRY_RUN` | `true` | When true, no live GitHub writes (mandatory default) |
 | `BUILDER_AGENT_SANDBOX_ENABLED` | `false` | Enable Sandbox backend |
+| `BUILDER_AGENT_ALLOWED_WORKSPACES` | `panacea` | Comma-separated workspace allowlist |
 | `WORKER_LABEL` | `panacea-builder-agent` | Log tagging |
 
 ## Optional integrations

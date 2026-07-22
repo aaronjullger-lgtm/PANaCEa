@@ -3,10 +3,10 @@
  *
  * Requires Workers Paid plan and BUILDER_AGENT_SANDBOX_ENABLED=true.
  * When unavailable, reports available=false and throws on use.
+ * Worker runtime selection is handled by execution/select-backend.ts.
  */
 
 import type { ExecutionBackend, WorkspaceHandle, CommandOptions, CommandResult } from './backend';
-import { LocalDevExecutionBackend } from './local-dev-backend';
 
 export interface SandboxBackendConfig {
   enabled: boolean;
@@ -25,7 +25,7 @@ export class SandboxExecutionBackend implements ExecutionBackend {
   async prepareWorkspace(repository: string, ref: string): Promise<WorkspaceHandle> {
     if (!this.available) {
       throw new SandboxUnavailableError(
-        'Cloudflare Sandbox is not enabled for this account. Set BUILDER_AGENT_SANDBOX_ENABLED=true and deploy with Sandbox binding. Use LocalDevExecutionBackend for dev workflows.'
+        'Cloudflare Sandbox is not enabled. Set BUILDER_AGENT_SANDBOX_ENABLED=true and deploy with Sandbox binding.'
       );
     }
     // Production implementation would clone repo via sandbox.exec('git clone ...')
@@ -62,17 +62,4 @@ export class SandboxUnavailableError extends Error {
     super(message);
     this.name = 'SandboxUnavailableError';
   }
-}
-
-export function selectExecutionBackend(env: {
-  BUILDER_AGENT_SANDBOX_ENABLED?: string;
-  sandboxBindingPresent?: boolean;
-}): ExecutionBackend {
-  const sandbox = new SandboxExecutionBackend({
-    enabled: env.BUILDER_AGENT_SANDBOX_ENABLED === 'true',
-    bindingPresent: env.sandboxBindingPresent === true,
-  });
-  if (sandbox.available) return sandbox;
-
-  return new LocalDevExecutionBackend();
 }

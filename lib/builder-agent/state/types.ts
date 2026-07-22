@@ -99,6 +99,7 @@ export interface BuilderRunState {
   ciResults: CiResultSummary[];
   prUrl?: string;
   branchName?: string;
+  workflowInstanceId?: string;
   artifacts: string[];
   retryCount: number;
   errorSummary?: string;
@@ -128,6 +129,7 @@ export interface BuilderAgentEnv {
   BUILDER_AGENT_SANDBOX_ENABLED?: string;
   BUILDER_AGENT_DEFAULT_REPO?: string;
   BUILDER_AGENT_DEFAULT_BRANCH?: string;
+  BUILDER_AGENT_ALLOWED_WORKSPACES?: string;
   GITHUB_TOKEN?: string;
   LINEAR_API_KEY?: string;
   SENTRY_AUTH_TOKEN?: string;

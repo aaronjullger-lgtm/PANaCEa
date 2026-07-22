@@ -5,7 +5,7 @@
 
 import { createApprovalRequest, resolveApproval } from '../approval/gates';
 import { classifyRisk } from '../approval/policy';
-import { LocalDevExecutionBackend } from '../execution/local-dev-backend';
+import { selectExecutionBackend } from '../execution/select-backend';
 import { runValidationSuite } from '../execution/backend';
 import { InMemoryIdempotencyStore } from '../idempotency/store';
 import { CollectingEventSink, createEvent } from '../observability/events';
@@ -116,7 +116,7 @@ export async function runDryRunLifecycle(
 
   // Phase 7-9: workspace, implement, validate
   transition('executing', 'workspace');
-  const backend = new LocalDevExecutionBackend({
+  const backend = selectExecutionBackend('test', {}, {
     failCommands: options.simulateTestFailure ? ['npm test -- tests/builder-agent'] : undefined,
   });
   const workspace = await backend.prepareWorkspace(run.repository, run.baseBranch);

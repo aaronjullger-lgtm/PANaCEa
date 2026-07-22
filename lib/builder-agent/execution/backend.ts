@@ -25,7 +25,7 @@ export interface CommandResult {
 }
 
 export interface ExecutionBackend {
-  readonly kind: 'local-dev' | 'sandbox' | 'mock';
+  readonly kind: 'local-dev' | 'sandbox' | 'mock' | 'unavailable';
   readonly available: boolean;
   prepareWorkspace(repository: string, ref: string): Promise<WorkspaceHandle>;
   runCommand(
