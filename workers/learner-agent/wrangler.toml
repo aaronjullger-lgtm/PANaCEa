@@ -16,6 +16,10 @@ class_name = "StudyPlanRevisionWorkflow"
 tag = "v1"
 new_sqlite_classes = ["LearnerAgent"]
 
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "7df124d8b81f400eafe6ba55477bf11d"
+
 # Secrets: CLERK_SECRET_KEY, DATABASE_URL, GEMINI_API_KEY, PAGES_API_URL
 [vars]
 WORKER_LABEL = "learner-agent"

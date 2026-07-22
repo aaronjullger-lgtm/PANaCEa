@@ -14,6 +14,8 @@ import {
   retrieveGroundedContent,
   startStudySession,
   completeStudySession,
+  recordAttempt,
+  assertSessionOwnedByUser,
 } from '@/lib/services/learner';
 import type { PrismaClient } from '@prisma/client';
 
@@ -53,7 +55,7 @@ export const getNextBestActionTool = defineTool({
     },
     required: [],
   },
-  category: 'read',
+  category: 'compute',
   costHint: 'medium',
   timeoutMs: 8000,
   execute: async (input, ctx) => {
@@ -163,24 +165,63 @@ export const startStudySessionTool = defineTool({
   },
 });
 
+export const recordAttemptTool = defineTool({
+  name: 'record_attempt',
+  description:
+    'Record a question attempt through the canonical drill review pipeline (FSRS, ReviewLog, telemetry). Requires idempotency_key.',
+  inputSchema: z.object({
+    question_id: z.string().min(1).max(128),
+    selected_answer: z.union([z.string(), z.number()]),
+    time_spent_ms: z.number().int().min(0).max(3_600_000),
+    idempotency_key: z.string().min(8).max(128),
+    study_session_id: z.string().min(1).max(128).optional(),
+    session_type: z.enum(['main', 'drill', 'targeted', 'cram', 'rapid_recall']).optional(),
+  }),
+  parametersJsonSchema: {
+    type: 'object',
+    properties: {
+      question_id: { type: 'string' },
+      selected_answer: { type: 'string' },
+      time_spent_ms: { type: 'integer' },
+      idempotency_key: { type: 'string' },
+      study_session_id: { type: 'string' },
+      session_type: { type: 'string' },
+    },
+    required: ['question_id', 'selected_answer', 'time_spent_ms', 'idempotency_key'],
+  },
+  category: 'canonical_write',
+  costHint: 'expensive',
+  timeoutMs: 12_000,
+  execute: async (input, ctx) => {
+    const prisma = requirePrisma(ctx);
+    if (input.study_session_id) {
+      await assertSessionOwnedByUser(prisma, ctx.userId, input.study_session_id);
+    }
+    return recordAttempt(prisma, ctx.userId, {
+      questionId: input.question_id,
+      selectedAnswer: input.selected_answer,
+      timeSpentMs: input.time_spent_ms,
+      idempotencyKey: input.idempotency_key,
+      studySessionId: input.study_session_id,
+      sessionType: input.session_type,
+      telemetry: { learner_agent_tool: true },
+    });
+  },
+});
+
 export const completeStudySessionTool = defineTool({
   name: 'complete_study_session',
-  description: 'Complete a study session and fetch next deterministic action.',
+  description:
+    'Complete a study session. Stats are aggregated from canonical QuestionAttempt rows when available.',
   inputSchema: z.object({
     session_id: z.string().min(1).max(128),
-    questions_answered: z.number().int().min(0).max(500),
-    accuracy: z.number().min(0).max(1),
-    duration_minutes: z.number().int().min(0).max(24 * 60),
   }),
   parametersJsonSchema: {
     type: 'object',
     properties: {
       session_id: { type: 'string' },
-      questions_answered: { type: 'integer' },
-      accuracy: { type: 'number' },
-      duration_minutes: { type: 'integer' },
     },
-    required: ['session_id', 'questions_answered', 'accuracy', 'duration_minutes'],
+    required: ['session_id'],
   },
   category: 'write',
   costHint: 'medium',
@@ -189,9 +230,9 @@ export const completeStudySessionTool = defineTool({
     const prisma = requirePrisma(ctx);
     return completeStudySession(prisma, ctx.userId, {
       sessionId: input.session_id,
-      questionsAnswered: input.questions_answered,
-      accuracy: input.accuracy,
-      durationMinutes: input.duration_minutes,
+      questionsAnswered: 0,
+      accuracy: 0,
+      durationMinutes: 0,
     });
   },
 });
@@ -204,6 +245,7 @@ export const LEARNER_AGENT_TOOL_NAMES = [
   'get_progress_summary',
   'retrieve_grounded_content',
   'start_study_session',
+  'record_attempt',
   'complete_study_session',
 ] as const;
 
@@ -216,6 +258,7 @@ export function createLearnerAgentToolRegistry() {
     getProgressSummaryTool,
     retrieveGroundedContentTool,
     startStudySessionTool,
+    recordAttemptTool,
     completeStudySessionTool,
   ]);
 }

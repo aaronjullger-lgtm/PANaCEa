@@ -4,11 +4,19 @@ import { describe, it, expect } from 'vitest';
  * Ensures learner agent tools are read/compute for NBA and write only via services.
  */
 describe('learner engine boundary', () => {
-  it('get_next_best_action is read-only category', async () => {
+  it('get_next_best_action is compute category (may read plan data)', async () => {
     const { getNextBestActionTool } = await import(
       '@/lib/services/learnerAgent/tools/index'
     );
-    expect(getNextBestActionTool.category).toBe('read');
+    expect(getNextBestActionTool.category).toBe('compute');
+  });
+
+  it('record_attempt is canonical_write and delegates to recordAttempt service', async () => {
+    const { recordAttemptTool } = await import('@/lib/services/learnerAgent/tools/index');
+    expect(recordAttemptTool.category).toBe('canonical_write');
+    const src = recordAttemptTool.execute.toString();
+    expect(src).toContain('recordAttempt');
+    expect(src).not.toContain('schedulingStates');
   });
 
   it('start_study_session is write but does not import fsrs directly', async () => {

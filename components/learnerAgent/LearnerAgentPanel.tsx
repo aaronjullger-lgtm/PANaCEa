@@ -66,6 +66,7 @@ export const LearnerAgentPanel: React.FC<LearnerAgentPanelProps> = ({
   return (
     <motion.section
       aria-label="Learner Agent recommendation"
+      data-testid="learner-agent-panel"
       initial={sectionEnter}
       animate={sectionAnimate}
       transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: [0.32, 0.72, 0, 1] }}

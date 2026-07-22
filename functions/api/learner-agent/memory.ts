@@ -1,7 +1,7 @@
 /**
  * GET/POST/DELETE /api/learner-agent/memory
  *
- * User-controlled learner memories (KV-backed, not canonical Postgres v1).
+ * User-controlled learner memories stored in Postgres (UserPreferences.customSettings).
  */
 
 import { z } from 'zod';
@@ -11,26 +11,32 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { isFeatureEnabled, featureDisabledResponse } from '../_shared/feature-flags';
 import { LEARNER_AGENT_FLAG } from '../../../lib/services/learnerAgent/constants';
 import {
-  memoryKvKey,
-  proposeMemory,
-  confirmMemory,
-  correctMemory,
-  type StoredLearnerMemory,
-  type MemoryCategory,
-} from '../../../lib/services/learnerAgent/memoryPolicy';
+  listLearnerMemories,
+  proposeLearnerMemory,
+  confirmLearnerMemory,
+  correctLearnerMemory,
+  deleteLearnerMemory,
+} from '../../../lib/services/learner/learnerMemoryStore';
+import { correlationFromRequest } from '../../../lib/services/learnerAgent/observability';
 
-const ProposeSchema = z.object({
-  body: z.object({
-    proposed: z.string().min(1).max(500),
-    category: z.enum(['preference', 'goal', 'difficulty', 'schedule', 'rotation_note']),
-    source: z.enum(['learner_stated', 'tool_derived', 'inferred']).optional(),
-  }),
-});
-
-const ConfirmSchema = z.object({
-  body: z.object({
-    memoryId: z.string().min(1).max(128),
-  }),
+const MemoryPostSchema = z.object({
+  body: z.discriminatedUnion('action', [
+    z.object({
+      action: z.literal('propose'),
+      proposed: z.string().min(1).max(500),
+      category: z.enum(['preference', 'goal', 'difficulty', 'schedule', 'rotation_note']),
+      source: z.enum(['learner_stated', 'tool_derived', 'inferred']).optional(),
+    }),
+    z.object({
+      action: z.literal('confirm'),
+      memoryId: z.string().min(1).max(128),
+    }),
+    z.object({
+      action: z.literal('correct'),
+      memoryId: z.string().min(1).max(128),
+      correctedText: z.string().min(1).max(500),
+    }),
+  ]),
 });
 
 const DeleteSchema = z.object({
@@ -38,31 +44,6 @@ const DeleteSchema = z.object({
     memoryId: z.string().min(1).max(128),
   }),
 });
-
-const CorrectSchema = z.object({
-  body: z.object({
-    memoryId: z.string().min(1).max(128),
-    correctedText: z.string().min(1).max(500),
-  }),
-});
-
-async function loadMemories(kv: { get: (k: string) => Promise<string | null> }, userId: string) {
-  const raw = await kv.get(memoryKvKey(userId));
-  if (!raw) return [] as StoredLearnerMemory[];
-  try {
-    return JSON.parse(raw) as StoredLearnerMemory[];
-  } catch {
-    return [];
-  }
-}
-
-async function saveMemories(
-  kv: { put: (k: string, v: string) => Promise<void> },
-  userId: string,
-  memories: StoredLearnerMemory[]
-) {
-  await kv.put(memoryKvKey(userId), JSON.stringify(memories));
-}
 
 export const onRequestOptions = withCors();
 
@@ -74,12 +55,15 @@ export const onRequestGet = authenticatedEndpoint(
     }
 
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-    const kv = context.env.CACHE;
 
     try {
       const user = await resolveOrCreateUserRecord(prisma, context.auth.userId, { id: true });
-      const memories = kv ? await loadMemories(kv, user.id) : [];
-      return { status: 200, data: { memories } };
+      const { confirmed, pending } = await listLearnerMemories(prisma, user.id);
+      return {
+        status: 200,
+        data: { memories: confirmed, pending },
+        headers: { 'x-correlation-id': correlationFromRequest(context.request) },
+      };
     } finally {
       await safePrismaDisconnect(prisma);
     }
@@ -87,63 +71,48 @@ export const onRequestGet = authenticatedEndpoint(
 );
 
 export const onRequestPost = authenticatedEndpoint(
-  ProposeSchema,
+  MemoryPostSchema,
   async (context) => {
     if (!isFeatureEnabled(context.env, LEARNER_AGENT_FLAG)) {
       return featureDisabledResponse(context.request, 'Learner Agent is not enabled');
     }
 
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-    const kv = context.env.CACHE;
-    if (!kv) {
-      return { status: 503, error: 'Memory storage unavailable' };
-    }
-
-    const { proposed, category, source } = context.validated.body;
-    const action = (context.request.headers.get('x-memory-action') ?? 'propose').toLowerCase();
+    const body = context.validated.body;
 
     try {
       const user = await resolveOrCreateUserRecord(prisma, context.auth.userId, { id: true });
-      const memories = await loadMemories(kv, user.id);
 
-      if (action === 'confirm') {
-        const parsed = ConfirmSchema.safeParse({ body: context.validated.body });
-        if (!parsed.success) {
-          return { status: 400, error: 'memoryId required for confirm' };
-        }
-        const idx = memories.findIndex((m) => m.id === parsed.data.body.memoryId);
-        if (idx < 0) return { status: 404, error: 'Memory not found' };
-        memories[idx] = confirmMemory(memories[idx]!);
-        await saveMemories(kv, user.id, memories);
-        return { status: 200, data: { memory: memories[idx] } };
+      if (body.action === 'confirm') {
+        const memory = await confirmLearnerMemory(prisma, user.id, body.memoryId);
+        return { status: 200, data: { memory } };
       }
 
-      if (action === 'correct') {
-        const parsed = CorrectSchema.safeParse({ body: context.validated.body });
-        if (!parsed.success) {
-          return { status: 400, error: 'memoryId and correctedText required' };
-        }
-        const idx = memories.findIndex((m) => m.id === parsed.data.body.memoryId);
-        if (idx < 0) return { status: 404, error: 'Memory not found' };
-        memories[idx] = correctMemory(memories[idx]!, parsed.data.body.correctedText);
-        await saveMemories(kv, user.id, memories);
-        return { status: 200, data: { memory: memories[idx] } };
+      if (body.action === 'correct') {
+        const memory = await correctLearnerMemory(
+          prisma,
+          user.id,
+          body.memoryId,
+          body.correctedText
+        );
+        return { status: 200, data: { memory } };
       }
 
-      const candidate = proposeMemory({
-        proposed,
-        category: category as MemoryCategory,
-        source: source ?? 'learner_stated',
+      const result = await proposeLearnerMemory(prisma, user.id, {
+        proposed: body.proposed,
+        category: body.category,
+        source: body.source,
       });
 
-      if (!candidate.requiresConfirmation) {
-        const stored = confirmMemory(candidate);
-        memories.push(stored);
-        await saveMemories(kv, user.id, memories);
-        return { status: 201, data: { candidate, stored } };
+      return {
+        status: result.pendingConfirmation ? 200 : 201,
+        data: result,
+      };
+    } catch (err) {
+      if (err instanceof Error && err.message === 'MEMORY_NOT_FOUND') {
+        return { status: 404, error: 'Memory not found' };
       }
-
-      return { status: 200, data: { candidate, pendingConfirmation: true } };
+      throw err;
     } finally {
       await safePrismaDisconnect(prisma);
     }
@@ -158,19 +127,16 @@ export const onRequestDelete = authenticatedEndpoint(
     }
 
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-    const kv = context.env.CACHE;
-    if (!kv) return { status: 503, error: 'Memory storage unavailable' };
 
     try {
       const user = await resolveOrCreateUserRecord(prisma, context.auth.userId, { id: true });
-      const memories = await loadMemories(kv, user.id);
-      const memoryId = context.validated.body.memoryId;
-      const next = memories.filter((m) => m.id !== memoryId);
-      if (next.length === memories.length) {
+      await deleteLearnerMemory(prisma, user.id, context.validated.body.memoryId);
+      return { status: 200, data: { deleted: context.validated.body.memoryId } };
+    } catch (err) {
+      if (err instanceof Error && err.message === 'MEMORY_NOT_FOUND') {
         return { status: 404, error: 'Memory not found' };
       }
-      await saveMemories(kv, user.id, next);
-      return { status: 200, data: { deleted: memoryId } };
+      throw err;
     } finally {
       await safePrismaDisconnect(prisma);
     }

@@ -1,8 +1,8 @@
 /**
  * POST /api/learner-agent/connect
  *
- * Authenticates via Clerk, resolves internal userId, returns connection
- * metadata for the Learner Agent worker WebSocket.
+ * Authenticates via Clerk, returns WebSocket connection metadata.
+ * Fails closed when KV is unavailable (token cannot be validated by worker).
  */
 
 import { z } from 'zod';
@@ -17,6 +17,8 @@ const ConnectSchema = z.object({
   body: z.object({}).optional(),
 });
 
+const CONNECT_PREFIX = 'learner-connect:';
+
 async function hashUserIdForDo(userId: string): Promise<string> {
   const data = new TextEncoder().encode(`learner-agent:${userId}`);
   const digest = await crypto.subtle.digest('SHA-256', data);
@@ -30,35 +32,36 @@ export const onRequestPost = authenticatedEndpoint(
       return featureDisabledResponse(context.request, 'Learner Agent is not enabled');
     }
 
+    const kv = context.env.RATE_LIMIT_KV as {
+      put: (k: string, v: string, o?: { expirationTtl?: number }) => Promise<void>;
+    } | undefined;
+
+    if (!kv) {
+      return { status: 503, error: 'Connection broker unavailable' };
+    }
+
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
     const correlationId = correlationFromRequest(context.request);
 
     try {
-      const user = await resolveOrCreateUserRecord(prisma, context.auth.userId, {
-        id: true,
-      });
-
+      const user = await resolveOrCreateUserRecord(prisma, context.auth.userId, { id: true });
       const doId = await hashUserIdForDo(user.id);
-      const workerUrl =
-        (context.env.LEARNER_AGENT_WORKER_URL as string | undefined) ??
-        'https://learner-agent.panacea.workers.dev';
+      const workerUrl = context.env.LEARNER_AGENT_WORKER_URL as string | undefined;
+      if (!workerUrl) {
+        return { status: 503, error: 'Learner agent worker not configured' };
+      }
 
       const connectionToken = createCorrelationId();
-      const kv = context.env.RATE_LIMIT_KV as {
-        put: (k: string, v: string, o?: { expirationTtl?: number }) => Promise<void>;
-      } | undefined;
-
-      if (kv) {
-        await kv.put(`learner-connect:${connectionToken}`, user.id, { expirationTtl: 300 });
-      }
+      await kv.put(`${CONNECT_PREFIX}${connectionToken}`, user.id, {
+        expirationTtl: 300,
+      });
 
       return {
         status: 200,
         data: {
           correlationId,
-          userId: user.id,
           durableObjectId: doId,
-          websocketUrl: `${workerUrl}/agents/learner/${doId}`,
+          websocketUrl: `${workerUrl.replace(/\/$/, '')}/agents/learner/${doId}`,
           connectionToken,
           expiresInSeconds: 300,
         },
@@ -72,3 +75,5 @@ export const onRequestPost = authenticatedEndpoint(
   },
   { requestsPerMinute: 30 }
 );
+
+export { CONNECT_PREFIX };

@@ -2,7 +2,7 @@
 
 ## Principle
 
-**Postgres is canonical.** Durable Object state is ephemeral/session-oriented. KV holds user-approved memories only in v1.
+**Postgres is canonical.** Durable Object state is ephemeral/session-oriented. KV holds short-lived connection tokens only.
 
 ## Ownership matrix
 
@@ -15,7 +15,7 @@
 | Recommendations (persisted) | Postgres `StudyRecommendation` | Not written by Learner Agent v1 |
 | Next-best-action (computed) | `learnerNextActionService` | Ephemeral; returned to client/DO |
 | Agent conversation turns | LearnerAgent DO | Bounded buffer; not long-term memory |
-| Approved learner memories | KV `learner-memory:{userId}` | User confirm/correct/delete via API |
+| Approved learner memories | Postgres `UserPreferences.customSettings` | User confirm/correct/delete via API |
 | Connection tokens | KV `learner-connect:{token}` | 5-minute TTL |
 | Reminder metadata | KV `learner-reminder:{userId}:{id}` | Idempotent create |
 | Graph clinical knowledge | Postgres `GraphNode`/`GraphEdge` | Read via grounded content / graphRag |

@@ -16,7 +16,11 @@ npm test -- tests/learner-agent
 |-----------|---------------|---------------|
 | Recommendation faithfulness | `surgeryRotationFixture` + `learnerNextActionService.test.ts` | Overdue FSRS ranks first for surgery rotation fixture |
 | No FSRS in model path | `learnerEngineBoundary.test.ts` | NBA service has no LLM imports |
-| Tool category boundary | `learnerEngineBoundary.test.ts` | NBA tool is `read`; session tools are `write` without FSRS |
+| Tool category boundary | `learnerEngineBoundary.test.ts` | NBA tool is `compute`; `record_attempt` is `canonical_write` |
+| Memory persistence | `memoryStore.test.ts` | Confirmed/pending memories in Postgres customSettings |
+| Attempt pipeline | `recordAttempt.test.ts` | Delegates to submitDrillReview with idempotency |
+| API flow | `recommendationSessionFlow.test.ts` | Recommendation → idempotent session start |
+| Run grounding | `runGroundingEval.test.ts` | Run endpoint wires memories + canonical_write tools |
 | Memory confirmation | `memoryPolicy.test.ts` | Inferred schedule requires confirmation |
 | Log redaction | `security.test.ts` | Secrets redacted |
 | Prompt injection awareness | `security.test.ts` | Untrusted wrapper pattern documented |

@@ -5,7 +5,7 @@
  * Canonical learning data remains in Postgres via Pages API tool calls.
  */
 
-import { Agent } from 'agents';
+import { Agent, type Connection } from 'agents';
 import { AgentWorkflow } from 'agents/workflows';
 import type { AgentWorkflowEvent, AgentWorkflowStep } from 'agents/workflows';
 
@@ -47,6 +47,8 @@ export class LearnerAgent extends Agent<Env, LearnerAgentState> {
       return;
     }
 
+    await this.env.RATE_LIMIT_KV?.delete(`learner-connect:${token}`);
+
     this.setState({
       ...this.state,
       userId,
@@ -57,7 +59,6 @@ export class LearnerAgent extends Agent<Env, LearnerAgentState> {
     connection.send(
       JSON.stringify({
         type: 'connected',
-        userId,
         correlationId: this.state.correlationId,
         activeSessionId: this.state.activeSessionId,
         pendingRecommendation: this.state.pendingRecommendation,
@@ -183,7 +184,7 @@ export class StudyPlanRevisionWorkflow extends AgentWorkflow<LearnerAgent, Revis
 
     await this.reportProgress({
       step: 'revision',
-      status: 'queued',
+      status: 'pending',
       requestId: params.requestId,
     });
 

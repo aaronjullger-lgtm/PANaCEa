@@ -13,7 +13,7 @@ import { runAgent } from '../../../lib/services/agents/agentRunner';
 import { LEARNER_AGENT_SYSTEM_PROMPT, buildLearnerContextAddendum } from '../../../lib/services/learnerAgent/prompts';
 import { createLearnerAgentToolRegistry, LEARNER_AGENT_TOOL_NAMES } from '../../../lib/services/learnerAgent/tools';
 import { correlationFromRequest } from '../../../lib/services/learnerAgent/observability';
-import { getLearnerContext } from '../../../lib/services/learner';
+import { getLearnerContext, listLearnerMemories, formatMemoriesForPrompt } from '../../../lib/services/learner';
 import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 
 const RunSchema = z.object({
@@ -33,13 +33,21 @@ export const onRequestPost = aiEndpoint(
 
     try {
       const user = await resolveOrCreateUserRecord(prisma, context.auth.userId, { id: true });
-      const learnerCtx = await getLearnerContext(prisma, user.id);
+      const [learnerCtx, memoryState] = await Promise.all([
+        getLearnerContext(prisma, user.id),
+        listLearnerMemories(prisma, user.id),
+      ]);
 
-      const addendum = buildLearnerContextAddendum({
-        rotation: learnerCtx.profile.currentRotation,
-        examDate: learnerCtx.profile.examDate,
-        overdueCount: learnerCtx.dueItemCounts.overdueFsrs,
-      });
+      const addendum = [
+        buildLearnerContextAddendum({
+          rotation: learnerCtx.profile.currentRotation,
+          examDate: learnerCtx.profile.examDate,
+          overdueCount: learnerCtx.dueItemCounts.overdueFsrs,
+        }),
+        formatMemoriesForPrompt(memoryState.confirmed),
+      ]
+        .filter(Boolean)
+        .join('\n\n');
 
       const registry = createLearnerAgentToolRegistry();
       const result = await runAgent({
@@ -47,7 +55,7 @@ export const onRequestPost = aiEndpoint(
         registry,
         config: {
           allowedTools: [...LEARNER_AGENT_TOOL_NAMES],
-          allowedCategories: ['read', 'compute', 'write'],
+          allowedCategories: ['read', 'compute', 'write', 'canonical_write'],
           systemInstruction: `${LEARNER_AGENT_SYSTEM_PROMPT}\n\n${addendum}`,
           maxIterations: 6,
         },
