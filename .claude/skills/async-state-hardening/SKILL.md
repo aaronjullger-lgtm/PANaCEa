@@ -73,7 +73,7 @@ For any component using async data, verify:
 3. `lib/hooks/useDrillFSRS.ts` — query hook; ensure staleTime set and offline check present
 4. `components/dashboard/*.tsx` — chart components crash on null data; wrap in conditional
 5. `lib/hooks/*.ts` (91 custom hooks) — audit all useQuery/useMutation for missing error handlers
-6. `components/progress/UserProgressChart.tsx` — EmptyChartState must render when no sessions
+6. `components/dashboard/StudyPathDashboard/ProgressProjectionChart.tsx` — EmptyChartState must render when no sessions
 7. `functions/api/_shared/auth.ts` — verify token provider in QueryClientProvider context
 8. `syncManager.ts` — check offline fallback path in drill + quiz submission
 

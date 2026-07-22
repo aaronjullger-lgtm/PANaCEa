@@ -234,9 +234,9 @@ PANaCEa/
 │   ├── services/      # Backend services (CMS, SRS, Auto-author)
 │   ├── middleware/    # Express middleware (auth, validation)
 │   └── fsrs.ts        # FSRS-compatible spaced repetition algorithm
-├── server.ts          # Express backend server
+├── server.ts          # Express backend server (legacy/local only)
 ├── App.tsx            # Main React application
-├── conditionRegistry.ts # Medical condition definitions (2195 entries)
+├── config/conditionRegistry.ts # Medical condition definitions
 └── prisma/            # Database schema and migrations
 ```
 

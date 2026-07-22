@@ -55,7 +55,7 @@ A clean repo is a fast repo. Eliminate duplicate logic, stale files, and import 
 - Avoid `@/../../../lib/` patterns — convert to absolute
 
 ### Barrel Files & Circular Dependencies
-- Maintain `index.ts` only for stable, public APIs (e.g., `lib/confidence/index.ts`)
+- Maintain `index.ts` only for stable, public APIs (e.g., `lib/confidence/` modules are imported individually — avoid barrel files unless the API surface is stable)
 - Use `npm run typecheck` to detect cycles; resolve by extracting utilities or splitting modules
 - Never barrel-export internal implementation details
 

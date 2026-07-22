@@ -10,7 +10,7 @@ The canonical review writer is `lib/services/drillReviewService.ts`. UI componen
 ## Current Paths
 
 - Main session UI: `components/session/QuizView.tsx`
-- Extracted submit hook: `components/session/hooks/useQuizSubmit.ts`
+- Session hooks: `components/session/hooks/useQuizSession.ts` (+ useQuizReplenishment, useQuizKeyboard, useQuizTimer)
 - Drill hook: `hooks/useDrillFSRS.ts`
 - Drill endpoint: `functions/api/drills/submit-review.ts`
 - Legacy SRS adapter: `functions/api/srs/submit.ts`

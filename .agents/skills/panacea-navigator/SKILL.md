@@ -40,7 +40,7 @@ Use this first for repo orientation. This repo has `AGENTS.md`; read and follow 
 ## High-Risk Subsystems
 
 - FSRS/review submission: `lib/fsrs.ts`, `lib/implicit-metrics.ts`, `lib/services/drillReviewService.ts`, `functions/api/drills/submit-review.ts`, `functions/api/srs/submit.ts`
-- Main session: `components/session/QuizView.tsx`, `components/session/hooks/useQuizSubmit.ts`, `lib/services/sync/syncManager.ts`
+- Main session: `components/session/QuizView.tsx`, `components/session/hooks/useQuizSession.ts` (+ useQuizReplenishment, useQuizKeyboard, useQuizTimer), `lib/services/sync/syncManager.ts`
 - Edge auth/API: `functions/api/_shared/middleware.ts`, `functions/api/_shared/auth.ts`, `functions/api/_shared/prisma-edge.ts`
 - Content/refinery: `functions/api/content`, `functions/api/admin/refinery`, `functions/api/admin/staging`, `lib/services/search`
 - OSCE: `components/osce`, `components/modes/osce`, `functions/api/osce`, `lib/services/soap*`, `lib/services/osceStructuralScorer.ts`

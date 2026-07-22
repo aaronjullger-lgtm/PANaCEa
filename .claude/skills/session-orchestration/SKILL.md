@@ -14,7 +14,7 @@ Question source -> UI presentation -> telemetry starts -> answer selected -> sub
 ## First Files
 
 - `components/session/QuizView.tsx`
-- `components/session/hooks/useQuizSubmit.ts`
+- `components/session/hooks/useQuizSession.ts` (+ useQuizReplenishment, useQuizKeyboard, useQuizTimer)
 - `components/session/SessionScopeSelector.tsx`
 - `components/drill/DrillShell.tsx`
 - `hooks/useDrillFSRS.ts`

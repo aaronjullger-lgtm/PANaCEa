@@ -168,7 +168,7 @@ Client (QuizView.tsx) → syncManager.queueAnswer() → POST /api/questions/atte
 Client (DrillShell.tsx + drill component) → useDrillFSRS hook → POST /api/drills/submit-review
 ```
 
-### Server Pipeline (drillReviewService.ts — 803 lines)
+### Server Pipeline (drillReviewService.ts — 2718 lines)
 ```
 Request → correctness check → implicit rating → par time lookup → circadian adjustment
 → FSRS update → write QuestionAttempt + ReviewLog + UserProgress + confusion pairs
@@ -200,7 +200,7 @@ StudyPANaCEa/
 │   ├── admin/           # Admin panels (29+ subdirs)
 │   ├── dashboard/       # Main dashboard layouts + widgets
 │   ├── drill/           # 42 drill-related files (13 active drill types)
-│   ├── session/         # QuizView.tsx (2274 lines), session management
+│   ├── session/         # QuizView.tsx (1905 lines), session management
 │   ├── osce/            # OSCE clinical simulation UI
 │   ├── library/         # Clinical reference library browser
 │   ├── charts/          # Data viz (recharts, d3, victory wrappers)
@@ -215,7 +215,7 @@ StudyPANaCEa/
 │   ├── implicit-metrics.ts
 │   ├── confidence/      # 8-step confidence pipeline
 │   ├── services/        # 112 service files
-│   │   ├── drillReviewService.ts  # Main submission pipeline (803 lines)
+│   │   ├── drillReviewService.ts  # Main submission pipeline (2718 lines)
 │   │   ├── calibrationEngine.ts
 │   │   ├── adaptiveLearning.ts
 │   │   ├── autoAuthor/  # AI content generation
@@ -282,8 +282,8 @@ GraphNode, GraphEdge, SystemMapping
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `components/session/QuizView.tsx` | 2045 | Main study session UI |
-| `lib/services/drillReviewService.ts` | 1620 | Core submission pipeline |
+| `components/session/QuizView.tsx` | 1905 | Main study session UI |
+| `lib/services/drillReviewService.ts` | 2718 | Core submission pipeline |
 | `lib/fsrs.ts` | — | FSRS v6 algorithm (21 params) |
 | `lib/implicit-metrics.ts` | — | Behavioral → rating derivation |
 | `components/drill/DrillShell.tsx` | — | Drill wrapper (13 drill types) |
