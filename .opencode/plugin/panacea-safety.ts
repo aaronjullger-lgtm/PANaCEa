@@ -52,9 +52,15 @@ export default async () => {
       }
 
       // Rule 5: No Hard/Easy FSRS ratings (binary Again/Good only)
-      if (/rating\s*===?\s*['"]hard['"]|rating\s*===?\s*['"]easy['"]/.test(content)) {
+      // Matches numeric (2=Hard, 3=Easy, 4=Easy in FSRS), string, and UI button patterns
+      if (
+        /rating\s*===?\s*[234]\b/.test(content) ||
+        /["']hard["']|["']easy["']/i.test(content) ||
+        /Hard.*Easy.*button|Hard.*Easy.*rating|rating.*Hard.*Easy/i.test(content) ||
+        /ManuallyRate|selfRat\w*|userRating/i.test(content)
+      ) {
         throw new Error(
-          "panacea-safety: refuse Hard/Easy FSRS ratings. Binary Again/Good only.",
+          "panacea-safety: refuse Hard/Easy FSRS ratings or self-rating UI. Binary Again/Good only.",
         )
       }
     },
