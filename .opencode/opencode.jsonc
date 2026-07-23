@@ -1,0 +1,53 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Enable built-in LSP servers (TypeScript diagnostics, go-to-definition)
+  "lsp": true,
+
+  // PANaCEa project safety rules (additive to global config)
+  "permission": {
+    "bash": {
+      // Database — always deny destructive operations (must ask first per AGENTS.md)
+      "npm run db:push*": "deny",
+      "npm run db:migrate:dev*": "deny",
+      "npm run db:migrate:deploy*": "ask",
+      "npm run migrate:production*": "ask",
+      "npx prisma db push*": "deny",
+      "npx prisma migrate dev*": "deny",
+      "npx prisma migrate deploy*": "ask",
+
+      // Deploy — always confirm
+      "npm run deploy*": "deny",
+      "npm run deploy:local*": "ask",
+      "wrangler deploy*": "deny",
+      "wrangler publish*": "deny",
+      "npm run pages:deploy*": "ask",
+
+      // Git — safe operations only
+      "git push origin main*": "ask",
+      "git push origin master*": "ask",
+
+      // Content generation scripts
+      "npm run generate:clinical*": "ask",
+      "npm run orchestrate:full*": "ask",
+      "npm run health-check*": "allow",
+      "npm run system-health*": "allow"
+    }
+  },
+
+  // Preserve more context for long delegation-heavy sessions
+  "compaction": {
+    "auto": true,
+    "tail_turns": 12,
+    "prune": true
+  },
+
+  // Enable file-edit snapshots for undo safety during autonomous work
+  "snapshot": true,
+
+  // Explicit skill paths — ensures both directories are loaded
+  "skills": {
+    ".agents/skills": true,
+    ".claude/skills": true
+  }
+}

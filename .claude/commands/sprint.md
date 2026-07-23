@@ -1,12 +1,17 @@
 Execute a full sprint implementation pipeline.
 
-Follow the sprint-pipeline skill workflow:
-1. **Audit** — Read all files that will be modified
-2. **Implement** — Break into numbered sprints, each touching 1-4 files
-3. **Wire** — Integrate into existing codebase (routes, config, imports)
-4. **Test** — Write and run tests for new pure functions
-5. **Report** — Concise results: "Sprint N done — file.ts written. Tests: X/X pass"
+Follow the `sprint-workflow` skill:
 
-Use argument as the task description. Example: `/sprint Add error boundary to DrillShell`
+1. **Audit** — Read all files that will be modified. Understand imports, types, patterns. Check `config/appViews.ts`, `prisma/schema.prisma`, existing tests.
+2. **Plan** — Break into numbered sprints (1–4 files each). Safety/data first, shared helpers before consumers.
+3. **Implement** — Write code following PANaCEa conventions. JSDoc headers, `// ─── Section ──────` separators, pure functions exported separately.
+4. **Wire** — Update configs, add endpoints, integrate with existing systems. Separate sprint from core logic.
+5. **Test** — Write tests for pure functions. Run: `npx vitest run <path>`. Don't move on with failing tests.
+6. **Verify** — Typecheck changed files (scoped, not full project). Check edge-runtime safety if touching `functions/`.
+7. **Commit** — Stage specific files. Message: `feat(scope): description`. Push when asked.
 
-"Do it for me" rules apply — execute immediately, don't ask clarifying questions.
+Use `$ARGUMENTS` as the task description.
+
+**"Do it for me"** = fully execute. Don't ask clarifying questions. Don't explain what you're about to do. Just build it.
+
+**Session continuation**: "continue" = pick up the NEXT undone thing. Don't recap completed work.

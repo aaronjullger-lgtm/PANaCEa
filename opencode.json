@@ -1,0 +1,37 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["AGENTS.md", "CLAUDE.md"],
+  "skills": {
+    "paths": [".agents/skills", ".claude/skills"]
+  },
+  "default_agent": "build",
+  "agent": {
+    "plan": {
+      "mode": "primary",
+      "permission": {
+        "edit": "deny",
+        "bash": "ask"
+      }
+    }
+  },
+  "permission": {
+    "bash": {
+      "*": "allow",
+      "git push*": "ask",
+      "git push --force*": "deny",
+      "rm -rf*": "ask",
+      "wrangler deploy*": "ask",
+      "npm run deploy*": "ask",
+      "npx prisma migrate*": "ask",
+      "prisma migrate*": "ask",
+      "npm run deploy:local*": "ask"
+    }
+  },
+  "mcp": {
+    "aidesigner": {
+      "type": "remote",
+      "url": "https://api.aidesigner.ai/api/v1/mcp",
+      "enabled": true
+    }
+  }
+}

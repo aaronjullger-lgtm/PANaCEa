@@ -3,6 +3,21 @@
     "aidesigner": {
       "type": "http",
       "url": "https://api.aidesigner.ai/api/v1/mcp"
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "sentry": {
+      "type": "http",
+      "url": "https://mcp.sentry.dev/mcp",
+      "headers": {
+        "Authorization": "Bearer ${SENTRY_AUTH_TOKEN}"
+      }
+    },
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp"
     }
   }
 }

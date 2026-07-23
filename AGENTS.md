@@ -1,214 +1,85 @@
 # AGENTS.md
 
-## Product identity
+StudyPANaCEa (PANaCEa) — PANCE/PANRE prep. React + Vite + TypeScript, Clerk auth, Prisma/Postgres (Supabase), Cloudflare Pages Functions (`functions/api/`).
 
-StudyPanacea is a premium PANCE prep platform. It helps users study through practice questions, clinical image training, weak-area targeting, progress tracking, readiness analytics, and adaptive study workflows.
+Local clone: `GitHub/StudyPANaCEa`. Remote: `github.com/aaronjullger-lgtm/PANaCEa`. Package manager: **npm** + `package-lock.json`. **Node 22** (`.nvmrc`). Path alias: `@/*` → repo root.
 
-The visual direction is:
-"Diagnostic Atlas OS" - a dark, precise, premium medical learning command center with anatomical diagrams, scanner motifs, glass panels, organ-system analytics, high-quality motion, and clinical dashboard patterns.
+Longer context: `CLAUDE.md`. Session recovery / blockers: `APP_FUNCTIONALITY_PLAN.md`.
 
-The UI should feel like:
+## Commands
 
-- a medical atlas
-- a diagnostic workstation
-- an exam-readiness command center
-- a premium education product
+```bash
+npm ci
+npm run dev                 # Vite only
+npm run dev:all             # Vite + local Express (routes/ is dev-only)
+npm run dev:wrangler        # production-like Pages + Functions
 
-The UI should not feel like:
+npm run typecheck           # production tsconfig
+npm run typecheck:ci        # CI gate (critical paths only — not full tree)
+NODE_OPTIONS="--max-old-space-size=4096" npm run typecheck   # if OOM
 
-- a generic AI SaaS landing page
-- a blue-gradient startup template
-- a stock-photo medical website
-- an admin dashboard template
-- a crypto dashboard
-- a random glassmorphism Dribbble shot
+npm run lint
+npm test
+npx vitest run <path>       # single file / focused
+npm run test:critical       # FSRS + learning-stack gate
 
-## Design principles
+npm run build               # inject-wrangler-env + vite production
+npm run build:check-size
+```
 
-1. Product-specific visuals beat generic polish.
-2. Motion must explain learning, diagnosis, progress, or readiness.
-3. Use 3D sparingly and meaningfully.
-4. Prefer precise clinical UI details over decorative blobs.
-5. Every dashboard metric must connect to a next action.
-6. Preserve accessibility and reduced-motion support.
-7. Mobile must have lighter fallbacks for heavy 3D sections.
-8. All UI must be responsive.
-9. Components must be typed.
-10. Do not introduce unnecessary dependencies.
+CI order (see `.github/workflows/ci.yml`): `prisma validate` → `prisma generate` → `typecheck:ci` → `lint` → `build` → `build:check-size` → `test:critical` → `test`.
 
-## Visual system
+Do not invent scripts. Prefer `panacea-verify` skill when choosing validation.
 
-Default direction:
+## Architecture (easy to get wrong)
 
-- dark clinical background
-- glass cards
-- subtle grid/noise overlays
-- cyan, blue, violet, and pulse-pink accents
-- anatomical/scanner motifs
-- organ-system labels
-- vitals-monitor-inspired metrics
-- clean typography
-- high contrast
-- generous spacing
+- **Production API** = `functions/api/**` only. `routes/` is local Express and is **never** deployed.
+- Edge handlers: use `context.env.*`, not `process.env`. Auth via `authenticatedEndpoint` (`functions/api/_shared/auth.ts`).
+- Prisma Edge singleton: `functions/api/_shared/prisma-edge.ts`. Always `await safePrismaDisconnect(prisma)` in `finally` for handler-created clients.
+- **No Prisma / `@prisma/client` in frontend** (Vite stubs it). Server-only.
+- Main study submit: `QuizView` → sync queue → `POST /api/questions/attempt`.
+- Drill submit: drill UI → `useDrillFSRS` → `POST /api/drills/submit-review` → `lib/services/drillReviewService.ts`.
+- SRS review writes are owned by `drillReviewService`; legacy `/api/srs/*` are compatibility adapters.
 
-Avoid:
+## FSRS / learning (non-negotiable)
 
-- huge generic gradients
-- blob backgrounds
-- fake AI robot mascots
-- stock doctor photos
-- random emoji icons
-- meaningless floating shapes
-- excessive neon
-- unreadable low-contrast text
-- animation that hurts performance
+- Fully **implicit** ratings from behavior — no student Hard/Easy self-rate UI.
+- Binary only: **Again / Good**. Do not reintroduce Hard/Easy.
+- Only real sessions update FSRS (`review_type: 'real'`; MAIN/DRILL). Cram / rapid_recall excluded.
+- Key files: `lib/fsrs.ts`, `lib/implicit-metrics.ts`, `lib/services/drillReviewService.ts`, `lib/confidence/**`.
+- Confidence pipeline source of truth = `// Step` / `// Wave` comments in `drillReviewService.ts` (code wins over docs).
 
-## Preferred frontend stack
+## Ask first / never
 
-Use the existing project stack when possible.
+**Ask first:** Prisma migrations / production data changes, new production deps, deploy (`deploy:local` / wrangler), auth middleware or RLS, FSRS algorithm parameters, deleting hot-path services/endpoints.
 
-This repository currently uses React, TypeScript, Vite, React Router, Tailwind, shadcn-style UI primitives, Framer Motion, Recharts, and Lucide. Preserve that architecture unless the user explicitly requests a framework migration.
+**Never:** commit secrets/`.env`; log secrets; Prisma in browser code; skip `safePrismaDisconnect`; auth/RLS bypasses “to make tests pass”; medical diagnosis claims in AI tutor/OSCE/content output.
 
-Prefer:
+## 1Password (secrets)
 
-- Next.js for new projects or explicitly requested migrations
-- TypeScript
-- Tailwind
-- shadcn/ui
-- Motion from `motion/react` when available or when a migration is approved
-- React Three Fiber only for meaningful 3D medical scenes
-- drei only when React Three Fiber is in use
-- GSAP ScrollTrigger only for pinned or scrubbed scroll scenes
-- Recharts for dashboard charts
-- TanStack Table for serious tables
-- Lucide icons
+The `1password` MCP server is installed (`/usr/local/bin/1password-mcp`, bridge to the desktop app). It manages **1Password Environments** — secrets never return to the agent; they're injected into authorized processes at runtime, with a desktop-app approval prompt on each access.
 
-Do not add React Three Fiber, drei, GSAP, or new UI libraries unless the feature need is clear and the user has approved dependency changes.
+- **Always use the 1Password MCP** for create/read/manage of secrets — do not paste or hardcode credentials, and do not fall back to inventing values if a secret is missing; ask instead.
+- **Project Environment:** use the Environment named **`PANaCEa`** (id `yyhys7vw4jpovijz7oxjiwuxqe`, account `LSYKNVM7BJAENHJE2DYZHVY23Q`) for this repo's secrets (DB URLs, Clerk/Gemini/Supabase keys, Cloudflare tokens, `OPENROUTER_API_KEY`, etc.). It already exists and is populated — do not recreate it.
+- **Variable discovery only:** listing variable *names* is fine; never request raw secret values. Reference secrets by name and let 1Password inject them.
+- **Runtime injection:** secrets are mounted as a local FIFO at `.env.1password` (1Password injects on read; no plaintext on disk). Launch opencode via `opencode-1p` (wrapper at `~/.local/bin/opencode-1p`) so MCP servers and the scout agent receive their keys (`OPENROUTER_API_KEY`, `FIRECRAWL_API_KEY`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CONTEXT7_API_KEY`, `COMPOSIO_API_KEY`). If a key is missing from the Environment, add it there — do not hardcode.
+- If the desktop app prompts, that's expected — approval is per-access.
 
-## Animation rules
+## Skills
 
-Use Motion for:
+Repo skills: `.agents/skills/`. Overview: `docs/skills-overview.md`.
 
-- hover/tap states
-- card reveals
-- layout transitions
-- tab transitions
-- modal/drawer transitions
-- SVG path drawing
-- simple scroll-linked transforms
+- Unclear ownership → `panacea-navigator`
+- Verification / which tests → `panacea-verify`
+- FSRS / scheduling / telemetry → `panacea-fsrs-guardrails`
+- Session/QuizView/drill submit → `panacea-session-pipeline`
+- Edge endpoints → `panacea-edge-endpoints`
+- Schema/migrations/data integrity → `panacea-prisma-data-integrity` (Supabase skill secondary only)
 
-Use GSAP ScrollTrigger for:
+One primary skill; add secondary only when it constrains the work. After skill add/rename/remove: update `docs/skills-overview.md` / `docs/skills-usage.md`.
 
-- pinned scroll storytelling
-- scrubbed timelines
-- scroll-controlled multi-step sections
-- complex sequencing
+## Working notes
 
-Use React Three Fiber for:
-
-- hero anatomy/scanner scene
-- meaningful 3D medical objects
-- subtle organ-system visualization
-
-Always:
-
-- respect prefers-reduced-motion
-- avoid animation during hydration that causes layout shift
-- lazy-load heavy 3D sections
-- keep mobile fallbacks lighter
-
-## Implementation rules
-
-Before editing:
-
-- inspect existing files
-- identify routing conventions
-- identify component conventions
-- identify package manager
-- preserve working behavior
-
-When editing:
-
-- make focused changes
-- avoid broad rewrites unless requested
-- keep components small and composable
-- use TypeScript types
-- avoid `any` unless justified
-- avoid hard-coded magic data inside presentation components
-- place mock data in a dedicated file
-- add loading, empty, and error states where relevant
-- maintain keyboard accessibility and visible focus states
-
-Verification:
-
-- run lint if available
-- run typecheck if available
-- run build if available
-- if a command fails, explain the failure and whether it is related to the change
-
-Completion summary:
-
-- list changed files
-- explain major decisions
-- list verification commands run
-- list known limitations
-
-## Recovery workflow
-
-This repository has a working recovery plan in `APP_FUNCTIONALITY_PLAN.md`.
-
-When continuing functional recovery work:
-
-- read `APP_FUNCTIONALITY_PLAN.md` before choosing the next task
-- update it after setup, build, runtime, auth, API, test, or workflow changes
-- keep known blockers, verification history, current task, and next best step current
-- do not restart broad inspection when the plan already contains current evidence
-- preserve unrelated dirty-worktree changes
-
-## Codex skill routing
-
-Repo-local skills live in `.agents/skills` and should be considered available to Codex whenever working inside this repository.
-
-Use `skill-routing-and-usage` when a request could match multiple skills, asks to improve skill usage, or changes `.agents/skills`.
-
-Default routing:
-
-- Use `panacea-navigator` first for unclear StudyPANaCEa repo work.
-- Prefer narrow `panacea-*` skills over generic reusable skills for product internals.
-- Use `panacea-verify` to choose validation commands for code changes.
-- Use `aidesigner-frontend` for AIDesigner-driven frontend generation or redesign.
-- Use `supabase` as a secondary skill for Supabase-specific behavior, but use `panacea-prisma-data-integrity` as primary for PANaCEa Prisma/schema/data-integrity work.
-- Use `security-and-privacy-audit` for auth, authorization, secrets, privacy, payment, or sensitive logging risk.
-- Use `release-readiness` only when the task is preparing for production release or launch.
-
-Do not load every plausible skill. Pick one primary skill, then add only the secondary skills that materially constrain the work.
-
-## Prompt engineering defaults
-
-When prompts are broad, restate the working route before editing:
-
-- primary skill
-- secondary skills, if any
-- affected subsystem
-- verification plan
-
-Favor precise, outcome-oriented task framing:
-
-- Good: "Use `panacea-session-pipeline` to trace duplicate drill submissions and add a regression test."
-- Good: "Use `panacea-fsrs-guardrails` and `panacea-verify` for a safe FSRS scheduler change."
-- Weak: "Fix the study mode."
-
-For safety-critical work, preserve these constraints:
-
-- no Hard/Easy FSRS ratings
-- no production migrations without approval
-- no secrets in logs or docs
-- no Prisma imports in frontend code
-- no auth, RLS, or middleware bypasses to make tests pass
-- no medical diagnosis claims in AI tutor, OSCE, or content-generation output
-
-Skill library maintenance:
-
-- Update `docs/skills-overview.md` when skills are added, renamed, removed, or repurposed.
-- Update `docs/skills-usage.md` when routing rules change.
-- Run `.agents/skills/skill-routing-and-usage/scripts/audit-skills.sh /Users/aaronullger/GitHub/StudyPANaCEa` after skill edits.
+- Preserve unrelated dirty-worktree changes.
+- Prefer focused diffs; park broad refactors (e.g. QuizView) unless requested.
+- Design system / UI direction lives in `CLAUDE.md` and product docs — do not expand this file with style essays.
