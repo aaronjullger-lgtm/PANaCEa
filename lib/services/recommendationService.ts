@@ -50,32 +50,29 @@ export const recommendationService = {
       recommendations.push(...newTopics);
     }
 
-    // Persist to DB, avoiding duplicates
-    for (const rec of recommendations) {
-      // Check if a similar pending recommendation exists to avoid noise
-      const existing = await prisma.studyRecommendation.findFirst({
-        where: {
+    // Persist to DB, avoiding duplicates — batch query instead of N+1
+    const existingPending = await prisma.studyRecommendation.findMany({
+      where: { userId: dbUser.id, status: 'pending' },
+      select: { type: true, topic: true },
+    });
+    const existingKeys = new Set(existingPending.map((r) => `${r.type}|${r.topic}`));
+    const toCreate = recommendations.filter(
+      (rec) => !existingKeys.has(`${rec.type}|${rec.topic}`)
+    );
+
+    if (toCreate.length > 0) {
+      await prisma.studyRecommendation.createMany({
+        data: toCreate.map((rec) => ({
+          id: uuidv4(),
           userId: dbUser.id,
           type: rec.type,
           topic: rec.topic,
+          reason: rec.reason,
+          priority: rec.priority,
           status: 'pending',
-        },
+          data: rec.data || {},
+        })),
       });
-
-      if (!existing) {
-        await prisma.studyRecommendation.create({
-          data: {
-            id: uuidv4(),
-            userId: dbUser.id,
-            type: rec.type,
-            topic: rec.topic,
-            reason: rec.reason,
-            priority: rec.priority,
-            status: 'pending',
-            data: rec.data || {},
-          },
-        });
-      }
     }
 
     return this.getPendingRecommendations(dbUser.id);

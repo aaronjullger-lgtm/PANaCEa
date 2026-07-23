@@ -182,24 +182,51 @@ export async function generateBatchVariants(
   // Sort by deficit descending (emptiest conditions first)
   thinList.sort((a, b) => b.deficit - a.deficit);
 
-  // Step 2: For each thin condition, find a source question and generate variants
+  const sourceQuestions = await prisma.question.findFirst({
+    where: { conditionId: { in: thinList.map((c) => c.conditionId) } },
+    select: {
+      id: true,
+      question: true,
+      vignette: true,
+      options: true,
+      correctAnswer: true,
+      explanation: true,
+      system: true,
+      difficulty: true,
+      conditionId: true,
+    },
+  }).then(async (first) => {
+    if (first) {
+      const rest = await prisma.question.findMany({
+        where: {
+          conditionId: { in: thinList.map((c) => c.conditionId) },
+          id: { not: first.id },
+        },
+        select: {
+          id: true,
+          question: true,
+          vignette: true,
+          options: true,
+          correctAnswer: true,
+          explanation: true,
+          system: true,
+          difficulty: true,
+          conditionId: true,
+        },
+      });
+      return [first, ...rest];
+    }
+    return [];
+  });
+
+  const questionByCondition = new Map(
+    sourceQuestions.map((q) => [q.conditionId, q])
+  );
+
   for (const condition of thinList) {
     if (result.generated >= maxGen) break;
 
-    // Find a source question for this condition
-    const sourceQuestion = await prisma.question.findFirst({
-      where: { conditionId: condition.conditionId },
-      select: {
-        id: true,
-        question: true,
-        vignette: true,
-        options: true,
-        correctAnswer: true,
-        explanation: true,
-        system: true,
-        difficulty: true,
-      },
-    });
+    const sourceQuestion = questionByCondition.get(condition.conditionId);
     if (!sourceQuestion) {
       // No source question exists — skip (needs content authoring, not variants)
       result.skipped++;
