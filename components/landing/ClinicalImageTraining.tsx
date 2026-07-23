@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, CircleDot, Eye, ScanLine, ShieldCheck } from 'lucide-react';
 import {
   MedicalGlassCard,

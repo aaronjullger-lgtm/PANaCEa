@@ -115,32 +115,26 @@ export type ModelName = keyof typeof MODEL_REGISTRY;
  * if the primary fails (rate limit, timeout, error).
  */
 export const TASK_MODEL_MAP: Record<string, { primary: ModelName; fallbacks: ModelName[] }> = {
-  /** RAG-grounded question generation */
   'question-generation': {
-    primary: 'gemini-2.0-flash',
-    fallbacks: ['gpt-4o-mini', 'claude-haiku-3.5'],
+    primary: 'gpt-4o-mini',
+    fallbacks: ['gemini-2.0-flash', 'claude-haiku-3.5'],
   },
-  /** Self-refine critique (lower temp, shorter output) */
   'question-critique': {
-    primary: 'gemini-2.0-flash',
-    fallbacks: ['gpt-4o-mini'],
+    primary: 'claude-haiku-3.5',
+    fallbacks: ['gemini-2.0-flash', 'gpt-4o-mini'],
   },
-  /** Auto-author clinical content */
   'content-generation': {
-    primary: 'gemini-2.0-flash',
-    fallbacks: ['gpt-4o-mini', 'claude-haiku-3.5'],
+    primary: 'deepseek-chat',
+    fallbacks: ['gemini-2.0-flash', 'gpt-4o-mini'],
   },
-  /** OSCE patient chat (needs conversational ability) */
   'osce-chat': {
-    primary: 'gemini-2.0-flash',
-    fallbacks: ['gpt-4o', 'claude-sonnet-4'],
+    primary: 'gpt-4o',
+    fallbacks: ['gemini-2.0-flash', 'claude-sonnet-4'],
   },
-  /** Complex clinical reasoning (Ghost Grader, deep analysis) */
   'clinical-reasoning': {
-    primary: 'gemini-2.5-pro',
-    fallbacks: ['gpt-4o', 'claude-sonnet-4'],
+    primary: 'claude-sonnet-4',
+    fallbacks: ['gpt-4o', 'gemini-2.5-pro'],
   },
-  /** Simple structured extraction (tagging, classification) */
   'extraction': {
     primary: 'gpt-4o-mini',
     fallbacks: ['gemini-2.0-flash', 'deepseek-chat'],

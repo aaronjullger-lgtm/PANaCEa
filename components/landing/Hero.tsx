@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect, useState } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, ChevronRight, Crosshair, ShieldCheck } from 'lucide-react';
 import {
   MedicalGlassCard,

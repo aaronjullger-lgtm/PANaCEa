@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, CircleDot, ScanLine } from 'lucide-react';
 import { MedicalGlassCard, MetricVital, SectionHeader } from '@/components/studypanacea';
 import { cn } from '@/lib/utils';

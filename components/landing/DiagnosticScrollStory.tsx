@@ -5,7 +5,7 @@ import {
   useMotionValue,
   useMotionValueEvent,
   useReducedMotion,
-} from 'motion/react';
+} from 'framer-motion';
 import { Activity, CheckCircle2, Radio, ScanLine } from 'lucide-react';
 import {
   MedicalGlassCard,

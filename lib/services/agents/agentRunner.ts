@@ -20,7 +20,6 @@
  */
 
 import { ZodError } from 'zod';
-import { GeminiModel } from '../../../functions/api/_shared/ai-service';
 import {
   CLINICAL_STUDY_AGENT_PROMPT,
   buildUserContextAddendum,
@@ -39,12 +38,12 @@ import type {
   ToolExecutionContext,
 } from './types';
 import {
-  runAgentTurn,
+  runLLMTurn,
   buildFunctionResponseTurn,
   type AgentContent,
   type AgentTurnContext,
-  type ParsedTurn,
-} from './geminiAgentClient';
+} from './llmTurnClient';
+import type { ParsedTurn } from './geminiAgentClient';
 
 // ─── Defaults ───────────────────────────────────────────────────────────────
 
@@ -143,23 +142,22 @@ export async function runAgent(args: RunAgentArgs): Promise<AgentRunResult> {
       );
     }
 
-    // --- 4a. Gemini turn ---
+    // --- 4a. LLM turn (provider-agnostic) ---
     let turn: ParsedTurn;
     const turnStart = Date.now();
     try {
-      turn = await runAgentTurn(geminiContext, {
+      turn = await runLLMTurn(geminiContext, {
         systemInstruction,
         contents,
         functionDeclarations,
-        model: config.model ?? GeminiModel.FLASH_2_5,
+        model: config.model ?? 'gpt-4o-mini',
         temperature: config.temperature ?? 0.2,
         maxOutputTokens: config.maxOutputTokens ?? 2048,
-        telemetryEndpoint: config.telemetryEndpoint ?? '/api/agents/run',
         signal: toolContext.signal,
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      toolContext.log?.('error', 'Gemini turn failed', { iteration: i, message });
+      toolContext.log?.('error', 'LLM turn failed', { iteration: i, message });
       return finalize(
         steps,
         '',
@@ -167,7 +165,7 @@ export async function runAgent(args: RunAgentArgs): Promise<AgentRunResult> {
         iterations,
         tokensUsed,
         startedAt,
-        { message, code: 'GEMINI_CALL_FAILED' }
+        { message, code: 'LLM_CALL_FAILED' }
       );
     }
 
