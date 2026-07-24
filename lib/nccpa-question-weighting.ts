@@ -380,6 +380,7 @@ export function exampleUsage() {
   const distribution = calculateSessionDistribution(sessionSize);
 
   for (const [system, count] of distribution) {
+    void system; void count;
   }
 
   const selected = selectWeightedSystems(5);
@@ -391,5 +392,6 @@ export function exampleUsage() {
   ]);
   const validation = validateSessionDistribution(testCounts, 40);
   if (!validation.valid) {
+    void validation;
   }
 }
