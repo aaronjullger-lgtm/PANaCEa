@@ -20,9 +20,10 @@ The system consists of four main components:
 **How It Works:**
 
 - AI generates questions → saved to `StagingQuestion` table (not shown to users)
-- Secondary cheaper AI model (GPT-3.5-Turbo / Gemini-1.5-Flash) runs adequacy checks
-- Checks: correct answer exists, explanation > 50 words, no medical inaccuracies
-- Auto-promotion: Pass → move to `PreGeneratedQuestion` (live pool)
+- Adequacy checks run through the centralized AI gateway (`gateway.callText`, tier `fast` ≈ `gemini-2.0-flash`)
+- Checks: correct answer resolves to an option, explanation ≥ 50 words, no medical inaccuracies, AI critic must complete (fail-closed)
+- Auto-promotion: Pass → move to `PreGeneratedQuestion` (live pool) with the same row id for provenance
+- Emergency topics (anaphylaxis, stroke/MI, sepsis, DKA, PE, etc.) require mandatory human review before promotion
 - Failed questions → Discarded or Flagged for Human Review
 
 **Benefits:**
@@ -31,23 +32,39 @@ The system consists of four main components:
 - Reduced costs (cheaper model for validation)
 - Human review only for edge cases
 
-**API Endpoints:**
+**API Endpoints (admin-authenticated):**
 
 ```bash
 # Save question to staging
 POST /api/questions/staging
 Body: { questionData: {...} }
 
-# Run adequacy check
+# Run adequacy check (gateway tier: fast)
 POST /api/questions/staging/:id/check
+Body: { body: { force?: boolean } }
 
-# Process staging queue (batch)
+# Process staging queue (batch adequacy + auto-promote)
 POST /api/questions/staging/process
 Body: { limit: 10 }
 
 # Get staging statistics
 GET /api/questions/staging/stats
+
+# Admin review UI
+GET /api/admin/staging/list?status=pending&limit=50
+POST /api/admin/staging/approve
+Body: { body: { id: "staging-uuid" } }
+POST /api/admin/staging/reject
+Body: { body: { id: "staging-uuid" } }
+PATCH /api/admin/staging/update
+Body: { body: { id: "staging-uuid", explanation?: "..." } }
+
+# AI critic batch (gateway tier: balanced; score > 90 promote, < 70 discard)
+POST /api/admin/staging/run-critic
+Body: { body: { limit: 10 } }
 ```
+
+See `docs/api/API_OVERVIEW.md` for full request/response contracts.
 
 **Usage Example:**
 
@@ -388,10 +405,15 @@ All endpoints return JSON with format:
 
 ### Staging Lake (Task 108)
 
-- `POST /api/questions/staging` - Save question to staging
-- `POST /api/questions/staging/:id/check` - Run adequacy check
-- `POST /api/questions/staging/process` - Process staging queue
+- `POST /api/questions/staging` - Save question to staging (validates structure; 400 on invalid payload)
+- `POST /api/questions/staging/:id/check` - Run adequacy check via AI gateway (`fast` tier)
+- `POST /api/questions/staging/process` - Batch adequacy check + auto-promote (fail-closed when AI unavailable)
 - `GET /api/questions/staging/stats` - Get staging statistics
+- `GET /api/admin/staging/list` - List staging rows for admin review
+- `POST /api/admin/staging/approve` - Human-approve and mirror to live pool
+- `POST /api/admin/staging/reject` - Reject staging row
+- `PATCH /api/admin/staging/update` - Edit explanation/question/vignette before approval
+- `POST /api/admin/staging/run-critic` - Batch AI critic scoring (`balanced` tier)
 
 ### No-Repeat Logic (Task 109)
 

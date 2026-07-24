@@ -121,6 +121,17 @@ CLOUDFLARE_ACCOUNT_ID=your_cloudflare_account_id
 ```
 **Get it:** Cloudflare Dashboard → API Tokens
 
+### Cloudflare AI Gateway (optional — server-side Gemini routing)
+
+When both values are set in Cloudflare Pages secrets, Gemini calls from Edge handlers and the Vercel AI SDK provider registry route through Cloudflare AI Gateway for caching, analytics, and rate limiting.
+
+```env
+CLOUDFLARE_ACCOUNT_ID=your_cloudflare_account_id
+CF_AI_GATEWAY_ID=your_ai_gateway_id
+```
+
+Used by `functions/api/_shared/ai-gateway.ts` (`buildGeminiUrl`) and `lib/ai-sdk/providers.ts`. Staging adequacy/critic checks use the centralized `lib/ai/aiGateway.ts` path and benefit from the same `GEMINI_API_KEY` configuration.
+
 ## ✅ Verification Steps
 
 ### 1. Check Environment Variables Are Loaded

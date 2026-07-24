@@ -132,4 +132,5 @@ Key metrics to track:
 - [Unified Workflow Design](../docs/unified-workflow-design.md)
 - [CMRR Optimizer](../lib/cmrr-optimizer.ts)
 - [Pearl Harvester Integration](../services/questionService.ts)
-- [Hybrid Content Engine](../functions/api/_shared/staging-questions.ts)
+- [Hybrid Content Engine](../docs/architecture/HYBRID_CONTENT_ENGINE.md)
+- [Staging API contracts](../docs/api/API_OVERVIEW.md)
