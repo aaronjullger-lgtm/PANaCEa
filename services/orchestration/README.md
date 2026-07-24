@@ -133,3 +133,4 @@ Key metrics to track:
 - [CMRR Optimizer](../lib/cmrr-optimizer.ts)
 - [Pearl Harvester Integration](../services/questionService.ts)
 - [Hybrid Content Engine](../functions/api/_shared/staging-questions.ts)
+- [Staging API contracts](../docs/api/API_OVERVIEW.md#staging-lake-endpoints)
