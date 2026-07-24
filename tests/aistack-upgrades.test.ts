@@ -781,7 +781,7 @@ describe('Cloudflare AI Gateway', () => {
   it('buildGeminiUrl routes through gateway when env vars set', async () => {
     const { buildGeminiUrl } = await import('@/functions/api/_shared/ai-gateway');
     const url = buildGeminiUrl('test-key', 'gemini-2.0-flash', 'generateContent', {
-      CF_ACCOUNT_ID: 'acc-123',
+      CLOUDFLARE_ACCOUNT_ID: 'acc-123',
       CF_AI_GATEWAY_ID: 'gw-456',
     });
     expect(url).toContain('gateway.ai.cloudflare.com');
@@ -803,7 +803,7 @@ describe('Cloudflare AI Gateway', () => {
     // Should not throw — the model is created with gateway config
     const model = createAIModel('gemini-2.0-flash', {
       GEMINI_API_KEY: 'test-key',
-      CF_ACCOUNT_ID: 'acc-123',
+      CLOUDFLARE_ACCOUNT_ID: 'acc-123',
       CF_AI_GATEWAY_ID: 'gw-456',
     });
     expect(model).toBeDefined();

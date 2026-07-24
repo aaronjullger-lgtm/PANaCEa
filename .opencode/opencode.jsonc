@@ -47,7 +47,11 @@
 
   // Explicit skill paths — ensures both directories are loaded
   "skills": {
-    ".agents/skills": true,
-    ".claude/skills": true
-  }
+    "paths": [".agents/skills", ".claude/skills"]
+  },
+  "plugin": [
+    "opencode-agent-memory",
+    "opencode-background-agents",
+    "opencode-autotitle"
+  ]
 }

@@ -3,12 +3,12 @@ export const GEMINI_API_VERSION = 'v1beta';
 
 /**
  * Cloudflare AI Gateway base URL.
- * When CF_AI_GATEWAY_ID and CF_ACCOUNT_ID are set in env, Gemini requests can
- * be proxied through Cloudflare AI Gateway for semantic caching, analytics,
+ * When CF_AI_GATEWAY_ID and CLOUDFLARE_ACCOUNT_ID are set in env, Gemini requests
+ * are proxied through Cloudflare AI Gateway for semantic caching, analytics,
  * and provider-level rate limiting.
  */
 function getAIGatewayBaseUrl(env?: Record<string, string>): string | null {
-  const accountId = env?.CF_ACCOUNT_ID;
+  const accountId = env?.CLOUDFLARE_ACCOUNT_ID;
   const gatewayId = env?.CF_AI_GATEWAY_ID;
   if (!accountId || !gatewayId) return null;
   return `https://gateway.ai.cloudflare.com/v1/${accountId}/${gatewayId}/google-ai-studio`;
@@ -16,7 +16,7 @@ function getAIGatewayBaseUrl(env?: Record<string, string>): string | null {
 
 /**
  * Build the full Gemini API URL for a given model and action.
- * Routes through Cloudflare AI Gateway when CF_ACCOUNT_ID + CF_AI_GATEWAY_ID
+ * Routes through Cloudflare AI Gateway when CLOUDFLARE_ACCOUNT_ID + CF_AI_GATEWAY_ID
  * are set.
  */
 export function buildGeminiUrl(

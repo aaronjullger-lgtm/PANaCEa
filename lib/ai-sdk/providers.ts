@@ -21,7 +21,7 @@ export interface AIProviderEnv {
   OPENAI_API_KEY?: string;
   ANTHROPIC_API_KEY?: string;
   /** Cloudflare AI Gateway — when set, routes Google AI calls through edge cache */
-  CF_ACCOUNT_ID?: string;
+  CLOUDFLARE_ACCOUNT_ID?: string;
   CF_AI_GATEWAY_ID?: string;
 }
 
@@ -116,8 +116,8 @@ export function createAIModel(
       if (!env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY required for Google models');
       // Route through Cloudflare AI Gateway when configured
       const googleConfig: { apiKey: string; baseURL?: string } = { apiKey: env.GEMINI_API_KEY };
-      if (env.CF_ACCOUNT_ID && env.CF_AI_GATEWAY_ID) {
-        googleConfig.baseURL = `https://gateway.ai.cloudflare.com/v1/${env.CF_ACCOUNT_ID}/${env.CF_AI_GATEWAY_ID}/google-ai-studio/v1beta`;
+      if (env.CLOUDFLARE_ACCOUNT_ID && env.CF_AI_GATEWAY_ID) {
+        googleConfig.baseURL = `https://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CF_AI_GATEWAY_ID}/google-ai-studio/v1beta`;
       }
       const google = createGoogleGenerativeAI(googleConfig);
       return google(spec.modelId);
