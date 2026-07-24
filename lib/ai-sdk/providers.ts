@@ -11,7 +11,7 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
-import type { LanguageModelV1 } from 'ai';
+import type { LanguageModel } from 'ai';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -94,7 +94,7 @@ export type ModelName = keyof typeof AI_MODELS;
 // ─── Provider Factory ──────────────────────────────────────────────────────
 
 /**
- * Create a Vercel AI SDK LanguageModelV1 from a model name + env keys.
+ * Create a Vercel AI SDK LanguageModel from a model name + env keys.
  *
  * @example
  * ```ts
@@ -105,7 +105,7 @@ export type ModelName = keyof typeof AI_MODELS;
 export function createAIModel(
   name: ModelName | string,
   env: AIProviderEnv
-): LanguageModelV1 {
+): LanguageModel {
   const spec = AI_MODELS[name];
   if (!spec) {
     throw new Error(`Unknown model: "${name}". Available: ${Object.keys(AI_MODELS).join(', ')}`);
