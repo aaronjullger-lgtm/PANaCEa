@@ -14,6 +14,9 @@ export default async () => {
 
       if (!filePath && !content) return
 
+      // Skip config/plugin/metadata files — they contain rule patterns that would self-trigger
+      if (filePath.includes('.opencode/') || filePath.includes('.agents/') || filePath.includes('.claude/')) return
+
       const inFunctions = /(?:^|\/)functions\//.test(filePath)
       const inFrontend =
         /\.(tsx|jsx)$/.test(filePath) &&
