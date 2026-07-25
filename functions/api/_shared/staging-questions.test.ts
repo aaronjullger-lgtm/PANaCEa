@@ -59,7 +59,7 @@ describe('staging question edge helper', () => {
           'subcategory:Vascular',
           'condition:cond-1',
           'medicalContent:mc-1',
-          'conditionName:Pulmonary embolism',
+        'conditionName:Community-acquired pneumonia',
           'questionOrder:third',
           'taskCategory:diagnosis',
         ]),
@@ -111,7 +111,7 @@ describe('staging question edge helper', () => {
         'subcategory:Vascular',
         'condition:cond-1',
         'medicalContent:mc-1',
-        'conditionName:Pulmonary embolism',
+        'conditionName:Community-acquired pneumonia',
         'questionOrder:third',
         'taskCategory:diagnosis',
         'generatorUser:clerk-admin-1',
@@ -154,7 +154,7 @@ describe('staging question edge helper', () => {
         questionData: expect.objectContaining({
           conditionId: 'cond-1',
           medicalContentId: 'mc-1',
-          conditionName: 'Pulmonary embolism',
+          conditionName: 'Community-acquired pneumonia',
           provenance: expect.objectContaining({
             taxonomyCode: 'PULM',
             subcategory: 'Vascular',

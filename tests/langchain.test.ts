@@ -274,8 +274,8 @@ describe('LangChain Router', () => {
     );
 
     expect(result.output).toBe('fallback response');
-    expect(result.model).toBe('gpt-4o-mini');
-    expect(result.provider).toBe('openai');
+    expect(result.model).toBe('gemini-2.0-flash');
+    expect(result.provider).toBe('gemini');
     expect(result.attempts).toBe(3);
   });
 
