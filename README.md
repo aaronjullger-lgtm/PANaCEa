@@ -47,13 +47,13 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 
 - **Production API:** Cloudflare Pages Functions under `functions/api/`. All deployed requests are served by these edge handlers.
 - **Legacy `routes/`:** The `routes/` directory contains Express route handlers for **local/dev only**. They are **not deployed** to Cloudflare Pages. Use `npm run dev:server` only when testing legacy Express behavior. For production behavior, use `npm run dev:wrangler` or deploy to Pages.
-- **Endpoint contracts:** See `docs/api/API_OVERVIEW.md` for current request/response shapes of actively maintained endpoints (health, Gemini, content library, questions, goals/session, diagnostic puzzle, OSCE grading, admin enrichment).
+- **Endpoint contracts:** See `docs/api/API_OVERVIEW.md` for current request/response shapes (AI Gateway Gemini proxy, staging/refinery pipeline, agents, admin, OSCE).
 
 ### Deployment & health (runbook)
 
 - **Validate locally:** `npm run typecheck` → `npm run lint` → `npm run build` → `npm test`. E2E: start app (e.g. `npm run dev:wrangler`), then `npm run test:e2e` or `npm run test:smoke`.
 - **CI:** `.github/workflows/ci.yml` runs typecheck, lint, build, unit tests, and an E2E smoke job (api-health against wrangler pages dev). Env vars for deploy: set in Cloudflare Pages (Dashboard → Settings → Environment variables); do not commit secrets.
-- **CSP and rate limits:** Security headers (including CSP) are in `public/_headers`. Gemini proxy rate limiting is in `functions/api/_shared/rateLimiter.ts` (applied to `/api/gemini` and `/api/gemini/stream`).
+- **CSP and rate limits:** Security headers (including CSP) are in `public/_headers`. Gemini proxy rate limiting is in `functions/api/_shared/rateLimiter.ts` (applied to `/api/ai/models` and `/api/ai/chat/stream`; legacy `/api/gemini` aliases still recognized by middleware).
 
 ---
 
