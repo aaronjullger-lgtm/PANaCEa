@@ -59,7 +59,7 @@ describe('staging question edge helper', () => {
           'subcategory:Vascular',
           'condition:cond-1',
           'medicalContent:mc-1',
-        'conditionName:Community-acquired pneumonia',
+          'conditionName:Pulmonary embolism',
           'questionOrder:third',
           'taskCategory:diagnosis',
         ]),
