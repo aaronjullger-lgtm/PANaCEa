@@ -34,20 +34,30 @@ The system consists of four main components:
 **API Endpoints:**
 
 ```bash
-# Save question to staging
+# Save question to staging (validates payload; 400 on malformed content)
 POST /api/questions/staging
-Body: { questionData: {...} }
+Body: { questionData: { question, options, correctAnswer, explanation, ... } }
 
-# Run adequacy check
+# Run adequacy check (AI Gateway tier=fast; fail-closed when review unavailable)
 POST /api/questions/staging/:id/check
+Body: { body: { force?: boolean } }
 
-# Process staging queue (batch)
+# Process staging queue (batch adequacy + auto-promotion)
 POST /api/questions/staging/process
 Body: { limit: 10 }
 
 # Get staging statistics
 GET /api/questions/staging/stats
+
+# Admin review inbox
+GET /api/admin/staging/list?status=pending&limit=50
+PATCH /api/admin/staging/update
+POST /api/admin/staging/approve
+POST /api/admin/staging/reject
+POST /api/admin/staging/run-critic   # Critic tier=balanced; score >90 promote, 70–90 flag, <70 discard
 ```
+
+See `docs/api/API_OVERVIEW.md` for full request/response contracts.
 
 **Usage Example:**
 
@@ -388,10 +398,15 @@ All endpoints return JSON with format:
 
 ### Staging Lake (Task 108)
 
-- `POST /api/questions/staging` - Save question to staging
-- `POST /api/questions/staging/:id/check` - Run adequacy check
-- `POST /api/questions/staging/process` - Process staging queue
+- `POST /api/questions/staging` - Save question to staging (structural validation; preserves `conditionName` and provenance tags)
+- `POST /api/questions/staging/:id/check` - Run adequacy check via AI Gateway (`fast` tier)
+- `POST /api/questions/staging/process` - Process staging queue (fail-closed when adequacy AI is unavailable)
 - `GET /api/questions/staging/stats` - Get staging statistics
+- `GET /api/admin/staging/list` - Admin staging inbox
+- `PATCH /api/admin/staging/update` - Edit staging question before approval
+- `POST /api/admin/staging/approve` - Promote to live pool with canonical mirror
+- `POST /api/admin/staging/reject` - Reject staging question
+- `POST /api/admin/staging/run-critic` - Critic automation (`balanced` tier)
 
 ### No-Repeat Logic (Task 109)
 
