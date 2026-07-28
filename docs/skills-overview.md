@@ -55,6 +55,61 @@ Memory workflow scripts:
 - `npm run test:memory`: run the focused memory/RAG/graph/tabular regression suite.
 - `npm run verify:memory`: run both gates in sequence.
 
+## LangChain Ecosystem Skills
+
+Source: [langchain-ai/langchain-skills](https://github.com/langchain-ai/langchain-skills). Used for the `langchain-agent` sibling repo (Python dev agents that operate on PANaCEa). Traced to LangSmith project `panacea-dev-agents`.
+
+### Routing & Primer
+
+| Skill | Folder | Description |
+| --- | --- | --- |
+| `ecosystem-primer` | `.agents/skills/ecosystem-primer` | INVOKE FIRST for any LangChain/LangGraph/Deep Agents work. Framework selection, env setup, which skill to load next. |
+| `langchain-dependencies` | `.agents/skills/langchain-dependencies` | Package version + dependency management reference (Python + TypeScript). |
+
+### Quickstarts
+
+| Skill | Folder | Description |
+| --- | --- | --- |
+| `langchain-python-quickstart` | `.agents/skills/langchain-python-quickstart` | Minimal local LangChain agent (Python). **Currently used** by `~/GitHub/langchain-agent/`. |
+| `langchain-typescript-quickstart` | `.agents/skills/langchain-typescript-quickstart` | Same, TypeScript. |
+| `langgraph-python-quickstart` | `.agents/skills/langgraph-python-quickstart` | LangGraph math agent (Python). |
+| `langgraph-typescript-quickstart` | `.agents/skills/langgraph-typescript-quickstart` | LangGraph math agent (TypeScript). |
+| `deepagents-python-quickstart` | `.agents/skills/deepagents-python-quickstart` | Deep Agents research agent (Python). |
+| `deepagents-typescript-quickstart` | `.agents/skills/deepagents-typescript-quickstart` | Deep Agents research agent (TypeScript). |
+
+### LangChain
+
+| Skill | Folder | Description |
+| --- | --- | --- |
+| `langchain-fundamentals` | `.agents/skills/langchain-fundamentals` | Agents with `create_agent`, tools, structured output, middleware basics. |
+| `langchain-middleware` | `.agents/skills/langchain-middleware` | Human-in-the-loop approval, custom middleware, Command resume. |
+| `langchain-rag` | `.agents/skills/langchain-rag` | RAG pipeline (document loaders, embeddings, vector stores). |
+
+### LangGraph
+
+| Skill | Folder | Description |
+| --- | --- | --- |
+| `langgraph-fundamentals` | `.agents/skills/langgraph-fundamentals` | StateGraph, nodes, edges, state reducers. |
+| `langgraph-persistence` | `.agents/skills/langgraph-persistence` | Checkpointers, thread_id, cross-thread memory. |
+| `langgraph-cli` | `.agents/skills/langgraph-cli` | CLI lifecycle: scaffold, dev, build, deploy, langgraph.json. |
+| `langgraph-human-in-the-loop` | `.agents/skills/langgraph-human-in-the-loop` | Interrupts, human review, approval workflows. |
+
+### Deep Agents (destination for autonomous dev agents)
+
+| Skill | Folder | Description |
+| --- | --- | --- |
+| `deep-agents-core` | `.agents/skills/deep-agents-core` | Agent architecture, harness setup, SKILL.md format. **Next step toward autonomous dev agents.** |
+| `deep-agents-memory` | `.agents/skills/deep-agents-memory` | Memory, persistence, filesystem middleware. |
+| `deep-agents-orchestration` | `.agents/skills/deep-agents-orchestration` | Subagents, task planning, human-in-the-loop. |
+| `managed-deep-agents` | `.agents/skills/managed-deep-agents` | Managed Deep Agents: deploy with the CLI, stream runs, MCP tools, React `useStream`. |
+
+### Evaluation & Utilities
+
+| Skill | Folder | Description |
+| --- | --- | --- |
+| `eval-engineering` | `.agents/skills/eval-engineering` | Build/run/audit Harbor evals for an agent. Requires Harbor + Docker. |
+| `swarm` | `.agents/skills/swarm` | Dispatch independent work items in parallel and aggregate results. |
+
 ## Reusable Engineering Skills
 
 | Skill | Folder | Description |
