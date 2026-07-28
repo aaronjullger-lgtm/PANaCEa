@@ -55,6 +55,14 @@ Memory workflow scripts:
 - `npm run test:memory`: run the focused memory/RAG/graph/tabular regression suite.
 - `npm run verify:memory`: run both gates in sequence.
 
+## Observability Skills
+
+| Skill | Folder | Description |
+| --- | --- | --- |
+| `langfuse` | `.agents/skills/langfuse` | Add or audit Langfuse tracing, query traces via the CLI, migrate prompts, manage datasets/scores, and follow Langfuse best practices. Source: [langfuse/skills](https://github.com/langfuse/skills). |
+
+Instrumented in PANaCEa: every AI Gateway call in `lib/ai/aiGateway.ts` (`callText`, `callStructured`, `callVision`, `callStream`) emits a Langfuse trace + generation via `traceGatewayCall` in `lib/observability/langfuse.ts`. No-op when `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` are absent.
+
 ## Reusable Engineering Skills
 
 | Skill | Folder | Description |

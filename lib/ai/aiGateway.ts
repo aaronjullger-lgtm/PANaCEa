@@ -48,11 +48,14 @@ import {
 
 import { parseStructured, buildRepairPrompt } from './jsonParser';
 
+import { traceGatewayCall, type LangfuseEnv } from '@/lib/observability/langfuse';
+
 import {
   GatewayError,
   type FallbackStrategy,
   type GatewayFailureCode,
   type GatewayRequest,
+  type GatewayRequestBase,
   type GatewayResponse,
   type GatewayStreamRequest,
   type GatewayStreamResponse,
@@ -407,6 +410,93 @@ function buildTelemetry(args: {
   };
 }
 
+type GatewayRequestForTrace = Pick<
+  GatewayRequestBase,
+  | 'task'
+  | 'endpoint'
+  | 'userPrompt'
+  | 'systemPrompt'
+  | 'temperature'
+  | 'maxOutputTokens'
+>;
+
+/**
+ * Emit a Langfuse observation for a gateway call. No-op when Langfuse keys are
+ * absent (see `traceGatewayCall`). Called from each public method on both the
+ * success and failure paths so failed calls show up as ERROR-level traces.
+ */
+function emitGatewayTrace(
+  context: GatewayContext,
+  request: GatewayRequestForTrace,
+  ids: { traceId: string; requestId: string; startMs: number },
+  outcome:
+    | {
+        kind: 'success';
+        modelUsed: string;
+        provider: string;
+        usage: GatewayUsage;
+        output?: string;
+        attempts: number;
+        fallbackUsed: boolean;
+        schemaRepairUsed: boolean;
+      }
+    | {
+        kind: 'failure';
+        modelUsed: string;
+        provider: string;
+        error: string;
+        errorCode?: string;
+      },
+): void {
+  const latencyMs = Date.now() - ids.startMs;
+  const langfuseEnv = context.env as unknown as LangfuseEnv;
+  if (outcome.kind === 'success') {
+    traceGatewayCall({
+      env: langfuseEnv,
+      waitUntil: context.waitUntil,
+      userId: context.auth?.userId,
+      traceId: ids.traceId,
+      requestId: ids.requestId,
+      task: request.task,
+      endpoint: request.endpoint,
+      model: outcome.modelUsed,
+      provider: outcome.provider,
+      userPrompt: request.userPrompt,
+      systemPrompt: request.systemPrompt,
+      temperature: request.temperature,
+      maxOutputTokens: request.maxOutputTokens,
+      output: outcome.output,
+      usage: outcome.usage,
+      latencyMs,
+      level: outcome.schemaRepairUsed ? 'WARNING' : 'DEFAULT',
+      metadata: {
+        attempts: outcome.attempts,
+        fallbackUsed: outcome.fallbackUsed,
+        schemaRepairUsed: outcome.schemaRepairUsed,
+      },
+    });
+    return;
+  }
+  traceGatewayCall({
+    env: langfuseEnv,
+    waitUntil: context.waitUntil,
+    userId: context.auth?.userId,
+    traceId: ids.traceId,
+    requestId: ids.requestId,
+    task: request.task,
+    endpoint: request.endpoint,
+    model: outcome.modelUsed,
+    provider: outcome.provider,
+    userPrompt: request.userPrompt,
+    systemPrompt: request.systemPrompt,
+    temperature: request.temperature,
+    maxOutputTokens: request.maxOutputTokens,
+    latencyMs,
+    errorMessage: outcome.error,
+    metadata: outcome.errorCode ? { errorCode: outcome.errorCode } : undefined,
+  });
+}
+
 // ─── Core execution ───────────────────────────────────────────────────────
 
 /**
@@ -654,32 +744,64 @@ async function callText(
 
   recordAttempt(request.task);
 
-  const result = await executeCore<string>(context, {
-    task: request.task,
-    tier,
-    explicitModel: request.model,
-    systemPrompt: request.systemPrompt,
-    userPrompt: request.userPrompt,
-    temperature: request.temperature ?? TASK_DEFAULT_TEMPERATURE[request.task],
-    maxOutputTokens:
-      request.maxOutputTokens ?? TASK_DEFAULT_MAX_OUTPUT_TOKENS[request.task],
-    thinkingBudget: request.thinkingBudget,
-    thinkingBudgetTokens: request.thinkingBudgetTokens,
-    history: request.history,
-    previousThoughtSignatures: request.previousThoughtSignatures,
-    tools: request.tools,
-    cachedContent: request.cachedContent,
-    structured: false,
-    repairOnSchemaFailure: false,
-    strategy,
-    endpoint: request.endpoint,
-    signal: request.signal,
-    requestId,
-    traceId,
-    startMs,
-  });
+  let result;
+  try {
+    result = await executeCore<string>(context, {
+      task: request.task,
+      tier,
+      explicitModel: request.model,
+      systemPrompt: request.systemPrompt,
+      userPrompt: request.userPrompt,
+      temperature: request.temperature ?? TASK_DEFAULT_TEMPERATURE[request.task],
+      maxOutputTokens:
+        request.maxOutputTokens ?? TASK_DEFAULT_MAX_OUTPUT_TOKENS[request.task],
+      thinkingBudget: request.thinkingBudget,
+      thinkingBudgetTokens: request.thinkingBudgetTokens,
+      history: request.history,
+      previousThoughtSignatures: request.previousThoughtSignatures,
+      tools: request.tools,
+      cachedContent: request.cachedContent,
+      structured: false,
+      repairOnSchemaFailure: false,
+      strategy,
+      endpoint: request.endpoint,
+      signal: request.signal,
+      requestId,
+      traceId,
+      startMs,
+    });
+  } catch (err) {
+    emitGatewayTrace(
+      context,
+      request,
+      { traceId, requestId, startMs },
+      {
+        kind: 'failure',
+        modelUsed: resolveModel(request.model, tier),
+        provider: 'gemini',
+        error: err instanceof Error ? err.message : String(err),
+        errorCode: err instanceof GatewayError ? err.code : undefined,
+      },
+    );
+    throw err;
+  }
 
   const usage = normalizeUsage(result.response.usage);
+  emitGatewayTrace(
+    context,
+    request,
+    { traceId, requestId, startMs },
+    {
+      kind: 'success',
+      modelUsed: result.modelUsed,
+      provider: result.provider,
+      usage,
+      output: result.response.text ?? undefined,
+      attempts: result.attempts,
+      fallbackUsed: result.fallbackUsed,
+      schemaRepairUsed: result.schemaRepairUsed,
+    },
+  );
   return {
     mode: 'text',
     text: result.response.text,
@@ -717,32 +839,49 @@ async function callStructured<T>(
 
   recordAttempt(request.task);
 
-  const result = await executeCore<T>(context, {
-    task: request.task,
-    tier,
-    explicitModel: request.model,
-    systemPrompt: request.systemPrompt,
-    userPrompt: request.userPrompt,
-    temperature: request.temperature ?? TASK_DEFAULT_TEMPERATURE[request.task],
-    maxOutputTokens:
-      request.maxOutputTokens ?? TASK_DEFAULT_MAX_OUTPUT_TOKENS[request.task],
-    thinkingBudget: request.thinkingBudget,
-    thinkingBudgetTokens: request.thinkingBudgetTokens,
-    history: request.history,
-    previousThoughtSignatures: request.previousThoughtSignatures,
-    tools: request.tools,
-    cachedContent: request.cachedContent,
-    structured: true,
-    schema: request.schema,
-    schemaDescription: request.schemaDescription,
-    repairOnSchemaFailure: request.repairOnSchemaFailure ?? true,
-    strategy,
-    endpoint: request.endpoint,
-    signal: request.signal,
-    requestId,
-    traceId,
-    startMs,
-  });
+  let result;
+  try {
+    result = await executeCore<T>(context, {
+      task: request.task,
+      tier,
+      explicitModel: request.model,
+      systemPrompt: request.systemPrompt,
+      userPrompt: request.userPrompt,
+      temperature: request.temperature ?? TASK_DEFAULT_TEMPERATURE[request.task],
+      maxOutputTokens:
+        request.maxOutputTokens ?? TASK_DEFAULT_MAX_OUTPUT_TOKENS[request.task],
+      thinkingBudget: request.thinkingBudget,
+      thinkingBudgetTokens: request.thinkingBudgetTokens,
+      history: request.history,
+      previousThoughtSignatures: request.previousThoughtSignatures,
+      tools: request.tools,
+      cachedContent: request.cachedContent,
+      structured: true,
+      schema: request.schema,
+      schemaDescription: request.schemaDescription,
+      repairOnSchemaFailure: request.repairOnSchemaFailure ?? true,
+      strategy,
+      endpoint: request.endpoint,
+      signal: request.signal,
+      requestId,
+      traceId,
+      startMs,
+    });
+  } catch (err) {
+    emitGatewayTrace(
+      context,
+      request,
+      { traceId, requestId, startMs },
+      {
+        kind: 'failure',
+        modelUsed: resolveModel(request.model, tier),
+        provider: 'gemini',
+        error: err instanceof Error ? err.message : String(err),
+        errorCode: err instanceof GatewayError ? err.code : undefined,
+      },
+    );
+    throw err;
+  }
 
   if (result.validated === undefined) {
     // Should be unreachable: executeCore throws on structured failure.
@@ -757,6 +896,21 @@ async function callStructured<T>(
   }
 
   const usage = normalizeUsage(result.response.usage);
+  emitGatewayTrace(
+    context,
+    request,
+    { traceId, requestId, startMs },
+    {
+      kind: 'success',
+      modelUsed: result.modelUsed,
+      provider: result.provider,
+      usage,
+      output: result.response.text ?? undefined,
+      attempts: result.attempts,
+      fallbackUsed: result.fallbackUsed,
+      schemaRepairUsed: result.schemaRepairUsed,
+    },
+  );
   return {
     mode: 'structured',
     data: result.validated,
@@ -793,35 +947,67 @@ async function callVision<T>(
 
   const structured = request.mode === 'vision-structured' && !!request.schema;
 
-  const result = await executeCore<T>(context, {
-    task: request.task,
-    tier,
-    explicitModel: request.model,
-    systemPrompt: request.systemPrompt,
-    userPrompt: request.userPrompt,
-    temperature: request.temperature ?? TASK_DEFAULT_TEMPERATURE[request.task],
-    maxOutputTokens:
-      request.maxOutputTokens ?? TASK_DEFAULT_MAX_OUTPUT_TOKENS[request.task],
-    thinkingBudget: request.thinkingBudget,
-    thinkingBudgetTokens: request.thinkingBudgetTokens,
-    history: request.history,
-    previousThoughtSignatures: request.previousThoughtSignatures,
-    tools: request.tools,
-    cachedContent: request.cachedContent,
-    structured,
-    schema: request.schema,
-    schemaDescription: request.schemaDescription,
-    repairOnSchemaFailure: structured,
-    strategy,
-    endpoint: request.endpoint,
-    signal: request.signal,
-    imageParts: request.images,
-    requestId,
-    traceId,
-    startMs,
-  });
+  let result;
+  try {
+    result = await executeCore<T>(context, {
+      task: request.task,
+      tier,
+      explicitModel: request.model,
+      systemPrompt: request.systemPrompt,
+      userPrompt: request.userPrompt,
+      temperature: request.temperature ?? TASK_DEFAULT_TEMPERATURE[request.task],
+      maxOutputTokens:
+        request.maxOutputTokens ?? TASK_DEFAULT_MAX_OUTPUT_TOKENS[request.task],
+      thinkingBudget: request.thinkingBudget,
+      thinkingBudgetTokens: request.thinkingBudgetTokens,
+      history: request.history,
+      previousThoughtSignatures: request.previousThoughtSignatures,
+      tools: request.tools,
+      cachedContent: request.cachedContent,
+      structured,
+      schema: request.schema,
+      schemaDescription: request.schemaDescription,
+      repairOnSchemaFailure: structured,
+      strategy,
+      endpoint: request.endpoint,
+      signal: request.signal,
+      imageParts: request.images,
+      requestId,
+      traceId,
+      startMs,
+    });
+  } catch (err) {
+    emitGatewayTrace(
+      context,
+      request,
+      { traceId, requestId, startMs },
+      {
+        kind: 'failure',
+        modelUsed: resolveModel(request.model, tier),
+        provider: 'gemini',
+        error: err instanceof Error ? err.message : String(err),
+        errorCode: err instanceof GatewayError ? err.code : undefined,
+      },
+    );
+    throw err;
+  }
 
   const usage = normalizeUsage(result.response.usage);
+  emitGatewayTrace(
+    context,
+    request,
+    { traceId, requestId, startMs },
+    {
+      kind: 'success',
+      modelUsed: result.modelUsed,
+      provider: result.provider,
+      usage,
+      output: result.response.text ?? undefined,
+      attempts: result.attempts,
+      fallbackUsed: result.fallbackUsed,
+      schemaRepairUsed: result.schemaRepairUsed,
+    },
+  );
   const telemetry = buildTelemetry({
     requestId,
     traceId,
@@ -890,13 +1076,43 @@ async function callStream(
     response = await streamGemini(context, geminiOpts);
   } catch (err) {
     recordTotalFailure(request.task);
-    throw toGatewayError(err, {
+    const gwErr = toGatewayError(err, {
       requestId,
       traceId,
       task: request.task,
       context: { model, endpoint: request.endpoint },
     });
+    emitGatewayTrace(
+      context,
+      request,
+      { traceId, requestId, startMs: Date.now() },
+      {
+        kind: 'failure',
+        modelUsed: String(model),
+        provider: 'gemini',
+        error: gwErr.message,
+        errorCode: gwErr.code,
+      },
+    );
+    throw gwErr;
   }
+
+  // Streaming traces emit input only; capturing stream output requires a
+  // TransformStream tap and is tracked as a fast-follow.
+  emitGatewayTrace(
+    context,
+    request,
+    { traceId, requestId, startMs: Date.now() },
+    {
+      kind: 'success',
+      modelUsed: String(model),
+      provider: 'gemini',
+      usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
+      attempts: 1,
+      fallbackUsed: false,
+      schemaRepairUsed: false,
+    },
+  );
 
   return {
     mode: 'stream',
