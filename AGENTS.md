@@ -197,6 +197,7 @@ Favor precise, outcome-oriented task framing:
 - Good: "Use `panacea-session-pipeline` to trace duplicate drill submissions and add a regression test."
 - Good: "Use `panacea-fsrs-guardrails` and `panacea-verify` for a safe FSRS scheduler change."
 - Good: "Use the `langfuse` skill when adding to or auditing Langfuse tracing in `lib/ai/aiGateway.ts` or `lib/observability/langfuse.ts`."
+- Good: "Use `ecosystem-primer` first when starting any LangChain/LangGraph/Deep Agents work in `~/GitHub/langchain-agent/`, then load the layer-specific skill."
 - Weak: "Fix the study mode."
 
 For safety-critical work, preserve these constraints:
