@@ -40,7 +40,7 @@ The new `lib/ai/aiGateway.ts` wraps `ai-service.ts` and adds the above. Existing
 | `functions/api/ai/vision/grade-spatial.ts` | `callGemini` | Grading contract |
 | `functions/api/ai/models/index.ts` | `callGemini` | Health/probe endpoint |
 | `functions/api/ai/mnemonics/generate.ts` | `callAIMultiProvider` | Generation contract |
-| `functions/api/ai/learning/socratic.ts` | `callAIMultiProvider` | Tutoring contract |
+| `functions/api/ai/learning/socratic.ts` | `gateway.tutor()` | **Migrated Sprint 5** — ZPD-calibrated Socratic remediation |
 | `functions/api/ai/chat/stream.ts` | `streamGemini` (mentioned) | Tutoring stream |
 | `functions/api/causal-chain/generate.ts` | `callAIMultiProvider` | Generation contract |
 | `functions/api/cron/content-quality-loop.ts` | `routeTask` (direct) | Bypasses ai-service; should go via gateway |
@@ -95,6 +95,7 @@ The new `lib/ai/aiGateway.ts` wraps `ai-service.ts` and adds the above. Existing
 |---|---|---|
 | `functions/api/osce/live.ts` | OSCE engine | Inspect for direct calls |
 | `functions/api/osce/live-engine.ts` | OSCE engine | Inspect for direct calls |
+| `functions/api/osce/evaluate.ts` | SPBench grading | **Migrated** — `gateway.grade()` with `tier: 'powerful'` |
 | `functions/api/osce/analysis/grade.ts` | Grading | Inspect; likely needs `gateway.grade()` |
 
 ### F. Scripts (LOW priority — non-production)
@@ -139,7 +140,7 @@ The new `lib/ai/aiGateway.ts` wraps `ai-service.ts` and adds the above. Existing
 1. **Sprint 2 (this sprint):** Build `lib/ai/aiGateway.ts` + contracts + schemas
 2. **Sprint 3:** Inventory and consolidate prompts into `lib/ai/prompts/*`
 3. **Sprint 4 — Ghost Grader / grading:** `drills/elaboration/grade.ts`, `drills/teachback/grade.ts`, `ai/vision/grade-spatial.ts`, `soapGradingService.ts`, `services/scribe/soapNoteService.ts`, `osce/analysis/grade.ts`
-4. **Sprint 5 — Socratic tutor:** `ai/tutor/chat.ts`, `ai/learning/socratic.ts`, `ai/chat/stream.ts`, `services/core/CoachingService.ts`
+4. **Sprint 5 — Socratic tutor:** `ai/tutor/chat.ts`, ~~`ai/learning/socratic.ts`~~ ✅, `ai/chat/stream.ts`, `services/core/CoachingService.ts`
 5. **Sprint 6 — OSCE engine:** `osce/live.ts`, `osce/live-engine.ts`, **remove AI from `OSCELiveSession.tsx`** (security critical)
 6. **Sprint 7 — Batch generation:** `questions/generate*.ts`, `drills/contrastive/generate.ts`, `admin/generate-*.ts`, `_shared/staging-questions.ts`, `_shared/question-generator.ts`, `lib/services/question/generationService.ts`, `services/ai/batchGeneratorService.ts`, `services/core/stagingQuestionService.ts`, `lib/questionGenerator.ts`, `services/domain/clinicalPearlService.ts`
 7. **Sprint 8 — Enrichment + extraction:** `autoAuthor/contentGenerator.ts`, `automatedContentPipeline.ts`, `contextualRetrieval.ts`, `semanticValidationService.ts`, `sessionService.ts` AI path, `services/domain/image*/educational*.ts`

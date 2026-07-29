@@ -328,7 +328,7 @@ catch { return { status: 400, error: 'Invalid JSON body' }; }
 **Endpoints that call Gemini API:**
 - `questions/generate.ts`, `questions/generate-batch.ts`, `questions/generate-enhanced.ts`, `questions/generate-deep.ts`
 - `ai/generate-mnemonic.ts`
-- `intelligence/tutor.ts`, `intelligence/socratic-remediation.ts`
+- `ai/learning/socratic.ts`, `ai/tutor/chat.ts`
 - `clinical-eye/analyze.ts`
 - `osce/chat.ts`, `osce/analysis/grade.ts`
 - `gemini/stream.ts`

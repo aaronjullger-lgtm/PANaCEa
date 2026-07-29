@@ -470,7 +470,7 @@ Risky query/index patterns still requiring audit:
 
 Mock/stub code still visible in production-relevant areas:
 
-- `functions/api/osce/intent.ts`, `functions/api/osce/patient.ts`, `functions/api/osce/evaluate.ts`, and `functions/api/cron/osce-spbench-judge.ts` contain deterministic OSCE behavior instead of real AI judging/agents.
+- `functions/api/osce/intent.ts`, `functions/api/osce/patient.ts`, `functions/api/osce/evaluate.ts` (SPBench via `gateway.grade()`), and `functions/api/cron/osce-spbench-judge.ts` — evaluate endpoint uses live AI grading; intent/patient/cron paths may still use deterministic stubs.
 - `services/domain/studyGroupService.ts` and social components reference mock/empty data and missing `/api/social/*` endpoints.
 - `lib/auth/permissionSystem.ts` contains mock permission behavior.
 - `hooks/useMedicalCompliance.ts` has mock recent compliance checks.
