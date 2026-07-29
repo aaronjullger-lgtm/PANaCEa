@@ -3,6 +3,26 @@
     "aidesigner": {
       "type": "http",
       "url": "https://api.aidesigner.ai/api/v1/mcp"
+    },
+    "linear": {
+      "command": "npx",
+      "args": ["-y", "@mseep/linear-mcp-server"],
+      "env": { "LINEAR_API_KEY": "${LINEAR_API_KEY}" }
+    },
+    "qdrant": {
+      "command": "npx",
+      "args": ["-y", "qdrant-mcp-server"],
+      "env": { "QDRANT_URL": "${QDRANT_URL}", "QDRANT_API_KEY": "${QDRANT_API_KEY}" }
+    },
+    "composio": {
+      "command": "npx",
+      "args": ["-y", "composio-mcp@latest"],
+      "env": { "COMPOSIO_API_KEY": "${COMPOSIO_API_KEY}" }
+    },
+    "n8n": {
+      "command": "npx",
+      "args": ["-y", "n8n-mcp"],
+      "env": { "N8N_API_URL": "${N8N_API_URL}", "N8N_API_KEY": "${N8N_API_KEY}" }
     }
   }
 }

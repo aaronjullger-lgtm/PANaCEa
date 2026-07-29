@@ -43,7 +43,7 @@ export interface CloudflareEnv {
   SENTRY_DSN?: string;
   ENVIRONMENT?: string;
 
-  // Langfuse Observability
+  // Langfuse (legacy — retained for agent-orchestrator compat, not used by the main app)
   LANGFUSE_PUBLIC_KEY?: string;
   LANGFUSE_SECRET_KEY?: string;
   LANGFUSE_BASE_URL?: string;

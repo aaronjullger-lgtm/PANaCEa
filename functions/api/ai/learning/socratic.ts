@@ -12,7 +12,8 @@
  *   - Gateway handles MISSING_API_KEY internally → dropped validateFunctionEnv.
  *   - Rate limiting moved from ad-hoc `withRateLimit` call to the `aiEndpoint`
  *     wrapper (default 25 req/min per user, same bucket as other AI calls).
- *   - Langfuse tracing stays layered on top — gateway telemetry is separate.
+ *   - Gateway telemetry (tokens, latency, model, provider) is emitted by the
+*     gateway itself; LangSmith tracing fires per-request via LangChain.
  *   - FALLBACK_QUESTION is still surfaced when the gateway throws, so a failed
  *     Socratic turn never blocks a Review Mode session.
  */
@@ -26,7 +27,6 @@ import {
 import { buildSystemPrompt } from '../../_shared/socraticZpd';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
-import { createTrace, type LangfuseEnv } from '@/lib/observability/langfuse';
 
 const BodySchema = z.object({
   body: z.object({
@@ -291,40 +291,6 @@ ${historyBlock}Generate ONE short guiding question. Do not give the answer.`;
 
     if (result.blocked) {
       return { data: { guidingQuestion: FALLBACK_QUESTION } };
-    }
-
-    // Langfuse tracing (fire-and-forget — never block the tutor response).
-    try {
-      const trace = createTrace(context.env as unknown as LangfuseEnv, {
-        name: 'socratic-remediation',
-        userId: auth.userId,
-        tags: ['gateway', 'socratic', result.telemetry.modelUsed],
-        metadata: {
-          model: result.telemetry.modelUsed,
-          provider: result.telemetry.provider,
-          latencyMs: result.telemetry.latencyMs,
-          fallbackUsed: result.telemetry.fallbackUsed,
-          personalized: Boolean(learnerState),
-        },
-      });
-      if (trace) {
-        trace.generation({
-          name: 'socratic-generation',
-          model: result.telemetry.modelUsed,
-          input: userPrompt.slice(0, 500),
-          output: result.text.slice(0, 500),
-          usage: {
-            promptTokens: result.usage.inputTokens,
-            completionTokens: result.usage.outputTokens,
-            totalTokens: result.usage.totalTokens,
-          },
-          modelParameters: { temperature: 0.5, maxTokens: maxOutputTokens },
-        });
-        const ctx = context as { waitUntil?: (p: Promise<unknown>) => void };
-        if (ctx.waitUntil && trace.flush) ctx.waitUntil(trace.flush());
-      }
-    } catch {
-      /* observability must never block the tutor */
     }
 
     return {

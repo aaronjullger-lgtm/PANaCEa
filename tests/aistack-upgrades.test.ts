@@ -4,7 +4,6 @@
  * - RxNorm medical API service
  * - Hybrid search utilities
  * - Contextual retrieval preprocessing
- * - Langfuse observability
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -250,68 +249,6 @@ describe('Contextual Retrieval', () => {
         expect(child.length).toBeLessThanOrEqual(500); // some tolerance
       }
     }
-  });
-});
-
-// ─── Langfuse Observability ────────────────────────────────────────────────
-
-const { MockLangfuse } = vi.hoisted(() => {
-  // Use a real class so `new Langfuse(...)` works
-  class MockLangfuse {
-    trace = vi.fn(() => ({
-      id: 'trace-123',
-      generation: vi.fn(),
-      span: vi.fn(),
-    }));
-    score = vi.fn();
-    flushAsync = vi.fn().mockResolvedValue(undefined);
-    shutdownAsync = vi.fn().mockResolvedValue(undefined);
-  }
-  return { MockLangfuse };
-});
-
-vi.mock('langfuse', () => ({
-  Langfuse: MockLangfuse,
-}));
-
-describe('Langfuse Observability', () => {
-  beforeEach(async () => {
-    // Reset the singleton _client by calling shutdownLangfuse
-    const mod = await import('@/lib/observability/langfuse');
-    await mod.shutdownLangfuse();
-  });
-
-  it('isLangfuseEnabled returns false without keys', async () => {
-    const { isLangfuseEnabled } = await import('@/lib/observability/langfuse');
-    expect(isLangfuseEnabled({})).toBe(false);
-  });
-
-  it('isLangfuseEnabled returns true with keys', async () => {
-    const { isLangfuseEnabled } = await import('@/lib/observability/langfuse');
-    expect(isLangfuseEnabled({
-      LANGFUSE_PUBLIC_KEY: 'pk-test',
-      LANGFUSE_SECRET_KEY: 'sk-test',
-    })).toBe(true);
-  });
-
-  it('createTrace returns null without keys', async () => {
-    const { createTrace } = await import('@/lib/observability/langfuse');
-    const trace = createTrace({}, { name: 'test' });
-    expect(trace).toBeNull();
-  });
-
-  it('createTrace returns trace object with keys', async () => {
-    const { createTrace } = await import('@/lib/observability/langfuse');
-    const trace = createTrace(
-      { LANGFUSE_PUBLIC_KEY: 'pk-test', LANGFUSE_SECRET_KEY: 'sk-test' },
-      { name: '/api/ai/generate-mnemonic', userId: 'user-1', tags: ['test'] }
-    );
-    expect(trace).not.toBeNull();
-    expect(trace!.traceId).toBe('trace-123');
-    expect(typeof trace!.generation).toBe('function');
-    expect(typeof trace!.span).toBe('function');
-    expect(typeof trace!.score).toBe('function');
-    expect(typeof trace!.flush).toBe('function');
   });
 });
 

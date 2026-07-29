@@ -240,3 +240,126 @@ export async function shutdownLangfuse(): Promise<void> {
     _client = null;
   }
 }
+
+/**
+ * Inputs to {@link traceGatewayCall}. Every field is something the AI Gateway
+ * (`lib/ai/aiGateway.ts`) already produces from a single call, so wiring is
+ * one line per public method (callText / callStructured / callVision /
+ * callStream). Designed to match the Langfuse SDK v3 trace + generation shape
+ * so the observation lands with model name, token usage, latency, and a
+ * generation-typed observation on the first hop.
+ */
+export interface GatewayTraceInput {
+  env: LangfuseEnv;
+  waitUntil?: (p: Promise<unknown>) => void;
+  userId?: string;
+  traceId: string;
+  requestId: string;
+  task: string;
+  endpoint: string;
+  model: string;
+  provider: string;
+  userPrompt: string;
+  systemPrompt?: string;
+  temperature?: number;
+  maxOutputTokens?: number;
+  output?: string;
+  usage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+    totalTokens?: number;
+  };
+  latencyMs?: number;
+  level?: 'DEFAULT' | 'DEBUG' | 'WARNING' | 'ERROR';
+  errorMessage?: string;
+  metadata?: Record<string, unknown>;
+  tags?: string[];
+  /** Multi-turn grouping (tutoring/OSCE). Optional; defer to fast-follow. */
+  sessionId?: string;
+}
+
+/**
+ * Emit a single-trace + single-generation Langfuse observation for an AI
+ * Gateway call. **No-op when Langfuse keys are absent** and safe on Cloudflare
+ * Edge (uses `waitUntil` to flush, never blocks the response).
+ *
+ * Best-practice rationale (per Langfuse skill `references/instrumentation.md`):
+ * - `input` is the user-facing message (+ system prompt as object field) rather
+ *   than every function arg, so API keys / fetch config never leak into traces.
+ * - `model`, `usage`, `level`, and a generation-typed observation are set so
+ *   model analytics, cost calculation, and the Agent Graph all work.
+ * - `traceId` from the gateway is carried in metadata (NOT as sessionId) so a
+ *   Langfuse trace cross-references Workers Logs + Sentry on the same id.
+ *
+ * Errors from the Langfuse SDK are swallowed: observability must never break
+ * the underlying AI call.
+ */
+export function traceGatewayCall(input: GatewayTraceInput): void {
+  const client = getLangfuseClient(input.env);
+  if (!client) return;
+
+  const traceMetadata: Record<string, unknown> = {
+    traceId: input.traceId,
+    requestId: input.requestId,
+    endpoint: input.endpoint,
+    task: input.task,
+    provider: input.provider,
+    model: input.model,
+    ...input.metadata,
+  };
+  if (input.latencyMs !== undefined) traceMetadata.latencyMs = input.latencyMs;
+  if (input.errorMessage) traceMetadata.errorMessage = input.errorMessage;
+
+  const generationMetadata: Record<string, unknown> = {
+    provider: input.provider,
+  };
+  if (input.systemPrompt !== undefined) {
+    generationMetadata.systemPromptLength = input.systemPrompt.length;
+  }
+
+  try {
+    const trace = client.trace({
+      name: `ai-gateway:${input.task}`,
+      userId: input.userId,
+      sessionId: input.sessionId,
+      tags: ['ai-gateway', input.task, ...(input.tags ?? [])],
+      metadata: traceMetadata,
+    });
+
+    trace.generation({
+      name: `${input.task}:${input.endpoint}`,
+      model: input.model,
+      input: input.systemPrompt
+        ? { system: input.systemPrompt, user: input.userPrompt }
+        : input.userPrompt,
+      output: input.output,
+      usage: input.usage
+        ? {
+            promptTokens: input.usage.inputTokens,
+            completionTokens: input.usage.outputTokens,
+            totalTokens: input.usage.totalTokens,
+          }
+        : undefined,
+      modelParameters: {
+        ...(input.temperature !== undefined ? { temperature: input.temperature } : {}),
+        ...(input.maxOutputTokens !== undefined
+          ? { maxOutputTokens: input.maxOutputTokens }
+          : {}),
+      },
+      level: input.level ?? (input.errorMessage ? 'ERROR' : 'DEFAULT'),
+      metadata: generationMetadata,
+    });
+
+    // waitUntil keeps the trace flush alive after the Edge response returns;
+    // without it the worker could terminate before Langfuse receives the POST.
+    if (input.waitUntil) {
+      input.waitUntil(
+        client.flushAsync().catch(() => {
+          /* swallow: observability must never break the request */
+        }),
+      );
+    }
+  } catch (err) {
+    console.warn('[langfuse] traceGatewayCall failed:', err);
+  }
+}
