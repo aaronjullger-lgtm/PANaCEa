@@ -65,7 +65,7 @@ Consolidated specification for multimodal AI features.
 | 19 | **Audio Overviews** (NotebookLM) | 🟡 | Lecture Converter in Toolkit; text → Host A/B script; TTS pipeline separate |
 | 20 | **Ephemeral Tokens** | 🟡 | Token exchange for Live Patient; reduce key exposure |
 | 21 | **Batch Nightly Study Plans** | 🔴 | Gemini Batch API; personalized Daily Review podcast |
-| 22 | **Socratic Remediation** | ✅ | `/api/intelligence/socratic-remediation`; Tutor Me button + SocraticTutorChat in QuizView |
+| 22 | **Socratic Remediation** | ✅ | `/api/ai/learning/socratic` (AI Gateway `gateway.tutor()`); Tutor Me button + SocraticTutorChat in QuizView |
 
 ---
 

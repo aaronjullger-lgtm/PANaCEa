@@ -258,9 +258,9 @@ A full OSCE simulation system exists with 15 endpoints, a state machine, orderab
 
 **What it does:** When a student gets a question wrong, instead of just showing the explanation, the system enters a Socratic dialogue mode. Using Gemini, it asks the student guided questions to help them reason through the correct answer: "What are the risk factors for this condition?" "Given those findings, what would you expect on imaging?" The dialogue adapts based on the student's responses.
 
-**Why it is valuable:** Passive explanation reading creates recognition-based false mastery. Active retrieval through guided questioning forces deeper processing. The `/api/intelligence/socratic-remediation` endpoint and `reasoning_tutor` mode already exist in the codebase.
+**Why it is valuable:** Passive explanation reading creates recognition-based false mastery. Active retrieval through guided questioning forces deeper processing. The `/api/ai/learning/socratic` endpoint and `reasoning_tutor` mode already exist in the codebase.
 
-**Builds on:** `/api/intelligence/socratic-remediation` (endpoint exists), `/api/tutor/chat` (AI tutor), `reasoning_tutor` training mode (defined in `training-modes.ts`), `MetacognitionPromptModal.tsx` (reflection prompts), `ElaborationDrill.tsx` (elaboration/reasoning), `TeachBackDrill.tsx` (active recall).
+**Builds on:** `/api/ai/learning/socratic` (endpoint exists), `/api/tutor/chat` (AI tutor), `reasoning_tutor` training mode (defined in `training-modes.ts`), `MetacognitionPromptModal.tsx` (reflection prompts), `ElaborationDrill.tsx` (elaboration/reasoning), `TeachBackDrill.tsx` (active recall).
 
 **SDK needed:** No new SDK. Gemini chat already integrated.
 

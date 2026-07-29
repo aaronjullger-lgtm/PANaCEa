@@ -98,7 +98,7 @@ model ContentChunk {
 ## Audit 3: Tutor Surfaces & FSRS
 
 ### Tutor Surfaces
-1. **Socratic Tutor**: `/functions/api/ai/learning/socratic.ts` → ZPD-calibrated remediation
+1. **Socratic Tutor**: `/functions/api/ai/learning/socratic.ts` → `POST /api/ai/learning/socratic` (ZPD-calibrated remediation via `gateway.tutor()`)
 2. **Drill Explanations**: Integrated in `drillReviewService.ts` with Ghost Grader
 3. **Dashboard Planner**: `dashboardPersonalization.ts` → 5 learner-stage configs
 4. **Wrong-Answer Explainer**: Via Ghost Grader + `explanationEngagementService.ts`
