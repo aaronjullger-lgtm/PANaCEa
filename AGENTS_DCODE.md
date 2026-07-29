@@ -1,151 +1,142 @@
-# Deep Agents Code (dcode) — Setup & Workflows
+# Dev Agents — Complete Setup & Catalog
 
-Daily-driver coding agent built on LangChain + LangGraph. Model-agnostic,
-LangSmith-traced, supports the same skills format as Claude Code.
+19 specialized agents + 4 multi-agent workflows, built on LangGraph + LangChain.
+Dual-traced to LangSmith + Langfuse. Model-agnostic (DeepSeek default, Gemini fallback).
 
 ## Quick start
 
 ```bash
+# Install dcode
 curl -LsSf https://langch.in/dcode | bash
+
+# Configure secrets from 1Password
 cd ~/GitHub/langchain-agent && uv run python scripts/setup_dcode_env.py
-dcode --install deepseek
-dcode --default-model deepseek:deepseek-chat
-dcode
+
+# List all 19 agents
+cd ~/GitHub/langchain-agent && uv run python -m agents list
+
+# Run any agent on PANaCEa
+uv run python -m agents discovery /Users/aaronullger/GitHub/StudyPANaCEa
 ```
 
-Slash commands inside dcode:
-- `/auth` — manage API keys (move from .env to OS keyring)
-- `/model` — switch (`/model deepinfra:qwen/Qwen3-235B-A22B`)
-- `/trace` — open current thread in LangSmith
-- `/skill panacea-navigator` — invoke a PANaCEA skill
-- `!git status` — shell mode
+## Agent Catalog (19 agents)
 
-## Model strategy — cheap by default, reasoning on demand
+### Core Dev-Lifecycle (6)
 
-| Provider | Model | Use for | Cost/1M (in/out) |
+| Agent | Command | Purpose |
+|---|---|---|
+| `discovery` | `python -m agents discovery <dir>` | Scan repo for TODOs, test gaps, violations |
+| `plan` | `cat report.md \| python -m agents.plan` | Turn discovery report into sprint plan |
+| `implement` | `python -m agents implement <dir> --task "..."` | Execute a single plan task |
+| `test` | `python -m agents test <dir> --cmd "npm test"` | Run tests, parse failures, suggest fixes |
+| `review` | `python -m agents review <dir> --ref HEAD~1` | Adversarial review of git diff |
+| `commit` | `python -m agents commit <dir>` | Generate conventional commit message |
+
+### Specialized Auditors (7)
+
+| Agent | Command | Purpose |
+|---|---|---|
+| `security` | `python -m agents security <dir>` | Audit secrets, auth gaps, injection, OWASP |
+| `refactor` | `python -m agents refactor <dir> --pattern "*.ts"` | Identify code smells, suggest decomposition |
+| `coverage` | `python -m agents coverage <dir>` | Find test gaps, suggest specific tests |
+| `optimize` | `python -m agents optimize <dir> --area "database"` | Find N+1 queries, re-renders, bundle bloat |
+| `dependencies` | `python -m agents dependencies <dir>` | Audit, update, resolve dependency conflicts |
+| `architect` | `python -m agents architect <dir> --action map` | Map architecture, review design |
+| `triage` | `python -m agents triage <dir> --repo owner/repo` | Categorize and prioritize GitHub issues |
+
+### Generators & Responders (6)
+
+| Agent | Command | Purpose |
+|---|---|---|
+| `docs` | `python -m agents docs <dir> --task readme` | Generate READMEs, API docs, changelogs |
+| `debug` | `python -m agents debug <dir> --bug "..."` | Reproduce, isolate, fix bugs |
+| `hotfix` | `python -m agents hotfix <dir> --incident "..."` | Production incident response |
+| `release` | `python -m agents release <dir> --action prepare` | Changelogs, readiness checks |
+| `eval` | `python -m agents eval <dir> --action create` | Create/run eval datasets for LLM features |
+| `explain` | `python -m agents explain <dir> --target "auth" --mode how` | Explain how/why code works |
+
+## Multi-Agent Workflows (4)
+
+```bash
+cd ~/GitHub/langchain-agent
+uv run python -m agents.orchestrator <workflow> /Users/aaronullger/GitHub/StudyPANaCEa
+```
+
+| Workflow | Agents | Mode | Use case |
 |---|---|---|---|
-| **DeepSeek** | `deepseek-chat` (V3) | Default — routine coding | $0.27 / $1.10 |
-| **DeepSeek** | `deepseek-reasoner` (R1) | Planning, review, hard reasoning | $0.55 / $2.19 |
-| **DeepInfra** | `deepseek-ai/DeepSeek-V3` | Alt route to V3 | similar |
-| **DeepInfra** | `qwen/Qwen3-235B-A22B` | Strong alternative | $0.80 / $0.80 |
-| Google | `gemini-2.5-pro` | Strong coding (working) | $1.25 / $10 |
-| Anthropic | `claude-sonnet-5` | Best coding | $3 / $15 — out of credits |
-| OpenAI | `gpt-5.5` | General | $5 / $20 — out of quota |
+| `full_audit` | discovery + security + coverage + optimize + refactor | **Parallel** (5 agents) | Comprehensive codebase health check |
+| `sprint` | discovery → plan → implement → test → review → commit | Sequential | Implement a feature end-to-end |
+| `incident` | triage → debug → hotfix → release | Sequential | Production incident response |
+| `onboard` | architect(map) → explain → docs(readme) | Sequential | Onboard to a new codebase |
 
-**Default**: `deepseek:deepseek-chat` (~10× cheaper than Gemini Pro for routine work).
+## Dual Tracing — LangSmith + Langfuse
 
-Switch for hard tasks via `/model deepseek:deepseek-reasoner`.
+Every agent call is traced to both platforms:
 
-## Configuration files
+| Platform | URL | Project | Mechanism |
+|---|---|---|---|
+| **LangSmith** | smith.langchain.com | `panacea-dev-agents` | `LANGCHAIN_TRACING_V2=true` env var |
+| **Langfuse** | cloud.langfuse.com | default project | OpenTelemetry `LangchainInstrumentor` |
+
+Tracing config (`agents/tracing.py`):
+- `_init_langfuse()` — creates `Langfuse()` client from env keys
+- `_instrument_langchain()` — calls `LangchainInstrumentor().instrument()`
+- `tracing_config(name)` — returns metadata tags for trace correlation
+
+## Model Strategy
+
+| Task Type | Primary | Fallback | Cost/1M (in/out) |
+|---|---|---|---|
+| Discovery/Implementation/Trivial | deepseek-chat | gemini-2.5-flash | $0.27/$1.10 |
+| Planning/Reasoning | deepseek-reasoner | gemini-2.5-pro | $0.55/$2.19 |
+| Review | gemini-2.5-flash | deepseek-chat → gemini-2.5-pro | $0.10/$0.40 |
+
+Runtime connectivity probe (`_probe_model()`) tries a lightweight `/models` request.
+If the provider is unreachable (DNS block, timeout), falls to the next choice automatically.
+
+## Configuration Files
 
 | File | Purpose |
 |---|---|
-| `~/.deepagents/.env` | API keys + LangSmith tracing. Generated by `scripts/setup_dcode_env.py`. |
-| `~/.deepagents/config.toml` | Provider config, default model, sandbox. Includes DeepInfra as custom provider. |
-| `~/.deepagents/.state/sessions.db` | Thread history (per-machine). |
+| `~/.deepagents/.env` | API keys + tracing config. Generated by `scripts/setup_dcode_env.py`. |
+| `~/.deepagents/config.toml` | Provider config, default model, sandbox. |
 
-## Skills — reusing PANaCEA's agent capabilities
-
-dcode auto-discovers `<project>/.agents/skills/*/SKILL.md`. PANaCEA has 52+ skills. Invoke directly:
-
+Required env vars:
 ```
-/skill panacea-navigator
-/skill panacea-fsrs-guardrails
-/skill adversarial-review
-/skill panacea-verify
+DEEPSEEK_API_KEY=sk-...
+GEMINI_API_KEY=AIza...
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=lsv2_pt_...
+LANGCHAIN_PROJECT=panacea-dev-agents
+LANGFUSE_HOST=https://cloud.langfuse.com
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
 ```
 
-## MCP servers
-
-dcode reads standard MCP config. PANaCEA's `.mcp.json` declares 1Password,
-Context7, Firecrawl. Use `/mcp` to inspect.
-
-## Custom LangGraph pipeline (discovery → plan → implement → test → review → commit)
-
-Lives in `~/GitHub/langchain-agent/agents/`. Six agents wired as a LangGraph.
-Each auto-picks its model via a task-aware router.
+## Daily Workflows
 
 ```bash
-# Full pipeline
+# Morning: comprehensive audit (5 agents in parallel, ~3 min)
 cd ~/GitHub/langchain-agent
-uv run python -m agents.pipeline /Users/aaronullger/GitHub/StudyPANaCEa --save
+uv run python -m agents.orchestrator full_audit /Users/aaronullger/GitHub/StudyPANaCEa
 
-# Or individually
-uv run python -m agents.discovery /Users/aaronullger/GitHub/StudyPANaCEa
-uv run python -m agents.review /Users/aaronullger/GitHub/StudyPANaCEa --ref HEAD~1
-uv run python -m agents.commit /Users/aaronullger/GitHub/StudyPANaCEa
+# Before commit: review + commit message
+uv run python -m agents review /Users/aaronullger/GitHub/StudyPANaCEa --ref HEAD~1
+cd /Users/aaronullger/GitHub/StudyPANaCEa && git add -A
+uv run python -m agents commit /Users/aaronullger/GitHub/StudyPANaCEa
+
+# Security check before deploy
+uv run python -m agents security /Users/aaronullger/GitHub/StudyPANaCEa --focus "API endpoints"
+
+# Onboard a new contributor
+uv run python -m agents.orchestrator onboard /Users/aaronullger/GitHub/StudyPANaCEa
 ```
 
-Task-aware router (`agents/models.py`):
-- `discovery`, `implementation`, `trivial` → deepseek-chat
-- `planning`, `review`, `reasoning` → deepseek-reasoner
+## Coexistence
 
-All calls traced to LangSmith project `panacea-dev-agents`.
+Three agent runtimes, complementary:
+- **Claude Code** — best Claude integration, complex refactors
+- **dcode** — model-agnostic, LangSmith-traced, cost-sensitive runs
+- **langchain-agent** — custom LangGraph pipeline for scripted/cron workflows
 
-## Daily workflows on PANaCEa
-
-```bash
-# Discovery scan (custom agent is cheaper+structured; dcode one-shot is more flexible)
-cd ~/GitHub/langchain-agent && uv run python -m agents.discovery /Users/aaronullger/GitHub/StudyPANaCEa
-
-# Implement a task
-cd ~/GitHub/StudyPANaCEa && dcode
-# then: "Implement Sprint 1 from /tmp/plan.md"
-
-# Review the diff
-cd ~/GitHub/langchain-agent && uv run python -m agents.review /Users/aaronullger/GitHub/StudyPANaCEa --ref HEAD~1
-
-# Commit message
-cd ~/GitHub/StudyPANaCEa && git add -A
-cd ~/GitHub/langchain-agent && uv run python -m agents.commit /Users/aaronullger/GitHub/StudyPANaCEa
-```
-
-## Claude Code coexistence
-
-**Both run in parallel. Not mutually exclusive.**
-
-| Tool | Strength | Use for |
-|---|---|---|
-| **Claude Code** | Best Claude Sonnet integration | Complex refactors, pair programming (when Anthropic credits loaded) |
-| **dcode** | Model-agnostic, LangSmith-traced | Cost-sensitive runs, traced automation, when using DeepSeek/Gemini |
-| **langchain-agent** | Custom LangGraph pipeline | Scripted discovery→review, cron-triggered workflows |
-
-All three read the same `.agents/skills/` and `.mcp.json`. No migration needed.
-
-## Remote sandboxes (optional)
-
-dcode supports running tools in a remote sandbox. Aaron has `E2B_API_KEY`.
-
-```bash
-dcode --install langchain-e2b --package --yes  # may have dep conflicts
-dcode --sandbox e2b
-```
-
-Other providers: LangSmith (default), Daytona, Modal, Runloop, Vercel.
-
-## Plugins marketplace (optional)
-
-```bash
-dcode plugin marketplace add langchain-ai/langchain-skills
-dcode plugin install <plugin>@<marketplace>
-```
-
-Plugin skills are namespaced: `/skill:<plugin>@<market>:<skill-name>`.
-
-## Tracing tips
-
-- **Project**: `panacea-dev-agents`
-- **Redaction**: enabled (`[tracing].langsmith_redact = true`)
-- **Per-thread URL**: `/trace` inside dcode
-- **Custom pipeline**: each agent invocation is a nested trace
-
-## Troubleshooting
-
-| Symptom | Fix |
-|---|---|
-| `AuthenticationError` from dcode | `dcode auth set <provider> --from-env <VAR>` — auth.json cache is more reliable than env alone |
-| DeepSeek connection error | Transient — retry. Check status.deepseek.com |
-| `No API key available for any model in task 'X'` | `uv run python -m agents.models` to see resolution; add key to .env or expand registry |
-| dcode can't find skills | Run from inside PANaCEa repo (skills are project-relative) |
-| LangSmith 403 on trace POST | Use `LANGSMITH_PERSONAL_ACCESS_TOKEN` (setup script handles this) |
-| E2B install fails | Dep conflict; skip E2B, use local tools or try Modal/Daytona |
+All three read the same `.agents/skills/` directory. No migration needed.

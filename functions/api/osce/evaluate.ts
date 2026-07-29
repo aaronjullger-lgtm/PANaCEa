@@ -16,6 +16,11 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserByClerkId } from '../_shared/resolveUser';
 import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
 import { SpbenchScoreSchema, SPBENCH_SCORE_DESCRIPTION } from '@/lib/ai/schemas/grading';
+import {
+  buildSpbenchSystemPrompt,
+  buildSpbenchUserPrompt,
+  type SpbenchPromptInput,
+} from '@/lib/ai/prompts/osce';
 
 // ─── Schema ────────────────────────────────────────────────────────────────
 
@@ -93,19 +98,14 @@ const evaluateSessionHandler = authenticatedEndpoint(
       const transcript = peSession.messages ?? [];
 
       // Build prompt for SPBench evaluation
-      const systemPrompt = buildSpbenchSystemPrompt(
+      const promptInput = buildSpbenchPromptInput(
         transcript,
         intentLog,
         studentDiagnosis,
         correctDiagnosis,
       );
-
-      const userPrompt = buildSpbenchUserPrompt(
-        transcript,
-        intentLog,
-        studentDiagnosis,
-        correctDiagnosis,
-      );
+      const systemPrompt = buildSpbenchSystemPrompt(promptInput);
+      const userPrompt = buildSpbenchUserPrompt(promptInput);
 
       // ── Call AI Gateway for SPBench scoring ──
       let scores;
@@ -211,99 +211,14 @@ export const onRequestPost = (context: CloudflareContext) => {
 };
 
 // ─── Prompt Builders ───────────────────────────────────────────────────────
+// Prompt builders live in `lib/ai/prompts/osce.ts` so both this endpoint and
+// the LangGraph OSCE encounter graph share the same prompt contract.
 
-function formatTranscript(
-  messages: unknown,
-): string {
-  if (typeof messages === 'string') return messages;
-  try {
-    const arr = JSON.parse(JSON.stringify(messages));
-    if (!Array.isArray(arr)) return JSON.stringify(messages);
-    return arr
-      .map((m: any) => {
-        const role = m?.role === 'student' ? 'Student' : 'Patient';
-        return `${role}: ${m?.text ?? JSON.stringify(m)}`;
-      })
-      .join('\n');
-  } catch {
-    return JSON.stringify(messages);
-  }
-}
-
-function buildSpbenchSystemPrompt(
+function buildSpbenchPromptInput(
   transcript: unknown,
   intentLog: ReadonlyArray<{ intent: string; studentText: string }>,
   studentDiagnosis: string,
   correctDiagnosis: string,
-): string {
-  const transcriptText = formatTranscript(transcript);
-  const intentText = intentLog
-    .map((i) => `[INTENT:${i.intent}] "${i.studentText}"`)
-    .join('\n');
-
-  return `You are a post-hoc OSCE evaluation agent using the SPBench rubric.
-
-Score 8 dimensions on a 0-100 scale:
-
-1. Query Competence (QC): How well did the student choose appropriate history questions? Focused, systematic, and relevant questions rate higher.
-
-2. Case Coverage (CC): How complete was the data gathered? Did the student cover chief complaint, HPI, PMH, medications, allergies, ROS, social/family history?
-
-3. Clinical Depth (CD): How deep was the diagnostic reasoning? Did the student form a plausible differential, interpret findings, and reach a well-supported diagnosis?
-
-4. Relevance Check (RC): How focused was the questioning? Did the student stay on track or pursue irrelevant lines of inquiry?
-
-5. Logical Consistency (LC): How coherent was the reasoning chain from data → differential → diagnosis → plan?
-
-6. Language Naturality (LN): Was the communication patient-appropriate? Clear, jargon-free, empathetic?
-
-7. Clinical Safety (CS): Did the student recognize red flags? Avoid dangerous omissions? Consider "cannot-miss" diagnoses?
-
-8. Professional Demeanor (PD): Was the student respectful, empathetic, and professional? Did they introduce themselves and explain their role?
-
---- SESSION DATA ---
-
-Transcript (Student = Student, Patient = Simulated Patient):
-${transcriptText}
-
-Intent log (clinical intents the student explored):
-${intentText}
-
-Student's diagnosis: ${studentDiagnosis}
-Correct diagnosis: ${correctDiagnosis}
-
---- SCORING GUIDANCE ---
-- Score each dimension independently based on what is evidenced in the transcript.
-- If the diagnosis is correct AND well-supported by history/exam data, score CD and LC higher.
-- If the diagnosis is correct but poorly supported (guessing), score LC lower.
-- If red flags were missed (e.g., no CVA tenderness check in suspected pyelonephritis), lower CS.
-- If the student used open-ended questions, showed empathy, and explained their reasoning, raise LN and PD.
-- Provide a brief, specific justification summarizing key strengths and areas for improvement.
-
-Return ONLY a single JSON object. No markdown, no code fence, no prose.`;
-}
-
-function buildSpbenchUserPrompt(
-  transcript: unknown,
-  intentLog: ReadonlyArray<{ intent: string; studentText: string }>,
-  studentDiagnosis: string,
-  correctDiagnosis: string,
-): string {
-  const transcriptText = formatTranscript(transcript);
-  const intentText = intentLog
-    .map((i) => `[INTENT:${i.intent}] "${i.studentText}"`)
-    .join('\n');
-
-  return `Evaluate this OSCE session using the SPBench 8-dimension rubric.
-
-Session transcript:
-${transcriptText}
-
-Clinical intents explored:
-${intentText}
-
-Student's submitted diagnosis: ${studentDiagnosis}
-Correct answer: ${correctDiagnosis}
-
-Return JSON with 8 SPBench dimension scores (0-100 each), an overall weighted score, and a justification.`;
+): SpbenchPromptInput {
+  return { transcript, intentLog, studentDiagnosis, correctDiagnosis };
 }

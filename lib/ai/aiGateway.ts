@@ -19,7 +19,7 @@
  * Architecture:
  *   The gateway delegates the raw model invocation to
  *   `functions/api/_shared/ai-service.ts` (callGemini, callAIMultiProvider,
- *   streamGemini) so existing token tracking, Langfuse tracing, and
+ *   streamGemini) so existing token tracking and
  *   Cloudflare AI Gateway routing keep working during incremental migration.
  */
 

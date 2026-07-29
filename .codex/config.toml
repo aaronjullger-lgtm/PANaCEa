@@ -3,5 +3,31 @@ sandbox_mode = "workspace-write"
 [mcp_servers.aidesigner]
 url = "https://api.aidesigner.ai/api/v1/mcp"
 
+[mcp_servers.linear]
+command = "npx"
+args = ["-y", "@mseep/linear-mcp-server"]
+[mcp_servers.linear.env]
+LINEAR_API_KEY = "${LINEAR_API_KEY}"
+
+[mcp_servers.qdrant]
+command = "npx"
+args = ["-y", "qdrant-mcp-server"]
+[mcp_servers.qdrant.env]
+QDRANT_URL = "${QDRANT_URL}"
+QDRANT_API_KEY = "${QDRANT_API_KEY}"
+
+[mcp_servers.composio]
+command = "npx"
+args = ["-y", "composio-mcp@latest"]
+[mcp_servers.composio.env]
+COMPOSIO_API_KEY = "${COMPOSIO_API_KEY}"
+
+[mcp_servers.n8n]
+command = "npx"
+args = ["-y", "n8n-mcp"]
+[mcp_servers.n8n.env]
+N8N_API_URL = "${N8N_API_URL}"
+N8N_API_KEY = "${N8N_API_KEY}"
+
 [sandbox_workspace_write]
 network_access = true

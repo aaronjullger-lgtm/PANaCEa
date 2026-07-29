@@ -49,10 +49,6 @@ vi.mock('@/lib/ai/aiGateway', () => ({
   toGatewayContext: vi.fn(() => ({ env: {} })),
 }));
 
-vi.mock('@/lib/observability/langfuse', () => ({
-  createTrace: vi.fn(() => null),
-}));
-
 import { gateway } from '@/lib/ai/aiGateway';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import './socratic';

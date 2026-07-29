@@ -64,6 +64,30 @@
         "@modelcontextprotocol/server-sequential-thinking"
       ],
       "description": "Enhanced reasoning for complex medical logic and FSRS algorithms"
+    },
+    "linear": {
+      "command": "npx",
+      "args": ["-y", "@mseep/linear-mcp-server"],
+      "description": "Linear issue tracking — create/search/update issues for the PANaCEa orchestrator agents",
+      "env": { "LINEAR_API_KEY": "${LINEAR_API_KEY}" }
+    },
+    "composio": {
+      "command": "npx",
+      "args": ["-y", "composio-mcp@latest"],
+      "description": "Composio tool aggregator — GitHub/Linear/Sentry/etc. as MCP tools",
+      "env": { "COMPOSIO_API_KEY": "${COMPOSIO_API_KEY}" }
+    },
+    "n8n": {
+      "command": "npx",
+      "args": ["-y", "n8n-mcp"],
+      "description": "n8n workflow automation — trigger named workflows via REST/webhook",
+      "env": { "N8N_API_URL": "${N8N_API_URL}", "N8N_API_KEY": "${N8N_API_KEY}" }
+    },
+    "qdrant": {
+      "command": "npx",
+      "args": ["-y", "qdrant-mcp-server"],
+      "description": "Qdrant vector database — orchestrator long-term memory collections",
+      "env": { "QDRANT_URL": "${QDRANT_URL}", "QDRANT_API_KEY": "${QDRANT_API_KEY}" }
     }
   },
   "globalShortcut": "Ctrl+Shift+M",
