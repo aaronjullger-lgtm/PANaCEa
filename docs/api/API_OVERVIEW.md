@@ -48,6 +48,8 @@ Both routes route model calls through `lib/ai/aiGateway.ts` (`gateway.tutor()` a
 }
 ```
 
+`fsrsState` and `turnNumber` tune Socratic hint depth (ZPD calibration).
+
 When `fsrsState` is omitted but `questionId` or `conditionId` is present, the handler may infer learner state from read-only `Card`, `UserProgress`, and `ReviewLog` rows. FSRS scheduling writes remain owned by `drillReviewService`.
 
 **Success response (`200 OK`)**
