@@ -180,6 +180,62 @@ app.post('/ensure-collections', authMiddleware, async (_req, res) => {
   res.json({ ok: true, collections: Object.values(COLLECTIONS) });
 });
 
+// ─── Autonomous fleet endpoints ──────────────────────────────────────────────
+
+app.get('/fleet/tasks', async (_req, res) => {
+  const { getActiveTasks } = await import('../autonomous/scheduler.js');
+  const tasks = await getActiveTasks();
+  res.json({ tasks, count: tasks.length });
+});
+
+app.post('/fleet/enqueue', authMiddleware, async (req, res) => {
+  const { enqueueTask } = await import('../autonomous/scheduler.js');
+  const body = (req.body ?? {}) as { type?: string; title?: string; description?: string; priority?: number; tags?: string[] };
+  if (!body.title || !body.description) {
+    res.status(400).json({ error: 'title + description required' });
+    return;
+  }
+  const task = await enqueueTask({
+    type: (body.type as 'bugfix' | 'feature' | 'refactor' | 'test' | 'review' | 'docs' | 'content' | 'monitor' | 'custom') ?? 'custom',
+    title: body.title,
+    description: body.description,
+    priority: body.priority,
+    tags: body.tags,
+  });
+  res.json({ ok: true, task });
+});
+
+app.post('/fleet/tick', authMiddleware, async (_req, res) => {
+  const { tick } = await import('../autonomous/scheduler.js');
+  const result = await tick();
+  res.json(result);
+});
+
+let _schedulerHandle: { stop: () => void } | null = null;
+
+app.post('/fleet/start', authMiddleware, async (req, res) => {
+  if (_schedulerHandle) {
+    res.json({ ok: true, message: 'scheduler already running' });
+    return;
+  }
+  const { startScheduler } = await import('../autonomous/scheduler.js');
+  const interval = Number(req.body?.intervalMs ?? 60_000);
+  _schedulerHandle = startScheduler(interval);
+  res.json({ ok: true, intervalMs: interval });
+});
+
+app.post('/fleet/stop', authMiddleware, async (_req, res) => {
+  if (_schedulerHandle) {
+    _schedulerHandle.stop();
+    _schedulerHandle = null;
+  }
+  res.json({ ok: true });
+});
+
+app.get('/fleet/status', async (_req, res) => {
+  res.json({ schedulerRunning: !!_schedulerHandle });
+});
+
 const port = parseInt(optionalEnv('ORCHESTRATOR_PORT', '4100'), 10);
 const server = app.listen(port, () => {
   console.log(`[agent-orchestrator] API listening on http://localhost:${port}`);
