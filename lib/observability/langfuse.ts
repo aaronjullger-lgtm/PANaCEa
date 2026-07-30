@@ -363,3 +363,91 @@ export function traceGatewayCall(input: GatewayTraceInput): void {
     console.warn('[langfuse] traceGatewayCall failed:', err);
   }
 }
+
+// ─── Agent Tracing ──────────────────────────────────────────────────────────
+
+export interface AgentTraceOptions {
+  tier?: string;
+  inputPreview?: unknown;
+  metadata?: Record<string, unknown>;
+  tags?: string[];
+}
+
+type TraceHandle = {
+  span(name: string, input?: unknown, output?: unknown): void;
+  score(name: string, value: number, comment?: string): void;
+  flush(): Promise<void>;
+  readonly traceId: string;
+};
+
+function buildTraceHandle(client: Langfuse, trace: ReturnType<Langfuse['trace']>): TraceHandle {
+  return {
+    span(name, input, output) {
+      try {
+        trace.span({ name, input: input as any, output: output as any });
+      } catch { /* swallow — observability must never break the caller */ }
+    },
+    score(name, value, comment) {
+      try {
+        client.score({ traceId: trace.id, name, value, comment });
+      } catch { /* swallow */ }
+    },
+    async flush() {
+      try {
+        await client.flushAsync();
+      } catch { /* swallow */ }
+    },
+    get traceId() { return trace.id; },
+  };
+}
+
+export function traceAgentInvocation(
+  agentName: string,
+  options?: AgentTraceOptions,
+): TraceHandle | null {
+  if (!_client) return null;
+
+  try {
+    const trace = _client.trace({
+      name: `agent:${agentName}`,
+      tags: ['agent', agentName, ...(options?.tags ?? [])],
+      metadata: {
+        agentName,
+        tier: options?.tier,
+        inputPreview: options?.inputPreview,
+        ...options?.metadata,
+      },
+    });
+    return buildTraceHandle(_client, trace);
+  } catch {
+    return null;
+  }
+}
+
+export function traceTeamWorkflow(
+  workflowName: string,
+  options?: {
+    agentNames?: string[];
+    strategy?: string;
+    metadata?: Record<string, unknown>;
+    tags?: string[];
+  },
+): TraceHandle | null {
+  if (!_client) return null;
+
+  try {
+    const trace = _client.trace({
+      name: `workflow:${workflowName}`,
+      tags: ['workflow', workflowName, ...(options?.tags ?? [])],
+      metadata: {
+        workflowName,
+        agentNames: options?.agentNames,
+        strategy: options?.strategy,
+        ...options?.metadata,
+      },
+    });
+    return buildTraceHandle(_client, trace);
+  } catch {
+    return null;
+  }
+}
