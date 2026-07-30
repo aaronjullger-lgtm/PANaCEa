@@ -447,6 +447,28 @@ Respond with JSON only:
   return result;
 }
 
+const EMERGENCY_KEYWORDS = [
+  'anaphylaxis', 'anaphylactic',
+  'stroke', 'cerebrovascular', 'cva', 'tia',
+  'myocardial infarction', 'stem i', 'nstemi', 'acute coronary', 'acs', 'cardiac arrest',
+  'sepsis', 'septic shock', 'septic',
+  'diabetic ketoacidosis', 'dka',
+  'status epilepticus', 'epidural hematoma', 'aortic dissection',
+  'pulmonary embolism', 'pe ', 'tension pneumothorax',
+  'airway obstruction', 'hypoxia',
+];
+
+function isEmergencyTopic(question: { system?: string | null; vignette?: string | null; question?: string | null; tags?: string[] | null }): boolean {
+  const haystack = [
+    question.system ?? '',
+    question.vignette ?? '',
+    question.question ?? '',
+    ...(question.tags ?? []),
+  ].join(' ').toLowerCase();
+
+  return EMERGENCY_KEYWORDS.some((kw) => haystack.includes(kw));
+}
+
 /**
  * Promote a staging question to live questions
  */
@@ -465,6 +487,10 @@ export async function promoteToLive(
 
   if (question.status !== 'graded' && !(options.allowPendingHumanReview && question.status === 'pending')) {
     throw new Error('Question has not passed adequacy check');
+  }
+
+  if (isEmergencyTopic(question) && !options.allowPendingHumanReview) {
+    throw new Error('Emergency clinical topics require mandatory human review before promotion');
   }
 
   const validationErrors = getStagingQuestionValidationErrors(question);

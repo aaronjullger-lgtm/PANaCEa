@@ -1,11 +1,11 @@
 # Agent Completion Dashboard
 
-Last updated: 2026-05-24
+Last updated: 2026-06-21
 
 ## Active Agents
 
 | Agent | Tasks Completed | Tests Added | Regressions Caught | Last Active |
-|-------|----------------|-------------|-------------------|-------------|
+|-------|-----------------|-------------|-------------------|-------------|
 | autonomy-skillsmith-agent | 3 | — | — | May 23 |
 | panacea-syncytium-coordinator | 1 | — | — | May 22 |
 | panacea-navigator | 0 | — | — | — |
@@ -28,14 +28,13 @@ Last updated: 2026-05-24
 | panacea-offline-sync | 0 | — | — | — |
 | panacea-osce-simulation | 0 | — | — | — |
 | panacea-prisma-data-integrity | 0 | — | — | — |
-| panacea-navigator | 0 | — | — | — |
 | panacea-verify | 0 | — | — | — |
 
 ## Agent Usage Heatmap
 
 ```
-                    May 20   May 21   May 22   May 23   May 24   May 25   May 26
-syncytium-coord     ░░░░░░░  ░░░░░░░  ███████  ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░
+                    Jun 15   Jun 16   Jun 17   Jun 18   Jun 19   Jun 20   Jun 21
+syncytium-coord     ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░
 clinical-auditor    ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░
 question-gen        ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░
 regression-guard    ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░  ░░░░░░░
@@ -55,13 +54,22 @@ Legend: ░ = no activity, ▓ = light use, █ = heavy use
 - **Total handoffs:** 0
 - **Verification runs:** 0
 - **Active file claims:** 0
-- **Risks:** 4 critical, 3 high
+- **Risks:** 4 critical, 3 high (unchanged from prior report)
 
-## Today's Progress (May 24)
+## Weekly Summary (Jun 21)
+
+- No agent activity this week — zero handoffs, zero verification runs, zero file claims
+- Last meaningful agent activity was May 22–23 (syncytium-coordinator, skillsmith-agent)
+- Risk register unchanged: 4 critical (FSRS, session pipeline, Edge auth, migrations) + 3 high
+- 4 weeks of agent inactivity — consider either activating agents or archiving unused ones
+
+## Previous Progress (May 24)
+
 - ✅ Weekly agent activity report ran — no new handoffs, 0 verification runs, 0 active file claims
 - ⚠️ 4 critical risks, 3 high risks outstanding (no change from prior week)
 
 ## Previous Progress (May 22)
+
 - ✅ 14 cron jobs configured (daily health, morning/evening status, 6 weekly scans, self-reflection, memory maintenance, learning capture, retrospective)
 - ✅ Agent dependency graph documented
 - ✅ Agent verification gate script created

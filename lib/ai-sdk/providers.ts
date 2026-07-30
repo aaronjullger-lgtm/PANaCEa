@@ -11,7 +11,7 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
-import type { LanguageModelV1 } from 'ai';
+import type { LanguageModel } from 'ai';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -21,7 +21,7 @@ export interface AIProviderEnv {
   OPENAI_API_KEY?: string;
   ANTHROPIC_API_KEY?: string;
   /** Cloudflare AI Gateway — when set, routes Google AI calls through edge cache */
-  CF_ACCOUNT_ID?: string;
+  CLOUDFLARE_ACCOUNT_ID?: string;
   CF_AI_GATEWAY_ID?: string;
 }
 
@@ -94,7 +94,7 @@ export type ModelName = keyof typeof AI_MODELS;
 // ─── Provider Factory ──────────────────────────────────────────────────────
 
 /**
- * Create a Vercel AI SDK LanguageModelV1 from a model name + env keys.
+ * Create a Vercel AI SDK LanguageModel from a model name + env keys.
  *
  * @example
  * ```ts
@@ -105,7 +105,7 @@ export type ModelName = keyof typeof AI_MODELS;
 export function createAIModel(
   name: ModelName | string,
   env: AIProviderEnv
-): LanguageModelV1 {
+): LanguageModel {
   const spec = AI_MODELS[name];
   if (!spec) {
     throw new Error(`Unknown model: "${name}". Available: ${Object.keys(AI_MODELS).join(', ')}`);
@@ -116,8 +116,8 @@ export function createAIModel(
       if (!env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY required for Google models');
       // Route through Cloudflare AI Gateway when configured
       const googleConfig: { apiKey: string; baseURL?: string } = { apiKey: env.GEMINI_API_KEY };
-      if (env.CF_ACCOUNT_ID && env.CF_AI_GATEWAY_ID) {
-        googleConfig.baseURL = `https://gateway.ai.cloudflare.com/v1/${env.CF_ACCOUNT_ID}/${env.CF_AI_GATEWAY_ID}/google-ai-studio/v1beta`;
+      if (env.CLOUDFLARE_ACCOUNT_ID && env.CF_AI_GATEWAY_ID) {
+        googleConfig.baseURL = `https://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CF_AI_GATEWAY_ID}/google-ai-studio/v1beta`;
       }
       const google = createGoogleGenerativeAI(googleConfig);
       return google(spec.modelId);

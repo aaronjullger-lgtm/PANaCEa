@@ -30,3 +30,19 @@
 | Any task involving Supabase products, SSR auth, Supabase CLI, RLS, storage, realtime, vectors | `supabase` if Supabase is the main task; otherwise secondary | `api-database-audit-and-fix` or `security-and-privacy-audit` for broader workflow | Supabase is only mentioned as historical context |
 | Personal decision support or prioritization outside repo execution | `think` | None | The request asks for code or repository edits |
 | End a session, save progress, write handoff, commit/push when requested | `wrap-up` | Release or verification skill if the session ends near a ship point | The task is still actively being implemented |
+| Audit and clean stale files, dead code, duplicate pathways | `panacea-repo-hygiene` | `repo-operating-system`, `panacea-verify` | The task is active feature development |
+| Sequence multi-agent work, resolve conflicts, plan cross-skill sprints | `panacea-syncytium-coordinator` | `panacea-navigator`, `panacea-verify` | The task has one clear owner |
+| Write regression tests, hunt regressions, fill test gaps | `panacea-regression-guard` | `panacea-verify`, `vitest-author` | The user only asks to run existing tests |
+| Generate AI questions, work on generation pipeline, batch refill | `panacea-question-generation` | `panacea-content-refinery`, `panacea-edge-endpoints`, `panacea-verify` | The task is UI-only |
+| Design/run identity or condition/content schema migration | `panacea-identity-migration` | `panacea-prisma-data-integrity`, `panacea-verify` | No database migration is involved |
+| Deploy or configure Cloudflare/Wrangler/KV/production build | `panacea-deployment-guard` | `release-readiness`, `security-and-privacy-audit`, `panacea-verify` | The task is local dev only |
+| Audit medical content correctness, drug data, condition metadata | `panacea-clinical-content-auditor` | `panacea-content-refinery`, `panacea-prisma-data-integrity` | The request is about generating new questions |
+| Audit Clerk auth, RBAC, tokens, or endpoint protection | `panacea-auth-guard` | `security-and-privacy-audit`, `panacea-edge-endpoints` | The task is about FSRS algorithm logic |
+| Fix study plan generation or daily plan endpoints | `panacea-study-plan` | `panacea-fsrs-guardrails`, `panacea-dashboard-analytics`, `panacea-session-pipeline` | The request is a general strategy discussion |
+| Audit RAG, vector search, embeddings, chunking, or source attribution | `rag-quality` | `hybrid-retrieval`, `memory-regression-eval`, `memory-safety` | The task is pure database schema changes |
+| Review memory ingestion, prompt context, retention/deletion, privacy | `memory-safety` | `memory-discovery`, `security-and-privacy-audit` | The task is purely frontend UI work |
+| Work on entity/relation extraction, knowledge graph, GraphRAG | `graph-memory` | `memory-regression-eval`, `panacea-prisma-data-integrity`, `panacea-verify` | The task only uses vector search |
+| Review SQL-backed memory, learner progress, FSRS state | `tabular-memory` | `memory-safety`, `panacea-prisma-data-integrity`, `panacea-verify` | Writing without database schema review |
+| Combine vector, keyword, graph, table, cached memory | `hybrid-retrieval` | `rag-quality`, `memory-regression-eval`, `memory-safety` | Only one retrieval method is in play |
+| Audit/review RAG, vector memory, graph memory, agent memory, retrieval routing | `memory-discovery` | `rag-quality`, `memory-safety`, `tabular-memory` | The task explicitly names one storage layer with no routing concerns |
+| Add/run memory evals, golden queries, retrieval regression tests | `memory-regression-eval` | `rag-quality`, `graph-memory`, `tabular-memory`, `panacea-verify` | Memory was not modified |

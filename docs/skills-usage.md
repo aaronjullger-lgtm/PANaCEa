@@ -41,6 +41,12 @@ Use this guide when deciding which `.agents/skills` workflow should drive a Stud
 | "Clean up dead code or repo debt" | `panacea-repo-hygiene` | `repo-operating-system`, `panacea-verify` |
 | "Audit Clerk auth/RBAC/token security" | `panacea-auth-guard` | `security-and-privacy-audit`, `panacea-edge-endpoints` |
 | "Fix study plan generation or V2 consolidation" | `panacea-study-plan` | `panacea-fsrs-guardrails`, `panacea-dashboard-analytics`, `panacea-session-pipeline` |
+| "Audit API, database, or Supabase connection issues" | `api-database-audit-and-fix` | `supabase`, `security-and-privacy-audit`, `panacea-edge-endpoints` |
+| "Optimize CI/CD, GitHub Actions, or deployment pipeline" | `optimize-ci-cd` | `release-readiness`, `panacea-deployment-guard`, `panacea-verify` |
+| "Work on OSCE, virtual patients, SOAP notes, or station flow" | `panacea-osce-simulation` | `ai-agent-design-and-eval`, `security-and-privacy-audit`, `panacea-edge-endpoints` |
+| "Combine vector, keyword, graph, and table memory" | `hybrid-retrieval` | `rag-quality`, `memory-regression-eval`, `memory-safety` |
+| "End session, save progress, write handoff, commit" | `wrap-up` | Release or verification skill if near ship point |
+| "Personal decision support or priority reasoning" | `think` | None (non-code work) |
 
 ## Prompt Engineering Defaults
 

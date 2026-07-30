@@ -2100,6 +2100,7 @@ export async function submitDrillReview(
         // DEV-002 FIX: Store full telemetry with server_computed key
         logger?.debug?.('Creating normal ReviewLog with full telemetry');
         let createdReviewLogId: string | null = null;
+        const progressConditionId = await resolveProgressConditionId();
         try {
           const reviewDate = new Date();
           const hoverOscillations =
@@ -2116,9 +2117,10 @@ export async function submitDrillReview(
             questionId,
             conditionId: question.conditionId,
           });
-          const createdLog = await prisma.reviewLog.create({
-            select: { id: true },
-            data: {
+          const createdLog = await prisma.$transaction(async (tx) => {
+            const log = await tx.reviewLog.create({
+              select: { id: true },
+              data: {
               userId,
               conditionId: question.conditionId,
               medicalContentId: question.medicalContentId ?? undefined,
@@ -2221,16 +2223,26 @@ export async function submitDrillReview(
               },
             },
           });
-          createdReviewLogId = createdLog.id;
+
+            await updateUserProgressWithHistory(tx, {
+              userId,
+              conditionId: progressConditionId!,
+              fsrsCard: updatedCard,
+              rating,
+              accuracy: isCorrect ? 1.0 : 0.0,
+              nextReviewAt: eorRotationEnd ? clampedNextDue : undefined,
+              progressContext,
+            });
+
+            return log.id;
+          });
+          createdReviewLogId = createdLog;
         } catch (reviewLogError) {
-          logger?.error?.('ReviewLog creation failed', {
+          logger?.error?.('ReviewLog + UserProgress transaction failed', {
             error:
               reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
           });
-          logger?.warn?.('Failed to write ReviewLog (non-fatal)', {
-            error:
-              reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
-          });
+          throw reviewLogError;
         }
 
         // ── Sprint 3.4 + 3.5: Wilson mastery + hypercorrection detection ──
@@ -2316,23 +2328,6 @@ export async function submitDrillReview(
           },
           logger as { warn?: (msg: string, meta?: Record<string, unknown>) => void } | undefined
         );
-
-        // Update UserProgress and sibling propagation for normal reviews only
-        const progressConditionId = await resolveProgressConditionId();
-        if (!progressConditionId) {
-          throw new Error(
-            `Cannot update UserProgress without MedicalContent.id for question ${questionId}`
-          );
-        }
-        await updateUserProgressWithHistory(prisma, {
-          userId,
-          conditionId: progressConditionId,
-          fsrsCard: updatedCard,
-          rating,
-          accuracy: isCorrect ? 1.0 : 0.0,
-          nextReviewAt: eorRotationEnd ? clampedNextDue : undefined,
-          progressContext,
-        });
 
         // ── UserTopicProgress sync (Improvement 5) ──
         // This is the single authoritative FSRS writer for UserTopicProgress.

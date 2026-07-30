@@ -1,0 +1,19 @@
+/**
+ * LangGraph Project Configuration
+ *
+ * Defines the agents available in this project for LangGraph Platform deployment.
+ * Each agent is a graph defined in lib/agents/graphs/.
+ *
+ * Deploy with: langgraph deploy
+ * Dev with:    langgraph dev
+ *
+ * @see https://langchain-ai.github.io/langgraph/cloud/
+ */
+{
+  "dependencies": ["./package.json"],
+  "graphs": {
+    "clinical_tutor": "./lib/agents/graphs/clinical-tutor.ts",
+    "preceptor_pimping": "./lib/agents/graphs/preceptor.ts"
+  },
+  "env": ".env.langgraph"
+}

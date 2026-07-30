@@ -7,7 +7,7 @@ vi.mock('../lib/prisma', () => ({
   prisma: {
     contentBranch: { findUnique: vi.fn(), create: vi.fn(), findMany: vi.fn(), update: vi.fn(), delete: vi.fn() },
     branchChange: { create: vi.fn(), deleteMany: vi.fn() },
-    medicalContent: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
+    medicalContent: { findUnique: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn() },
   },
 }));
 
@@ -23,6 +23,7 @@ const mockPrisma = prisma as any;
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.DATABASE_URL = 'postgresql://test';
+  mockPrisma.medicalContent.findMany.mockResolvedValue([]);
 });
 
 describe('contentBranchingService', () => {
@@ -236,6 +237,7 @@ describe('contentBranchingService', () => {
         BranchChange: [{ contentId: 'c-existing', conditionId: 'cond', changeType: 'update', contentData: { title: 'Updated' } }],
       };
       mockPrisma.contentBranch.findUnique.mockResolvedValue(branch);
+      mockPrisma.medicalContent.findMany.mockResolvedValue([{ id: 'c-existing', updatedAt: new Date('2026-04-16') }]);
       mockPrisma.medicalContent.findUnique.mockResolvedValue({ id: 'c-existing', updatedAt: new Date('2026-04-16') });
 
       const result = await branchService.mergeBranch('my-branch', 'admin-1');
@@ -252,6 +254,7 @@ describe('contentBranchingService', () => {
         BranchChange: [{ contentId: 'c-existing', conditionId: 'cond', changeType: 'create', contentData: { title: 'New' } }],
       };
       mockPrisma.contentBranch.findUnique.mockResolvedValue(branch);
+      mockPrisma.medicalContent.findMany.mockResolvedValue([{ id: 'c-existing' }]);
       mockPrisma.medicalContent.findUnique.mockResolvedValue({ id: 'c-existing' });
 
       const result = await branchService.mergeBranch('my-branch', 'admin-1');

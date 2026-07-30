@@ -11,7 +11,7 @@
  * @module hooks/useSessionWellness
  */
 
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import {
   detectDiminishingReturns,
   detectProactiveFatigue,
@@ -88,6 +88,15 @@ export function useSessionWellness(): UseSessionWellnessReturn {
   const [onBreak, setOnBreak] = useState(false);
   const [breakSecondsLeft, setBreakSecondsLeft] = useState(0);
   const breakTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (breakTimerRef.current) {
+        clearInterval(breakTimerRef.current);
+        breakTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const recordAttempt = useCallback(
     (wasCorrect: boolean, responseTimeMs: number) => {

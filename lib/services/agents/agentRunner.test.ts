@@ -10,17 +10,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { z } from 'zod';
 
-// ─── Mock callGemini before importing anything that consumes it ─────────────
+// ─── Mock runLLMTurn at the provider boundary ──────────────────────────────
 
-const callGeminiMock = vi.fn();
+const runLLMTurnMock = vi.fn();
 
-vi.mock('../../../functions/api/_shared/ai-service', async () => {
-  const actual = await vi.importActual<
-    typeof import('../../../functions/api/_shared/ai-service')
-  >('../../../functions/api/_shared/ai-service');
+vi.mock('./llmTurnClient', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./llmTurnClient')>();
   return {
     ...actual,
-    callGemini: (...args: unknown[]) => callGeminiMock(...args),
+    runLLMTurn: (...args: unknown[]) => runLLMTurnMock(...args),
   };
 });
 
@@ -31,61 +29,29 @@ import type { ToolExecutionContext } from './types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-/** Build a fake Gemini `raw` payload with only text (run completes). */
 function textResponse(text: string, usage = { input: 5, output: 3, total: 8 }) {
-  return {
-    text,
-    raw: {
-      candidates: [
-        {
-          content: {
-            parts: [{ text }],
-          },
-        },
-      ],
-      usageMetadata: {
-        promptTokenCount: usage.input,
-        candidatesTokenCount: usage.output,
-        totalTokenCount: usage.total,
-      },
-    },
-  };
+  return { text, functionCalls: [], blocked: false, usage };
 }
 
-/** Build a fake Gemini `raw` payload containing one or more function calls. */
 function functionCallResponse(
   calls: Array<{ name: string; args: Record<string, unknown> }>,
   leadingText = ''
 ) {
-  const parts: Array<Record<string, unknown>> = [];
-  if (leadingText) parts.push({ text: leadingText });
-  for (const c of calls) parts.push({ functionCall: c });
   return {
     text: leadingText,
-    raw: {
-      candidates: [{ content: { parts } }],
-      usageMetadata: {
-        promptTokenCount: 10,
-        candidatesTokenCount: 2,
-        totalTokenCount: 12,
-      },
-    },
+    functionCalls: calls,
+    blocked: false,
+    usage: { input: 10, output: 2, total: 12 },
   };
 }
 
-/** Build a safety-blocked Gemini response. */
 function safetyBlockedResponse() {
   return {
     text: '',
-    raw: {
-      promptFeedback: { blockReason: 'SAFETY' },
-      candidates: [],
-      usageMetadata: {
-        promptTokenCount: 4,
-        candidatesTokenCount: 0,
-        totalTokenCount: 4,
-      },
-    },
+    functionCalls: [],
+    blocked: true,
+    blockReason: 'SAFETY',
+    usage: { input: 4, output: 0, total: 4 },
   };
 }
 
@@ -134,14 +100,14 @@ function baseGeminiContext() {
 }
 
 beforeEach(() => {
-  callGeminiMock.mockReset();
+  runLLMTurnMock.mockReset();
 });
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
 describe('runAgent — happy paths', () => {
   it('completes on a single text-only turn', async () => {
-    callGeminiMock.mockResolvedValueOnce(textResponse('Final answer.'));
+    runLLMTurnMock.mockResolvedValueOnce(textResponse('Final answer.'));
     const registry = buildRegistry(async ({ id }) => ({ id }));
 
     const result = await runAgent({
@@ -155,7 +121,7 @@ describe('runAgent — happy paths', () => {
     expect(result.stopReason).toBe('completed');
     expect(result.finalText).toBe('Final answer.');
     expect(result.iterations).toBe(1);
-    expect(callGeminiMock).toHaveBeenCalledOnce();
+    expect(runLLMTurnMock).toHaveBeenCalledOnce();
     // user seed + model turn
     expect(result.steps).toHaveLength(2);
     expect(result.steps[0]?.role).toBe('user');
@@ -164,7 +130,7 @@ describe('runAgent — happy paths', () => {
   });
 
   it('dispatches one tool call then completes on the follow-up turn', async () => {
-    callGeminiMock
+    runLLMTurnMock
       .mockResolvedValueOnce(
         functionCallResponse([{ name: 'lookup_thing', args: { id: 'abc' } }])
       )
@@ -182,7 +148,7 @@ describe('runAgent — happy paths', () => {
     expect(result.stopReason).toBe('completed');
     expect(result.finalText).toBe('Looked it up: abc.');
     expect(result.iterations).toBe(2);
-    expect(callGeminiMock).toHaveBeenCalledTimes(2);
+    expect(runLLMTurnMock).toHaveBeenCalledTimes(2);
 
     const toolStep = result.steps.find((s) => s.role === 'tool');
     expect(toolStep).toBeDefined();
@@ -196,7 +162,7 @@ describe('runAgent — happy paths', () => {
   });
 
   it('accumulates token usage across multiple turns', async () => {
-    callGeminiMock
+    runLLMTurnMock
       .mockResolvedValueOnce(
         functionCallResponse([{ name: 'lookup_thing', args: { id: 'x' } }])
       )
@@ -218,7 +184,7 @@ describe('runAgent — happy paths', () => {
 
 describe('runAgent — error handling', () => {
   it('returns a safety_block stop reason when Gemini blocks output', async () => {
-    callGeminiMock.mockResolvedValueOnce(safetyBlockedResponse());
+    runLLMTurnMock.mockResolvedValueOnce(safetyBlockedResponse());
     const registry = buildRegistry(async ({ id }) => ({ id }));
 
     const result = await runAgent({
@@ -235,7 +201,7 @@ describe('runAgent — error handling', () => {
   });
 
   it('surfaces tool errors to the model and lets it recover', async () => {
-    callGeminiMock
+    runLLMTurnMock
       .mockResolvedValueOnce(
         functionCallResponse([{ name: 'fail_thing', args: {} }])
       )
@@ -278,7 +244,7 @@ describe('runAgent — error handling', () => {
     });
     const registry = new ToolRegistry([strict]);
 
-    callGeminiMock
+    runLLMTurnMock
       .mockResolvedValueOnce(
         // Gemini sends an integer where a string is required.
         functionCallResponse([
@@ -307,7 +273,7 @@ describe('runAgent — error handling', () => {
 
   it('bails with max_iterations when the model keeps calling tools', async () => {
     // Every turn asks for another tool call, no final text.
-    callGeminiMock.mockResolvedValue(
+    runLLMTurnMock.mockResolvedValue(
       functionCallResponse([{ name: 'lookup_thing', args: { id: 'loop' } }])
     );
     const registry = buildRegistry(async ({ id }) => ({ id }));
@@ -326,7 +292,7 @@ describe('runAgent — error handling', () => {
   });
 
   it('returns model_error when callGemini throws', async () => {
-    callGeminiMock.mockRejectedValueOnce(new Error('network down'));
+    runLLMTurnMock.mockRejectedValueOnce(new Error('network down'));
     const registry = buildRegistry(async ({ id }) => ({ id }));
 
     const result = await runAgent({
@@ -338,7 +304,7 @@ describe('runAgent — error handling', () => {
     });
 
     expect(result.stopReason).toBe('model_error');
-    expect(result.error?.code).toBe('GEMINI_CALL_FAILED');
+    expect(result.error?.code).toBe('LLM_CALL_FAILED');
     expect(result.error?.message).toContain('network down');
   });
 
@@ -355,7 +321,7 @@ describe('runAgent — error handling', () => {
 
     expect(result.stopReason).toBe('model_error');
     expect(result.error?.code).toBe('TOOL_SELECTION_FAILED');
-    expect(callGeminiMock).not.toHaveBeenCalled();
+    expect(runLLMTurnMock).not.toHaveBeenCalled();
   });
 });
 
@@ -383,7 +349,7 @@ describe('runAgent — parallel tool calls', () => {
     });
     const registry = new ToolRegistry([lookup]);
 
-    callGeminiMock
+    runLLMTurnMock
       .mockResolvedValueOnce(
         functionCallResponse([
           { name: 'lookup_thing', args: { id: 'a' } },
@@ -421,7 +387,7 @@ describe('runAgent — parallel tool calls', () => {
     });
     const registry = new ToolRegistry([lookup]);
 
-    callGeminiMock
+    runLLMTurnMock
       .mockResolvedValueOnce(
         functionCallResponse([
           { name: 'lookup_thing', args: { id: '1' } },
@@ -463,6 +429,6 @@ describe('runAgent — abort signal', () => {
     });
 
     expect(result.stopReason).toBe('aborted');
-    expect(callGeminiMock).not.toHaveBeenCalled();
+    expect(runLLMTurnMock).not.toHaveBeenCalled();
   });
 });

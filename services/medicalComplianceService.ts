@@ -739,6 +739,7 @@ export class MedicalComplianceService {
       .find((req) => req.id === requirementId);
 
     if (requirement) {
+      void requirement;
     }
   }
 

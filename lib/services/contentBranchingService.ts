@@ -217,11 +217,14 @@ export async function mergeBranch(
     // Check for conflicts
     const conflicts: Array<{ contentId: string; reason: string }> = [];
 
-    // For each change, check if the target content has been modified since branch creation
+    const allContentIds = branch.BranchChange.map((c) => c.contentId);
+    const existingContents = await prisma.medicalContent.findMany({
+      where: { id: { in: allContentIds } },
+    });
+    const contentMap = new Map(existingContents.map((c) => [c.id, c]));
+
     for (const change of branch.BranchChange) {
-      const existingContent = await prisma.medicalContent.findUnique({
-        where: { id: change.contentId },
-      });
+      const existingContent = contentMap.get(change.contentId);
 
       if (change.changeType === 'update' && existingContent) {
         // Check if content was modified after branch creation

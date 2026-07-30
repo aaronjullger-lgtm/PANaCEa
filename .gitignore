@@ -362,3 +362,18 @@ __pycache__/
 
 # Superpowers in-session plan docs (ephemeral working memory, not source)
 docs/superpowers/plans/
+
+# Session handoff notes (auto-generated, never commit)
+.claude/handoff.md
+.opencode/handoff.md
+
+# OpenCode ephemeral state (session logs, goal tracking, scout backlog)
+.omo/
+.opencode/goals/
+.opencode/knowledge/
+.opencode/scout/
+.opencode/run-continuation/
+
+# One-off audit outputs
+COMPREHENSIVE_REPOSITORY_AUDIT.md
+.audit/

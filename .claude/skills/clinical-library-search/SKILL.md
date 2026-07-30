@@ -12,7 +12,7 @@ The clinical library is how students learn reference material during study sessi
 
 **Medical content hierarchy:**
 - Conditions, drugs, anatomy, clinical guidelines, antibiotic guidelines
-- Conditions have parent categories (stored in `condition_metadata.json`, migration 20260113)
+- Conditions have parent categories (stored in DB `Condition` table via `parent_category` and `parentId` fields — database-first)
 - All content embedded in `MedicalContent` table (768-dim Gemini text-embedding-005)
 - HNSW vector index for fast retrieval (migration 20260207230000)
 
@@ -89,7 +89,7 @@ Create/Update Content (API)
 - [ ] Is embedding vector NULL in `MedicalContent`?
 - [ ] Does HNSW index exist? `SELECT COUNT(*) FROM pg_indexes WHERE schemaname='public' AND indexname LIKE '%hnsw%'`
 - [ ] Are search endpoints returning `null` or empty array?
-- [ ] Is condition hierarchy broken? Check `condition_metadata.json` parsing
+- [ ] Is condition hierarchy broken? Check `Condition.parent_category` / `Condition.parentId` in DB
 - [ ] Did embedding job fail? Check `functions/api/cron/` logs
 - [ ] Is content loading API called but returning empty? Trace `components/library/` props
 
