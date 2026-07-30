@@ -272,7 +272,7 @@ async function embed(text: string): Promise<number[]> {
     try {
       const { GoogleGenerativeAI } = await import('@google/generative-ai');
       const genAI = new GoogleGenerativeAI(requireEnv('GEMINI_API_KEY'));
-      const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+      const model = genAI.getGenerativeModel({ model: 'embedding-001' });
       const res = await model.embedContent(text);
       return res.embedding.values;
     } catch (err) {
