@@ -1,0 +1,14 @@
+{
+  "node_version": "22",
+  "dockerfile": "",
+  "dependencies": ["."],
+  "graphs": {
+    "content_audit": "./src/graphs/contentAudit.graph.ts:default",
+    "pr_triage": "./src/graphs/prTriage.graph.ts:default",
+    "incident_responder": "./src/graphs/incidentResponder.graph.ts:default",
+    "content_enrichment": "./src/graphs/contentEnrichment.graph.ts:default",
+    "weekly_report": "./src/graphs/weeklyReport.graph.ts:default",
+    "weekly_report_supervisor": "./src/graphs/weeklyReportSupervisor.graph.ts:default"
+  },
+  "env": ".env.agents"
+}

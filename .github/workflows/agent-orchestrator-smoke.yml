@@ -1,0 +1,36 @@
+name: Agent Orchestrator Smoke
+
+on:
+  pull_request:
+    paths:
+      - 'packages/agent-orchestrator/**'
+      - '.github/workflows/agent-orchestrator-smoke.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'packages/agent-orchestrator/**'
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: 'packages/agent-orchestrator/.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: 'packages/agent-orchestrator/package-lock.json'
+
+      - name: Install
+        working-directory: packages/agent-orchestrator
+        run: npm install --no-audit --no-fund --legacy-peer-deps
+
+      - name: Typecheck
+        working-directory: packages/agent-orchestrator
+        run: npm run typecheck
+
+      - name: Smoke (compile all agent graphs)
+        working-directory: packages/agent-orchestrator
+        run: npm run smoke

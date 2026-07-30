@@ -1,0 +1,59 @@
+{
+  "name": "@panacea/agent-orchestrator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "LangGraph agent orchestration layer for StudyPANaCEa dev/ops + content automation. Traced with Langfuse + LangSmith, long-term memory in Qdrant.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "dev": "tsx watch src/server/api.ts",
+    "start": "node dist/server/api.js",
+    "run": "tsx src/cli.ts",
+    "run:content-audit": "tsx src/cli.ts content-audit",
+    "run:pr-triage": "tsx src/cli.ts pr-triage",
+    "run:incident-responder": "tsx src/cli.ts incident-responder",
+    "run:content-enrichment": "tsx src/cli.ts content-enrichment",
+    "run:weekly-report": "tsx src/cli.ts weekly-report",
+    "smoke": "tsx src/cli.ts --smoke",
+    "ensure-collections": "tsx src/cli.ts --ensure-collections",
+    "monitors:provision": "tsx src/cli.ts --monitors",
+    "langgraph:dev": "langgraph dev",
+    "eval:judge": "tsx src/eval/cli.ts",
+    "prompts:push": "tsx src/clients/prompts.cli.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.1",
+    "@langchain/anthropic": "^1.3.26",
+    "@langchain/core": "^1.1.39",
+    "@langchain/google-genai": "^2.1.26",
+    "@langchain/langgraph": "^1.1.0",
+    "@langchain/langgraph-checkpoint-sqlite": "^1.0.3",
+    "@langchain/langgraph-supervisor": "^1.1.1",
+    "@langchain/openai": "^1.4.4",
+    "@langchain/qdrant": "^1.0.3",
+    "@langfuse/langchain": "^5.9.1",
+    "@linear/sdk": "^88.3.0",
+    "@qdrant/js-client-rest": "^1.18.0",
+    "composio-core": "^0.5.39",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "langfuse": "^3.38.20",
+    "langsmith": "^0.7.1",
+    "openai": "^4.95.0",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.19.7",
+    "tsx": "^4.20.6",
+    "typescript": "~5.8.2"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
