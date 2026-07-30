@@ -236,6 +236,53 @@ app.get('/fleet/status', async (_req, res) => {
   res.json({ schedulerRunning: !!_schedulerHandle });
 });
 
+app.get('/specialists', async (_req, res) => {
+  const { describeSpecialists } = await import('../agents/specialists.js');
+  res.json({ specialists: describeSpecialists() });
+});
+
+app.post('/specialists/:role/invoke', authMiddleware, async (req, res) => {
+  const role = req.params.role;
+  const { buildSpecialist, SPECIALIST_ROLES } = await import('../agents/specialists.js');
+  if (!SPECIALIST_ROLES.includes(role as never)) {
+    res.status(404).json({ error: `unknown specialist. Available: ${SPECIALIST_ROLES.join(', ')}` });
+    return;
+  }
+  if (!canRunAgents()) { res.status(503).json({ error: 'no LLM provider configured' }); return; }
+  const body = (req.body ?? {}) as { messages?: Array<{ role: string; content: string }> };
+  if (!body.messages?.length) { res.status(400).json({ error: 'messages[] required' }); return; }
+  try {
+    const agent = await buildSpecialist(role as never, {});
+    const result = await agent.invoke({ messages: body.messages.map((m) => ({ role: m.role as 'user', content: m.content })) });
+    const output = finalResponse(result.messages);
+    res.json({ role: req.params.role, output, messageCount: result.messages.length });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+app.get('/pipelines', async (_req, res) => {
+  const { describePipelines } = await import('../autonomous/pipelines.js');
+  res.json({ pipelines: describePipelines() });
+});
+
+app.post('/pipelines/:id/launch', authMiddleware, async (req, res) => {
+  const { launchPipeline } = await import('../autonomous/pipelines.js');
+  const context = (req.body?.context as string) ?? '';
+  if (!context) { res.status(400).json({ error: 'context required' }); return; }
+  try {
+    const result = await launchPipeline(req.params.id as string, context);
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+app.get('/eval/datasets', async (_req, res) => {
+  const { describeDatasets } = await import('../eval/datasets.js');
+  res.json({ datasets: describeDatasets() });
+});
+
 const port = parseInt(optionalEnv('ORCHESTRATOR_PORT', '4100'), 10);
 const server = app.listen(port, () => {
   console.log(`[agent-orchestrator] API listening on http://localhost:${port}`);

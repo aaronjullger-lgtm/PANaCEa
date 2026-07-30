@@ -21,7 +21,10 @@
     "ensure-collections": "tsx src/cli.ts --ensure-collections",
     "monitors:provision": "tsx src/cli.ts --monitors",
     "langgraph:dev": "langgraph dev",
-    "eval:judge": "tsx src/eval/cli.ts",
+    "eval:judge": "tsx src/eval/cli.ts judge",
+    "eval:datasets": "tsx src/eval/cli.ts datasets",
+    "eval:run": "tsx src/eval/cli.ts run",
+    "eval:all": "tsx src/eval/cli.ts all",
     "prompts:push": "tsx src/clients/prompts.cli.ts"
   },
   "dependencies": {
