@@ -77,6 +77,7 @@ describe('LangChain Config', () => {
     expect(providers).toContain('openai');
     expect(providers).toContain('anthropic');
     expect(providers).toContain('deepseek');
+    expect(providers).toContain('openrouter');
   });
 
   it('TASK_MODEL_MAP has entries for core PANaCEa tasks', async () => {
@@ -87,6 +88,37 @@ describe('LangChain Config', () => {
     expect(TASK_MODEL_MAP['osce-chat']).toBeDefined();
     expect(TASK_MODEL_MAP['clinical-reasoning']).toBeDefined();
     expect(TASK_MODEL_MAP['extraction']).toBeDefined();
+    expect(TASK_MODEL_MAP['socratic-tutoring']).toBeDefined();
+    expect(TASK_MODEL_MAP['bulk-enrichment']).toBeDefined();
+  });
+
+  it('clinical-critical tasks route to Claude Sonnet as primary', async () => {
+    const { TASK_MODEL_MAP } = await import('../lib/langchain/config');
+    expect(TASK_MODEL_MAP['question-generation'].primary).toBe('claude-sonnet-5');
+    expect(TASK_MODEL_MAP['question-critique'].primary).toBe('claude-sonnet-5');
+    expect(TASK_MODEL_MAP['clinical-reasoning'].primary).toBe('claude-sonnet-5');
+    expect(TASK_MODEL_MAP['osce-chat'].primary).toBe('claude-sonnet-5');
+  });
+
+  it('cost-sensitive tasks route to cheaper models', async () => {
+    const { TASK_MODEL_MAP, MODEL_REGISTRY } = await import('../lib/langchain/config');
+    const contentCost = MODEL_REGISTRY[TASK_MODEL_MAP['content-generation'].primary].inputCostPer1M;
+    const extractionCost = MODEL_REGISTRY[TASK_MODEL_MAP['extraction'].primary].inputCostPer1M;
+    expect(contentCost).toBeLessThan(1.0);
+    expect(extractionCost).toBeLessThan(0.5);
+  });
+
+  it('bulk-enrichment routes to cheapest capable model', async () => {
+    const { TASK_MODEL_MAP } = await import('../lib/langchain/config');
+    expect(TASK_MODEL_MAP['bulk-enrichment'].primary).toBe('deepseek-v4-pro');
+  });
+
+  it('DeepInfra models are in the registry', async () => {
+    const { MODEL_REGISTRY } = await import('../lib/langchain/config');
+    expect(MODEL_REGISTRY['qwen3-235b']).toBeDefined();
+    expect(MODEL_REGISTRY['qwen3-235b'].provider).toBe('deepinfra');
+    expect(MODEL_REGISTRY['qwen-2.5-72b']).toBeDefined();
+    expect(MODEL_REGISTRY['qwen-2.5-72b'].provider).toBe('deepinfra');
   });
 
   it('every task mapping has a primary and fallbacks array', async () => {
@@ -106,8 +138,8 @@ describe('LangChain Config', () => {
   it('all models have cost information', async () => {
     const { MODEL_REGISTRY } = await import('../lib/langchain/config');
     for (const [name, config] of Object.entries(MODEL_REGISTRY)) {
-      expect(config.inputCostPer1M, `${name} missing inputCostPer1M`).toBeGreaterThan(0);
-      expect(config.outputCostPer1M, `${name} missing outputCostPer1M`).toBeGreaterThan(0);
+      expect(config.inputCostPer1M, `${name} missing inputCostPer1M`).toBeGreaterThanOrEqual(0);
+      expect(config.outputCostPer1M, `${name} missing outputCostPer1M`).toBeGreaterThanOrEqual(0);
     }
   });
 
@@ -138,11 +170,25 @@ describe('LangChain Models', () => {
     expect(providers).toContain('openai');
     expect(providers).not.toContain('anthropic');
     expect(providers).not.toContain('deepseek');
+    expect(providers).not.toContain('openrouter');
   });
 
   it('getAvailableProviders returns empty when no keys', async () => {
     const { getAvailableProviders } = await import('../lib/langchain/models');
     expect(getAvailableProviders({})).toEqual([]);
+  });
+
+  it('getAvailableProviders includes deepinfra when key present', async () => {
+    const { getAvailableProviders } = await import('../lib/langchain/models');
+    const providers = getAvailableProviders({ DEEPINFRA_API_KEY: 'dk' });
+    expect(providers).toContain('deepinfra');
+  });
+
+  it('getAvailableProviders includes openrouter when key present', async () => {
+    const { getAvailableProviders } = await import('../lib/langchain/models');
+    const providers = getAvailableProviders({ OPENROUTER_API_KEY: 'ork' });
+    expect(providers).toContain('openrouter');
+    expect(providers).toHaveLength(1);
   });
 
   it('isModelAvailable checks provider key', async () => {
@@ -166,6 +212,20 @@ describe('LangChain Models', () => {
       createModel('gemini-2.0-flash', {})
     ).toThrow('GEMINI_API_KEY not configured');
   });
+
+  it('createModel throws when OpenRouter key missing', async () => {
+    const { createModel } = await import('../lib/langchain/models');
+    expect(() =>
+      createModel('or-gemini-2.0-flash', {})
+    ).toThrow('OPENROUTER_API_KEY not configured');
+  });
+
+  it('createModel succeeds for OpenRouter with key', async () => {
+    const { createModel } = await import('../lib/langchain/models');
+    const model = createModel('or-gemini-2.0-flash', { OPENROUTER_API_KEY: 'ork' });
+    expect(model).toBeDefined();
+    expect(MockChatOpenAI).toHaveBeenCalled();
+  });
 });
 
 // ─── Environment Adapter Tests ────────────────────────────────────────────
@@ -178,6 +238,7 @@ describe('LangChain Env Adapter', () => {
       OPENAI_API_KEY: 'oai',
       ANTHROPIC_API_KEY: 'ant',
       DEEPSEEK_API_KEY: 'ds',
+      OPENROUTER_API_KEY: 'or',
       LANGSMITH_API_KEY: 'ls',
       LANGSMITH_PROJECT: 'proj',
       DATABASE_URL: 'postgres://...',
@@ -188,6 +249,7 @@ describe('LangChain Env Adapter', () => {
     expect(env.OPENAI_API_KEY).toBe('oai');
     expect(env.ANTHROPIC_API_KEY).toBe('ant');
     expect(env.DEEPSEEK_API_KEY).toBe('ds');
+    expect(env.OPENROUTER_API_KEY).toBe('or');
     expect(env.LANGSMITH_API_KEY).toBe('ls');
     expect(env.LANGSMITH_PROJECT).toBe('proj');
   });
@@ -250,7 +312,7 @@ describe('LangChain Router', () => {
     });
 
     expect(result.output).toBe('{"test": true}');
-    expect(result.model).toBe('gemini-2.0-flash');
+    expect(result.model).toBe('gemini-2.5-pro');
     expect(result.provider).toBe('gemini');
     expect(result.attempts).toBe(1);
     expect(result.latencyMs).toBeGreaterThanOrEqual(0);
@@ -274,8 +336,8 @@ describe('LangChain Router', () => {
     );
 
     expect(result.output).toBe('fallback response');
-    expect(result.model).toBe('gpt-4o-mini');
-    expect(result.provider).toBe('openai');
+    expect(result.model).toBe('gemini-2.5-pro');
+    expect(result.provider).toBe('gemini');
     expect(result.attempts).toBe(3);
   });
 
@@ -426,7 +488,7 @@ describe('LangChain Question Generation Chain', () => {
 
     expect(result.questions).toHaveLength(1);
     expect((result.questions[0] as any).type).toBe('vignette');
-    expect(result.model).toBe('gemini-2.0-flash');
+    expect(result.model).toBe('gemini-2.5-pro');
   });
 
   it('critiqueQuestion routes to question-critique task', async () => {

@@ -30,6 +30,8 @@ export function fromCloudflareEnv(env: Record<string, unknown>): AIEnvKeys {
     OPENAI_API_KEY: asString(env.OPENAI_API_KEY),
     ANTHROPIC_API_KEY: asString(env.ANTHROPIC_API_KEY),
     DEEPSEEK_API_KEY: asString(env.DEEPSEEK_API_KEY),
+    DEEPINFRA_API_KEY: asString(env.DEEPINFRA_API_KEY),
+    OPENROUTER_API_KEY: asString(env.OPENROUTER_API_KEY),
     LANGSMITH_API_KEY: asString(env.LANGSMITH_API_KEY),
     LANGSMITH_PROJECT: asString(env.LANGSMITH_PROJECT),
   };
@@ -59,6 +61,8 @@ export function fromExplicitKeys(keys: Partial<AIEnvKeys>): AIEnvKeys {
     OPENAI_API_KEY: keys.OPENAI_API_KEY,
     ANTHROPIC_API_KEY: keys.ANTHROPIC_API_KEY,
     DEEPSEEK_API_KEY: keys.DEEPSEEK_API_KEY,
+    DEEPINFRA_API_KEY: keys.DEEPINFRA_API_KEY,
+    OPENROUTER_API_KEY: keys.OPENROUTER_API_KEY,
     LANGSMITH_API_KEY: keys.LANGSMITH_API_KEY,
     LANGSMITH_PROJECT: keys.LANGSMITH_PROJECT,
   };

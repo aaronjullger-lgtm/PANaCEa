@@ -28,6 +28,8 @@ export interface AIEnvKeys {
   OPENAI_API_KEY?: string;
   ANTHROPIC_API_KEY?: string;
   DEEPSEEK_API_KEY?: string;
+  DEEPINFRA_API_KEY?: string;
+  OPENROUTER_API_KEY?: string;
   LANGSMITH_API_KEY?: string;
   LANGSMITH_PROJECT?: string;
 }
@@ -117,7 +119,6 @@ function createProviderModel(
     }
 
     case 'deepseek': {
-      // DeepSeek uses OpenAI-compatible API
       const apiKey = env.DEEPSEEK_API_KEY;
       if (!apiKey) throw new Error('DEEPSEEK_API_KEY not configured');
       return new ChatOpenAI({
@@ -127,6 +128,34 @@ function createProviderModel(
         maxTokens: opts.maxTokens,
         configuration: {
           baseURL: 'https://api.deepseek.com/v1',
+        },
+      });
+    }
+
+    case 'deepinfra': {
+      const apiKey = env.DEEPINFRA_API_KEY;
+      if (!apiKey) throw new Error('DEEPINFRA_API_KEY not configured');
+      return new ChatOpenAI({
+        apiKey,
+        model: modelId,
+        temperature: opts.temperature,
+        maxTokens: opts.maxTokens,
+        configuration: {
+          baseURL: 'https://api.deepinfra.com/v1/openai',
+        },
+      });
+    }
+
+    case 'openrouter': {
+      const apiKey = env.OPENROUTER_API_KEY;
+      if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
+      return new ChatOpenAI({
+        apiKey,
+        model: modelId,
+        temperature: opts.temperature,
+        maxTokens: opts.maxTokens,
+        configuration: {
+          baseURL: 'https://openrouter.ai/api/v1',
         },
       });
     }
@@ -145,6 +174,8 @@ export function getAvailableProviders(env: AIEnvKeys): ModelProvider[] {
   if (env.OPENAI_API_KEY) providers.push('openai');
   if (env.ANTHROPIC_API_KEY) providers.push('anthropic');
   if (env.DEEPSEEK_API_KEY) providers.push('deepseek');
+  if (env.DEEPINFRA_API_KEY) providers.push('deepinfra');
+  if (env.OPENROUTER_API_KEY) providers.push('openrouter');
   return providers;
 }
 

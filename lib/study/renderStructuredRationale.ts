@@ -160,7 +160,7 @@ export function resolveStructuredRationale(rationale: unknown): StructuredRation
 const HTML_TAG_RE = /<[^>]+>/g;
 const WHITESPACE_RE = /\s+/g;
 
-function cleanText(value?: string): string {
+function cleanText(value?: unknown): string {
   if (!value || typeof value !== 'string') return '';
   return value.replace(HTML_TAG_RE, ' ').replace(WHITESPACE_RE, ' ').trim();
 }

@@ -5,34 +5,25 @@
  * and default parameters. All AI calls in PANaCEa should use this
  * config rather than hardcoding model names or API keys.
  *
+ * Model IDs verified against provider APIs on 2026-07-29.
+ *
  * @module lib/langchain/config
- * Sprint: LangChain Integration — Sprint 1
  */
 
 // ─── Provider Configuration ────────────────────────────────────────────────
 
-export type ModelProvider = 'gemini' | 'openai' | 'anthropic' | 'deepseek';
+export type ModelProvider = 'gemini' | 'openai' | 'anthropic' | 'deepseek' | 'deepinfra' | 'openrouter';
 
 export interface ModelConfig {
   provider: ModelProvider;
   modelId: string;
-  /** Tokens per minute rate limit (approximate) */
   rateLimit?: number;
-  /** Cost per 1M input tokens in USD */
   inputCostPer1M?: number;
-  /** Cost per 1M output tokens in USD */
   outputCostPer1M?: number;
 }
 
-/**
- * Available models organized by capability tier.
- *
- * - **fast**: Low-latency, high-throughput. Best for structured extraction, simple Q&A.
- * - **balanced**: Good quality/speed tradeoff. Default for most generation tasks.
- * - **powerful**: Highest quality. Complex reasoning, nuanced clinical content.
- */
 export const MODEL_REGISTRY = {
-  // ── Gemini ──
+  // ── Gemini (verified 2026-07-29: all stable, no preview models) ──
   'gemini-2.0-flash': {
     provider: 'gemini' as ModelProvider,
     modelId: 'gemini-2.0-flash',
@@ -42,26 +33,40 @@ export const MODEL_REGISTRY = {
   },
   'gemini-2.5-flash': {
     provider: 'gemini' as ModelProvider,
-    modelId: 'gemini-2.5-flash-preview-04-17',
+    modelId: 'gemini-2.5-flash',
     rateLimit: 1000,
     inputCostPer1M: 0.15,
     outputCostPer1M: 0.60,
   },
   'gemini-2.5-pro': {
     provider: 'gemini' as ModelProvider,
-    modelId: 'gemini-2.5-pro-preview-05-06',
+    modelId: 'gemini-2.5-pro',
     rateLimit: 150,
     inputCostPer1M: 1.25,
     outputCostPer1M: 10.00,
   },
 
-  // ── OpenAI ──
+  // ── OpenAI (verified 2026-07-29) ──
+  'gpt-4.1-mini': {
+    provider: 'openai' as ModelProvider,
+    modelId: 'gpt-4.1-mini',
+    rateLimit: 10000,
+    inputCostPer1M: 0.40,
+    outputCostPer1M: 1.60,
+  },
   'gpt-4o-mini': {
     provider: 'openai' as ModelProvider,
     modelId: 'gpt-4o-mini',
     rateLimit: 10000,
     inputCostPer1M: 0.15,
     outputCostPer1M: 0.60,
+  },
+  'gpt-4.1': {
+    provider: 'openai' as ModelProvider,
+    modelId: 'gpt-4.1',
+    rateLimit: 5000,
+    inputCostPer1M: 2.00,
+    outputCostPer1M: 8.00,
   },
   'gpt-4o': {
     provider: 'openai' as ModelProvider,
@@ -70,37 +75,69 @@ export const MODEL_REGISTRY = {
     inputCostPer1M: 2.50,
     outputCostPer1M: 10.00,
   },
-  'o3-mini': {
-    provider: 'openai' as ModelProvider,
-    modelId: 'o3-mini',
-    rateLimit: 1000,
-    inputCostPer1M: 1.10,
-    outputCostPer1M: 4.40,
-  },
 
-  // ── Anthropic ──
-  'claude-sonnet-4': {
+  // ── Anthropic (verified 2026-07-29: Sonnet 4 + Haiku 3.5 are DELETED, replaced by 5/4.5) ──
+  'claude-sonnet-5': {
     provider: 'anthropic' as ModelProvider,
-    modelId: 'claude-sonnet-4-20250514',
+    modelId: 'claude-sonnet-5',
     rateLimit: 4000,
     inputCostPer1M: 3.00,
     outputCostPer1M: 15.00,
   },
-  'claude-haiku-3.5': {
+  'claude-haiku-4-5': {
     provider: 'anthropic' as ModelProvider,
-    modelId: 'claude-3-5-haiku-20241022',
+    modelId: 'claude-haiku-4-5-20251001',
     rateLimit: 8000,
     inputCostPer1M: 0.80,
     outputCostPer1M: 4.00,
   },
 
-  // ── DeepSeek ──
-  'deepseek-chat': {
+  // ── DeepSeek (verified 2026-07-29: deepseek-chat replaced by v4-pro/v4-flash) ──
+  'deepseek-v4-pro': {
     provider: 'deepseek' as ModelProvider,
-    modelId: 'deepseek-chat',
+    modelId: 'deepseek-v4-pro',
     rateLimit: 5000,
     inputCostPer1M: 0.14,
     outputCostPer1M: 0.28,
+  },
+  'deepseek-v4-flash': {
+    provider: 'deepseek' as ModelProvider,
+    modelId: 'deepseek-v4-flash',
+    rateLimit: 8000,
+    inputCostPer1M: 0.07,
+    outputCostPer1M: 0.14,
+  },
+
+  // ── DeepInfra (verified 2026-07-29: Llama 3.1 70B removed, Qwen3 235B added) ──
+  'qwen3-235b': {
+    provider: 'deepinfra' as ModelProvider,
+    modelId: 'Qwen/Qwen3-235B-A22B-Instruct-2507',
+    rateLimit: 3000,
+    inputCostPer1M: 0.40,
+    outputCostPer1M: 0.40,
+  },
+  'qwen-2.5-72b': {
+    provider: 'deepinfra' as ModelProvider,
+    modelId: 'Qwen/Qwen2.5-72B-Instruct',
+    rateLimit: 3000,
+    inputCostPer1M: 0.40,
+    outputCostPer1M: 0.40,
+  },
+
+  // ── OpenRouter (free tier — $0 cost, low rate limit, good for dev/testing) ──
+  'or-gemini-2.0-flash': {
+    provider: 'openrouter' as ModelProvider,
+    modelId: 'google/gemini-2.0-flash-exp:free',
+    rateLimit: 200,
+    inputCostPer1M: 0,
+    outputCostPer1M: 0,
+  },
+  'or-llama-3.1-8b': {
+    provider: 'openrouter' as ModelProvider,
+    modelId: 'meta-llama/llama-3.1-8b-instruct:free',
+    rateLimit: 200,
+    inputCostPer1M: 0,
+    outputCostPer1M: 0,
   },
 } as const;
 
@@ -109,41 +146,50 @@ export type ModelName = keyof typeof MODEL_REGISTRY;
 // ─── Task-to-Model Routing ─────────────────────────────────────────────────
 
 /**
- * Default model assignments per PANaCEa task type.
+ * Per-task model routing — balances model strengths against cost.
  *
- * Primary is the first-choice model. Fallbacks are tried in order
- * if the primary fails (rate limit, timeout, error).
+ * Verified 2026-07-29: all model IDs confirmed available on their APIs.
+ *
+ * Cost tiers:
+ *   - Premium ($3+/$15+): Claude Sonnet 5 — clinical-critical reasoning
+ *   - Mid ($2/$8): GPT-4.1 — strong all-rounder, good at Socratic
+ *   - Budget ($0.40/$1.60): GPT-4.1-mini — content generation, fallback
+ *   - Cheap ($0.10/$0.40): Gemini Flash — extraction, classification
+ *   - Ultra-cheap ($0.14/$0.28): DeepSeek V4 — bulk pipeline
+ *   - Free ($0/$0): OpenRouter free tier — dev/testing only
  */
 export const TASK_MODEL_MAP: Record<string, { primary: ModelName; fallbacks: ModelName[] }> = {
-  /** RAG-grounded question generation */
   'question-generation': {
-    primary: 'gemini-2.0-flash',
-    fallbacks: ['gpt-4o-mini', 'claude-haiku-3.5'],
+    primary: 'claude-sonnet-5',
+    fallbacks: ['gpt-4.1', 'gemini-2.5-pro'],
   },
-  /** Self-refine critique (lower temp, shorter output) */
   'question-critique': {
-    primary: 'gemini-2.0-flash',
-    fallbacks: ['gpt-4o-mini'],
+    primary: 'claude-sonnet-5',
+    fallbacks: ['gpt-4.1', 'gemini-2.5-pro'],
   },
-  /** Auto-author clinical content */
   'content-generation': {
-    primary: 'gemini-2.0-flash',
-    fallbacks: ['gpt-4o-mini', 'claude-haiku-3.5'],
+    primary: 'gpt-4.1-mini',
+    fallbacks: ['gemini-2.0-flash', 'claude-haiku-4-5'],
   },
-  /** OSCE patient chat (needs conversational ability) */
   'osce-chat': {
-    primary: 'gemini-2.0-flash',
-    fallbacks: ['gpt-4o', 'claude-sonnet-4'],
+    primary: 'claude-sonnet-5',
+    fallbacks: ['gpt-4.1-mini', 'claude-haiku-4-5'],
   },
-  /** Complex clinical reasoning (Ghost Grader, deep analysis) */
   'clinical-reasoning': {
-    primary: 'gemini-2.5-pro',
-    fallbacks: ['gpt-4o', 'claude-sonnet-4'],
+    primary: 'claude-sonnet-5',
+    fallbacks: ['gpt-4.1', 'gemini-2.5-pro'],
   },
-  /** Simple structured extraction (tagging, classification) */
   'extraction': {
-    primary: 'gpt-4o-mini',
-    fallbacks: ['gemini-2.0-flash', 'deepseek-chat'],
+    primary: 'gemini-2.0-flash',
+    fallbacks: ['gpt-4.1-mini', 'deepseek-v4-flash'],
+  },
+  'socratic-tutoring': {
+    primary: 'gpt-4.1',
+    fallbacks: ['claude-sonnet-5', 'gemini-2.5-pro'],
+  },
+  'bulk-enrichment': {
+    primary: 'deepseek-v4-pro',
+    fallbacks: ['qwen3-235b', 'gemini-2.0-flash'],
   },
 } as const;
 
@@ -154,11 +200,8 @@ export type TaskType = keyof typeof TASK_MODEL_MAP;
 export const DEFAULT_PARAMS = {
   temperature: 0.7,
   maxOutputTokens: 4096,
-  /** Max retries per provider before falling back */
   maxRetries: 2,
-  /** Timeout per request in ms */
   timeoutMs: 30_000,
-  /** Delay between retries in ms */
   retryDelayMs: 1000,
 } as const;
 

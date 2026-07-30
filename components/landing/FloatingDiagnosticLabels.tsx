@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { HERO_DIAGNOSTIC_LABELS, type HeroDiagnosticLabel } from './content';
 
