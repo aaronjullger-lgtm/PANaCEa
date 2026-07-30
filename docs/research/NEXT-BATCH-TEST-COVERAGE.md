@@ -113,7 +113,7 @@
 
 | Rank | Improvement | Composite | LOC Untested | Status |
 |------|-------------|-----------|-------------|--------|
-| 1 | Drill Review Service Tests | 120 | 2713 | 🔲 TODO |
+| 1 | Drill Review Service Tests | 120 | 2713 | ✅ Phase 1 DONE (44 pure function tests) |
 | 2 | Question Selector Tests | 96 | 1931 | 🔲 TODO |
 | 3 | FSRS Schedule Service Tests | 90 | 547 | 🔲 TODO |
 | 4 | Offline Sync Service Tests | 84 | 467 | 🔲 TODO |
