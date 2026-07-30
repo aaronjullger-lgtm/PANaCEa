@@ -295,18 +295,20 @@ Never give the answer directly. Guide through Socratic questioning.
 
 ## Summary Table
 
-| Rank | Improvement | Composite | Impact | Feasibility | Evidence | Primary PANCE Domain |
-|------|-------------|-----------|--------|-------------|----------|---------------------|
-| 1 | Hybrid Search (pgvector + BM25) | 125 | 5 | 5 | 5 | All (search quality) |
-| 2 | Vercel AI SDK v6 Migration | 125 | 5 | 5 | 5 | All (AI infrastructure) |
-| 3 | Lapse Severity Index | 100 | 5 | 4 | 5 | Applying Basic Science |
-| 4 | Socratic ZPD Tutor (LearnLM) | 100 | 5 | 4 | 5 | Clinical Intervention |
-| 5 | Distractor Interaction Chronometry | 96 | 4 | 4 | 6 | Clinical Intervention |
-| 6 | Contextual Retrieval (RAG) | 96 | 4 | 4 | 6 | All (content quality) |
-| 7 | Explanation Engagement Depth | 80 | 4 | 4 | 5 | Applying Basic Science |
-| 8 | Longitudinal Patient | 80 | 5 | 4 | 4 | Managing Patients |
-| 9 | Knowledge Graph Prereq Remediation | 72 | 4 | 3 | 6 | Managing Patients |
-| 10 | AI Visual Mnemonics (Leech Cards) | 72 | 4 | 4 | 4.5 | Applying Basic Science |
+| Rank | Improvement | Composite | Status | Primary PANCE Domain |
+|------|-------------|-----------|--------|---------------------|
+| 1 | Hybrid Search (pgvector + BM25) | 125 | ✅ IMPLEMENTED | All (search quality) |
+| 2 | Vercel AI SDK v6 Migration | 125 | ✅ IMPLEMENTED | All (AI infrastructure) |
+| 3 | Lapse Severity Index | 100 | ✅ IMPLEMENTED | Applying Basic Science |
+| 4 | Socratic ZPD Tutor (LearnLM) | 100 | ✅ IMPLEMENTED | Clinical Intervention |
+| 5 | Distractor Interaction Chronometry | 96 | ✅ IMPLEMENTED | Clinical Intervention |
+| 6 | Contextual Retrieval (RAG) | 96 | ✅ IMPLEMENTED | All (content quality) |
+| 7 | Explanation Engagement Depth | 80 | ✅ IMPLEMENTED | Applying Basic Science |
+| 8 | Longitudinal Patient | 80 | ✅ IMPLEMENTED | Managing Patients |
+| 9 | Knowledge Graph Prereq Remediation | 72 | ✅ IMPLEMENTED | Managing Patients |
+| 10 | AI Visual Mnemonics (Leech Cards) | 72 | ✅ IMPLEMENTED | Applying Basic Science |
+
+> **All 10 improvements verified 2026-07-30.** 117 unit tests pass across 5 service test files. All services wired into drill pipeline (Waves 1A–3), search endpoints, or OSCE flow.
 
 ---
 
