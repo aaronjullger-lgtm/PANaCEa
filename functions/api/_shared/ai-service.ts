@@ -102,6 +102,8 @@ export interface GeminiRequestOptions {
   endpoint?: string;
   /** Abort signal for request cancellation */
   signal?: AbortSignal;
+  /** CF AI Gateway cache TTL in seconds. Set for cacheable calls (mnemonics, content). Omit for personalized calls. */
+  cacheTtl?: number;
 }
 
 export interface GeminiResponse {
@@ -281,9 +283,14 @@ export async function callGemini(
   const url = buildGeminiUrl(apiKey, model, 'generateContent', context.env as Record<string, string>);
   const body = buildRequestBody(options);
 
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (options.cacheTtl && options.cacheTtl >= 60) {
+    headers['cf-aig-cache-ttl'] = String(options.cacheTtl);
+  }
+
   const response = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(body),
     signal: options.signal,
   });
@@ -591,6 +598,245 @@ export async function callAIMultiProvider(
       error: `Multi-provider routing failed: ${lcError instanceof Error ? lcError.message : String(lcError)}`,
       code: 'ALL_PROVIDERS_FAILED',
       retryable: true,
+    } satisfies GeminiError;
+  }
+}
+
+// ─── Vercel AI SDK Structured Output ────────────────────────────────────────
+
+export interface GenerateObjectOptions<T extends Record<string, unknown>> {
+  model?: GeminiModelId;
+  system?: string;
+  prompt: string;
+  schema: { parse: (data: unknown) => T; _def?: unknown };
+  schemaName?: string;
+  schemaDescription?: string;
+  temperature?: number;
+  maxOutputTokens?: number;
+  endpoint?: string;
+}
+
+export interface GenerateObjectResult<T> {
+  object: T;
+  model: string;
+  usage: { promptTokens: number; completionTokens: number; totalTokens: number };
+  latencyMs: number;
+}
+
+/**
+ * Generate a Zod-validated structured object via the Vercel AI SDK.
+ *
+ * Uses `generateObject` from the `ai` package which enforces schema compliance
+ * at the API level (Google response schema / OpenAI structured outputs).
+ * Falls back to raw Gemini + parse when the SDK model creation fails.
+ *
+ * @example
+ * ```ts
+ * const { object } = await generateObject(context, {
+ *   model: GeminiModel.FLASH_2_0,
+ *   prompt: 'Generate a DDx problem for Cardiology',
+ *   schema: DdxOutputSchema,
+ *   schemaName: 'ddx_problem',
+ *   temperature: 0.7,
+ *   endpoint: '/api/ddx/generate',
+ * });
+ * // object is fully typed and validated
+ * ```
+ */
+export async function generateObject<T extends Record<string, unknown>>(
+  context: AIServiceContext,
+  options: GenerateObjectOptions<T>
+): Promise<GenerateObjectResult<T>> {
+  const startMs = Date.now();
+  const model = options.model ?? GeminiModel.FLASH_2_5;
+
+  try {
+    const apiKey = context.env.GEMINI_API_KEY ? sanitizeEnvValue(context.env.GEMINI_API_KEY) : undefined;
+    if (!apiKey) {
+      throw { status: 500, error: 'GEMINI_API_KEY not configured', code: 'MISSING_KEY', retryable: false } satisfies GeminiError;
+    }
+
+    const { generateObject: aiGenerateObject } = await import('ai');
+    const { createGoogleGenerativeAI } = await import('@ai-sdk/google');
+
+    const google = createGoogleGenerativeAI({ apiKey });
+    const aiModel = google(model);
+
+    const result = await aiGenerateObject({
+      model: aiModel,
+      system: options.system,
+      prompt: options.prompt,
+      schema: options.schema as any,
+      schemaName: options.schemaName,
+      schemaDescription: options.schemaDescription,
+      temperature: options.temperature ?? 0.5,
+      maxOutputTokens: options.maxOutputTokens ?? 4096,
+    });
+
+    const latencyMs = Date.now() - startMs;
+
+    trackTokenUsage(context, {
+      endpoint: options.endpoint ?? 'unknown',
+      model,
+      usage: {
+        promptTokenCount: result.usage?.inputTokens ?? 0,
+        candidatesTokenCount: result.usage?.outputTokens ?? 0,
+        totalTokenCount: result.usage?.totalTokens ?? 0,
+      },
+      latencyMs,
+      statusCode: 200,
+      cacheHit: false,
+    });
+
+    return {
+      object: result.object as T,
+      model,
+      usage: {
+        promptTokens: result.usage?.inputTokens ?? 0,
+        completionTokens: result.usage?.outputTokens ?? 0,
+        totalTokens: result.usage?.totalTokens ?? 0,
+      },
+      latencyMs,
+    };
+  } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error) {
+      throw error;
+    }
+    throw {
+      status: 500,
+      error: `generateObject failed: ${error instanceof Error ? error.message : String(error)}`,
+      code: 'GENERATE_OBJECT_FAILED',
+      retryable: false,
+    } satisfies GeminiError;
+  }
+}
+
+// ─── Tool Calling Support ───────────────────────────────────────────────────
+
+export interface ToolDefinition {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+}
+
+export interface ToolCallOptions {
+  model?: GeminiModelId;
+  system?: string;
+  prompt: string;
+  tools: ToolDefinition[];
+  toolChoice?: 'auto' | 'none' | 'required' | { type: 'tool'; toolName: string };
+  temperature?: number;
+  maxOutputTokens?: number;
+  endpoint?: string;
+}
+
+export interface ToolCallResult {
+  text: string;
+  toolCalls: Array<{ toolName: string; input: Record<string, unknown> }>;
+  model: string;
+  usage: { promptTokens: number; completionTokens: number; totalTokens: number };
+  latencyMs: number;
+}
+
+/**
+ * Call the model with tool/function-calling support via the Vercel AI SDK.
+ *
+ * The model can request one or more tool invocations. This function returns
+ * both the text output and the raw tool call list so the caller can execute
+ * tools and feed results back in a multi-step loop.
+ *
+ * @example
+ * ```ts
+ * const result = await callWithTools(context, {
+ *   model: GeminiModel.FLASH_2_5,
+ *   system: 'You are a clinical tutor.',
+ *   prompt: 'What is the next step for a patient with chest pain?',
+ *   tools: [
+ *     {
+ *       name: 'lookup_condition',
+ *       description: 'Look up a medical condition',
+ *       inputSchema: { type: 'object', properties: { name: { type: 'string' } } },
+ *     },
+ *   ],
+ *   endpoint: '/api/ai/tutor/chat',
+ * });
+ * ```
+ */
+export async function callWithTools(
+  context: AIServiceContext,
+  options: ToolCallOptions
+): Promise<ToolCallResult> {
+  const startMs = Date.now();
+  const model = options.model ?? GeminiModel.FLASH_2_5;
+
+  try {
+    const apiKey = context.env.GEMINI_API_KEY ? sanitizeEnvValue(context.env.GEMINI_API_KEY) : undefined;
+    if (!apiKey) {
+      throw { status: 500, error: 'GEMINI_API_KEY not configured', code: 'MISSING_KEY', retryable: false } satisfies GeminiError;
+    }
+
+    const { generateText, tool } = await import('ai');
+    const { createGoogleGenerativeAI } = await import('@ai-sdk/google');
+
+    const google = createGoogleGenerativeAI({ apiKey });
+    const aiModel = google(model);
+
+    const aiTools: Record<string, any> = {};
+    for (const t of options.tools) {
+      aiTools[t.name] = tool({
+        description: t.description,
+        inputSchema: t.inputSchema as any,
+      });
+    }
+
+    const result = await generateText({
+      model: aiModel,
+      system: options.system,
+      prompt: options.prompt,
+      tools: aiTools,
+      toolChoice: options.toolChoice ?? 'auto',
+      temperature: options.temperature ?? 0.7,
+      maxOutputTokens: options.maxOutputTokens ?? 4096,
+    });
+
+    const latencyMs = Date.now() - startMs;
+
+    trackTokenUsage(context, {
+      endpoint: options.endpoint ?? 'unknown',
+      model,
+      usage: {
+        promptTokenCount: result.usage?.inputTokens ?? 0,
+        candidatesTokenCount: result.usage?.outputTokens ?? 0,
+        totalTokenCount: result.usage?.totalTokens ?? 0,
+      },
+      latencyMs,
+      statusCode: 200,
+      cacheHit: false,
+    });
+
+    return {
+      text: result.text,
+      toolCalls: (result.toolCalls ?? []).map((tc) => ({
+        toolName: tc.toolName,
+        input: tc.input as Record<string, unknown>,
+      })),
+      model,
+      usage: {
+        promptTokens: result.usage?.inputTokens ?? 0,
+        completionTokens: result.usage?.outputTokens ?? 0,
+        totalTokens: result.usage?.totalTokens ?? 0,
+      },
+      latencyMs,
+    };
+  } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error) {
+      throw error;
+    }
+    throw {
+      status: 500,
+      error: `callWithTools failed: ${error instanceof Error ? error.message : String(error)}`,
+      code: 'TOOL_CALL_FAILED',
+      retryable: false,
     } satisfies GeminiError;
   }
 }

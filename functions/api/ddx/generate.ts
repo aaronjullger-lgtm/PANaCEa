@@ -10,8 +10,8 @@ import { z } from 'zod';
 import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import { callGeminiText } from '../../../services/ai/geminiService';
-import { GEMINI_FLASH_MODEL } from "@/config/topic-map";
+import { aiGenerateObject } from '@/lib/ai-sdk/helpers';
+import type { AIProviderEnv } from '@/lib/ai-sdk/providers';
 
 export interface DdxProblem {
   vignette: string;
@@ -29,7 +29,12 @@ const GenerateDdxSchema = z.object({
   topic: z.string().min(1).max(100).optional().default('Cardiology'),
 });
 
-async function generateDdxProblem(prisma: any, topic: string): Promise<DdxProblem> {
+const DdxOutputSchema = z.object({
+  vignette: z.string().describe('Clinical vignette describing the patient presentation'),
+  rationales: z.record(z.string(), z.string()).describe('Map of diagnosis name to rationale'),
+});
+
+async function generateDdxProblem(prisma: any, topic: string, env: AIProviderEnv): Promise<DdxProblem> {
   const conditionCount = await prisma.medicalContent.count({
     where: { system: topic, status: 'published' },
   });
@@ -49,7 +54,6 @@ async function generateDdxProblem(prisma: any, topic: string): Promise<DdxProble
     throw new Error(`No conditions found for topic: ${topic}`);
   }
 
-  // Type for distractor query result
   type DistractorResult = { title: string };
 
   const distractors: DistractorResult[] = await prisma.medicalContent.findMany({
@@ -67,7 +71,6 @@ async function generateDdxProblem(prisma: any, topic: string): Promise<DdxProble
     ...distractors.map((d: DistractorResult) => d.title),
   ];
 
-  // Extract distractor titles safely
   const distractor0 = distractors[0];
   const distractor1 = distractors[1];
   const distractor2 = distractors[2];
@@ -77,31 +80,26 @@ async function generateDdxProblem(prisma: any, topic: string): Promise<DdxProble
   }
 
   const prompt = `
-You are a medical education expert creating a differential diagnosis (DDx) problem.
-The primary diagnosis is: "${correctCondition.title}".
-The differential diagnoses to consider are: ${distractors.map((d) => `"${d.title}"`).join(', ')}.
+Create a differential diagnosis (DDx) problem.
+Primary diagnosis: "${correctCondition.title}".
+Differential diagnoses: ${distractors.map((d) => `"${d.title}"`).join(', ')}.
 
-Based on the following context for the primary diagnosis, generate a clinical vignette.
 Context for ${correctCondition.title}: ${JSON.stringify(correctCondition.content)}
 
-Instructions:
-1. Create a classic but challenging clinical vignette for a patient presenting with "${correctCondition.title}". The vignette should be detailed enough to suggest the correct diagnosis but also contain features that could plausibly point to the distractors.
-2. For EACH of the 4 conditions (${allConditionTitles.join(', ')}), write a concise rationale explaining why it is or is not the most likely diagnosis based on the vignette you created.
-
-Return a single, valid JSON object with the following structure, and no other text:
-{
-  "vignette": "A 65-year-old male presents with...",
-  "rationales": {
-    "${correctCondition.title}": "This is the most likely diagnosis because...",
-    "${distractor0.title}": "While possible, this is less likely because...",
-    "${distractor1.title}": "This diagnosis is not supported by the findings of...",
-    "${distractor2.title}": "This can be ruled out due to..."
-  }
-}
+1. Write a classic but challenging clinical vignette for "${correctCondition.title}" that suggests the correct diagnosis but also contains features plausibly pointing to the distractors.
+2. For EACH of the 4 conditions (${allConditionTitles.join(', ')}), write a concise rationale explaining why it is or is not the most likely diagnosis based on the vignette.
   `.trim();
 
-  const responseText = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.7);
-  const responseJson = JSON.parse(responseText.match(/\{[\s\S]*\}/)![0]);
+  const { object: responseJson } = await aiGenerateObject(env, {
+    model: 'gemini-2.0-flash',
+    system: 'You are a medical education expert creating differential diagnosis problems.',
+    prompt,
+    schema: DdxOutputSchema,
+    schemaName: 'ddx_problem',
+    schemaDescription: 'A clinical vignette with differential diagnosis rationales',
+    temperature: 0.7,
+    endpoint: '/api/ddx/generate',
+  });
 
   const diagnoses = allConditionTitles
     .map((name) => ({
@@ -121,7 +119,6 @@ Return a single, valid JSON object with the following structure, and no other te
 export const onRequestGet = aiEndpoint(
   GenerateDdxSchema,
   async (context) => {
-    // AI cost endpoint: rate limit enforced at 10 req/min via options below
     const { env, auth, validated } = context;
     const logger = createEndpointLogger('/api/ddx/generate');
     let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
@@ -136,7 +133,7 @@ export const onRequestGet = aiEndpoint(
         topic,
       });
 
-      const ddxProblem = await generateDdxProblem(prisma, topic);
+      const ddxProblem = await generateDdxProblem(prisma, topic, env);
 
       logger.info('DDx problem generated successfully', {
         userId: auth.userId,

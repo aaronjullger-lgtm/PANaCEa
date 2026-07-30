@@ -47,14 +47,14 @@ export const AI_MODELS: Record<string, ModelSpec> = {
   },
   'gemini-2.5-flash': {
     provider: 'google',
-    modelId: 'gemini-2.5-flash-preview-04-17',
+    modelId: 'gemini-2.5-flash',
     tier: 'balanced',
     inputCostPer1M: 0.15,
     outputCostPer1M: 0.60,
   },
   'gemini-2.5-pro': {
     provider: 'google',
-    modelId: 'gemini-2.5-pro-preview-05-06',
+    modelId: 'gemini-2.5-pro',
     tier: 'powerful',
     inputCostPer1M: 1.25,
     outputCostPer1M: 10.00,
@@ -66,6 +66,20 @@ export const AI_MODELS: Record<string, ModelSpec> = {
     inputCostPer1M: 0.15,
     outputCostPer1M: 0.60,
   },
+  'gpt-4.1-mini': {
+    provider: 'openai',
+    modelId: 'gpt-4.1-mini',
+    tier: 'fast',
+    inputCostPer1M: 0.40,
+    outputCostPer1M: 1.60,
+  },
+  'gpt-4.1': {
+    provider: 'openai',
+    modelId: 'gpt-4.1',
+    tier: 'powerful',
+    inputCostPer1M: 2.00,
+    outputCostPer1M: 8.00,
+  },
   'gpt-4o': {
     provider: 'openai',
     modelId: 'gpt-4o',
@@ -73,16 +87,16 @@ export const AI_MODELS: Record<string, ModelSpec> = {
     inputCostPer1M: 2.50,
     outputCostPer1M: 10.00,
   },
-  'claude-haiku-3.5': {
+  'claude-haiku-4-5': {
     provider: 'anthropic',
-    modelId: 'claude-3-5-haiku-20241022',
+    modelId: 'claude-haiku-4-5-20251001',
     tier: 'fast',
     inputCostPer1M: 0.80,
     outputCostPer1M: 4.00,
   },
-  'claude-sonnet-4': {
+  'claude-sonnet-5': {
     provider: 'anthropic',
-    modelId: 'claude-sonnet-4-20250514',
+    modelId: 'claude-sonnet-5',
     tier: 'powerful',
     inputCostPer1M: 3.00,
     outputCostPer1M: 15.00,
