@@ -216,13 +216,13 @@ describe('LangChain Models', () => {
   it('createModel throws when OpenRouter key missing', async () => {
     const { createModel } = await import('../lib/langchain/models');
     expect(() =>
-      createModel('or-gemini-2.0-flash', {})
+      createModel('openrouter-free', {})
     ).toThrow('OPENROUTER_API_KEY not configured');
   });
 
   it('createModel succeeds for OpenRouter with key', async () => {
     const { createModel } = await import('../lib/langchain/models');
-    const model = createModel('or-gemini-2.0-flash', { OPENROUTER_API_KEY: 'ork' });
+    const model = createModel('openrouter-free', { OPENROUTER_API_KEY: 'ork' });
     expect(model).toBeDefined();
     expect(MockChatOpenAI).toHaveBeenCalled();
   });

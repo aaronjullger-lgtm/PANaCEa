@@ -124,17 +124,10 @@ export const MODEL_REGISTRY = {
     outputCostPer1M: 0.40,
   },
 
-  // ── OpenRouter (free tier — $0 cost, low rate limit, good for dev/testing) ──
-  'or-gemini-2.0-flash': {
+  // ── OpenRouter free tier — auto-router picks the best free model available ──
+  'openrouter-free': {
     provider: 'openrouter' as ModelProvider,
-    modelId: 'google/gemini-2.0-flash-exp:free',
-    rateLimit: 200,
-    inputCostPer1M: 0,
-    outputCostPer1M: 0,
-  },
-  'or-llama-3.1-8b': {
-    provider: 'openrouter' as ModelProvider,
-    modelId: 'meta-llama/llama-3.1-8b-instruct:free',
+    modelId: 'openrouter/auto',
     rateLimit: 200,
     inputCostPer1M: 0,
     outputCostPer1M: 0,
@@ -181,7 +174,7 @@ export const TASK_MODEL_MAP: Record<string, { primary: ModelName; fallbacks: Mod
   },
   'extraction': {
     primary: 'gemini-2.0-flash',
-    fallbacks: ['gpt-4.1-mini', 'deepseek-v4-flash'],
+    fallbacks: ['gpt-4.1-mini', 'deepseek-v4-flash', 'openrouter-free'],
   },
   'socratic-tutoring': {
     primary: 'gpt-4.1',
@@ -189,7 +182,7 @@ export const TASK_MODEL_MAP: Record<string, { primary: ModelName; fallbacks: Mod
   },
   'bulk-enrichment': {
     primary: 'deepseek-v4-pro',
-    fallbacks: ['qwen3-235b', 'gemini-2.0-flash'],
+    fallbacks: ['qwen3-235b', 'gemini-2.0-flash', 'openrouter-free'],
   },
 } as const;
 
