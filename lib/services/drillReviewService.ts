@@ -281,7 +281,7 @@ async function ensureQuestionAttemptQuestionTarget(
   },
   logger?: DrillReviewLogger
 ): Promise<boolean> {
-  const questionModel = (prisma as any).question;
+  const questionModel = (prisma as PrismaClient).question;
   if (!questionModel?.findUnique || !questionModel?.upsert) return true;
 
   const existing = await questionModel.findUnique({
@@ -460,7 +460,7 @@ async function linkStudySessionQuestionAttempt(
 ): Promise<void> {
   if (!options.sessionId || !options.attemptId) return;
 
-  const delegate = (prisma as any).studySessionQuestion;
+  const delegate = (prisma as PrismaClient).studySessionQuestion;
   if (!delegate?.updateMany) return;
 
   const canonicalIds = dedupeIds([options.canonicalQuestionId ?? options.questionId]);
@@ -526,7 +526,7 @@ async function recordStudyPlanAttemptProgress(
     return;
   }
 
-  const delegate = (prisma as any).dailyStudyPlan;
+  const delegate = (prisma as PrismaClient).dailyStudyPlan;
   if (!delegate?.findUnique || !delegate?.update) return;
 
   const planDate = parseStudyPlanDate(options.planDate);
@@ -754,7 +754,7 @@ async function getCardRtBaseline(
 ): Promise<CardBaseline | undefined> {
   try {
     // Fetch past RT values for this question+user (max 50 most recent)
-    const pastAttempts = await (prisma as any).questionAttempt.findMany({
+    const pastAttempts = await (prisma as PrismaClient).questionAttempt.findMany({
       where: {
         userId,
         questionId,
@@ -796,7 +796,7 @@ async function getCardRtBaseline(
     // Fetch FSRS stability for maturity-aware dampening
     let fsrsStability: number | undefined;
     if (conditionId) {
-      const progress = await (prisma as any).userProgress.findFirst({
+      const progress = await (prisma as PrismaClient).userProgress.findFirst({
         where: { userId, conditionId },
         select: { fsrsStability: true },
       });
@@ -894,7 +894,7 @@ export async function submitDrillReview(
     if (questionIdentityResolved) return questionIdentityId;
     questionIdentityResolved = true;
     questionIdentityId = await resolveOrCreateQuestionIdentity(
-      prisma as any,
+      prisma,
       {
         questionSource: learningEventIdentity.questionSource,
         sourceQuestionId: learningEventIdentity.sourceQuestionId,
@@ -933,7 +933,7 @@ export async function submitDrillReview(
   // ── A/B Test: resolve active experiments for this user (non-blocking) ──
   let abAssignments: ABAssignmentMap = {};
   try {
-    abAssignments = await resolveAssignments(prisma as any, userId, [...AB_EXPERIMENTS]);
+    abAssignments = await resolveAssignments(prisma as PrismaClient, userId, [...AB_EXPERIMENTS]);
   } catch {
     // Non-fatal: A/B resolution failure must not block the review pipeline
   }
@@ -1250,7 +1250,7 @@ export async function submitDrillReview(
       tremorScore,
       latencyRatio,
       eliminationVelocity,
-      optionCount: (question.questionData as any)?.options?.length ?? 4,
+      optionCount: (question.questionData as QuestionData)?.options?.length ?? 4,
       baseline: ghostBaseline,
       hintViewed: behaviorMetrics.hintViewed,
       hintDurationMs: behaviorMetrics.hintViewDurationMs,
@@ -1318,15 +1318,15 @@ export async function submitDrillReview(
   }
 
   try {
-    await applyAttemptToUserStatistics(prisma as any, userId, {
-      system: question.system || (qData as any).system || undefined,
+    await applyAttemptToUserStatistics(prisma as PrismaClient, userId, {
+      system: question.system || (qData['system'] as string | undefined) || undefined,
       isCorrect,
       timeSpentMs: numericTime,
       selectedCondition: selectedMeta?.conditionId ?? selectedMeta?.label ?? null,
       correctCondition: question.conditionId ?? null,
       timestamp: new Date(),
     });
-    await updateTimingAggregates(prisma as any, userId, { refreshPeakHours: true });
+    await updateTimingAggregates(prisma as PrismaClient, userId, { refreshPeakHours: true });
   } catch (statsError) {
     logger?.warn?.('Failed to update user statistics after review', {
       error: statsError instanceof Error ? statsError.message : String(statsError),
@@ -1768,6 +1768,7 @@ export async function submitDrillReview(
           confidence?: number;
           wasCorrect?: boolean;
           telemetryQuality?: TelemetryQuality;
+          responseTimeMs?: number;
         }>;
         const historicalReviews: HistoricalReview[] = reviewHistory
           .filter(
@@ -1897,9 +1898,9 @@ export async function submitDrillReview(
         // Step 6a: RT trajectory — implicit delayed JOL (Nelson & Dunlosky, 1991)
         // Faster RT at increasing intervals = consolidation → stability bonus
         const lastReviewWithRT = reviewHistory
-          .filter((r: any) => typeof r.responseTimeMs === 'number' && r.responseTimeMs > 0)
+          .filter((r) => typeof r.responseTimeMs === 'number' && r.responseTimeMs > 0)
           .at(0); // newest first
-        const previousRtMs = (lastReviewWithRT as any)?.responseTimeMs ?? null;
+        const previousRtMs = lastReviewWithRT?.responseTimeMs ?? null;
         const rtTrajectory = computeRtTrajectory(
           effectiveDurationMs,
           previousRtMs,
@@ -2028,8 +2029,8 @@ export async function submitDrillReview(
         };
         const recalculatedScheduledDays =
           updatedCard.state === 2 &&
-          typeof (fsrs as any).calculateIntervalFromStability === 'function'
-            ? (fsrs as any).calculateIntervalFromStability(updatedCard.stability)
+          typeof fsrs.calculateIntervalFromStability === 'function'
+            ? fsrs.calculateIntervalFromStability(updatedCard.stability)
             : updatedCard.scheduled_days;
         updatedCard.scheduled_days = recalculatedScheduledDays;
 
@@ -2656,7 +2657,7 @@ export async function submitDrillReview(
   if (Object.keys(abAssignments).length > 0) {
     for (const [expId, assignment] of Object.entries(abAssignments)) {
       logABConversion(
-        prisma as any,
+        prisma as PrismaClient,
         userId,
         expId,
         assignment.variantName,
