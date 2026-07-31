@@ -36,6 +36,8 @@ export default defineConfig({
       'tests/agents-runtime.test.ts',
       'tests/aistack-upgrades.test.ts',
       'tests/langchain-graphs-osce.test.ts',
+      'lib/observability/langfuse.test.ts',
+      'functions/api/osce/analysis/grade.test.ts',
     ],
     setupFiles: ['./vitest.setup.ts'],
     restoreMocks: true,
