@@ -16,6 +16,21 @@ id = "7df124d8b81f400eafe6ba55477bf11d"
 binding = "CACHE"
 id = "b576c43270a3407a8e5ae65afad0fe7e"
 
+# Workers AI — edge LLM inference via env.AI.run()
+# Available to all Cloudflare accounts, no resource creation needed.
+[ai]
+binding = "AI"
+
+# D1 Database — edge-local SQLite for session state, edge caching, offline-first features.
+# Schema: edge_cache (key TEXT PRIMARY KEY, value TEXT, expires_at INTEGER)
+#   key        — cache key (e.g. "condition:chf", "user:abc:stats", "qseed:pool:1")
+#   value      — JSON-serialized payload
+#   expires_at — unix epoch seconds; NULL = permanent (no expiry)
+[[d1_databases]]
+binding = "EDGE_DB"
+database_name = "panacea-edge"
+database_id = "5d8d23a1-3a32-42e4-aa7e-278c55469f1a"
+
 # Note: Scheduled cache warming via cron triggers is not supported for Cloudflare Pages.
 # Use an external scheduler (e.g., GitHub Actions, cron-job.org) to call /api/admin/cache/warm periodically.
 
