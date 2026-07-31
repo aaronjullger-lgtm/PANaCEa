@@ -84,28 +84,24 @@ export async function runOrchestrator(
 
   const start = Date.now();
 
-  try {
-    let result: OrchestratorResult;
+  let result: OrchestratorResult;
 
-    switch (config.strategy) {
-      case 'sequential':
-        result = await executeSequential(config, input, ctx);
-        break;
-      case 'parallel':
-        result = await executeParallel(config, input, ctx);
-        break;
-      case 'supervisor':
-        result = await executeSupervisor(config, input, ctx);
-        break;
-      default:
-        throw new Error(`Unknown strategy: ${config.strategy}`);
-    }
-
-    result.totalDurationMs = Date.now() - start;
-    return result;
-  } catch (err) {
-    throw err;
+  switch (config.strategy) {
+    case 'sequential':
+      result = await executeSequential(config, input, ctx);
+      break;
+    case 'parallel':
+      result = await executeParallel(config, input, ctx);
+      break;
+    case 'supervisor':
+      result = await executeSupervisor(config, input, ctx);
+      break;
+    default:
+      throw new Error(`Unknown strategy: ${config.strategy}`);
   }
+
+  result.totalDurationMs = Date.now() - start;
+  return result;
 }
 
 /**

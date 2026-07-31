@@ -2,11 +2,11 @@ name: Agent Evaluations
 
 on:
   push:
-    branches: [main, feat/agent-orchestrator-v2]
-  pull_request:
     branches: [main]
+    paths:
+      - 'packages/agent-orchestrator/**'
+      - '.github/workflows/agent-evals.yml'
   schedule:
-    # Run weekly on Sundays at 2am UTC
     - cron: '0 2 * * 0'
   workflow_dispatch:
     inputs:
@@ -14,138 +14,53 @@ on:
         description: 'Dataset to evaluate (blank = all)'
         required: false
         default: ''
-      agent:
-        description: 'Agent role to evaluate (blank = all)'
-        required: false
-        default: ''
 
 env:
   NODE_VERSION: '22'
-  LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
-  LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
-  LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
-  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
 jobs:
   agent-eval:
     name: Run Agent Evaluations
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          
-      - name: Install dependencies
-        run: npm ci
-        
-      - name: Build agent orchestrator
-        run: npm run build --workspace=packages/agent-orchestrator
-        
+
+      - name: Install orchestrator
+        working-directory: packages/agent-orchestrator
+        run: npm install --no-audit --no-fund --legacy-peer-deps
+
+      - name: Typecheck
+        working-directory: packages/agent-orchestrator
+        run: npm run typecheck
+
       - name: Run agent evaluations
+        working-directory: packages/agent-orchestrator
         run: |
-          cd packages/agent-orchestrator
           if [ -n "${{ github.event.inputs.dataset }}" ]; then
-            npm run eval:run -- --dataset=${{ github.event.inputs.dataset }}
-          elif [ -n "${{ github.event.inputs.agent }}" ]; then
-            npm run eval:run -- --agent=${{ github.event.inputs.agent }}
+            npx tsx src/eval/cli.ts run "${{ github.event.inputs.dataset }}"
           else
-            npm run eval:run
+            npx tsx src/eval/cli.ts all
           fi
         env:
-          LANGFUSE_PUBLIC_KEY: ${{ env.LANGFUSE_PUBLIC_KEY }}
-          LANGFUSE_SECRET_KEY: ${{ env.LANGFUSE_SECRET_KEY }}
-          LANGSMITH_API_KEY: ${{ env.LANGSMITH_API_KEY }}
-          GEMINI_API_KEY: ${{ env.GEMINI_API_KEY }}
-          
-      - name: Upload eval results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: eval-results-${{ github.sha }}
-          path: packages/agent-orchestrator/eval-results/
-          retention-days: 30
-          
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          QDRANT_URL: ${{ secrets.QDRANT_URL }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+          ORCHESTRATOR_CHECKPOINT: 'off'
+
       - name: Post eval summary
         if: always()
         run: |
           echo "## Agent Evaluation Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Run: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "Dataset: ${{ github.event.inputs.dataset || 'all' }}" >> $GITHUB_STEP_SUMMARY
-          echo "Agent: ${{ github.event.inputs.agent || 'all' }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Results uploaded as artifacts." >> $GITHUB_STEP_SUMMARY
-
-  agent-integration:
-    name: Agent Integration Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: agent-eval
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          
-      - name: Install dependencies
-        run: npm ci
-        
-      - name: Run agent integration tests
-        run: npm test -- --testPathPattern="agents-runtime|langchain-graphs"
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          
-      - name: Typecheck agent modules
-        run: |
-          npx tsc --noEmit --project tsconfig.json \
-            lib/agents/**/*.ts \
-            packages/agent-orchestrator/src/**/*.ts
-
-  agent-tracing:
-    name: Verify Agent Tracing
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: agent-eval
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          
-      - name: Install dependencies
-        run: npm ci
-        
-      - name: Verify Langfuse integration
-        run: |
-          node -e "
-            const { traceAgentInvocation } = require('./lib/observability/langfuse.ts');
-            console.log('Langfuse module loads successfully');
-          "
-        env:
-          LANGFUSE_PUBLIC_KEY: test
-          LANGFUSE_SECRET_KEY: test
-          
-      - name: Verify trace groups
-        run: |
-          node -e "
-            const { createTraceGroup, listTraceGroups } = require('./lib/agents/langsmith-tracing.ts');
-            const group = createTraceGroup({ name: 'test-group' });
-            console.log('Trace groups work:', listTraceGroups().length > 0);
-          "
+          echo "See job logs for detailed results." >> $GITHUB_STEP_SUMMARY

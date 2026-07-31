@@ -19,7 +19,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version-file: 'packages/agent-orchestrator/.nvmrc'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: 'packages/agent-orchestrator/package-lock.json'
 
