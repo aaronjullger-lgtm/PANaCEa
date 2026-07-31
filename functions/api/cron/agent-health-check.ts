@@ -19,14 +19,19 @@ import {
   safePrismaDisconnect,
 } from '../_shared/prisma-edge';
 import { ToolRegistry } from '../../../lib/services/agents';
-import {
-  runAgent,
-  type AgentRunResult,
-} from '../../../lib/services/agents/agentRunner';
+import { runAgent } from '../../../lib/services/agents/agentRunner';
+import type { AgentRunResult } from '../../../lib/services/agents/types';
 import {
   INFRA_TOOLS,
   QUALITY_TOOLS,
 } from '../../../lib/services/agents/tools';
+import {
+  collectAgentHealthSnapshot,
+  buildAgentMetricsPayload,
+  getQualityGates,
+  getAlertRules,
+} from '../../../lib/agents/monitoring';
+import { configureBridge, pingOrchestrator } from '../../../lib/agents/bridge';
 
 interface AgentCheckResult {
   check: string;
@@ -179,6 +184,38 @@ export const onRequestPost = cronEndpoint({
         });
       }
 
+      // ─── Check 4: Agent Bridge & LangSmith Health ──────────────────────
+      console.log('[agentHealthCheck] Check 4/4: Agent bridge + LangSmith health');
+      let bridgeSnapshot = null;
+      let langsmithMetrics = null;
+      try {
+        // Configure bridge from env if orchestrator URL is set
+        const orchestratorUrl = (env as Record<string, string>).AGENT_ORCHESTRATOR_URL;
+        if (orchestratorUrl) {
+          configureBridge({
+            orchestratorBaseUrl: orchestratorUrl,
+            enabled: true,
+            timeoutMs: 5000,
+          });
+        }
+
+        bridgeSnapshot = await collectAgentHealthSnapshot({
+          env: env as Record<string, string> as any,
+          userId: 'cron-agent-health',
+          log: (level, msg) => console.log(`[agentHealthCheck:bridge] ${level}: ${msg}`),
+        });
+
+        langsmithMetrics = buildAgentMetricsPayload(bridgeSnapshot);
+
+        console.log(
+          `[agentHealthCheck:bridge] Edge: ${bridgeSnapshot.edge.agentCount} agents, ` +
+          `Node: ${bridgeSnapshot.node.reachable ? `${bridgeSnapshot.node.agentCount} agents` : 'unreachable'}, ` +
+          `Bridge: ${bridgeSnapshot.bridge.status}`
+        );
+      } catch (err) {
+        console.warn('[agentHealthCheck:bridge] Bridge health check failed:', err instanceof Error ? err.message : String(err));
+      }
+
       // ─── Summary ─────────────────────────────────────────────────────────
       const totalMs = Date.now() - startedAt;
       const okCount = results.filter((r) => r.status === 'ok').length;
@@ -205,6 +242,26 @@ export const onRequestPost = cronEndpoint({
         warnings: warnCount,
         errors: errCount,
         details: results,
+        bridge: bridgeSnapshot ? {
+          edgeAgentCount: bridgeSnapshot.edge.agentCount,
+          nodeReachable: bridgeSnapshot.node.reachable,
+          nodeAgentCount: bridgeSnapshot.node.agentCount,
+          bridgeStatus: bridgeSnapshot.bridge.status,
+        } : null,
+        langsmithMetrics: langsmithMetrics ? {
+          metricCount: langsmithMetrics.metrics.length,
+          timestamp: langsmithMetrics.timestamp,
+        } : null,
+        qualityGates: getQualityGates().map((g) => ({
+          metric: g.metric,
+          threshold: g.threshold,
+          severity: g.severity,
+        })),
+        alertRules: getAlertRules().filter((r) => r.enabled).map((r) => ({
+          name: r.name,
+          metric: r.metric,
+          threshold: r.threshold,
+        })),
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

@@ -47,6 +47,74 @@ app.get('/agents', (_req, res) => {
   res.json({ agents: describeAgents() });
 });
 
+// Bridge-compatible agent list endpoint (matches lib/agents/bridge.ts expectations)
+app.get('/api/agents/list', (_req, res) => {
+  const agents = describeAgents().map((a) => ({
+    name: a.name,
+    description: a.description,
+    role: a.role,
+    tier: 'orchestrator' as const,
+    inputHint: a.inputHint,
+    status: 'available' as const,
+  }));
+  res.json({ agents });
+});
+
+// Bridge-compatible agent invoke endpoint
+app.post('/api/agents/invoke', authMiddleware, async (req, res) => {
+  const body = (req.body ?? {}) as {
+    agentRole?: string;
+    input?: unknown;
+    threadId?: string;
+    model?: string;
+  };
+
+  const role = body.agentRole as keyof typeof AGENT_REGISTRY;
+  if (!role || !(role in AGENT_REGISTRY)) {
+    res.status(404).json({
+      error: `unknown role "${String(role ?? 'undefined')}". Available: ${ALL_ROLES.join(', ')}`,
+    });
+    return;
+  }
+  if (!canRunAgents()) {
+    res.status(503).json({ error: 'no LLM provider configured' });
+    return;
+  }
+
+  const inputStr = typeof body.input === 'string'
+    ? body.input
+    : JSON.stringify(body.input ?? {});
+
+  const messages = [{ role: 'user' as const, content: inputStr }];
+  const startedAt = Date.now();
+  const def = AGENT_REGISTRY[role];
+
+  try {
+    const agent = await def.build({ model: body.model });
+    const result = await agent.invoke({
+      messages,
+      threadId: body.threadId ?? `bridge_${role}_${Date.now()}`,
+    });
+
+    const normalizedMessages = result.messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    res.json({
+      messages: normalizedMessages,
+      agentRole: role,
+      durationMs: Date.now() - startedAt,
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err instanceof Error ? err.message : String(err),
+      agentRole: role,
+      durationMs: Date.now() - startedAt,
+    });
+  }
+});
+
 app.post('/agents/:role/invoke', authMiddleware, async (req, res) => {
   const role = req.params.role as keyof typeof AGENT_REGISTRY;
   if (!(role in AGENT_REGISTRY)) {

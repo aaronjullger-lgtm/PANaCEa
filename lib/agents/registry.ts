@@ -29,11 +29,78 @@ import './ops/schemaDriftDetector';
 import './ops/envVarAuditor';
 
 import { registerBuiltInOrchestrators } from './orchestrator';
+import { registerAllSupervisorsV2 } from './supervisor-v2';
+import { registerBuiltInSkills } from './deep-agents';
+import { configureBridge } from './bridge';
 
 registerBuiltInOrchestrators();
+registerAllSupervisorsV2();
+registerBuiltInSkills();
+
+// Auto-configure bridge from env if orchestrator URL is available
+// In Edge runtime, this reads from context.env; in Node, from process.env
+try {
+  const orchestratorUrl = typeof process !== 'undefined'
+    ? process.env.AGENT_ORCHESTRATOR_URL
+    : undefined;
+
+  if (orchestratorUrl) {
+    configureBridge({
+      orchestratorBaseUrl: orchestratorUrl,
+      enabled: true,
+      timeoutMs: 10_000,
+    });
+  }
+} catch {
+  // process.env not available in Edge runtime — bridge configured via
+  // configureBridge() called from the health-check endpoint instead
+}
 
 export { listAgents, invokeAgent, getAgent, clearRegistryForTests };
 export { registerBuiltInOrchestrators, runOrchestrator, listOrchestrators } from './orchestrator';
+
+// V2 Supervisor (LLM-powered routing)
+export {
+  registerSupervisorV2,
+  runSupervisorV2,
+  runBroadcastSupervisorV2,
+  listSupervisorsV2,
+  registerAllSupervisorsV2,
+} from './supervisor-v2';
+export type { SupervisorV2Config, SupervisorV2Result } from './supervisor-v2';
+
+// LLM Router
+export {
+  routeWithLLM,
+  routeWithContext,
+  routeBatchWithLLM,
+  buildRouterConfigFromRegistry,
+} from './router/llmRouter';
+export type { LLMRouterConfig, AgentRoutingDecision } from './router/llmRouter';
+
+// Subagent Delegation
+export {
+  delegateToSubagents,
+  delegateSequential,
+  runClinicalEncounterSubagents,
+  runDiagnosticWorkupSubagents,
+  runOpsAuditSubagents,
+} from './subagent';
+export type { SubagentConfig, SubagentResult, SubagentDelegationResult } from './subagent';
+
+// Observability
+export {
+  withTracing,
+  createOrchestratorTrace,
+  createSupervisorTrace,
+  createSubagentTrace,
+  agentMetrics,
+} from './observability';
+export type { AgentTraceConfig, AgentTraceSpan, AgentMetrics } from './observability';
+
+// Agent Protocol Types
+export * from './protocol';
+
 export type {
   AgentDefinition,
   AgentContext,
