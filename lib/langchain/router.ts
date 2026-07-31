@@ -29,6 +29,9 @@ import {
 } from './config';
 import { createModel, isModelAvailable, type AIEnvKeys } from './models';
 import { buildTracingConfig } from './tracing';
+import type { CostTracker } from '@/lib/ai/costTracker';
+import type { CircuitBreaker } from '@/lib/ai/circuitBreaker';
+import { getRequestCostGuardrails } from '@/lib/ai/costGuardrailContext';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -45,6 +48,12 @@ export interface RouteOptions {
   runName?: string;
   /** Additional metadata for tracing */
   metadata?: Record<string, unknown>;
+  /** Cost guardrail: tracker for budget enforcement. If provided, pre-call budget checks and post-call cost recording are enabled. */
+  costTracker?: CostTracker;
+  /** Cost guardrail: circuit breaker for provider health. If provided, budget-exceeded providers are skipped. */
+  circuitBreaker?: CircuitBreaker;
+  /** Cost guardrail: user ID for per-user budget tracking */
+  userId?: string;
 }
 
 export interface RouteResult<T = string> {
@@ -64,6 +73,7 @@ export interface RouteResult<T = string> {
     outputTokens?: number;
     totalTokens?: number;
   };
+  estimatedCostUsd?: number;
 }
 
 // ─── Core Router ───────────────────────────────────────────────────────────
@@ -94,6 +104,10 @@ async function executeWithFallback<T>(
   options: RouteOptions,
   handler: (ctx: InvokeContext) => Promise<{ output: T; usage?: RouteResult['usage'] }>,
 ): Promise<RouteResult<T>> {
+  const ctx = getRequestCostGuardrails();
+  const costTracker = options.costTracker ?? ctx.costTracker;
+  const circuitBreaker = options.circuitBreaker ?? ctx.circuitBreaker;
+  const userId = options.userId ?? ctx.userId;
   const models = resolveModelChain(task, env, options.forceModel);
 
   if (models.length === 0) {
@@ -107,6 +121,7 @@ async function executeWithFallback<T>(
   let attempt = 0;
   let lastError: Error | null = null;
   const temperature = options.temperature;
+  const maxTokens = options.maxOutputTokens ?? DEFAULT_PARAMS.maxOutputTokens;
 
   const tracingConfig: RunnableConfig = buildTracingConfig(env, {
     runName: options.runName ?? `panacea:${task}`,
@@ -114,6 +129,36 @@ async function executeWithFallback<T>(
   });
 
   for (const modelName of models) {
+    if (circuitBreaker) {
+      const provider = MODEL_REGISTRY[modelName]?.provider as import('@/lib/langchain/config').ModelProvider | undefined;
+      if (provider && !circuitBreaker.isAvailable(provider)) {
+        console.warn(`[LangChain Router] ${modelName} skipped — circuit breaker open`);
+        continue;
+      }
+    }
+
+    if (costTracker) {
+      const registry = MODEL_REGISTRY[modelName];
+      if (registry) {
+        const budgetCheck = await costTracker.checkBudget({
+          provider: registry.provider,
+          userId,
+          estimatedInputTokens: Math.ceil(params.userPrompt.length / 4),
+          estimatedOutputTokens: maxTokens,
+          inputCostPer1M: registry.inputCostPer1M ?? 0,
+          outputCostPer1M: registry.outputCostPer1M ?? 0,
+        });
+
+        if (!budgetCheck.allowed) {
+          console.warn(`[CostGuardrail] ${modelName} BLOCKED: ${budgetCheck.reason}`);
+          if (circuitBreaker && budgetCheck.reason?.includes('exhausted')) {
+            circuitBreaker.tripForBudget(registry.provider);
+          }
+          continue;
+        }
+      }
+    }
+
     for (let retry = 0; retry < DEFAULT_PARAMS.maxRetries; retry++) {
       attempt++;
       if (attempt > maxAttempts) break;
@@ -123,7 +168,7 @@ async function executeWithFallback<T>(
 
         const model = createModel(modelName, env, {
           temperature,
-          maxOutputTokens: options.maxOutputTokens,
+          maxOutputTokens: maxTokens,
         });
 
         const messages: BaseMessage[] = params.messages ?? [
@@ -131,16 +176,46 @@ async function executeWithFallback<T>(
           new HumanMessage(params.userPrompt),
         ];
 
-        const result = await handler({ model, modelName, messages, tracingConfig });
+        // Only attach LangSmith tracer on the first attempt per model.
+        // Retries during error storms would otherwise multiply trace events
+        // and burn through the LangSmith event quota.
+        const activeConfig = retry === 0
+          ? tracingConfig
+          : { tags: tracingConfig.tags, metadata: tracingConfig.metadata };
+
+        const result = await handler({ model, modelName, messages, tracingConfig: activeConfig });
         const latencyMs = Date.now() - start;
+
+        const registry = MODEL_REGISTRY[modelName];
+        const cost = registry && result.usage
+          ? ((result.usage.inputTokens ?? 0) / 1_000_000) * (registry.inputCostPer1M ?? 0) +
+            ((result.usage.outputTokens ?? 0) / 1_000_000) * (registry.outputCostPer1M ?? 0)
+          : undefined;
+
+        if (costTracker && registry && result.usage) {
+          await costTracker.recordCost({
+            provider: registry.provider,
+            modelName,
+            userId,
+            inputTokens: result.usage.inputTokens ?? 0,
+            outputTokens: result.usage.outputTokens ?? 0,
+            inputCostPer1M: registry.inputCostPer1M ?? 0,
+            outputCostPer1M: registry.outputCostPer1M ?? 0,
+          });
+        }
+
+        if (circuitBreaker && registry) {
+          circuitBreaker.recordSuccess(registry.provider);
+        }
 
         return {
           output: result.output,
           model: modelName,
-          provider: MODEL_REGISTRY[modelName]?.provider ?? 'unknown',
+          provider: registry?.provider ?? 'unknown',
           attempts: attempt,
           latencyMs,
           usage: result.usage,
+          estimatedCostUsd: cost,
         };
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
@@ -148,6 +223,11 @@ async function executeWithFallback<T>(
           `[LangChain Router] ${modelName} attempt ${retry + 1} failed:`,
           lastError.message.slice(0, 200)
         );
+
+        if (circuitBreaker) {
+          const registry = MODEL_REGISTRY[modelName];
+          if (registry) circuitBreaker.recordFailure(registry.provider);
+        }
 
         if (retry < DEFAULT_PARAMS.maxRetries - 1) {
           await sleep(DEFAULT_PARAMS.retryDelayMs * (retry + 1));
@@ -312,7 +392,7 @@ export function parseJsonResponse(text: string): unknown {
   // Strip markdown code fences if present
   let cleaned = text.trim();
   const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fenceMatch) cleaned = fenceMatch[1].trim();
+  if (fenceMatch?.[1]) cleaned = fenceMatch[1].trim();
 
   // Clean common LLM artifacts
   cleaned = cleaned

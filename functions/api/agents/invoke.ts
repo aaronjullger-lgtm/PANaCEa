@@ -30,6 +30,9 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 import '@/lib/agents/registry.encounter';
 import { invokeAgent, listAgents, getAgent } from '@/lib/agents/registry.encounter';
+import { createCostTracker } from '@/lib/ai/costTracker';
+import { createCircuitBreaker } from '@/lib/ai/circuitBreaker';
+import { setRequestCostGuardrails, clearRequestCostGuardrails } from '@/lib/ai/costGuardrailContext';
 
 // ─── Allowlist ────────────────────────────────────────────────────────────
 
@@ -104,6 +107,13 @@ export const onRequestPost = aiEndpoint(
 
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
+    // Cost guardrails: create per-request instances and set request-scoped context
+    // so the LangChain router can enforce budgets even when agents call routeTask
+    // directly (without explicit RouteOptions).
+    const costTracker = createCostTracker({ RATE_LIMIT_KV: env.RATE_LIMIT_KV });
+    const circuitBreaker = createCircuitBreaker();
+    setRequestCostGuardrails({ costTracker, circuitBreaker, userId: auth.userId });
+
     try {
       const result = await invokeAgent(agentName, input, {
         env: {
@@ -114,6 +124,7 @@ export const onRequestPost = aiEndpoint(
           DEEPINFRA_API_KEY: env.DEEPINFRA_API_KEY,
           LANGSMITH_API_KEY: env.LANGSMITH_API_KEY,
           LANGSMITH_PROJECT: env.LANGSMITH_PROJECT,
+          LANGSMITH_SAMPLE_RATE: env.LANGSMITH_SAMPLE_RATE,
         },
         userId: auth.userId,
         log: (level, message, data) => {
@@ -155,15 +166,15 @@ export const onRequestPost = aiEndpoint(
 
       return {
         status: httpStatus,
-        error: result.error?.message ?? `Agent ${agentName} returned status ${result.status}`,
+        error: sanitizeClientError(result.error?.message, agentName, result.status),
         data: {
           agent: result.agent,
           status: result.status,
-          error: result.error,
           durationMs: result.durationMs,
         },
       };
     } finally {
+      clearRequestCostGuardrails();
       await safePrismaDisconnect(prisma);
     }
   },
@@ -184,6 +195,18 @@ async function persistAgentResult(
 ): Promise<void> {
   const sessionId = (input as { sessionId?: string })?.sessionId;
   if (!sessionId) return;
+
+  // Ownership check: verify the OSCE session belongs to the calling user
+  // before any write. sessionId is user-supplied input — without this check a
+  // user could persist scores against another user's session. Silent reject
+  // (no error) to avoid leaking session existence.
+  const session = await prisma.osceSession.findUnique({
+    where: { id: sessionId },
+    select: { userId: true },
+  });
+  if (!session || session.userId !== userId) {
+    return;
+  }
 
   if (agentName === 'spbench-grader' && output && typeof output === 'object' && 'overallScore' in output) {
     const scores = output as {
@@ -221,4 +244,19 @@ async function persistAgentResult(
       },
     });
   }
+}
+
+/**
+ * Sanitizes agent error messages for the client response. Provider SDK errors
+ * (OpenAI/Anthropic/Gemini) can echo baseURLs or diagnostic fragments; this
+ * strips URLs and caps length. Internal `cause`/`telemetry` are never returned.
+ */
+function sanitizeClientError(
+  message: string | undefined,
+  agentName: string,
+  status: string,
+): string {
+  if (!message) return `Agent ${agentName} returned status ${status}.`;
+  const stripped = message.replace(/https?:\/\/[^\s'"<>]+/gi, '[url]');
+  return stripped.length > 120 ? stripped.slice(0, 117) + '...' : stripped;
 }
