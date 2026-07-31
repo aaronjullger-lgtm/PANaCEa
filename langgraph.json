@@ -12,8 +12,8 @@
 {
   "dependencies": ["./package.json"],
   "graphs": {
-    "clinical_tutor": "./lib/agents/graphs/clinical-tutor.ts",
-    "preceptor_pimping": "./lib/agents/graphs/preceptor.ts"
+    "clinical_tutor": "./lib/agents/graphs/clinical-tutor.ts:clinicalTutorGraph",
+    "preceptor_pimping": "./lib/agents/graphs/preceptor.ts:preceptorGraph"
   },
   "env": ".env.langgraph"
 }

@@ -1,5 +1,5 @@
 /**
- * Gemini / Google AI helpers for embeddings (text-embedding-005) and vision (gemini-2.5-flash).
+ * Gemini / Google AI helpers for embeddings (gemini-embedding-2) and vision (gemini-2.5-flash).
  * Used by RAG chunking, hybrid search, semantic scripts, and image quality assessment.
  *
  * Trace propagation: both helpers accept an optional `traceId` (the same id
@@ -8,7 +8,7 @@
  * back to the originating request in Workers Logs and Sentry.
  */
 
-const EMBED_MODEL = 'text-embedding-005';
+const EMBED_MODEL = 'gemini-embedding-2';
 const EMBED_DIMS = 768;
 const VISION_MODEL = 'gemini-2.5-flash';
 
