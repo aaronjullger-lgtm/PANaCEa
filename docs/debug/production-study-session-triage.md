@@ -26,7 +26,7 @@ The highest-priority repair path is:
 | Route | Handler | Auth | Main DB / service deps | Primary risk observed |
 | --- | --- | --- | --- | --- |
 | `/api/questions/session` | `functions/api/questions/session.ts` | `authenticatedEndpoint` | `User`, `SessionService`, `UserQuestionSeen`, `PreGeneratedQuestion`, `Question`, `QuestionSeed`, `MedicalContent` | Launch-critical; user lookup retry path plus multi-source session assembly |
-| `/api/questions/pool` | `functions/api/questions/pool.ts` | `authenticatedEndpoint` | `User`, `UserQuestionSeen`, `PreGeneratedQuestion`, `Question`, `MedicalContent`, Gemini generation | Heavy seen-history + oversized pool fetch + generation fallback |
+| `/api/questions/pool` | `functions/api/questions/pool.ts` | `aiEndpoint` (GET), `authenticatedEndpoint` (POST, admin) | `User`, `UserQuestionSeen`, `PreGeneratedQuestion`, `Question`, D1/KV cache | Heavy seen-history + oversized pool fetch; learner hot-path generation suppressed |
 | `/api/user/stats` | `functions/api/user/stats.ts` | `authenticatedEndpoint` | `User`, `QuestionAttempt`, `ReviewLog`, `UserQuestionSeen` | Large multi-query aggregation on bootstrap |
 | `/api/user/profile` | `functions/api/user/profile.ts` | `authenticatedEndpoint` | `User` | Simple route, but fails if user row missing or DB unhealthy |
 | `/api/srs/due` | `functions/api/srs/due.ts` | `authenticatedEndpoint` | `User`, `SRSItem` | Should be cheap; currently safe-fails, but still depends on synced user row |
