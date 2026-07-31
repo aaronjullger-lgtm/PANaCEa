@@ -29,6 +29,14 @@ Workflow retirement mapping:
 
 All scheduled lanes also expose `workflow_dispatch` for operator reruns.
 
+## Lane Registry & Validation
+
+- `config/automation-lanes.ts` is the machine-readable mirror of the Schedule Matrix (9 lanes: slug, workflow, cron, npmScript, endpoints, purpose).
+- `npm run automation:lanes:check` (`scripts/automation/check-lane-registry.ts`) validates registry ↔ workflow files ↔ package.json scripts and flags orphans (umbrella scripts warn by design).
+- `npm run scripts:list [filter]` (`scripts/help-scripts.mjs`) groups the 160+ npm scripts for navigation.
+
+When adding a lane: add the `sched-*.yml` workflow, then update both the Schedule Matrix above and `config/automation-lanes.ts`; run `npm run automation:lanes:check` to confirm consistency.
+
 ## Reusable Workflow Contract
 
 `_automation-lane.yml` accepts:

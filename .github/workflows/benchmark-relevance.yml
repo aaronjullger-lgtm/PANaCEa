@@ -1,0 +1,74 @@
+# Benchmark - Relevance (clinical-library search)
+#
+# Runs the live hybrid-search relevance benchmark (`npm run benchmark:relevance`)
+# against the production-grade pipeline (real DB + Gemini embeddings).
+# The script exits 2 when Hit@5 drops below the regression floor, which fails
+# this job — the benchmark is a weekly + manual safety net, NOT a PR gate
+# (it costs Gemini tokens and loads the DB, so it must not run per-PR).
+#
+# Secrets required: DATABASE_URL, GEMINI_API_KEY
+# Artifacts: refreshed baseline JSON uploaded every run (also on failure).
+name: Benchmark - Relevance
+
+on:
+  schedule:
+    - cron: '0 3 * * 2' # Tuesday 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: benchmark-relevance
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  relevance:
+    name: Relevance Benchmark
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run relevance benchmark
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: npm run benchmark:relevance -- --out docs/benchmarks/relevance-baseline.json
+
+      - name: Write benchmark summary
+        if: ${{ always() }}
+        run: |
+          {
+            echo "### Relevance Benchmark"
+            echo ""
+            echo "- Workflow: benchmark-relevance.yml"
+            echo "- Baseline output: docs/benchmarks/relevance-baseline.json"
+            echo "- Exit code 2 = Hit@5 regression floor breached (job fails intentionally)."
+            echo "- Next action on failure: inspect the step log for per-intent Hit@1/5/10 + MRR breakdowns before touching the search pipeline."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload baseline artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: relevance-baseline-${{ github.run_number }}
+          path: docs/benchmarks/relevance-baseline.json
+          if-no-files-found: ignore
+          retention-days: 30

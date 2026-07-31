@@ -1,0 +1,58 @@
+# Dependabot — weekly grouped updates.
+# Three npm package scopes (root app + two package workspaces) plus GitHub Actions.
+# Groups keep PR volume low: production vs development deps land in separate PRs.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: America/New_York
+    open-pull-requests-limit: 8
+    groups:
+      production-deps:
+        dependency-type: production
+        update-types: ["minor", "patch"]
+      dev-deps:
+        dependency-type: development
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: npm
+    directory: "/packages/agent-orchestrator"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:30"
+      timezone: America/New_York
+    open-pull-requests-limit: 4
+    groups:
+      orchestrator-deps:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: npm
+    directory: "/packages/agents-dashboard"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: America/New_York
+    open-pull-requests-limit: 4
+    groups:
+      dashboard-deps:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:30"
+      timezone: America/New_York
+    open-pull-requests-limit: 4
+    groups:
+      actions-minor:
+        update-types: ["minor", "patch"]

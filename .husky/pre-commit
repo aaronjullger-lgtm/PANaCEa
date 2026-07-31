@@ -1,1 +1,6 @@
-npm run lint
+#!/bin/sh
+# Delegates to the canonical git-hooks pre-commit (design audit + critical
+# tests + gitleaks). The active hooks live in scripts/git-hooks/ and are
+# installed with `bash scripts/git-hooks/install-hooks.sh` — no husky required.
+# Full CI parity gates run in pre-push.
+bash scripts/git-hooks/pre-commit.sh

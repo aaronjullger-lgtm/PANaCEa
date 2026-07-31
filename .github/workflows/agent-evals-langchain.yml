@@ -1,4 +1,4 @@
-name: Agent Evaluations
+name: Agent Evals - LangChain
 
 on:
   schedule:
@@ -18,7 +18,7 @@ on:
       - 'functions/api/agents/**'
 
 jobs:
-  evaluate:
+  langchain-evaluate:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     

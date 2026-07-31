@@ -1,0 +1,42 @@
+# Agent Skills Sync Check
+#
+# Verifies the skills inventory stays consistent: every skill directory under
+# .agents/skills (and .claude/skills) must be documented in docs/skills-overview.md,
+# and documented skills must resolve to real directories. Runs the repo's own
+# audit-skills.sh against the workspace.
+#
+# Fails the check (non-zero exit) when skills and docs drift apart.
+name: Agent Skills Sync Check
+
+on:
+  pull_request:
+    paths:
+      - '.agents/skills/**'
+      - '.claude/skills/**'
+      - 'docs/skills-overview.md'
+      - 'docs/skills-usage.md'
+  push:
+    branches: [main]
+    paths:
+      - '.agents/skills/**'
+      - '.claude/skills/**'
+      - 'docs/skills-overview.md'
+      - 'docs/skills-usage.md'
+  schedule:
+    - cron: '0 4 * * 1' # Monday 04:00 UTC — catches manual/agent drift
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync-check:
+    name: Skills Inventory Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run skills audit
+        run: bash .agents/skills/skill-routing-and-usage/scripts/audit-skills.sh "$GITHUB_WORKSPACE"

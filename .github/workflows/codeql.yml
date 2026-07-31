@@ -1,0 +1,62 @@
+# CodeQL — semantic JavaScript/TypeScript analysis.
+# Runs on push to main, on PRs touching code, weekly, and manually.
+# Advisory (non-blocking) safety net alongside the gitleaks secret-scan gate in ci.yml.
+#
+# build-mode: none — static analysis over the source tree; no production build
+# required, so the Vite/wrangler env preconditions of `npm run build` don't apply.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.js'
+      - '**/*.jsx'
+      - '**/*.mjs'
+      - '**/*.cjs'
+      - '!docs/**'
+      - '!public/**'
+      - '!prisma/migrations/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.js'
+      - '**/*.jsx'
+      - '**/*.mjs'
+      - '**/*.cjs'
+      - '!docs/**'
+      - '!public/**'
+      - '!prisma/migrations/**'
+  schedule:
+    - cron: '0 3 * * 1' # Monday 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (javascript-typescript)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          build-mode: none
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
