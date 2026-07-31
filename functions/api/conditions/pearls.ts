@@ -12,7 +12,10 @@ import {
   EdgePrismaClient,
 } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { d1GetOrSet, d1InvalidatePrefix } from '../_shared/d1-cache';
 import { z } from 'zod';
+
+const PEARLS_CACHE_TTL = 86400;
 
 // Schema for POST - Save pearls
 const PostPearlsSchema = z.object({
@@ -83,6 +86,12 @@ export const onRequestPost = authenticatedEndpoint(
         },
       });
 
+      // Invalidate system-level pearls cache so RapidRecallDrill picks up changes
+      const mc = await prisma.medicalContent.findUnique({ where: { id: conditionId }, select: { system: true } });
+      if (mc?.system) {
+        await d1InvalidatePrefix(env.EDGE_DB, `pearls:system:${mc.system}`);
+      }
+
       log.info('Pearls saved successfully', {
         conditionId,
         totalPearls: limitedPearls.length,
@@ -152,44 +161,40 @@ export const onRequestGet = authenticatedEndpoint(
       if (system && isRandom) {
         log.info('Fetching random pearls for system', { system });
 
-        // Fetch all conditions in the system that have pearls
-        const conditions = await prisma.medicalContent.findMany({
-          where: {
-            system: system.toUpperCase(),
-            status: 'published',
-          },
-          select: {
-            id: true,
-            condition: true,
-            content: true,
-          },
-        });
-
-        // Filter conditions that have pearls and flatten all pearls
-        const allPearls: Array<{ conditionId: string; conditionName: string; pearl: string }> = [];
-
-        for (const condition of conditions) {
-          const content = condition.content as Record<string, any> | null;
-          const pearls = Array.isArray(content?.pearls)
-            ? content.pearls
-            : Array.isArray(content?.clinicalPearls)
-              ? content.clinicalPearls
-              : [];
-
-          for (const pearl of pearls) {
-            allPearls.push({
-              conditionId: condition.id,
-              conditionName: condition.condition,
-              pearl,
+        const cacheKey = `pearls:system:${system.toUpperCase()}`;
+        const allPearls = await d1GetOrSet(
+          env.EDGE_DB,
+          cacheKey,
+          async () => {
+            const conditions = await prisma!.medicalContent.findMany({
+              where: {
+                system: system.toUpperCase(),
+                status: 'published',
+              },
+              select: { id: true, condition: true, content: true },
             });
-          }
-        }
+
+            const flat: Array<{ conditionId: string; conditionName: string; pearl: string }> = [];
+            for (const condition of conditions) {
+              const content = condition.content as Record<string, any> | null;
+              const pearls = Array.isArray(content?.pearls)
+                ? content.pearls
+                : Array.isArray(content?.clinicalPearls)
+                  ? content.clinicalPearls
+                  : [];
+              for (const pearl of pearls) {
+                flat.push({ conditionId: condition.id, conditionName: condition.condition, pearl });
+              }
+            }
+            return flat;
+          },
+          PEARLS_CACHE_TTL
+        );
 
         if (allPearls.length === 0) {
           return { pearls: [], message: 'No pearls found for this system' };
         }
 
-        // Randomly select 10 pearls
         const shuffled = allPearls.sort(() => Math.random() - 0.5);
         const selectedPearls = shuffled.slice(0, 10);
 

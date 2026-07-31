@@ -9,7 +9,10 @@
 
 import { publicEndpoint, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { d1GetOrSet } from '../_shared/d1-cache';
 import { z } from 'zod';
+
+const HIGH_YIELD_CACHE_TTL = 86400;
 
 const HighYieldSchema = z.object({
   query: z.object({
@@ -76,35 +79,31 @@ export const onRequestGet = publicEndpoint(HighYieldSchema, async ({ env, valida
     const { limit, system, random } = validated.query;
     const randomize = random === 'true';
 
-    // Build where clause
-    const where: any = {
-      status: 'published',
-      // Only include conditions with buzzwords or high yield score
-      OR: [{ buzzwords: { isEmpty: false } }, { pance_yield: { gt: 5 } }],
-    };
+    const cacheKey = system
+      ? `conditions:high-yield:${system.toUpperCase()}`
+      : 'conditions:high-yield:all';
 
-    if (system) {
-      where.system = system.toUpperCase();
-    }
+    const conditions = await d1GetOrSet(env.EDGE_DB, cacheKey, async () => {
+      const where: any = {
+        status: 'published',
+        OR: [{ buzzwords: { isEmpty: false } }, { pance_yield: { gt: 5 } }],
+      };
+      if (system) where.system = system.toUpperCase();
 
-    // Fetch high-yield conditions from database
-    const conditions = await prisma.medicalContent.findMany({
-      where,
-      select: {
-        condition: true,
-        system: true,
-        buzzwords: true,
-        clinical_pearls: true,
-        overview: true,
-        pance_yield: true,
-      },
-      orderBy: randomize
-        ? undefined // Random handled after fetch
-        : [{ pance_yield: 'desc' }, { condition: 'asc' }],
-      take: randomize ? undefined : limit,
-    });
+      return prisma.medicalContent.findMany({
+        where,
+        select: {
+          condition: true,
+          system: true,
+          buzzwords: true,
+          clinical_pearls: true,
+          overview: true,
+          pance_yield: true,
+        },
+        orderBy: [{ pance_yield: 'desc' }, { condition: 'asc' }],
+      });
+    }, HIGH_YIELD_CACHE_TTL);
 
-    // Transform to response format
     let results: HighYieldConditionResponse[] = conditions.map((c: any) => ({
       condition: c.condition,
       system: c.system,
@@ -113,9 +112,10 @@ export const onRequestGet = publicEndpoint(HighYieldSchema, async ({ env, valida
       importance: mapYieldToImportance(c.pance_yield),
     }));
 
-    // Randomize if requested
     if (randomize) {
       results = results.sort(() => Math.random() - 0.5).slice(0, limit);
+    } else {
+      results = results.slice(0, limit);
     }
 
     return {
