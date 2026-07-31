@@ -36,6 +36,10 @@ import {
   buildSpbenchUserPrompt,
   type SpbenchPromptInput,
 } from '@/lib/ai/prompts/osce';
+import { StudentIntentSchema, type StudentIntent, type StudentIntentResult } from '@/lib/ai/schemas/intent';
+
+export { StudentIntentSchema } from '@/lib/ai/schemas/intent';
+export type { StudentIntent, StudentIntentResult } from '@/lib/ai/schemas/intent';
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
@@ -46,10 +50,6 @@ export type OscePhase =
   | 'diagnostic_workup'
   | 'assessment'
   | 'grading';
-
-import { StudentIntentSchema, type StudentIntent } from '@/lib/ai/schemas/intent';
-export { StudentIntentSchema } from '@/lib/ai/schemas/intent';
-export type { StudentIntent, StudentIntentResult } from '@/lib/ai/schemas/intent';
 
 export interface TranscriptMessage {
   role: 'student' | 'patient' | 'system';
