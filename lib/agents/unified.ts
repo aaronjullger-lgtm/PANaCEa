@@ -9,17 +9,28 @@
  * - Shared Langfuse traces for end-to-end visibility
  * - Supervised agent coordination via LangGraph patterns
  * - Eval dataset integration for clinical encounter agents
+ * - Node agent discovery via HTTP (Edge-compatible) and direct import (Node.js)
  *
  * @module lib/agents/unified
  */
 
 import type { AgentDefinition, AgentContext, InvokeResult } from './shared/types';
 import { getAgent, listAgents } from './shared/runtime';
+import {
+  listNodeAgents,
+  invokeNodeAgent,
+  checkNodeOrchestratorHealth,
+  type NodeAgentInfo,
+} from './node-client';
+import {
+  isNodeAgentPackageAvailable,
+  registerNodeAgentsInEdgeRegistry,
+} from './shared/node-agent-bridge';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 export interface UnifiedAgentOptions {
-  /** Agent name (kebab-case) */
+  /** Agent name (kebab-case or Node role) */
   name: string;
   /** Input payload */
   input: unknown;
@@ -45,7 +56,6 @@ export interface TeamWorkflow {
   name: string;
   description: string;
   agents: TeamAgent[];
-  /** Execute agents sequentially, passing outputs as inputs */
   execute: (input: unknown, ctx: AgentContext) => Promise<TeamResult>;
 }
 
@@ -61,11 +71,131 @@ export interface TeamResult {
   traceId?: string;
 }
 
+// ─── Node Agent Discovery (lazy, cached) ────────────────────────────────────
+
+interface DiscoveredNodeAgent {
+  name: string;
+  description: string;
+  tier: string;
+  role: string;
+  source: 'node-http' | 'node-direct';
+}
+
+let _discoveredNodeAgents: DiscoveredNodeAgent[] | null = null;
+let _discoveryPromise: Promise<DiscoveredNodeAgent[]> | null = null;
+
+/**
+ * Discover Node-side agents through all available bridges.
+ * Results are cached after first successful discovery.
+ */
+async function discoverNodeAgents(): Promise<DiscoveredNodeAgent[]> {
+  if (_discoveredNodeAgents) return _discoveredNodeAgents;
+
+  // Deduplicate concurrent discovery calls
+  if (_discoveryPromise) return _discoveryPromise;
+
+  _discoveryPromise = (async () => {
+    const agents: DiscoveredNodeAgent[] = [];
+
+    // Bridge 1: HTTP-based (works in Edge runtime, requires orchestrator server)
+    try {
+      const httpAgents = await listNodeAgents();
+      for (const a of httpAgents) {
+        agents.push({
+          name: a.role,
+          description: a.description,
+          tier: 'orchestrator',
+          role: a.role,
+          source: 'node-http',
+        });
+      }
+    } catch {
+      // HTTP bridge unavailable — expected when orchestrator isn't running
+    }
+
+    // Bridge 2: Direct import (Node.js runtime only, no server needed)
+    try {
+      const available = await isNodeAgentPackageAvailable();
+      if (available) {
+        await registerNodeAgentsInEdgeRegistry();
+        // After registration, these agents appear in the Edge registry
+        // via listAgents() — no need to duplicate them here
+      }
+    } catch {
+      // Direct import unavailable — expected in Edge runtime
+    }
+
+    _discoveredNodeAgents = agents;
+    return agents;
+  })();
+
+  return _discoveryPromise;
+}
+
+// ─── Bridge Health ──────────────────────────────────────────────────────────
+
+export interface BridgeHealth {
+  edge: { agentCount: number; status: 'ok' };
+  nodeHttp: { status: 'ok' | 'degraded' | 'down'; agentCount: number; url: string };
+  nodeDirect: { status: 'ok' | 'unavailable'; reason?: string };
+}
+
+/**
+ * Get the health status of all agent bridges.
+ */
+export async function getBridgeHealth(): Promise<BridgeHealth> {
+  const edgeAgents = listAgents();
+
+  // Node HTTP health
+  let nodeHttpStatus: BridgeHealth['nodeHttp'] = {
+    status: 'down',
+    agentCount: 0,
+    url: 'http://localhost:4100',
+  };
+  try {
+    const health = await checkNodeOrchestratorHealth();
+    if (health) {
+      nodeHttpStatus = {
+        status: health.status === 'ok' ? 'ok' : 'degraded',
+        agentCount: health.agents.length,
+        url: 'http://localhost:4100',
+      };
+    }
+  } catch {
+    // HTTP bridge down
+  }
+
+  // Node direct health
+  let nodeDirectStatus: BridgeHealth['nodeDirect'] = { status: 'unavailable' };
+  try {
+    const available = await isNodeAgentPackageAvailable();
+    nodeDirectStatus = available
+      ? { status: 'ok' }
+      : { status: 'unavailable', reason: 'Package not importable in current runtime' };
+  } catch (err) {
+    nodeDirectStatus = {
+      status: 'unavailable',
+      reason: err instanceof Error ? err.message : String(err),
+    };
+  }
+
+  return {
+    edge: { agentCount: edgeAgents.length, status: 'ok' },
+    nodeHttp: nodeHttpStatus,
+    nodeDirect: nodeDirectStatus,
+  };
+}
+
 // ─── Unified Agent Invocation ───────────────────────────────────────────────
 
 /**
  * Invoke an agent with unified tracing and error handling.
  * Works with both Edge-side and Node-side agents.
+ *
+ * Resolution order:
+ * 1. Edge registry (lib/agents/) — fastest, always available
+ * 2. Node HTTP bridge (packages/agent-orchestrator/) — requires server
+ * 3. Node direct bridge — requires Node.js runtime
  *
  * @example
  * ```ts
@@ -86,20 +216,40 @@ export async function invokeUnifiedAgent(
   const { name, input, ctx, trace } = options;
   const start = Date.now();
 
-  // Check if agent exists in Edge registry
+  // 1. Check Edge registry
   const edgeAgent = getAgent(name);
   if (edgeAgent) {
     return invokeWithTracing(edgeAgent, input, ctx, trace, name);
   }
 
-  // Check if agent exists in Node registry (packages/agent-orchestrator)
-  // This will be implemented when we bridge the systems
+  // 2. Check Node agents (discovered via HTTP or direct import)
+  const nodeAgents = await discoverNodeAgents();
+  const nodeAgent = nodeAgents.find(
+    (a) => a.name === name || a.role === name,
+  );
+
+  if (nodeAgent) {
+    const nodeResult = await invokeNodeAgent(nodeAgent.role, input, ctx);
+    return {
+      ...nodeResult,
+      telemetry: {
+        ...nodeResult.telemetry,
+        source: nodeAgent.source,
+        nodeAgentRole: nodeAgent.role,
+      },
+    };
+  }
+
+  // 3. Not found anywhere
+  const edgeNames = listAgents().map((a) => a.name).join(', ');
+  const nodeNames = nodeAgents.map((a) => a.role).join(', ');
+
   return {
     status: 'internal_error',
     output: null,
     error: {
       status: 'internal_error',
-      message: `Agent not found in any registry: ${name}`,
+      message: `Agent not found in any registry: "${name}". Edge agents: [${edgeNames || 'none'}]. Node agents: [${nodeNames || 'none'}].`,
       cause: name,
     },
     agent: name,
@@ -145,23 +295,6 @@ async function invokeWithTracing(
 /**
  * Create a team workflow that executes multiple agents in sequence.
  * Each agent's output is passed as input to the next agent.
- *
- * @example
- * ```ts
- * const workflow = createTeamWorkflow({
- *   name: 'clinical-ddx-with-validation',
- *   description: 'Generate DDx then validate each diagnosis',
- *   agents: [
- *     { name: 'ddx-generator', ... },
- *     { name: 'clinical-validator', ... },
- *   ],
- * });
- *
- * const result = await workflow.execute(
- *   { condition: 'chest pain' },
- *   { env, userId: 'user_123' },
- * );
- * ```
  */
 export function createTeamWorkflow(
   config: Omit<TeamWorkflow, 'execute'> & {
@@ -194,7 +327,6 @@ function defaultSequentialExecution(
           durationMs: Date.now() - agentStart,
         });
 
-        // Pass output as input to next agent
         if (result.output) {
           currentInput = result.output;
         }
@@ -205,7 +337,6 @@ function defaultSequentialExecution(
           output: null,
           durationMs: Date.now() - agentStart,
         });
-        // Stop workflow on error
         break;
       }
     }
@@ -222,23 +353,14 @@ function defaultSequentialExecution(
 
 const teamRegistry = new Map<string, TeamWorkflow>();
 
-/**
- * Register a team workflow for reuse.
- */
 export function registerTeamWorkflow(workflow: TeamWorkflow): void {
   teamRegistry.set(workflow.name, workflow);
 }
 
-/**
- * Get a registered team workflow by name.
- */
 export function getTeamWorkflow(name: string): TeamWorkflow | undefined {
   return teamRegistry.get(name);
 }
 
-/**
- * List all registered team workflows.
- */
 export function listTeamWorkflows(): Array<{
   name: string;
   description: string;
@@ -288,23 +410,38 @@ export async function runTeam(
 }
 
 /**
- * Get all available agents (Edge + Node registries).
+ * Get all available agents across Edge and Node registries.
+ * Node agents are discovered lazily and cached.
  */
-export function getAllAgents(): Array<{
+export async function getAllAgents(): Promise<Array<{
   name: string;
   description: string;
   tier: string;
   source: 'edge' | 'node';
-}> {
+}>> {
   const edgeAgents = listAgents().map((a) => ({ ...a, source: 'edge' as const }));
 
-  // Node agents will be added when we bridge the systems
-  const nodeAgents: Array<{
+  let nodeAgentList: Array<{
     name: string;
     description: string;
     tier: string;
     source: 'node';
   }> = [];
 
-  return [...edgeAgents, ...nodeAgents];
+  try {
+    const discovered = await discoverNodeAgents();
+    nodeAgentList = discovered.map((a) => ({
+      name: a.role,
+      description: a.description,
+      tier: a.tier,
+      source: 'node' as const,
+    }));
+  } catch {
+    // Node agents unavailable — return Edge-only list
+  }
+
+  return [...edgeAgents, ...nodeAgentList];
 }
+
+// Re-export for consumers
+export { type NodeAgentInfo };
