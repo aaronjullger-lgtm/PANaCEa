@@ -44,6 +44,13 @@ import {
   type AgentTurnContext,
 } from './llmTurnClient';
 import type { ParsedTurn } from './geminiAgentClient';
+import {
+  buildTraceContext,
+  buildStepTrace,
+  logTraceEvent,
+  recordAgentCompletion,
+  type TraceContext,
+} from './agentObservability';
 
 // ─── Defaults ───────────────────────────────────────────────────────────────
 
@@ -64,6 +71,10 @@ export interface RunAgentArgs {
   toolContext: ToolExecutionContext;
   /** Gemini call context (env, auth, waitUntil). */
   geminiContext: AgentTurnContext;
+  /** Optional: enable LangSmith/Langfuse tracing for this run. */
+  enableTracing?: boolean;
+  /** Optional: trace tags for filtering in observability UI. */
+  traceTags?: string[];
 }
 
 /**
@@ -72,8 +83,27 @@ export interface RunAgentArgs {
  * render them consistently.
  */
 export async function runAgent(args: RunAgentArgs): Promise<AgentRunResult> {
-  const { userMessage, registry, config, toolContext, geminiContext } = args;
+  const { userMessage, registry, config, toolContext, geminiContext, enableTracing, traceTags } = args;
   const startedAt = Date.now();
+
+  // Build trace context if tracing is enabled
+  const trace: TraceContext | null = enableTracing
+    ? buildTraceContext({
+        agentName: config.telemetryEndpoint ?? 'agent-runner',
+        userId: toolContext.userId,
+        endpoint: config.telemetryEndpoint,
+        tags: traceTags,
+        metadata: {
+          model: config.model,
+          allowedTools: config.allowedTools,
+          maxIterations: config.maxIterations,
+        },
+      })
+    : null;
+
+  if (trace) {
+    logTraceEvent(trace, 'start', { userMessage: userMessage.slice(0, 200) });
+  }
 
   // 1. Resolve tool selection up front. A malformed selection is a
   //    programmer error — fail fast with a clear message.
@@ -138,7 +168,8 @@ export async function runAgent(args: RunAgentArgs): Promise<AgentRunResult> {
         iterations,
         tokensUsed,
         startedAt,
-        { message: 'Run aborted by caller', code: 'ABORTED' }
+        { message: 'Run aborted by caller', code: 'ABORTED' },
+        trace,
       );
     }
 
@@ -165,7 +196,8 @@ export async function runAgent(args: RunAgentArgs): Promise<AgentRunResult> {
         iterations,
         tokensUsed,
         startedAt,
-        { message, code: 'LLM_CALL_FAILED' }
+        { message, code: 'LLM_CALL_FAILED' },
+        trace,
       );
     }
 
@@ -189,7 +221,8 @@ export async function runAgent(args: RunAgentArgs): Promise<AgentRunResult> {
         iterations,
         tokensUsed,
         startedAt,
-        { message: msg, code: 'SAFETY_BLOCK' }
+        { message: msg, code: 'SAFETY_BLOCK' },
+        trace,
       );
     }
 
@@ -214,7 +247,9 @@ export async function runAgent(args: RunAgentArgs): Promise<AgentRunResult> {
         'completed',
         iterations,
         tokensUsed,
-        startedAt
+        startedAt,
+        undefined,
+        trace,
       );
     }
 
@@ -297,7 +332,8 @@ export async function runAgent(args: RunAgentArgs): Promise<AgentRunResult> {
     {
       message: `Agent did not produce a final answer within ${maxIterations} iterations`,
       code: 'MAX_ITERATIONS',
-    }
+    },
+    trace,
   );
 }
 
@@ -406,9 +442,10 @@ function finalize(
   iterations: number,
   tokensUsed: { input: number; output: number; total: number },
   startedAt: number,
-  error?: { message: string; code?: string }
+  error?: { message: string; code?: string },
+  trace?: TraceContext | null,
 ): AgentRunResult {
-  return {
+  const result: AgentRunResult = {
     finalText,
     stopReason,
     steps,
@@ -417,6 +454,12 @@ function finalize(
     durationMs: Date.now() - startedAt,
     ...(error ? { error } : {}),
   };
+
+  if (trace) {
+    recordAgentCompletion(trace, result);
+  }
+
+  return result;
 }
 
 function errorResult(

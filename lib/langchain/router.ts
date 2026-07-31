@@ -28,7 +28,7 @@ import {
   type ModelName,
 } from './config';
 import { createModel, isModelAvailable, type AIEnvKeys } from './models';
-import { buildTracingConfig } from './tracing';
+import { buildTracingConfig, type TracingOptions } from './tracing';
 import type { CostTracker } from '@/lib/ai/costTracker';
 import type { CircuitBreaker } from '@/lib/ai/circuitBreaker';
 import { getRequestCostGuardrails } from '@/lib/ai/costGuardrailContext';
@@ -123,12 +123,37 @@ async function executeWithFallback<T>(
   const temperature = options.temperature;
   const maxTokens = options.maxOutputTokens ?? DEFAULT_PARAMS.maxOutputTokens;
 
-  const tracingConfig: RunnableConfig = buildTracingConfig(env, {
+  // Build base tracing config — enriched per-model inside the loop.
+  const baseTracingConfig: RunnableConfig = buildTracingConfig(env, {
     runName: options.runName ?? `panacea:${task}`,
-    metadata: options.metadata,
+    tags: ['task', task],
+    metadata: {
+      task_type: task,
+      ...options.metadata,
+    },
   });
 
   for (const modelName of models) {
+    const registry = MODEL_REGISTRY[modelName];
+    const provider = registry?.provider ?? 'unknown';
+    const costTier: TracingOptions['costTier'] =
+      (registry?.inputCostPer1M ?? 999) === 0 ? 'free' :
+      (registry?.inputCostPer1M ?? 999) <= 0.15 ? 'budget' :
+      (registry?.inputCostPer1M ?? 999) <= 2.00 ? 'mid' : 'premium';
+
+    // Enrich tracing config with model-specific metadata.
+    const modelTracingConfig: RunnableConfig = {
+      ...baseTracingConfig,
+      tags: [...(baseTracingConfig.tags ?? []), `model:${modelName}`, `provider:${provider}`, `cost:${costTier}`],
+      metadata: {
+        ...(baseTracingConfig.metadata ?? {}),
+        model_name: modelName,
+        provider,
+        cost_tier: costTier,
+        input_cost_per_1m: registry?.inputCostPer1M,
+        output_cost_per_1m: registry?.outputCostPer1M,
+      },
+    };
     if (circuitBreaker) {
       const provider = MODEL_REGISTRY[modelName]?.provider as import('@/lib/langchain/config').ModelProvider | undefined;
       if (provider && !circuitBreaker.isAvailable(provider)) {

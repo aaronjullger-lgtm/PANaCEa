@@ -480,3 +480,154 @@ describe('env-var-auditor agent', () => {
     expect(r.output?.usedEnvVars.length).toBeGreaterThan(0);
   });
 });
+
+// ─── Batch 3: Preceptor Pimping Bot ────────────────────────────────────────
+
+describe('preceptor-pimping agent', () => {
+  it('returns env_missing without GEMINI_API_KEY', async () => {
+    const { invokeAgent } = await import('@/lib/agents/shared/runtime');
+    await import('@/lib/agents/graphs/preceptor');
+    const r = await invokeAgent('preceptor-pimping', {
+      sessionId: 'pp-1',
+      setting: 'ED',
+      studentUtterance: 'What do we have?',
+    }, { env: {} });
+    expect(r.status).toBe('env_missing');
+    expect(r.error?.cause).toBe('preceptor-pimping.env');
+  });
+
+  it('returns schema_invalid when studentUtterance is empty', async () => {
+    const { invokeAgent } = await import('@/lib/agents/shared/runtime');
+    await import('@/lib/agents/graphs/preceptor');
+    const r = await invokeAgent('preceptor-pimping', {
+      sessionId: 'pp-2',
+      setting: 'ED',
+      studentUtterance: '',
+    }, ctx);
+    expect(r.status).toBe('schema_invalid');
+    expect(r.error?.cause).toBe('preceptor-pimping.input');
+  });
+
+  it('returns schema_invalid for invalid setting', async () => {
+    const { invokeAgent } = await import('@/lib/agents/shared/runtime');
+    await import('@/lib/agents/graphs/preceptor');
+    const r = await invokeAgent('preceptor-pimping', {
+      sessionId: 'pp-3',
+      setting: 'ICU',
+      studentUtterance: 'Hello',
+    }, ctx);
+    expect(r.status).toBe('schema_invalid');
+  });
+
+  it('generates ED preceptor response via routeTask', async () => {
+    mocks.routeTask.mockResolvedValue({
+      output: 'Correct. What is the most life-threatening cause of chest pain you must rule out first? [PEARL: Always rule out ACS, PE, aortic dissection, and tension pneumothorax in undifferentiated chest pain.]',
+      model: 'gemini-2.5-flash',
+      provider: 'gemini',
+      attempts: 1,
+      latencyMs: 200,
+      usage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
+    });
+    const { invokeAgent } = await import('@/lib/agents/shared/runtime');
+    await import('@/lib/agents/graphs/preceptor');
+    const r = await invokeAgent('preceptor-pimping', {
+      sessionId: 'pp-4',
+      setting: 'ED',
+      studentUtterance: 'ACS — STEMI, NSTEMI, unstable angina.',
+      priorTurns: [
+        { role: 'preceptor', text: '55yo male, crushing chest pain, diaphoretic. What is your differential?' },
+        { role: 'student', text: 'ACS — STEMI, NSTEMI, unstable angina.' },
+      ],
+      currentDifficulty: 3,
+      correctStreak: 1,
+    }, ctx);
+    expect(r.status).toBe('ok');
+    expect(r.output?.preceptorReply).toContain('Correct');
+    expect(r.output?.clinicalPearl).toContain('ACS');
+    expect(r.output?.newDifficulty).toBeGreaterThanOrEqual(3);
+    expect(mocks.routeTask).toHaveBeenCalledOnce();
+    const callArgs = mocks.routeTask.mock.calls[0];
+    expect(callArgs[0]).toBe('osce-chat');
+    expect(callArgs[2].systemPrompt).toContain('Emergency Department');
+  });
+
+  it('detects incorrect answer and decreases difficulty', async () => {
+    mocks.routeTask.mockResolvedValue({
+      output: 'Incorrect. The most common cause of community-acquired pneumonia is Streptococcus pneumoniae, not H. influenzae. Remember: Strep pneumo is #1 in all age groups. What antibiotic would you start empirically?',
+      model: 'gemini-2.5-flash',
+      provider: 'gemini',
+      attempts: 1,
+      latencyMs: 180,
+    });
+    const { invokeAgent } = await import('@/lib/agents/shared/runtime');
+    await import('@/lib/agents/graphs/preceptor');
+    const r = await invokeAgent('preceptor-pimping', {
+      sessionId: 'pp-5',
+      setting: 'rounds',
+      studentUtterance: 'H. influenzae.',
+      priorTurns: [
+        { role: 'preceptor', text: 'What is the most common cause of community-acquired pneumonia?' },
+      ],
+      currentDifficulty: 4,
+      correctStreak: 2,
+    }, ctx);
+    expect(r.status).toBe('ok');
+    expect(r.output?.lastAnswerCorrect).toBe(false);
+    expect(r.output?.newCorrectStreak).toBe(0);
+    expect(r.output?.newDifficulty).toBeLessThan(4);
+  });
+
+  it('detects session end signal', async () => {
+    mocks.routeTask.mockResolvedValue({
+      output: 'Strong work today. You know your cardiac emergencies. Keep reading on the latest AHA guidelines. [SESSION_END]',
+      model: 'gemini-2.5-flash',
+      provider: 'gemini',
+      attempts: 1,
+      latencyMs: 150,
+    });
+    const { invokeAgent } = await import('@/lib/agents/shared/runtime');
+    await import('@/lib/agents/graphs/preceptor');
+    const r = await invokeAgent('preceptor-pimping', {
+      sessionId: 'pp-6',
+      setting: 'clinic',
+      studentUtterance: 'Start a statin, check A1c, and screen for depression.',
+      priorTurns: Array.from({ length: 8 }, (_, i) => ({
+        role: (i % 2 === 0 ? 'preceptor' : 'student') as 'preceptor' | 'student',
+        text: `Turn ${i + 1} content`,
+      })),
+      currentDifficulty: 4,
+      correctStreak: 3,
+    }, ctx);
+    expect(r.status).toBe('ok');
+    expect(r.output?.sessionEnding).toBe(true);
+    expect(r.output?.preceptorReply).not.toContain('[SESSION_END]');
+  });
+
+  it('uses setting-specific system prompt for OR', async () => {
+    mocks.routeTask.mockResolvedValue({
+      output: 'Correct. Name the layers of the abdominal wall you will incise through.',
+      model: 'gemini-2.5-flash',
+      provider: 'gemini',
+      attempts: 1,
+      latencyMs: 150,
+    });
+    const { invokeAgent } = await import('@/lib/agents/shared/runtime');
+    await import('@/lib/agents/graphs/preceptor');
+    const r = await invokeAgent('preceptor-pimping', {
+      sessionId: 'pp-7',
+      setting: 'OR',
+      studentUtterance: 'Midline laparotomy.',
+    }, ctx);
+    expect(r.status).toBe('ok');
+    const callArgs = mocks.routeTask.mock.calls[0];
+    expect(callArgs[2].systemPrompt).toContain('surgical');
+    expect(callArgs[2].systemPrompt).toContain('sterile');
+  });
+
+  it('registers in the agent list', async () => {
+    const { listAgents } = await import('@/lib/agents/shared/runtime');
+    await import('@/lib/agents/graphs/preceptor');
+    const names = listAgents().map((a) => a.name);
+    expect(names).toContain('preceptor-pimping');
+  });
+});

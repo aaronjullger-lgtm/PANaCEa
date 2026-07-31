@@ -26,6 +26,7 @@ import './encounter/ddxGenerator';
 import './encounter/diagnosticWorkupAdvisor';
 import './encounter/feedbackSummarizer';
 import './encounter/soapNoteGrader';
+import '../graphs/preceptor';
 
 export { listAgents, invokeAgent, getAgent, clearRegistryForTests };
 export type {

@@ -2,22 +2,18 @@
  * Unified LangChain Agent Entry Point
  *
  * Provides `createAgent()` for building production agents with LangChain.
- * Handles model selection, tool execution, and state management.
+ * Uses `createReactAgent` from `@langchain/langgraph/prebuilt` for the
+ * standard ReAct loop (tool binding, message history, recursion limit).
  *
- * Follows the same patterns as `osceEncounter.ts` — `Annotation.Root`,
- * method chaining, `routeTask`/`routeStructured` from the router.
+ * Consolidates the previous custom StateGraph implementation with the
+ * agent-orchestrator package's pattern — one agent factory, two call sites.
  *
  * @module lib.langchain.agent
  */
 
-import { HumanMessage, SystemMessage, AIMessage, type BaseMessage } from '@langchain/core/messages';
-import type { StructuredTool } from '@langchain/core/tools';
-import {
-  StateGraph,
-  Annotation,
-  START,
-  END,
-} from '@langchain/langgraph';
+import { SystemMessage, type BaseMessage } from '@langchain/core/messages';
+import type { StructuredToolInterface } from '@langchain/core/tools';
+import { createReactAgent } from '@langchain/langgraph/prebuilt';
 
 import {
   MODEL_REGISTRY,
@@ -26,36 +22,8 @@ import {
   type ModelName,
   type TaskType,
 } from './config';
-import { createModel, isModelAvailable, type AIEnvKeys } from './models';
+import { createModel, type AIEnvKeys } from './models';
 import { buildTracingConfig } from './tracing';
-
-// ─── Agent State Schema ─────────────────────────────────────────────────
-
-export const AgentState = Annotation.Root({
-  messages: Annotation<BaseMessage[]>({
-    reducer: (prev, next) => [...prev, ...next],
-    default: () => [],
-  }),
-  context: Annotation<Record<string, unknown>>({
-    reducer: (_prev, next) => next,
-    default: () => ({}),
-  }),
-  output: Annotation<string>({
-    reducer: (_prev, next) => next,
-    default: () => '',
-  }),
-  metadata: Annotation<Record<string, unknown>>({
-    reducer: (_prev, next) => next,
-    default: () => ({}),
-  }),
-  env: Annotation<AIEnvKeys | null>({
-    reducer: (_prev, next) => next,
-    default: () => null,
-  }),
-});
-
-export type AgentStateType = typeof AgentState.State;
-export type AgentUpdate = Partial<AgentStateType>;
 
 // ─── Agent Configuration ────────────────────────────────────────────────
 
@@ -65,8 +33,8 @@ export interface AgentConfig {
   /** System prompt for the agent */
   systemPrompt?: string;
   /** Tools available to the agent */
-  tools?: StructuredTool[];
-  /** Maximum recursion limit */
+  tools?: StructuredToolInterface[];
+  /** Maximum recursion limit (tool-call loops) */
   recursionLimit?: number;
   /** Temperature override */
   temperature?: number;
@@ -78,6 +46,22 @@ export interface AgentConfig {
   metadata?: Record<string, unknown>;
   /** Tags for filtering in LangSmith */
   tags?: string[];
+}
+
+// ─── Return Type ────────────────────────────────────────────────────────
+
+export interface AgentInstance {
+  /** Invoke the agent with messages, returning the full state */
+  invoke(
+    input: { messages: BaseMessage[] },
+    options?: { threadId?: string },
+  ): Promise<{ messages: BaseMessage[]; output: string }>;
+
+  /** Stream the agent execution, yielding state chunks */
+  stream(
+    input: { messages: BaseMessage[] },
+    options?: { threadId?: string },
+  ): AsyncGenerator<Record<string, unknown>>;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -96,7 +80,7 @@ function resolveModelName(input?: ModelName | TaskType): ModelName {
 }
 
 function getAgentEnv(): AIEnvKeys {
-  const env = typeof process !== 'undefined' ? process.env : {};
+  const env = typeof process !== 'undefined' ? process.env : ({} as Record<string, string | undefined>);
   return {
     GEMINI_API_KEY: env.GEMINI_API_KEY,
     OPENAI_API_KEY: env.OPENAI_API_KEY,
@@ -109,80 +93,39 @@ function getAgentEnv(): AIEnvKeys {
   };
 }
 
-function resolveEnv(state: AgentStateType): AIEnvKeys {
-  if (state.env) return state.env;
-  return getAgentEnv();
-}
-
-// ─── Agent Node ──────────────────────────────────────────────────────────
-
-function createAgentNodeFn(systemPrompt?: string) {
-  return async (state: AgentStateType): Promise<AgentUpdate> => {
-    const env = resolveEnv(state);
-    const modelName = resolveModelName();
-
-    const model = createModel(modelName, env, {
-      temperature: 0.7,
-      maxOutputTokens: DEFAULT_PARAMS.maxOutputTokens,
-    });
-
-    const messages: BaseMessage[] = [];
-    if (systemPrompt) {
-      messages.push(new SystemMessage(systemPrompt));
-    }
-    messages.push(...state.messages);
-
-    const response = await model.invoke(messages);
-
-    return { messages: [response] };
-  };
-}
-
-function createToolNodeFn(tools: StructuredTool[]) {
-  return async (state: AgentStateType): Promise<AgentUpdate> => {
-    const lastMessage = state.messages[state.messages.length - 1];
-
-    if (!lastMessage || !('tool_calls' in lastMessage) || !Array.isArray(lastMessage.tool_calls)) {
-      return { messages: [] };
-    }
-
-    const toolResults: BaseMessage[] = [];
-
-    for (const toolCall of lastMessage.tool_calls) {
-      const tool = tools.find((t) => t.name === toolCall.name);
-      if (!tool) {
-        toolResults.push(
-          new AIMessage({
-            content: `Tool "${toolCall.name}" not found`,
-          })
-        );
-        continue;
+/**
+ * Extract the final text output from agent messages.
+ * Returns the content of the last AI message (skipping tool calls).
+ */
+function extractOutput(messages: BaseMessage[]): string {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i]!;
+    const type = msg.getType?.() ?? msg._getType?.() ?? 'unknown';
+    if (type === 'ai' || type === 'AIMessage') {
+      const content = msg.content;
+      if (typeof content === 'string') return content;
+      if (Array.isArray(content)) {
+        // Find the first text block
+        const textBlock = content.find(
+          (b: unknown) => typeof b === 'object' && b !== null && (b as Record<string, unknown>).type === 'text',
+        ) as { text?: string } | undefined;
+        if (textBlock?.text) return textBlock.text;
+        return JSON.stringify(content);
       }
-
-      try {
-        const result = await tool.invoke(toolCall.args);
-        toolResults.push(
-          new AIMessage({
-            content: typeof result === 'string' ? result : JSON.stringify(result),
-          })
-        );
-      } catch (error) {
-        toolResults.push(
-          new AIMessage({
-            content: `Tool error: ${error instanceof Error ? error.message : String(error)}`,
-          })
-        );
-      }
+      return String(content);
     }
-
-    return { messages: toolResults };
-  };
+  }
+  return '';
 }
 
 // ─── Agent Factory ──────────────────────────────────────────────────────
 
 /**
  * Create a LangChain agent with automatic model selection and tracing.
+ *
+ * Uses `createReactAgent` from `@langchain/langgraph/prebuilt` for the
+ * standard ReAct loop — tool binding, message history, and recursion
+ * limit are all handled internally.
  *
  * @example
  * ```ts
@@ -194,66 +137,65 @@ function createToolNodeFn(tools: StructuredTool[]) {
  * const result = await agent.invoke({
  *   messages: [new HumanMessage('Generate a cardiology question')],
  * });
+ * console.log(result.output);
  * ```
  */
-export function createAgent(config: AgentConfig) {
+export function createAgent(config: AgentConfig): AgentInstance {
   const env = getAgentEnv();
+  const modelName = resolveModelName(config.model);
+  const model = createModel(modelName, env, {
+    temperature: config.temperature,
+    maxOutputTokens: config.maxOutputTokens,
+  });
 
-  const workflow = new StateGraph(AgentState)
-    .addNode('agent', createAgentNodeFn(config.systemPrompt))
-    .addNode('tools', createToolNodeFn(config.tools ?? []))
-    .addEdge(START, 'agent')
-    .addConditionalEdges(
-      'agent',
-      (state: AgentStateType) => {
-        const lastMessage = state.messages[state.messages.length - 1];
-        if (lastMessage && 'tool_calls' in lastMessage && Array.isArray(lastMessage.tool_calls) && lastMessage.tool_calls.length > 0) {
-          return 'tools';
-        }
-        return '__end__';
-      },
-      ['tools', '__end__']
-    )
-    .addEdge('tools', 'agent');
+  const tools = config.tools ?? [];
+  const systemPrompt = config.systemPrompt;
 
-  const compiled = workflow.compile();
+  // Build the ReAct agent via createReactAgent.
+  // This handles: model.bindTools(tools), ToolNode, conditional routing,
+  // message history accumulation, and recursion limit internally.
+  const graph = createReactAgent({
+    llm: model,
+    tools,
+    messageModifier: systemPrompt ? new SystemMessage(systemPrompt) : undefined,
+  });
+
+  const runName = config.runName ?? `agent:${config.model ?? 'default'}`;
+  const tags = config.tags ?? [];
+  const metadata = config.metadata ?? {};
 
   return {
-    async invoke(input: { messages: BaseMessage[] }, options?: { threadId?: string }) {
-      const tracingConfig = buildTracingConfig(env, {
-        runName: config.runName ?? `agent:${config.model ?? 'default'}`,
-        tags: config.tags,
-        metadata: config.metadata,
-      });
+    async invoke(input, options) {
+      const tracingConfig = buildTracingConfig(env, { runName, tags, metadata });
 
-      return compiled.invoke(
-        { ...input, env },
+      const result = await graph.invoke(
+        { messages: input.messages },
         {
           configurable: { thread_id: options?.threadId ?? 'default' },
           ...tracingConfig,
           recursionLimit: config.recursionLimit ?? 25,
         },
       );
+
+      const messages: BaseMessage[] = (result.messages ?? []) as BaseMessage[];
+      return { messages, output: extractOutput(messages) };
     },
 
-    async *stream(input: { messages: BaseMessage[] }, options?: { threadId?: string }) {
-      const tracingConfig = buildTracingConfig(env, {
-        runName: config.runName ?? `agent:${config.model ?? 'default'}`,
-        tags: config.tags,
-        metadata: config.metadata,
-      });
+    async *stream(input, options) {
+      const tracingConfig = buildTracingConfig(env, { runName, tags, metadata });
 
-      const readable = await compiled.stream(
-        { ...input, env },
+      const stream = await graph.stream(
+        { messages: input.messages },
         {
           configurable: { thread_id: options?.threadId ?? 'default' },
           ...tracingConfig,
           recursionLimit: config.recursionLimit ?? 25,
+          streamMode: 'values',
         },
       );
 
-      for await (const chunk of readable) {
-        yield chunk;
+      for await (const chunk of stream) {
+        yield chunk as Record<string, unknown>;
       }
     },
   };
@@ -264,7 +206,7 @@ export function createAgent(config: AgentConfig) {
 /**
  * Create a medical question generation agent.
  */
-export function createQuestionGeneratorAgent() {
+export function createQuestionGeneratorAgent(): AgentInstance {
   return createAgent({
     model: 'question-generation',
     systemPrompt: `You are a medical education expert creating PANCE/PANRE practice questions.
@@ -293,7 +235,7 @@ Output format:
 /**
  * Create a clinical reasoning tutor agent.
  */
-export function createTutorAgent() {
+export function createTutorAgent(): AgentInstance {
   return createAgent({
     model: 'socratic-tutoring',
     systemPrompt: `You are a Socratic tutor helping PA students prepare for PANCE/PANRE.
@@ -314,7 +256,7 @@ Keep responses concise and focused. Use clinical scenarios when possible.`,
 /**
  * Create an OSCE encounter agent.
  */
-export function createOsceAgent() {
+export function createOsceAgent(): AgentInstance {
   return createAgent({
     model: 'osce-chat',
     systemPrompt: `You are a standardized patient in an OSCE (Objective Structured Clinical Examination).

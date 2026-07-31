@@ -1,7 +1,9 @@
 import { StateGraph, END, START, MemorySaver } from '@langchain/langgraph';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
+import { HumanMessage, SystemMessage } from '@langchain/core/messages';
+import type { RunnableConfig } from '@langchain/core/runnables';
 import { TutorState } from '../state/tutor-state';
+import type { AIEnvKeys } from '@/lib/langchain/models';
 
 const TUTOR_SYSTEM_PROMPT = `You are an adaptive clinical tutor for PA students preparing for the PANCE exam.
 
@@ -13,16 +15,39 @@ Rules:
 - Keep explanations concise — 2-3 sentences max unless the student asks for more
 - Never diagnose real patients — this is educational only`;
 
-function getModel() {
+/**
+ * Resolve the Gemini API key from the graph's RunnableConfig.
+ * In Edge runtime, env vars are injected via config.configurable.aiEnv
+ * rather than process.env (which is unavailable in Cloudflare Workers).
+ */
+function resolveApiKey(config?: RunnableConfig): string {
+  // Prefer injected env from configurable (Edge-safe)
+  const aiEnv = config?.configurable?.aiEnv as AIEnvKeys | undefined;
+  if (aiEnv?.GEMINI_API_KEY) return aiEnv.GEMINI_API_KEY;
+
+  // Fallback to process.env for local Node.js dev (Express, scripts, tests)
+  if (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) {
+    return process.env.GEMINI_API_KEY;
+  }
+
+  throw new Error(
+    'GEMINI_API_KEY not configured. Pass via config.configurable.aiEnv.GEMINI_API_KEY in Edge runtime, or set GEMINI_API_KEY env var for local dev.'
+  );
+}
+
+function getModel(config?: RunnableConfig) {
   return new ChatGoogleGenerativeAI({
     model: 'gemini-2.5-flash',
-    apiKey: process.env.GEMINI_API_KEY,
+    apiKey: resolveApiKey(config),
     temperature: 0.7,
   });
 }
 
-async function generateQuestion(state: typeof TutorState.State) {
-  const model = getModel();
+async function generateQuestion(
+  state: typeof TutorState.State,
+  config?: RunnableConfig,
+) {
+  const model = getModel(config);
 
   const systemContext = `Current focus: ${state.organSystem ?? 'mixed organ systems'}
 Task category: ${state.taskCategory ?? 'general'}
@@ -46,8 +71,11 @@ Generate a clinical vignette question. Return ONLY the question — no answer ye
   };
 }
 
-async function evaluateAnswer(state: typeof TutorState.State) {
-  const model = getModel();
+async function evaluateAnswer(
+  state: typeof TutorState.State,
+  config?: RunnableConfig,
+) {
+  const model = getModel(config);
   const lastHuman = state.messages.filter((m) => m._getType() === 'human').pop();
 
   if (!lastHuman || !state.currentQuestion) {

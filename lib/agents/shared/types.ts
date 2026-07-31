@@ -11,7 +11,7 @@
 
 import type { AIEnvKeys } from '@/lib/langchain/models';
 
-export type AgentTier = 'encounter' | 'ops';
+export type AgentTier = 'encounter' | 'ops' | 'orchestrator';
 
 export type AgentStatus =
   | 'ok'

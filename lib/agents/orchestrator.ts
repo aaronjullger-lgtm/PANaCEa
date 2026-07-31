@@ -5,12 +5,21 @@
  * (packages/agent-orchestrator/) systems. Provides unified tracing,
  * error handling, and result aggregation.
  *
+ * Execution is powered by a LangGraph StateGraph (orchestrator-graph.ts)
+ * with checkpointing, streaming, and conditional routing. The old
+ * hand-rolled sequential/parallel/supervisor dispatch has been replaced
+ * by the graph-based pipeline.
+ *
  * @module lib/agents/orchestrator
  */
 
-import type { AgentContext, InvokeResult } from './shared/types';
-import { invokeUnifiedAgent, createTeamWorkflow, runTeam, type TeamWorkflow, type TeamResult } from './unified';
-import { runSupervisor, runBroadcastSupervisor, registerClinicalSupervisor, registerOpsSupervisor, registerContentSupervisor } from './supervisor';
+import type { AgentContext } from './shared/types';
+import { registerClinicalSupervisor, registerOpsSupervisor, registerContentSupervisor } from './supervisor';
+import {
+  invokeOrchestratorGraph,
+  type OrchestratorGraphConfig,
+  type OrchestratorNodeResult,
+} from './graphs/orchestrator-graph';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -19,12 +28,14 @@ export interface OrchestratorConfig {
   description: string;
   /** Agents to coordinate */
   agents: string[];
-  /** Execution strategy: 'sequential' | 'parallel' | 'supervisor' */
-  strategy: 'sequential' | 'parallel' | 'supervisor';
+  /** Execution strategy: 'sequential' | 'parallel' | 'supervisor' | 'conditional' */
+  strategy: 'sequential' | 'parallel' | 'supervisor' | 'conditional';
   /** Supervisor name if strategy is 'supervisor' */
   supervisorName?: string;
   /** Optional: custom merge function for parallel execution */
   merger?: (results: Array<{ agent: string; output: unknown }>) => unknown;
+  /** Optional: custom route function for conditional strategy */
+  routeFn?: OrchestratorGraphConfig['routeFn'];
 }
 
 export interface OrchestratorResult {
@@ -70,7 +81,11 @@ export function listOrchestrators(): Array<{
 // ─── Orchestrator Execution ─────────────────────────────────────────────────
 
 /**
- * Execute an orchestrator workflow with full tracing.
+ * Execute an orchestrator workflow via the LangGraph StateGraph pipeline.
+ *
+ * All strategies (sequential, parallel, supervisor, conditional) are
+ * handled by the unified graph in orchestrator-graph.ts. The graph
+ * provides checkpointing, streaming, and consistent error handling.
  */
 export async function runOrchestrator(
   orchestratorName: string,
@@ -84,149 +99,32 @@ export async function runOrchestrator(
 
   const start = Date.now();
 
-  let result: OrchestratorResult;
-
-  switch (config.strategy) {
-    case 'sequential':
-      result = await executeSequential(config, input, ctx);
-      break;
-    case 'parallel':
-      result = await executeParallel(config, input, ctx);
-      break;
-    case 'supervisor':
-      result = await executeSupervisor(config, input, ctx);
-      break;
-    default:
-      throw new Error(`Unknown strategy: ${config.strategy}`);
-  }
-
-  result.totalDurationMs = Date.now() - start;
-  return result;
-}
-
-/**
- * Sequential execution: agents run one after another.
- */
-async function executeSequential(
-  config: OrchestratorConfig,
-  input: unknown,
-  ctx: AgentContext,
-): Promise<OrchestratorResult> {
-  const results: OrchestratorResult['results'] = [];
-  let currentInput = input;
-
-  for (const agentName of config.agents) {
-    const agentStart = Date.now();
-
-    const result = await invokeUnifiedAgent({
-      name: agentName,
-      input: currentInput,
-      ctx,
-      trace: {
-        name: `orchestrator/${agentName}`,
-        tags: ['sequential'],
-      },
-    });
-
-    results.push({
-      agent: agentName,
-      status: result.status === 'ok' ? 'ok' : 'error',
-      output: result.output,
-      durationMs: Date.now() - agentStart,
-    });
-
-    // Pass output as input to next agent
-    if (result.output) {
-      currentInput = result.output;
-    }
-
-    // Stop on error
-    if (result.status !== 'ok') {
-      break;
-    }
-  }
-
-  return {
-    orchestrator: config.name,
-    strategy: 'sequential',
-    results,
-    mergedOutput: results[results.length - 1]?.output,
-    totalDurationMs: 0,
+  // Map OrchestratorConfig → OrchestratorGraphConfig
+  const graphConfig: OrchestratorGraphConfig = {
+    name: config.name,
+    description: config.description,
+    agents: config.agents,
+    strategy: config.strategy === 'supervisor' ? 'conditional' : config.strategy,
+    merger: config.merger
+      ? (results: OrchestratorNodeResult[]) => {
+          return config.merger!(results.map((r) => ({ agent: r.agent, output: r.output })));
+        }
+      : undefined,
+    routeFn: config.routeFn,
   };
-}
 
-/**
- * Parallel execution: agents run simultaneously.
- */
-async function executeParallel(
-  config: OrchestratorConfig,
-  input: unknown,
-  ctx: AgentContext,
-): Promise<OrchestratorResult> {
-  const promises = config.agents.map(async (agentName) => {
-    const agentStart = Date.now();
-
-    const result = await invokeUnifiedAgent({
-      name: agentName,
-      input,
-      ctx,
-      trace: {
-        name: `orchestrator/${agentName}`,
-        tags: ['parallel'],
-      },
-    });
-
-    return {
-      agent: agentName,
-      status: result.status === 'ok' ? 'ok' as const : 'error' as const,
-      output: result.output,
-      durationMs: Date.now() - agentStart,
-    };
+  const graphResult = await invokeOrchestratorGraph({
+    config: graphConfig,
+    input,
+    ctx,
   });
 
-  const results = await Promise.all(promises);
-
-  // Merge outputs if merger is provided
-  let mergedOutput: unknown;
-  if (config.merger) {
-    mergedOutput = config.merger(results.map((r) => ({ agent: r.agent, output: r.output })));
-  } else {
-    mergedOutput = results.map((r) => ({ agent: r.agent, output: r.output }));
-  }
-
   return {
     orchestrator: config.name,
-    strategy: 'parallel',
-    results,
-    mergedOutput,
-    totalDurationMs: 0,
-  };
-}
-
-/**
- * Supervisor execution: delegates to a registered supervisor.
- */
-async function executeSupervisor(
-  config: OrchestratorConfig,
-  input: unknown,
-  ctx: AgentContext,
-): Promise<OrchestratorResult> {
-  const supervisorName = config.supervisorName;
-  if (!supervisorName) {
-    throw new Error('supervisorName required for supervisor strategy');
-  }
-
-  const supervisorResult = await runSupervisor(supervisorName, input, ctx);
-
-  return {
-    orchestrator: config.name,
-    strategy: 'supervisor',
-    results: supervisorResult.allResults.map((r) => ({
-      ...r,
-      durationMs: 0,
-    })),
-    mergedOutput: supervisorResult.output,
-    totalDurationMs: 0,
+    strategy: config.strategy,
+    results: graphResult.results,
+    mergedOutput: graphResult.mergedOutput ?? undefined,
+    totalDurationMs: Date.now() - start,
   };
 }
 
@@ -279,7 +177,7 @@ export function registerBuiltInOrchestrators(): void {
     }),
   });
 
-  // Ops orchestrator (supervisor)
+  // Ops orchestrator (supervisor → conditional)
   registerOrchestrator({
     name: 'ops-supervised',
     description: 'Route operational tasks to appropriate agent via supervisor',

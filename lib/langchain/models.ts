@@ -33,6 +33,9 @@ export interface AIEnvKeys {
   LANGSMITH_API_KEY?: string;
   LANGSMITH_PROJECT?: string;
   LANGSMITH_SAMPLE_RATE?: string;
+  LANGFUSE_PUBLIC_KEY?: string;
+  LANGFUSE_SECRET_KEY?: string;
+  LANGFUSE_BASE_URL?: string;
 }
 
 // ─── Model Creation ────────────────────────────────────────────────────────

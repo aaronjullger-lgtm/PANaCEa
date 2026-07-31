@@ -77,7 +77,7 @@ export {
   createTutorAgent,
   createOsceAgent,
   type AgentConfig,
-  type AgentStateType,
+  type AgentInstance,
 } from './agent';
 
 // ─── Graph Pipelines ─────────────────────────────────────────────────────
@@ -88,3 +88,52 @@ export {
   type PipelineInput,
   type QuestionDraft,
 } from './graphs/questionPipeline';
+
+// ─── OSCE Encounter Graph ────────────────────────────────────────────────
+export {
+  compiledOsceGraph,
+  OsceEncounterState,
+  StudentIntentSchema,
+  type OsceState,
+  type OsceUpdate,
+  type OscePhase,
+  type OsceGraphInput,
+  type TranscriptMessage,
+  type StudentIntent,
+  type StudentIntentResult,
+  type CompiledOsceGraph,
+} from './graphs/osceEncounter';
+
+// ─── Clinical Deep Research Graph ────────────────────────────────────────
+export {
+  compiledClinicalResearchGraph,
+  runClinicalResearch,
+  type ClinicalResearchInput,
+  type ClinicalResearchResult,
+  type ClinicalReport,
+  type ResearchTask,
+  type ResearchSource,
+  type ReportSection,
+} from './graphs/clinicalResearch';
+
+// ─── Deep Agent Harness (deepagents wrapper) ─────────────────────────────
+export {
+  createPanaceaAgent,
+  createContentAgent,
+  createTutorAgent as createDeepTutorAgent,
+  createQuestionAgent,
+  createEdgeAgent,
+  type PanaceaDeepAgentConfig,
+  type PanaceaAgent,
+} from './deepagent';
+
+// ─── MCP Tools Integration ───────────────────────────────────────────────
+export {
+  loadPanaceaMcpTools,
+  checkMcpHealth,
+  prefixMcpTools,
+  filterEdgeSafeServers,
+  PANACEA_MCP_SERVERS,
+  type McpServerConfig,
+  type McpToolsResult,
+} from './mcp';
