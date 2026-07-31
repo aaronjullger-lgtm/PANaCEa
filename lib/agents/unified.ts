@@ -234,7 +234,7 @@ export async function invokeUnifiedAgent(
       ...nodeResult,
       telemetry: {
         ...nodeResult.telemetry,
-        source: nodeAgent.source,
+        source: 'node-bridge',
         nodeAgentRole: nodeAgent.role,
       },
     };
@@ -418,14 +418,16 @@ export async function getAllAgents(): Promise<Array<{
   description: string;
   tier: string;
   source: 'edge' | 'node';
+  status: 'online' | 'offline';
 }>> {
-  const edgeAgents = listAgents().map((a) => ({ ...a, source: 'edge' as const }));
+  const edgeAgents = listAgents().map((a) => ({ ...a, source: 'edge' as const, status: 'online' as const }));
 
   let nodeAgentList: Array<{
     name: string;
     description: string;
     tier: string;
     source: 'node';
+    status: 'online' | 'offline';
   }> = [];
 
   try {
@@ -435,12 +437,42 @@ export async function getAllAgents(): Promise<Array<{
       description: a.description,
       tier: a.tier,
       source: 'node' as const,
+      status: 'online' as const,
     }));
   } catch {
     // Node agents unavailable — return Edge-only list
   }
 
   return [...edgeAgents, ...nodeAgentList];
+}
+
+// ─── Compatibility: getAgentSystemHealth ────────────────────────────────────
+
+export interface AgentSystemHealth {
+  edge: { status: 'ok'; agentCount: number };
+  node: { status: 'ok' | 'down'; agentCount: number };
+}
+
+/**
+ * Get simplified agent system health (compatibility wrapper).
+ * Prefer `getBridgeHealth()` for detailed per-bridge status.
+ */
+export async function getAgentSystemHealth(): Promise<AgentSystemHealth> {
+  const bridgeHealth = await getBridgeHealth();
+
+  // Node is "ok" only if the HTTP bridge is reachable (primary Edge-compatible bridge)
+  const nodeStatus: 'ok' | 'down' =
+    bridgeHealth.nodeHttp.status === 'ok' ? 'ok' : 'down';
+
+  const nodeAgentCount =
+    bridgeHealth.nodeHttp.status === 'ok'
+      ? bridgeHealth.nodeHttp.agentCount
+      : 0;
+
+  return {
+    edge: bridgeHealth.edge,
+    node: { status: nodeStatus, agentCount: nodeAgentCount },
+  };
 }
 
 // Re-export for consumers
