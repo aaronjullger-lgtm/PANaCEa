@@ -283,6 +283,42 @@ app.get('/eval/datasets', async (_req, res) => {
   res.json({ datasets: describeDatasets() });
 });
 
+app.post('/intake', async (req, res) => {
+  const message = (req.body?.message as string) ?? '';
+  if (!message || message.trim().length < 5) {
+    res.status(400).json({ error: 'message required (min 5 chars)' });
+    return;
+  }
+  if (!canRunAgents()) {
+    res.status(503).json({ error: 'no LLM provider configured' });
+    return;
+  }
+  try {
+    const { processIntake } = await import('../autonomous/intake.js');
+    const result = await processIntake(message);
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+app.post('/fleet/autonomous-dev', authMiddleware, async (req, res) => {
+  const { runAutonomousDev } = await import('../autonomous/autonomousDev.js');
+  const { claimNextTask } = await import('../autonomous/workQueue.js');
+  const task = await claimNextTask('autonomous-dev');
+  if (!task) {
+    res.json({ ok: false, message: 'no tasks in queue' });
+    return;
+  }
+  res.json({ ok: true, taskId: task.id, message: 'autonomous dev started — check logs for progress' });
+  runAutonomousDev(task).then((result) => {
+    console.log(`[autonomous-dev] task ${task.id} → ${result.success ? 'SUCCESS' : 'FAILED'}: ${result.finalStatus}`);
+    if (result.prUrl) console.log(`[autonomous-dev] PR: ${result.prUrl}`);
+  }).catch((err) => {
+    console.error(`[autonomous-dev] task ${task.id} crashed:`, err);
+  });
+});
+
 const port = parseInt(optionalEnv('ORCHESTRATOR_PORT', '4100'), 10);
 const server = app.listen(port, () => {
   console.log(`[agent-orchestrator] API listening on http://localhost:${port}`);

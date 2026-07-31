@@ -142,6 +142,63 @@ export function isGitHubEnabled(): boolean {
   return getCapabilities().github;
 }
 
+export async function createPR(opts: {
+  title: string;
+  body: string;
+  head: string;
+  base?: string;
+}): Promise<{ number: number; url: string } | null> {
+  if (!getCapabilities().github) return null;
+  const r = parseRepo();
+  if (!r) return null;
+  try {
+    const res = await fetch(`${GITHUB_API}/repos/${r.owner}/${r.repo}/pulls`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(authHeaders() as Record<string, string>) },
+      body: JSON.stringify({ title: opts.title, body: opts.body, head: opts.head, base: opts.base ?? 'main' }),
+    });
+    if (!res.ok) {
+      console.warn(`[agent-orchestrator] GitHub createPR failed: ${res.status}`);
+      return null;
+    }
+    const j = (await res.json()) as { number: number; html_url: string };
+    return { number: j.number, url: j.html_url };
+  } catch (err) {
+    console.warn('[agent-orchestrator] GitHub createPR failed:', err);
+    return null;
+  }
+}
+
+export async function pushWorktreeBranch(worktreePath: string, branch: string): Promise<boolean> {
+  try {
+    const { execSync } = await import('node:child_process');
+    execSync(`git push origin "${branch}"`, { cwd: worktreePath, stdio: 'pipe', timeout: 30_000 });
+    return true;
+  } catch (err) {
+    console.warn(`[agent-orchestrator] git push ${branch} failed:`, err instanceof Error ? err.message : err);
+    return false;
+  }
+}
+
+export async function getPRCheckStatus(prNumber: number): Promise<{ state: 'pending' | 'success' | 'failure' | 'none' }> {
+  if (!getCapabilities().github) return { state: 'none' };
+  const r = parseRepo();
+  if (!r) return { state: 'none' };
+  try {
+    const res = await fetch(`${GITHUB_API}/repos/${r.owner}/${r.repo}/pulls/${prNumber}`, {
+      headers: authHeaders() as Record<string, string>,
+    });
+    if (!res.ok) return { state: 'none' };
+    const j = (await res.json()) as { mergeable_state?: string };
+    const state = j.mergeable_state;
+    if (state === 'clean' || state === 'unstable') return { state: 'success' };
+    if (state === 'blocked' || state === 'dirty') return { state: 'failure' };
+    return { state: 'pending' };
+  } catch {
+    return { state: 'none' };
+  }
+}
+
 export function getRepo(): string | undefined {
   return getEnv().GITHUB_REPO;
 }
