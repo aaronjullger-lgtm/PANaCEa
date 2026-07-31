@@ -28,13 +28,19 @@ import './ops/promptContractValidator';
 import './ops/schemaDriftDetector';
 import './ops/envVarAuditor';
 
+// Graphs (self-registering) — preceptor-pimping is the tutor-intent target for
+// user-supervisor-v2. Already edge-safe: the encounter registry imports it.
+import './graphs/preceptor';
+
 import { registerBuiltInOrchestrators } from './orchestrator';
 import { registerAllSupervisorsV2 } from './supervisor-v2';
+import { registerUserSupervisorV2 } from './userSupervisor';
 import { registerBuiltInSkills } from './deep-agents';
 import { configureBridge } from './bridge';
 
 registerBuiltInOrchestrators();
 registerAllSupervisorsV2();
+registerUserSupervisorV2();
 registerBuiltInSkills();
 
 // Auto-configure bridge from env if orchestrator URL is available
