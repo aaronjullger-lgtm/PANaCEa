@@ -80,6 +80,13 @@ export function buildTracingConfig(
 
   if (!env.LANGSMITH_API_KEY) return config;
 
+  // Sampling gate: prevents retry storms from flooding LangSmith.
+  // Default 1.0 (100%); set LANGSMITH_SAMPLE_RATE=0.1 for 10% in dev.
+  const sampleRate = Number(env.LANGSMITH_SAMPLE_RATE ?? 1);
+  if (sampleRate < 1 && Math.random() > sampleRate) {
+    return config;
+  }
+
   const tracer = new LangChainTracer({
     projectName: env.LANGSMITH_PROJECT ?? 'panacea',
   });

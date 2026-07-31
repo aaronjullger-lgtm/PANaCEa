@@ -40,7 +40,6 @@ export const StandardizedPatientInputSchema = z.object({
       text: z.string().max(4000),
     }),
   ).max(100).default([]),
-  systemPromptOverride: z.string().optional(),
   maxOutputTokens: z.number().int().min(64).max(2048).optional(),
 });
 export type StandardizedPatientInput = z.infer<typeof StandardizedPatientInputSchema>;
@@ -54,7 +53,6 @@ export type StandardizedPatientOutput = z.infer<typeof StandardizedPatientOutput
 const SpState = Annotation.Root({
   studentUtterance: Annotation<string>,
   priorTurns: Annotation<{ role: string; text: string }[]>,
-  systemPromptOverride: Annotation<string | null>,
   maxOutputTokens: Annotation<number>,
   patientReply: Annotation<string>,
   closureRequested: Annotation<boolean>,
@@ -66,7 +64,6 @@ async function spNode(state: SpStateType): Promise<Partial<SpStateType>> {
   const env = state.env;
   if (!env) throw new Error('StandardizedPatient: env missing from state');
   const systemPrompt =
-    state.systemPromptOverride ??
     'You are a standardized patient in an OSCE encounter. Stay in character. ' +
       'Answer briefly in the patient\'s own voice. Do not volunteer the diagnosis.';
   const historyBlock = state.priorTurns.length > 0
@@ -134,7 +131,6 @@ const standardizedPatientAgent: AgentDefinition<StandardizedPatientInput, Standa
         {
           studentUtterance: parsed.data.studentUtterance,
           priorTurns: parsed.data.priorTurns,
-          systemPromptOverride: parsed.data.systemPromptOverride ?? null,
           maxOutputTokens: parsed.data.maxOutputTokens ?? 256,
           env: ctx.env,
         },

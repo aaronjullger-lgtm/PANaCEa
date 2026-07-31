@@ -48,7 +48,7 @@ import {
 
 import { parseStructured, buildRepairPrompt } from './jsonParser';
 
-import { traceGatewayCall, type LangfuseEnv } from '@/lib/observability/langfuse';
+
 
 import {
   GatewayError,
@@ -420,16 +420,11 @@ type GatewayRequestForTrace = Pick<
   | 'maxOutputTokens'
 >;
 
-/**
- * Emit a Langfuse observation for a gateway call. No-op when Langfuse keys are
- * absent (see `traceGatewayCall`). Called from each public method on both the
- * success and failure paths so failed calls show up as ERROR-level traces.
- */
 function emitGatewayTrace(
-  context: GatewayContext,
-  request: GatewayRequestForTrace,
-  ids: { traceId: string; requestId: string; startMs: number },
-  outcome:
+  _context: GatewayContext,
+  _request: GatewayRequestForTrace,
+  _ids: { traceId: string; requestId: string; startMs: number },
+  _outcome:
     | {
         kind: 'success';
         modelUsed: string;
@@ -448,53 +443,7 @@ function emitGatewayTrace(
         errorCode?: string;
       },
 ): void {
-  const latencyMs = Date.now() - ids.startMs;
-  const langfuseEnv = context.env as unknown as LangfuseEnv;
-  if (outcome.kind === 'success') {
-    traceGatewayCall({
-      env: langfuseEnv,
-      waitUntil: context.waitUntil,
-      userId: context.auth?.userId,
-      traceId: ids.traceId,
-      requestId: ids.requestId,
-      task: request.task,
-      endpoint: request.endpoint,
-      model: outcome.modelUsed,
-      provider: outcome.provider,
-      userPrompt: request.userPrompt,
-      systemPrompt: request.systemPrompt,
-      temperature: request.temperature,
-      maxOutputTokens: request.maxOutputTokens,
-      output: outcome.output,
-      usage: outcome.usage,
-      latencyMs,
-      level: outcome.schemaRepairUsed ? 'WARNING' : 'DEFAULT',
-      metadata: {
-        attempts: outcome.attempts,
-        fallbackUsed: outcome.fallbackUsed,
-        schemaRepairUsed: outcome.schemaRepairUsed,
-      },
-    });
-    return;
-  }
-  traceGatewayCall({
-    env: langfuseEnv,
-    waitUntil: context.waitUntil,
-    userId: context.auth?.userId,
-    traceId: ids.traceId,
-    requestId: ids.requestId,
-    task: request.task,
-    endpoint: request.endpoint,
-    model: outcome.modelUsed,
-    provider: outcome.provider,
-    userPrompt: request.userPrompt,
-    systemPrompt: request.systemPrompt,
-    temperature: request.temperature,
-    maxOutputTokens: request.maxOutputTokens,
-    latencyMs,
-    errorMessage: outcome.error,
-    metadata: outcome.errorCode ? { errorCode: outcome.errorCode } : undefined,
-  });
+  // Langfuse removed — LangSmith is the sole observability path.
 }
 
 // ─── Core execution ───────────────────────────────────────────────────────

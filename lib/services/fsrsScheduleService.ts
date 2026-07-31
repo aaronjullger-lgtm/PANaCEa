@@ -15,7 +15,7 @@
 import type { PrismaClient } from '@prisma/client';
 import { FSRS, type Rating } from '../fsrs';
 import { confidenceStabilityMultiplier, fluencyIllusionDampener } from '../implicit-metrics';
-import { applyCircadianModifier } from '../circadian';
+import { applyCircadianModifier, type CircadianContext } from '../circadian';
 import { applyEorClampIfNeeded } from '../fsrs/eorScheduler';
 import { getUserCalibration } from './calibrationService';
 import { getOptimizedParameters } from './fsrsOptimizerService';
@@ -33,10 +33,8 @@ import {
 } from './sessionAccuracySlopeService';
 import { computeIntervalDeviation } from './intervalDeviationService';
 import { computeFatigueConfidenceDampener } from './sessionFatigueService';
-import type {
-  DistractorChronometryResult,
-  SwitchDirectionResult,
-} from './distractorChronometryService';
+import type { DistractorChronometryResult } from './distractorChronometryService';
+import type { SwitchDirectionResult } from './switchDirectionService';
 import type { ExplanationEngagementResult } from './explanationEngagementService';
 import type { SessionRegularityResult } from './sessionRegularityService';
 import type { RelearningSpeedResult } from './relearningSpeedService';
@@ -228,7 +226,7 @@ export async function computeFSRSUpdate(
   }
 
   let modifiedStability = rawCard.stability;
-  modifiedStability = applyCircadianModifier(modifiedStability, circadianContext);
+  modifiedStability = applyCircadianModifier(modifiedStability, circadianContext as CircadianContext);
 
   // ── Step 3: Confidence pipeline ──
 
@@ -281,9 +279,11 @@ export async function computeFSRSUpdate(
       select: { correctConditionId: true, selectedConditionId: true },
       take: 20,
     });
-    const confusionPairIds = confusionPairs.map((p) =>
-      p.correctConditionId === conditionId ? p.selectedConditionId : p.correctConditionId
-    );
+    const confusionPairIds = confusionPairs
+      .map((p) =>
+        p.correctConditionId === conditionId ? p.selectedConditionId : p.correctConditionId
+      )
+      .filter((id): id is string => id != null);
 
     const sessionCutoff = new Date(Date.now() - 30 * 60 * 1000);
     const recentSessionReviews = await prisma.reviewLog.findMany({

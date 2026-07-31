@@ -72,7 +72,7 @@ export async function generateBatchForSystem(
   const shuffled = conditions.sort(() => Math.random() - 0.5);
 
   for (let i = 0; i < count && i < shuffled.length; i++) {
-    const condition = shuffled[i];
+    const condition = shuffled[i]!;
 
     try {
       const question = await generateQuestionForCondition(condition, system);
@@ -225,8 +225,9 @@ export async function generateForAllLowSystems(threshold: number = 50): Promise<
   };
 }
 
-// CLI
-if (require.main === module) {
+// CLI (ESM-compatible)
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
   const args = process.argv.slice(2);
   const system = args.find((a) => a.startsWith('--system='))?.split('=')[1];
   const count = parseInt(args.find((a) => a.startsWith('--count='))?.split('=')[1] || '10');

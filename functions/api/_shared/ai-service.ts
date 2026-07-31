@@ -455,7 +455,7 @@ function mapToLangChainTask(task: AITaskType): TaskType | string {
       return 'content-generation';
     case 'tutor':
     case 'socratic':
-      return 'osce-chat'; // conversational tasks
+      return 'socratic-tutoring';
     case 'session-analysis':
     case 'vision-analysis':
       return 'clinical-reasoning';

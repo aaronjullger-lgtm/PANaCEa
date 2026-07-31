@@ -91,20 +91,23 @@ async function scanNode(state: EStateType): Promise<Partial<EStateType>> {
 
     // Extract env type declarations from types.ts
     if (filePath.endsWith('types.ts')) {
-      let m;
+      let m: RegExpExecArray | null;
       const typePattern = new RegExp(ENV_TYPE_PATTERN);
       while ((m = typePattern.exec(contents)) !== null) {
-        declaredVars.push(m[1]);
+        const name = m[1];
+        if (name) declaredVars.push(name);
       }
     }
 
     // Extract env.VAR references
-    let match;
+    let match: RegExpExecArray | null;
     const refPattern = new RegExp(ENV_REF_PATTERN);
     while ((match = refPattern.exec(contents)) !== null) {
       const varName = match[1];
-      if (!usedMap.has(varName)) usedMap.set(varName, []);
-      usedMap.get(varName)!.push(relPath);
+      if (varName) {
+        if (!usedMap.has(varName)) usedMap.set(varName, []);
+        usedMap.get(varName)!.push(relPath);
+      }
     }
   }
 

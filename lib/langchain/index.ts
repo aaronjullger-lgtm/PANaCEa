@@ -69,3 +69,22 @@ export {
   type ContentGenerationResult,
   type ContentGenerationOptions,
 } from './chains';
+
+// ─── Agent Factory ───────────────────────────────────────────────────────
+export {
+  createAgent,
+  createQuestionGeneratorAgent,
+  createTutorAgent,
+  createOsceAgent,
+  type AgentConfig,
+  type AgentStateType,
+} from './agent';
+
+// ─── Graph Pipelines ─────────────────────────────────────────────────────
+export {
+  compiledQuestionPipeline,
+  runQuestionPipeline,
+  type PipelineResult,
+  type PipelineInput,
+  type QuestionDraft,
+} from './graphs/questionPipeline';

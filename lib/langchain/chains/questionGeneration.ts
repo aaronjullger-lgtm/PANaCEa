@@ -113,7 +113,7 @@ export async function generateQuestions(
 
   try {
     // Step 1: Format prompt via ChatPromptTemplate (type-safe, synchronous)
-    const messages = questionPromptTemplate.formatMessages({
+    const messages = await questionPromptTemplate.formatMessages({
       formattedContext,
       count: String(count),
       questionType,

@@ -55,6 +55,12 @@ function sseEvent(event: string, data: unknown): string {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
+function sanitizeClientError(message: string | undefined): string {
+  if (!message) return 'Agent request failed.';
+  const stripped = message.replace(/https?:\/\/[^\s'"<>]+/gi, '[url]');
+  return stripped.length > 120 ? stripped.slice(0, 117) + '...' : stripped;
+}
+
 export const onRequestPost = aiEndpoint(
   StreamAgentRequestSchema,
   async (context: StreamAgentContext) => {
@@ -81,6 +87,7 @@ export const onRequestPost = aiEndpoint(
               DEEPINFRA_API_KEY: env.DEEPINFRA_API_KEY,
               LANGSMITH_API_KEY: env.LANGSMITH_API_KEY,
               LANGSMITH_PROJECT: env.LANGSMITH_PROJECT,
+              LANGSMITH_SAMPLE_RATE: env.LANGSMITH_SAMPLE_RATE,
             },
             userId: auth.userId,
           });
@@ -100,7 +107,7 @@ export const onRequestPost = aiEndpoint(
               encoder.encode(sseEvent('agent_error', {
                 agent: result.agent,
                 status: result.status,
-                error: result.error,
+                error: { status: result.status, message: sanitizeClientError(result.error?.message) },
                 durationMs: result.durationMs,
               })),
             );
@@ -111,7 +118,7 @@ export const onRequestPost = aiEndpoint(
             encoder.encode(sseEvent('agent_error', {
               agent: agentName,
               status: 'internal_error',
-              error: { status: 'internal_error', message: err instanceof Error ? err.message : String(err) },
+              error: { status: 'internal_error', message: sanitizeClientError(err instanceof Error ? err.message : String(err)) },
               durationMs: 0,
             })),
           );

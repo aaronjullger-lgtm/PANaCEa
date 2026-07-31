@@ -112,7 +112,7 @@ async function generateContent<T>(
 ): Promise<ContentGenerationResult<T>> {
   try {
     // Step 1: Format prompt via ChatPromptTemplate (type-safe, no injection)
-    const messages = promptTemplate.formatMessages(templateVars);
+    const messages = await promptTemplate.formatMessages(templateVars);
     const systemPrompt = messages[0]?.content as string ?? '';
     const userPrompt = messages[1]?.content as string ?? '';
 

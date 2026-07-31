@@ -26,7 +26,7 @@ describe('AI SDK Providers', () => {
     expect(Object.keys(AI_MODELS).length).toBeGreaterThanOrEqual(7);
     expect(AI_MODELS['gemini-2.0-flash'].provider).toBe('google');
     expect(AI_MODELS['gpt-4o-mini'].provider).toBe('openai');
-    expect(AI_MODELS['claude-haiku-3.5'].provider).toBe('anthropic');
+    expect(AI_MODELS['claude-haiku-4-5'].provider).toBe('anthropic');
   });
 
   it('createAIModel creates Google model with API key', async () => {

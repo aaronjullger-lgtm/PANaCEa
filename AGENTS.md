@@ -57,13 +57,14 @@ Do not invent scripts. Prefer `panacea-verify` skill when choosing validation.
 
 ## 1Password (secrets)
 
-The `1password` MCP server is installed (`/usr/local/bin/1password-mcp`, bridge to the desktop app). It manages **1Password Environments** — secrets never return to the agent; they're injected into authorized processes at runtime, with a desktop-app approval prompt on each access.
+The `1password` MCP server wraps the `op` CLI (`scripts/mcp-1password.js` in the repo root). It uses your **desktop app auth** — no service account needed. Secrets are read from the **`Code` vault** on demand via `op://` references.
 
-- **Always use the 1Password MCP** for create/read/manage of secrets — do not paste or hardcode credentials, and do not fall back to inventing values if a secret is missing; ask instead.
-- **Project Environment:** use the Environment named **`PANaCEa`** (id `yyhys7vw4jpovijz7oxjiwuxqe`, account `LSYKNVM7BJAENHJE2DYZHVY23Q`) for this repo's secrets (DB URLs, Clerk/Gemini/Supabase keys, Cloudflare tokens, `OPENROUTER_API_KEY`, etc.). It already exists and is populated — do not recreate it.
-- **Variable discovery only:** listing variable *names* is fine; never request raw secret values. Reference secrets by name and let 1Password inject them.
-- **Runtime injection:** secrets are mounted as a local FIFO at `.env.1password` (1Password injects on read; no plaintext on disk). Launch opencode via `opencode-1p` (wrapper at `~/.local/bin/opencode-1p`) so MCP servers and the scout agent receive their keys (`OPENROUTER_API_KEY`, `FIRECRAWL_API_KEY`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CONTEXT7_API_KEY`, `COMPOSIO_API_KEY`). If a key is missing from the Environment, add it there — do not hardcode.
-- If the desktop app prompts, that's expected — approval is per-access.
+- **Always use the 1Password MCP** for reading secrets — do not paste or hardcode credentials, and do not fall back to inventing values if a secret is missing; ask instead.
+- **Vault:** use the **`Code` vault** (id `2rtellcmb44g5uku2ozj3hlcei`) for this repo's secrets (DB URLs, Clerk/Gemini/Supabase keys, Cloudflare tokens, `OPENROUTER_API_KEY`, etc.).
+- **Tools available:** `vault_list`, `item_lookup`, `item_list`, `item_get`, `read_secret` (for `op://` refs), `op_run` (run commands with resolved secrets).
+- **Prefer `op_run` over `read_secret`** — use `op://Code/Item Name/field` in env vars to pass secrets to commands without revealing them to the model.
+- **Desktop app auth:** the `op` CLI authenticates via your desktop app. If prompted, approve the connection in 1Password.
+- **Variable discovery only:** listing item names is fine; never request raw secret values unless explicitly needed. Use `op://` references instead.
 
 ## Skills
 

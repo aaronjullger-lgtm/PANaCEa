@@ -31,3 +31,15 @@ export function buildGeminiUrl(
   }
   return `${GEMINI_BASE_URL}/${GEMINI_API_VERSION}/models/${model}:${action}?key=${apiKey}`;
 }
+
+export function buildCompatUrl(
+  provider: 'openai' | 'anthropic' | 'deepseek' | 'deepinfra' | 'azure-openai',
+  baseUrl: string,
+  env?: Record<string, string>
+): string {
+  const gatewayBase = getAIGatewayBaseUrl(env);
+  if (gatewayBase) {
+    return `${gatewayBase}/${provider}`;
+  }
+  return baseUrl;
+}

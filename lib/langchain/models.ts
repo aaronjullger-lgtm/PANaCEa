@@ -32,6 +32,7 @@ export interface AIEnvKeys {
   OPENROUTER_API_KEY?: string;
   LANGSMITH_API_KEY?: string;
   LANGSMITH_PROJECT?: string;
+  LANGSMITH_SAMPLE_RATE?: string;
 }
 
 // ─── Model Creation ────────────────────────────────────────────────────────
@@ -156,6 +157,10 @@ function createProviderModel(
         maxTokens: opts.maxTokens,
         configuration: {
           baseURL: 'https://openrouter.ai/api/v1',
+          defaultHeaders: {
+            'HTTP-Referer': 'https://studypanacea.com',
+            'X-Title': 'PANaCEa',
+          },
         },
       });
     }
