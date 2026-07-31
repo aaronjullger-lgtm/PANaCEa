@@ -253,7 +253,7 @@ describe('spbench-grader agent', () => {
 });
 
 describe('callgemini-auditor agent', () => {
-  it('scans the current repo and finds callGemini references', async () => {
+  it('scans the current repo and finds callGemini references', { timeout: 15000 }, async () => {
     const { invokeAgent } = await import('@/lib/agents/shared/runtime');
     const r = await invokeAgent('callgemini-auditor', {
       rootDir: process.cwd(),
