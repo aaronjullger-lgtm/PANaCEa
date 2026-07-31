@@ -19,7 +19,7 @@ PANaCEa already has LangSmith tracing enabled (via `LANGSMITH_TRACING=true` + `L
 | `lib/langchain/` | ✅ LangSmith auto-instrumentation | All LangGraph graphs, chains, and agents |
 | `lib/agents/` | ✅ Langfuse CallbackHandler | Edge-side agents via `invokeWithTracing` |
 | `packages/agent-orchestrator/` | ✅ Langfuse + LangSmith | Dual tracing on every agent invoke |
-| `functions/api/agents/` | ⚠️ Partial | Health endpoint only; invoke endpoints need tracing |
+| `functions/api/agents/` | ✅ Partial | `/health` reports registry/MCP/model status; `/invoke` and `/invoke/stream` traced via LangGraph; `/run` and admin tool-loop endpoints emit telemetry; Agent Protocol (`/runs`, `/threads`) and `/mcp` are prototype surfaces |
 
 ---
 
@@ -290,48 +290,29 @@ export interface EvalRubric {
 
 ---
 
-## 5. Agent Health Endpoint Enhancement
+## 5. Agent Health Endpoint
 
-The existing `functions/api/agents/health.ts` should be enhanced to report:
-- Agent registry status (which agents are registered)
-- MCP server connectivity (which MCP servers are reachable)
-- Model availability (which AI models are configured)
+`GET /api/agents/health` (`functions/api/agents/health.ts`) reports:
+- Agent registry status (registered agents by tier, capabilities, production readiness)
+- MCP server configuration (registered servers, tool counts)
+- Model availability (configured providers, `MODEL_REGISTRY`, `TASK_MODEL_MAP`)
+- Overall status (`healthy` | `degraded` | `unhealthy`)
+
+**Still planned (not yet in the health payload):**
 - Recent agent activity (last N invocations)
 - Error summary (error counts by agent, last 24h)
 
-### Enhanced Health Response Schema
+See `docs/api/API_OVERVIEW.md` for the shipped response schema.
+
+### Planned additions (not yet implemented)
+
+Activity counters and per-agent error summaries remain on the roadmap:
 
 ```typescript
-interface AgentHealthResponse {
-  status: 'healthy' | 'degraded' | 'unhealthy';
-  timestamp: string;
-  agents: {
-    registered: number;
-    productionReady: number;
-    byTier: Record<string, number>;
-    details: Array<{
-      name: string;
-      status: 'ok' | 'error' | 'unknown';
-      lastInvocation?: string;
-      errorCount24h: number;
-    }>;
-  };
-  mcp: {
-    servers: Array<{
-      name: string;
-      status: 'connected' | 'disconnected' | 'unknown';
-      toolCount: number;
-    }>;
-  };
-  models: {
-    available: string[];
-    configured: string[];
-  };
-  activity: {
-    invocations24h: number;
-    errors24h: number;
-    avgLatencyMs24h: number;
-  };
+interface AgentHealthActivity {
+  invocations24h: number;
+  errors24h: number;
+  avgLatencyMs24h: number;
 }
 ```
 
@@ -342,7 +323,7 @@ interface AgentHealthResponse {
 - [ ] Create LangSmith dashboards (3 dashboards documented above)
 - [ ] Configure alert rules (4 critical, 4 warning, 3 info)
 - [ ] Set up online evaluation pipeline (`lib/langchain/evals/onlineEvals.ts`)
-- [ ] Enhance agent health endpoint (`functions/api/agents/health.ts`)
+- [x] Enhance agent health endpoint (`functions/api/agents/health.ts`) — registry, MCP, model, and capability summary shipped; activity/error counters still TODO
 - [ ] Add agent invocation counters for dashboard metrics
 - [ ] Document dashboard URLs in team runbook
 - [ ] Set up Slack webhook for alert notifications

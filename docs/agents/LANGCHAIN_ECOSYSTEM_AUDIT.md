@@ -138,10 +138,10 @@ PANaCEa has built a **sophisticated, production-grade agent infrastructure** tha
 
 | Capability | PANaCEa Status | Gap |
 |-----------|---------------|-----|
-| Standardized messages | ⚠️ Custom types | Partial — no interoperability |
-| Capability discovery | ❌ None | **GAP** — No agent capability advertisement |
-| Task lifecycle | ⚠️ Implicit only | Partial — no explicit task states |
-| Error standardization | ✅ AgentError type | Covered |
+| Standardized messages | ✅ `lib/agents/protocol/types.ts` | Types shipped; Edge handlers at `/api/agents/runs` and `/api/agents/threads` (in-memory prototype — see `docs/api/API_OVERVIEW.md`) |
+| Capability discovery | ✅ `/api/agents/health` | Registry + MCP + model summary exposed |
+| Task lifecycle | ⚠️ Partial | Run status enum + in-memory store; cancel/stateless-wait routes not yet wired |
+| Error standardization | ✅ `AGENT_PROTOCOL_ERRORS` | Covered |
 
 ---
 
@@ -165,7 +165,7 @@ PANaCEa has built a **sophisticated, production-grade agent infrastructure** tha
 | 7 | LangSmith Engine setup | LangSmith plan tier |
 | 8 | Remote sandboxes for code execution | Deep Agents SDK dep |
 | 9 | Langflow prototyping environment | Python infrastructure |
-| 10 | Agent Protocol full implementation | `@agent-protocol/core` dep |
+| 10 | Agent Protocol full implementation | Durable store (D1/KV) + cancel/search routes; see `docs/api/API_OVERVIEW.md` for current Edge prototype |
 
 ---
 
