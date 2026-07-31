@@ -12,6 +12,7 @@ export LANGFUSE_SECRET_KEY="$(op read 'op://Code/LANGFUSE_SECRET_KEY/credential'
 export LANGFUSE_PUBLIC_KEY="$(op read 'op://Code/LANGFUSE_PUBLIC_KEY/credential' 2>/dev/null)"
 export LANGFUSE_HOST="$(op read 'op://Code/LANGFUSE_HOST/credential' 2>/dev/null)"
 export GEMINI_API_KEY="$(op read 'op://Code/GEMINI_API_KEY/credential' 2>/dev/null)"
+export OPENAI_API_KEY="$(op read 'op://Code/OPENAI_API_KEY/credential' 2>/dev/null)"
 export QDRANT_URL="$(op read 'op://Code/QDRANT_URL/credential' 2>/dev/null)"
 export QDRANT_API_KEY="$(op read 'op://Code/QDRANT_API_KEY/credential' 2>/dev/null)"
 export LINEAR_API_KEY="$(op read 'op://Code/LINEAR_API_KEY/credential' 2>/dev/null)"
@@ -19,6 +20,9 @@ export LINEAR_TEAM_ID="$(op read 'op://Code/LINEAR_TEAM_ID/credential' 2>/dev/nu
 export COMPOSIO_API_KEY="$(op read 'op://Code/COMPOSIO_API_KEY/credential' 2>/dev/null)"
 export GITHUB_PAT="$(op read 'op://Code/GITHUB_PAT/credential' 2>/dev/null)"
 export GITHUB_REPO="aaronjullger-lgtm/PANaCEa"
+export SENTRY_AUTH_TOKEN="$(op read 'op://Code/SENTRY_AUTH_TOKEN/credential' 2>/dev/null)"
+export SENTRY_ORG="aaron-ullger"
+export VERCEL_TOKEN="$(op read 'op://Code/VERCEL_API_KEY/credential' 2>/dev/null)"
 export ORCHESTRATOR_CHECKPOINT="${ORCHESTRATOR_CHECKPOINT:-off}"
 
 echo "=== Starting orchestrator on :4100 ==="
