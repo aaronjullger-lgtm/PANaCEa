@@ -207,6 +207,9 @@ npx wrangler kv:namespace list
 # Expected namespaces:
 # - RATE_LIMIT_KV (id: 7df124d8b81f400eafe6ba55477bf11d)
 # - CACHE (id: b576c43270a3407a8e5ae65afad0fe7e)
+
+# Expected D1 database (wrangler.toml [[d1_databases]]):
+# - EDGE_DB → panacea-edge (id: 5d8d23a1-3a32-42e4-aa7e-278c55469f1a)
 ```
 
 **Resolution:**

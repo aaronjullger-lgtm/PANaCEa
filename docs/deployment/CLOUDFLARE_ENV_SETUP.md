@@ -207,7 +207,8 @@ npm run dev
 
 ## Code / repo reference
 
-- **Cloudflare env types:** `functions/api/_shared/types.ts` — `CloudflareEnv` must match `wrangler.toml` bindings (e.g. `RATE_LIMIT_KV`, `CACHE`) and Dashboard variables (`DATABASE_URL`, `GEMINI_API_KEY`, `CLERK_SECRET_KEY`, `SUPABASE_*`, `SENTRY_DSN`, `ENVIRONMENT`).
+- **Cloudflare env types:** `functions/api/_shared/types.ts` — `CloudflareEnv` must match `wrangler.toml` bindings (e.g. `RATE_LIMIT_KV`, `CACHE`, `EDGE_DB`, `AI`) and Dashboard variables (`DATABASE_URL`, `GEMINI_API_KEY`, `CLERK_SECRET_KEY`, `SUPABASE_*`, `SENTRY_DSN`, `ENVIRONMENT`).
+- **D1 edge cache:** `EDGE_DB` binds the `panacea-edge` D1 database for `functions/api/_shared/d1-cache.ts` (`edge_cache` table). See `docs/api/API_OVERVIEW.md` for schema and key-prefix conventions.
 - **Vite env types:** `types/vite-env.d.ts` — `ImportMetaEnv` lists all `VITE_*` variables used by the client. Use `import.meta.env.VITE_*` in frontend code; never `process.env` in browser bundles.
 - **Functions:** Use `context.env` (or the `env` param) in `functions/api/**`; do not use `process.env` in Edge handlers (use Dashboard or `.dev.vars` for local).
 
