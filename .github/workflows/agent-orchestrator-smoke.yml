@@ -33,4 +33,4 @@ jobs:
 
       - name: Smoke (compile all agent graphs)
         working-directory: packages/agent-orchestrator
-        run: npm run smoke
+        run: npx tsx src/smoke.test.ts
