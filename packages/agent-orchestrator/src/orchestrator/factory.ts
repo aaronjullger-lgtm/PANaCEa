@@ -39,6 +39,14 @@ export interface BuildAgentOptions {
   recursionLimit?: number;
   /** Override the default model (env ORCHESTRATOR_MODEL). */
   model?: string;
+  /**
+   * Structured output schema (Deep Agents response_format pattern).
+   * When provided, the agent's final response is parsed against this schema.
+   * Accepts a Zod schema, JSON Schema object, or a provider-native format string.
+   *
+   * Example: `responseFormat: z.object({ severity: z.enum(['low','medium','high']), summary: z.string() })`
+   */
+  responseFormat?: unknown;
 }
 
 export interface CompiledAgent {
@@ -47,7 +55,13 @@ export interface CompiledAgent {
   invoke: (input: {
     messages: Array<{ role: 'user' | 'system' | 'assistant' | 'tool'; content: string }>;
     threadId?: string;
-  }) => Promise<{ messages: Array<{ role: string; content: string; tool_calls?: unknown[] }> }>;
+    /** Optional structured output schema for this specific invocation. */
+    responseFormat?: unknown;
+  }) => Promise<{
+    messages: Array<{ role: string; content: string; tool_calls?: unknown[] }>;
+    /** Parsed structured output if response_format was provided. */
+    structuredOutput?: unknown;
+  }>;
   streamEvents?: (input: {
     messages: Array<{ role: 'user' | 'system' | 'assistant' | 'tool'; content: string }>;
     threadId?: string;
@@ -115,7 +129,15 @@ export async function buildAgent(opts: BuildAgentOptions): Promise<CompiledAgent
         return { role: type, content, tool_calls: m.tool_calls };
       });
 
-      return { messages };
+      // Attempt structured output parsing if response_format was requested
+      let structuredOutput: unknown;
+      const responseFormat = input.responseFormat ?? opts.responseFormat;
+      if (responseFormat) {
+        const lastMsg = messages.at(-1)?.content ?? '';
+        structuredOutput = tryParseStructuredOutput(lastMsg, responseFormat);
+      }
+
+      return { messages, structuredOutput };
     },
     async *streamEvents(input) {
       const config = {
@@ -139,4 +161,22 @@ export function finalResponse(messages: Array<{ role: string; content: string }>
     if (messages[i]?.role === 'ai' || messages[i]?.role === 'assistant') return messages[i]?.content ?? '';
   }
   return messages.at(-1)?.content ?? '';
+}
+
+function tryParseStructuredOutput(content: string, schema: unknown): unknown {
+  // Extract JSON from markdown code blocks or raw text
+  const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/) ?? content.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+  if (!jsonMatch?.[1]) return undefined;
+
+  try {
+    const parsed = JSON.parse(jsonMatch[1]);
+    // If schema is a Zod schema, validate
+    if (typeof (schema as { safeParse?: (v: unknown) => { success: boolean; data: unknown } }).safeParse === 'function') {
+      const result = (schema as { safeParse: (v: unknown) => { success: boolean; data: unknown } }).safeParse(parsed);
+      return result.success ? result.data : undefined;
+    }
+    return parsed;
+  } catch {
+    return undefined;
+  }
 }

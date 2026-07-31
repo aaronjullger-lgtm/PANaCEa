@@ -16,7 +16,16 @@ export * from './clients/github.js';
 export * from './clients/sentry.js';
 export * from './clients/integrations.js';
 export * from './tools/index.js';
+export {
+  panaceaToolToLangChain,
+  panaceaToolsToLangChain,
+  mergeTools,
+  type PanaceaToolDefinition,
+  type AnyPanaceaTool,
+  type ToolExecutionContext as PanaceaToolContext,
+} from './tools/from-registry.js';
 export * from './orchestrator/factory.js';
+export * from './orchestrator/subAgentBuilder.js';
 export * from './agents/registry.js';
 export { buildContentAuditAgent, CONTENT_AUDIT_SYSTEM_PROMPT, CONTENT_AUDIT_ROLE } from './agents/contentAudit.js';
 export { buildPRTriageAgent, PR_TRIAGE_SYSTEM_PROMPT, PR_TRIAGE_ROLE } from './agents/prTriage.js';

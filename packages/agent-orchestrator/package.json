@@ -25,7 +25,9 @@
     "eval:datasets": "tsx src/eval/cli.ts datasets",
     "eval:run": "tsx src/eval/cli.ts run",
     "eval:all": "tsx src/eval/cli.ts all",
-    "prompts:push": "tsx src/clients/prompts.cli.ts"
+    "prompts:push": "tsx src/clients/prompts.cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.1",

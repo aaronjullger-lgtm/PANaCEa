@@ -214,3 +214,14 @@ export function toolsForRole(role: AgentRole) {
 }
 
 export type AgentRole = 'content-audit' | 'pr-triage' | 'incident-responder' | 'content-enrichment' | 'weekly-report' | 'weekly-report-supervisor';
+
+// ─── PANaCEa clinical tool adapter ──────────────────────────────────────────
+
+export {
+  panaceaToolToLangChain,
+  panaceaToolsToLangChain,
+  mergeTools,
+  type PanaceaToolDefinition,
+  type AnyPanaceaTool,
+  type ToolExecutionContext as PanaceaToolContext,
+} from './from-registry.js';
