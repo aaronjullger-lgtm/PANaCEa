@@ -2,6 +2,8 @@ import { DATASETS, DATASET_NAMES, type DatasetCase } from './datasets.js';
 import { evalDeterministic, evalLLMJudge, casePassed, type EvalScore, type CaseResult } from './evaluators.js';
 import { buildSpecialist, SPECIALIST_ROLES, type SpecialistRole } from '../agents/specialists.js';
 import { buildContentAuditAgent } from '../agents/contentAudit.js';
+import { buildAgent } from '../orchestrator/factory.js';
+import { resolvePrompt } from '../clients/prompts.js';
 import { remember } from '../clients/qdrant.js';
 import { getEnv, getLangfuseHost, getCapabilities } from '../config/env.js';
 
@@ -20,6 +22,25 @@ async function getAgent(role: string) {
     return buildSpecialist(role as SpecialistRole);
   }
   if (role === 'content-audit') return buildContentAuditAgent({});
+  const promptMap: Record<string, string> = {
+    'code-reviewer': 'panacea-code-reviewer',
+    'ddx-generator': 'panacea-clinical-validator',
+    'soap-note-grader': 'panacea-clinical-validator',
+    'feedback-summarizer': 'panacea-weekly-report',
+    'diagnostic-workup-advisor': 'panacea-clinical-validator',
+  };
+  const promptName = promptMap[role];
+  if (promptName) {
+    const prompt = await resolvePrompt(promptName);
+    return buildAgent({
+      role: 'content-enrichment',
+      tools: [],
+      systemPrompt: prompt,
+      traceName: `panacea:eval-${role}`,
+      tags: ['panacea', 'eval', role],
+      recursionLimit: 8,
+    });
+  }
   throw new Error(`No builder for role "${role}"`);
 }
 

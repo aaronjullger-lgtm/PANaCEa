@@ -48,9 +48,9 @@ async function getQdrant(): Promise<import('@qdrant/js-client-rest').QdrantClien
 /** Embedding dimension for the active embedding provider. */
 async function getEmbeddingDim(): Promise<number> {
   const env = getEnv();
-  if (env.GEMINI_API_KEY) return 768; // text-embedding-004
-  if (env.OPENAI_API_KEY) return 1536; // text-embedding-3-small
-  return 384; // fallback dim for_sha256-hash pseudo-embeddings in fully offline mode
+  if (env.OPENAI_API_KEY) return 1536;
+  if (env.GEMINI_API_KEY) return 768;
+  return 1536;
 }
 
 const _ensured = new Set<string>();
@@ -268,6 +268,17 @@ async function embed(text: string): Promise<number[]> {
   const env = getEnv();
   const caps = getCapabilities();
 
+  if (env.OPENAI_API_KEY) {
+    try {
+      const OpenAI = (await import('openai')).default;
+      const client = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+      const res = await client.embeddings.create({ model: 'text-embedding-3-small', input: text });
+      return res.data[0]?.embedding ?? hashEmbed(text, 1536);
+    } catch (err) {
+      console.warn('[agent-orchestrator] OpenAI embedding failed, trying fallback:', err instanceof Error ? err.message : err);
+    }
+  }
+
   if (env.GEMINI_API_KEY) {
     try {
       const { GoogleGenerativeAI } = await import('@google/generative-ai');
@@ -276,24 +287,10 @@ async function embed(text: string): Promise<number[]> {
       const res = await model.embedContent(text);
       return res.embedding.values;
     } catch (err) {
-      console.warn('[agent-orchestrator] Gemini embedding failed, using hash fallback:', err);
+      console.warn('[agent-orchestrator] Gemini embedding failed, using hash fallback:', err instanceof Error ? err.message : err);
     }
   }
 
-  if (env.OPENAI_API_KEY && caps.qdrant) {
-    try {
-      const OpenAI = (await import('openai')).default;
-      const client = new OpenAI({ apiKey: env.OPENAI_API_KEY });
-      const res = await client.embeddings.create({ model: 'text-embedding-3-small', input: text });
-      return res.data[0]?.embedding ?? hashEmbed(text, 1536);
-    } catch (err) {
-      console.warn('[agent-orchestrator] OpenAI embedding failed, using hash fallback:', err);
-    }
-  }
-
-  // Deterministic offline fallback — NOT a real embedding, but keeps Qdrant
-  // functional (cosine search degenerates to a near-random but stable retrieval).
-  // Only used when no embedding API key is set at all.
   return hashEmbed(text, await getEmbeddingDim());
 }
 
