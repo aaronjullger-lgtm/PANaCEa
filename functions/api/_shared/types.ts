@@ -30,10 +30,12 @@ export interface CloudflareEnv {
   OPENAI_API_KEY?: string;
   ANTHROPIC_API_KEY?: string;
   DEEPSEEK_API_KEY?: string;
+  DEEPINFRA_API_KEY?: string;
 
   // LangSmith Observability
   LANGSMITH_API_KEY?: string;
   LANGSMITH_PROJECT?: string;
+  LANGSMITH_SAMPLE_RATE?: string;
 
   // Supabase (storage, media) — set in Dashboard
   SUPABASE_URL?: string;
@@ -56,8 +58,11 @@ export interface CloudflareEnv {
   CACHE?: WorkersKVNamespace;
   RATE_LIMIT_KV?: WorkersKVNamespace;
 
-  // Optional D1 binding (for future use)
-  DB?: D1Database;
+  // Workers AI binding (env.AI.run() for edge LLM inference)
+  AI?: Ai;
+
+  // D1 Database binding (wrangler.toml: [[d1_databases]] binding = "EDGE_DB")
+  EDGE_DB?: D1Database;
 
   // Optional R2 bucket (for media storage)
   MEDIA_BUCKET?: R2Bucket;
@@ -314,6 +319,14 @@ interface D1Result<T = unknown> {
 interface D1ExecResult {
   count: number;
   duration: number;
+}
+
+/**
+ * Workers AI binding stub
+ * Full types available from @cloudflare/workers-types
+ */
+export interface Ai {
+  run(model: string, inputs: Record<string, unknown>): Promise<Record<string, unknown>>;
 }
 
 /**

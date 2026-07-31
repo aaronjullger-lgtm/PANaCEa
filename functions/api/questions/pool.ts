@@ -23,6 +23,7 @@ import {
   CACHE_CONFIG,
   isKVAvailable,
 } from '../_shared/cache';
+import { d1Get, d1Set } from '../_shared/d1-cache';
 import type { KVNamespace } from '@cloudflare/workers-types';
 import {
   indexToLetter,
@@ -282,7 +283,7 @@ export const onRequestGet = aiEndpoint(
         seenQuestionIds.map((q: { questionId: string }) => q.questionId)
       );
 
-      // Check cache (include systems for didactic multi-system requests)
+      // Check D1 cache first (strong consistency, SQL-queryable), then KV fallback
       const cacheKey = getQuestionPoolCacheKey({
         system: system ?? undefined,
         systems: systems ?? undefined,
@@ -291,7 +292,8 @@ export const onRequestGet = aiEndpoint(
       });
       let cachedPool: PreGeneratedQuestionRecord[] | null = null;
 
-      if (isKVAvailable((env as { CACHE?: KVNamespace }).CACHE)) {
+      cachedPool = await d1Get<PreGeneratedQuestionRecord[]>(env.EDGE_DB, cacheKey);
+      if (!cachedPool && isKVAvailable((env as { CACHE?: KVNamespace }).CACHE)) {
         cachedPool = await getFromCache((env as { CACHE: KVNamespace }).CACHE, cacheKey);
       }
 
@@ -365,18 +367,17 @@ export const onRequestGet = aiEndpoint(
           currentCount: questions.length,
         });
       }
-      // Cache the pool questions if available
-      if (
-        isKVAvailable((env as { CACHE?: KVNamespace }).CACHE) &&
-        !cachedPool &&
-        poolQuestions.rawQuestions
-      ) {
-        await setInCache(
-          (env as { CACHE: KVNamespace }).CACHE,
-          cacheKey,
-          poolQuestions.rawQuestions,
-          CACHE_CONFIG.TTL.QUESTION_POOL
-        );
+      // Cache pool questions in D1 (primary) and KV (fallback) on miss
+      if (!cachedPool && poolQuestions.rawQuestions) {
+        await d1Set(env.EDGE_DB, cacheKey, poolQuestions.rawQuestions, CACHE_CONFIG.TTL.QUESTION_POOL);
+        if (isKVAvailable((env as { CACHE?: KVNamespace }).CACHE)) {
+          await setInCache(
+            (env as { CACHE: KVNamespace }).CACHE,
+            cacheKey,
+            poolQuestions.rawQuestions,
+            CACHE_CONFIG.TTL.QUESTION_POOL
+          );
+        }
       }
 
       logger.info('Fetched pool questions', {

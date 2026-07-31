@@ -100,6 +100,7 @@ const SCHEDULES: Record<string, string[]> = {
     'aggregate-distributions',
     'calibrate-items',
     'analyze-exam-outcomes',
+    'd1-cache-purge',
   ],
   // Weekly — Sunday 07:00 UTC — replaces weekly-automation.yml
   '0 7 * * 0': [

@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import type { CloudflareEnv } from '../_shared/types';
+import { d1GetOrSet } from '../_shared/d1-cache';
 import {
   buildIllnessScript,
   compareScripts,
@@ -29,11 +30,11 @@ const QuerySchema = z.object({
   compare: z.string().optional(),
 });
 
-type Env = CloudflareEnv & { CACHE?: KVNamespace };
+const ILLNESS_SCRIPT_TTL = 3600;
 
 export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) => {
   const { env, validated } = context as {
-    env: Env;
+    env: CloudflareEnv;
     validated: z.infer<typeof QuerySchema>;
     auth: { userId: string };
   };
@@ -41,23 +42,28 @@ export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) =
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Check KV cache
     const cacheKey = validated.compare
       ? `illness-script:${validated.conditionId}:vs:${validated.compare}`
       : `illness-script:${validated.conditionId}`;
 
-    if (env.CACHE) {
-      const cached = await env.CACHE.get(cacheKey);
-      if (cached) {
-        return new Response(cached, {
-          status: 200,
-          headers: { 'Content-Type': 'application/json', 'X-Cache': 'HIT' },
-        });
-      }
-    }
+    const script = await d1GetOrSet(env.EDGE_DB, cacheKey, async () => {
+      const primary = await fetchAndBuildScript(prisma, validated.conditionId);
+      if (!primary) return null;
 
-    // Fetch primary condition
-    const script = await fetchAndBuildScript(prisma, validated.conditionId);
+      if (validated.compare) {
+        const secondary = await fetchAndBuildScript(prisma, validated.compare);
+        if (!secondary) return null;
+        return {
+          mode: 'comparison',
+          scriptA: primary,
+          scriptB: secondary,
+          comparison: compareScripts(primary, secondary),
+        };
+      }
+
+      return { mode: 'single', script: primary };
+    }, ILLNESS_SCRIPT_TTL);
+
     if (!script) {
       return new Response(
         JSON.stringify({ error: `Condition not found: ${validated.conditionId}` }),
@@ -65,42 +71,14 @@ export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) =
       );
     }
 
-    let responseBody: Record<string, unknown>;
-
-    // Optional comparison mode
-    if (validated.compare) {
-      const compareScript = await fetchAndBuildScript(prisma, validated.compare);
-      if (!compareScript) {
-        return new Response(
-          JSON.stringify({ error: `Comparison condition not found: ${validated.compare}` }),
-          { status: 404, headers: { 'Content-Type': 'application/json' } }
-        );
-      }
-
-      const comparison = compareScripts(script, compareScript);
-      responseBody = {
-        mode: 'comparison',
-        scriptA: script,
-        scriptB: compareScript,
-        comparison,
-      };
-    } else {
-      responseBody = {
-        mode: 'single',
-        script,
-      };
-    }
-
-    const json = JSON.stringify(responseBody);
-
-    // Cache for 1 hour
-    if (env.CACHE) {
-      await env.CACHE.put(cacheKey, json, { expirationTtl: 3600 });
-    }
+    const json = JSON.stringify(script);
+    const cacheHit = await import('../_shared/d1-cache').then((m) =>
+      m.d1Has(env.EDGE_DB, cacheKey)
+    );
 
     return new Response(json, {
       status: 200,
-      headers: { 'Content-Type': 'application/json', 'X-Cache': 'MISS' },
+      headers: { 'Content-Type': 'application/json', 'X-Cache': cacheHit ? 'HIT' : 'MISS' },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
