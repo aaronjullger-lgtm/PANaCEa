@@ -9,6 +9,7 @@ on:
     branches: [main]
     paths:
       - 'packages/agent-orchestrator/**'
+      - '.github/workflows/agent-orchestrator-smoke.yml'
 
 jobs:
   smoke:
