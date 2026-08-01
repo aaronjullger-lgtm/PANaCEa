@@ -440,14 +440,14 @@ function buildInsights(input: NormalizeInput, goal: DashboardGoal, userState: Da
   const pairLeft = formatTopic(pair?.correctConditionName ?? pair?.correctConditionId ?? input.todayPlan?.targetedConditions?.[0]);
   const pairRight = formatTopic(pair?.selectedConditionName ?? pair?.selectedConditionId ?? (pairLeft.toLowerCase().includes('pneumonia') ? 'PE' : 'Pneumonia'));
   const hasPair = Boolean(pair) || input.todayPlan?.targetedConditions?.some((condition) => condition.toLowerCase().includes(' vs '));
-  if (hasPair && maturity >= 0.25) {
-    const handled = targetTopic.toLowerCase().includes(pairLeft.toLowerCase()) || input.todayPlan?.targetedConditions?.some((condition) => condition.toLowerCase().includes(' vs '));
+    if (hasPair && maturity >= 0.25) {
+    const handled = targetTopic.toLowerCase().includes(pairLeft.toLowerCase()) || (input.todayPlan?.targetedConditions?.some((condition) => condition.toLowerCase().includes(' vs ')) ?? false);
     candidates.push({
       id: 'confusion_pair',
       class: 'evidence',
       signalId: 'confusion_pair',
       title: handled ? 'Confusion pair is in plan' : 'Confusion pair surfaced',
-      explanation: handled ? 'The comparison is already built into today’s repair block.' : 'A split comparison drill would reduce repeated misses.',
+      explanation: handled ? 'The comparison is already built into today\'s repair block.' : 'A split comparison drill would reduce repeated misses.',
       attribution: pair ? `${pair.frequency} recent misses connected ${pairLeft} with ${pairRight}.` : `${targetTopic} is the active targeted comparison.`,
       actionState: handled ? 'in_plan' : 'needs_action',
       microVisual: { kind: 'split-contrast', left: pairLeft, right: pairRight, handled },
@@ -460,6 +460,7 @@ function buildInsights(input: NormalizeInput, goal: DashboardGoal, userState: Da
       anxietyCost: handled ? 0.05 : 0.16,
       redundancyPenalty: handled ? 0.2 : 0,
       alreadyHandledPenalty: handled ? 0.06 : 0,
+      deepLink: { href: `/library?search=${encodeURIComponent(pairLeft)} vs ${encodeURIComponent(pairRight)}`, label: `Compare ${pairLeft} vs ${pairRight}` },
     });
   }
 
@@ -483,6 +484,7 @@ function buildInsights(input: NormalizeInput, goal: DashboardGoal, userState: Da
       anxietyCost: 0.16,
       redundancyPenalty: 0.12,
       alreadyHandledPenalty: targetTopic.toLowerCase().includes(weak.system.toLowerCase()) ? 0.08 : 0,
+      deepLink: { href: `/library?search=${encodeURIComponent(weak.system)}`, label: `Review ${formatTopic(weak.system)} content` },
     });
   }
 

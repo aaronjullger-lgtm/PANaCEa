@@ -11,10 +11,10 @@ export type DashboardLayoutProfile = {
 export const dashboardModeProfiles: Record<DashboardMode, DashboardLayoutProfile> = {
   pance: {
     aboveFold: ['goal_context', 'today_command', 'insight_stack'],
-    secondary: ['review_coverage', 'readiness_pulse'],
-    belowFold: ['mastery_urgency_matrix', 'trust_timeline', 'plan_protocol_strip', 'blueprint_heatmap'],
+    secondary: ['blueprint_heatmap', 'review_coverage', 'readiness_pulse'],
+    belowFold: ['mastery_urgency_matrix', 'trust_timeline', 'plan_protocol_strip'],
     visualDensity: 'standard',
-    maxVisibleWidgets: 7,
+    maxVisibleWidgets: 8,
   },
   eor: {
     aboveFold: ['goal_context', 'today_command', 'insight_stack'],
@@ -53,10 +53,10 @@ export const dashboardModeProfiles: Record<DashboardMode, DashboardLayoutProfile
   },
   behind: {
     aboveFold: ['goal_context', 'today_command', 'insight_stack'],
-    secondary: ['catch_up_plan', 'readiness_pulse'],
+    secondary: ['blueprint_heatmap', 'catch_up_plan', 'readiness_pulse'],
     belowFold: ['mastery_urgency_matrix', 'review_coverage', 'trust_timeline'],
     visualDensity: 'standard',
-    maxVisibleWidgets: 6,
+    maxVisibleWidgets: 7,
   },
   ahead: {
     aboveFold: ['goal_context', 'today_command', 'insight_stack'],

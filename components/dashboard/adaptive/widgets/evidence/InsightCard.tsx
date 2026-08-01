@@ -1,5 +1,6 @@
 import React from 'react';
-import { Activity, CheckCircle2, Eye, ShieldCheck, Target, TriangleAlert } from 'lucide-react';
+import { Activity, CheckCircle2, Eye, ShieldCheck, Target, TriangleAlert, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { DashboardInsightCandidate, InsightActionState, InsightMicroVisual } from '../../model/widgetTypes';
 import { MicroBars } from '../../visuals/MicroBars';
 
@@ -118,6 +119,15 @@ export function InsightCard({ card }: { card: DashboardInsightCandidate }) {
         <MicroVisual visual={card.microVisual} />
       </div>
       <p className="mt-2 text-[0.68rem] leading-4 text-[var(--color-text-muted)]">{card.attribution}</p>
+      {card.deepLink && (
+        <Link
+          to={card.deepLink.href}
+          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--color-accent)] hover:underline"
+        >
+          {card.deepLink.label}
+          <ExternalLink className="h-3 w-3" aria-hidden="true" />
+        </Link>
+      )}
     </article>
   );
 }

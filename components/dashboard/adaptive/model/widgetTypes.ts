@@ -119,6 +119,8 @@ export type DashboardInsightCandidate = {
   anxietyCost: number;
   redundancyPenalty: number;
   alreadyHandledPenalty: number;
+  /** Optional deep link to related clinical library content. */
+  deepLink?: { href: string; label: string };
 };
 
 export type DashboardSlots = Partial<Record<DashboardSlot, SelectedWidget[]>>;
