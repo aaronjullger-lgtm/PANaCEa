@@ -26,7 +26,7 @@ import './encounter/ddxGenerator';
 import './encounter/diagnosticWorkupAdvisor';
 import './encounter/feedbackSummarizer';
 import './encounter/soapNoteGrader';
-// import '../graphs/preceptor.ts'; // FIXME: esbuild resolution issue in Cloudflare Pages Functions build
+import '../graphs/preceptor';
 
 export { listAgents, invokeAgent, getAgent, clearRegistryForTests };
 export type {
