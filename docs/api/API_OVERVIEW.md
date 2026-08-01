@@ -56,37 +56,45 @@ Gate uses gateway task `grading` (balanced tier), structured `{ passed, feedback
 
 **Success response (`200 OK`)**
 
+Unified envelope (handler payload is nested under `data`):
+
 ```json
 {
+  "ok": true,
   "success": true,
-  "question": {
-    "id": "string",
-    "text": "string",
-    "options": ["string"],
-    "correctAnswer": "string",
-    "system": "string",
-    "difficulty": "medium",
-    "submissionReady": false,
-    "requiresApproval": true,
-    "metadata": {
-      "stagingQuestionId": "string",
-      "persistence": "staged_for_review",
-      "medicalContentId": "string",
-      "conditionId": "string",
-      "cached": false,
-      "fromCache": false,
-      "fromStaging": false
+  "data": {
+    "success": true,
+    "question": {
+      "id": "string",
+      "text": "string",
+      "options": ["string"],
+      "correctAnswer": "string",
+      "system": "string",
+      "difficulty": "medium",
+      "submissionReady": false,
+      "requiresApproval": true,
+      "metadata": {
+        "stagingQuestionId": "string",
+        "persistence": "staged_for_review",
+        "medicalContentId": "string",
+        "conditionId": "string",
+        "cached": false,
+        "fromCache": false,
+        "fromStaging": false
+      },
+      "drugValidation": {
+        "checked": true,
+        "allValid": true,
+        "drugCount": 2,
+        "invalidDrugs": [],
+        "hasInteractions": false
+      }
     },
-    "drugValidation": {
-      "checked": true,
-      "allValid": true,
-      "drugCount": 2,
-      "invalidDrugs": [],
-      "hasInteractions": false
-    }
+    "cached": false,
+    "similarity": 0.94
   },
-  "cached": false,
-  "similarity": 0.94
+  "traceId": "string",
+  "timestamp": "2026-08-01T00:00:00.000Z"
 }
 ```
 
