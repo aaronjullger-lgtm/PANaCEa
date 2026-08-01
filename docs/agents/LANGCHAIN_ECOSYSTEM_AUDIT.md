@@ -59,7 +59,7 @@ PANaCEa has built a **sophisticated, production-grade agent infrastructure** tha
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| `toolRegistry.ts` | ✅ Production | Typed tool registry, Gemini function declarations |
+| `toolRegistry.ts` | ✅ Production | Typed tool registry, Gemini function declarations, registry factories (`createDefaultToolRegistry`, `createClinicalToolRegistry`, `createQualityToolRegistry`) |
 | 12 Tools | ✅ Production | blueprintCoverageCheck, clinicalLibrarySearch, conditionVerify, contentHealthAudit, databaseIntegrityCheck, drillCoverageCheck, fsrsCalibrationStatus, fsrsDueCount, questionQualityCheck, userProgressSummary |
 | `agentRunner.ts` | ✅ Production | Multi-turn agent execution loop |
 | `geminiAgentClient.ts` | ✅ Production | Gemini-specific turn parsing |

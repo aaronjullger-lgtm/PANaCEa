@@ -113,23 +113,30 @@ repo-hygiene ← database_integrity_check
 
 ## Tool Registry Configuration
 
+Registry factories live in two modules:
+
+- **`lib/services/agents/toolRegistry.ts`** — `createDefaultToolRegistry`, `createClinicalToolRegistry`, `createQualityToolRegistry` (lazy `require` to avoid circular imports). **Use this in Edge handlers** such as `functions/api/agents/run.ts`.
+- **`lib/services/agents/tools/index.ts`** — same three factories plus `createInfraToolRegistry` (eager imports). **Use this in Node/tests** and frontend-adjacent code.
+
+Both return a `ToolRegistry` instance; tool names and categories are identical.
+
 ### Default Registry (10 tools)
 ```typescript
-import { createDefaultToolRegistry } from '@/lib/services/agents/tools';
+import { createDefaultToolRegistry } from '@/lib/services/agents/toolRegistry';
 const registry = createDefaultToolRegistry();
 // All 10 tools available
 ```
 
 ### Clinical Agent Registry (3 tools)
 ```typescript
-import { createClinicalToolRegistry } from '@/lib/services/agents/tools';
+import { createClinicalToolRegistry } from '@/lib/services/agents/toolRegistry';
 const registry = createClinicalToolRegistry();
 // clinical_library_search, user_progress_summary, fsrs_due_count
 ```
 
 ### Quality Agent Registry (3 tools)
 ```typescript
-import { createQualityToolRegistry } from '@/lib/services/agents/tools';
+import { createQualityToolRegistry } from '@/lib/services/agents/toolRegistry';
 const registry = createQualityToolRegistry();
 // content_health_audit, question_quality_check, condition_verify
 ```
@@ -140,6 +147,10 @@ import { createInfraToolRegistry } from '@/lib/services/agents/tools';
 const registry = createInfraToolRegistry();
 // database_integrity_check, fsrs_calibration_status
 ```
+
+### HTTP entry point
+
+`POST /api/agents/run` is the student-facing agent runner. See [API Overview](../api/API_OVERVIEW.md#post-apiagentsrun) for the request/response contract.
 
 ---
 
