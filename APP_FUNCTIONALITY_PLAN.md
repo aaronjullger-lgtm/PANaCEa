@@ -20,7 +20,6 @@
 | Pending Prisma migrations | 7 migrations awaiting approval (see `prisma/audit/proposed_migration_*.sql`) | Needs Aaron approval |
 | Prod dep: `web-push` | Sprint 18 notification cron — needs Aaron approval | Needs Aaron approval |
 | Supabase MCP migrations | 3 migrations applied 2026-04-17, need `npx prisma migrate resolve --applied` on pull | Session setup |
-| Missing status docs | `UPDATED_PRODUCTION_READINESS_SCORECARD.md`, `NEXT_IMPLEMENTATION_PLAN.md` referenced by CLAUDE.md but don't exist | Docs |
 
 ## Current Task Priorities
 
