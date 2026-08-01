@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { dashboardFixtures } from '../fixtures/dashboardFixtures';
 import { resolveDashboardWidgets } from './resolveDashboardWidgets';
 import { scoreWidget } from './scoreWidget';
@@ -123,7 +124,11 @@ describe('adaptive dashboard rendering states', () => {
     const ctx = dashboardFixtures.partialFailure();
     const vm = resolveDashboardWidgets(ctx);
 
-    render(<DashboardShell viewModel={vm} />);
+    render(
+      <MemoryRouter>
+        <DashboardShell viewModel={vm} />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByText(/Study plan fetch failed/i)).toBeTruthy();
     expect(screen.getAllByTestId('primary-study-action')).toHaveLength(1);

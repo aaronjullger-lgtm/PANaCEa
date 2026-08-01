@@ -18,11 +18,15 @@ import { PlanProtocolStripWidget } from './context/PlanProtocolStripWidget';
 import { TrustTimelineWidget } from './trust/TrustTimelineWidget';
 import { TargetedConditionsWidget } from './evidence/TargetedConditionsWidget';
 import { WeaknessDrillWidget } from './triage/WeaknessDrillWidget';
+import { StudyStreakWidget } from './trust/StudyStreakWidget';
+import { FsrsHealthWidget } from './forecast/FsrsHealthWidget';
+import { RecentSessionsWidget } from './trust/RecentSessionsWidget';
 import { getSystemDisplayFullName } from '@/config/topic-map';
 import type {
   BlueprintHeatmapData,
   CatchUpPlanData,
   ExamHorizonData,
+  FsrsHealthData,
   GoalContextData,
   InsightStackData,
   LoadGuardrailData,
@@ -30,7 +34,9 @@ import type {
   MasteryUrgencyMatrixData,
   PlanProtocolStripData,
   ReadinessPulseData,
+  RecentSessionsData,
   ReviewCoverageData,
+  StudyStreakData,
   TodayCommandData,
   TargetedConditionsData,
   TrustTimelineData,
@@ -519,5 +525,139 @@ export const dashboardWidgetRegistry: DashboardWidgetDefinition[] = [
       const weak = ctx.raw.dashboardAnalytics?.weakSystems?.[0];
       return weak ? `${weak.system} at ${Math.round(weak.accuracy)}% accuracy over ${weak.attempts} attempts.` : 'No weakness data available.';
     },
+  },
+  {
+    id: 'study_streak',
+    class: 'trust',
+    allowedSlots: ['secondary_left', 'secondary_right', 'below_fold_secondary'],
+    eligible: (ctx) => {
+      if (ctx.mode === 'low_data' || ctx.mode === 'overloaded') return false;
+      const overview = ctx.raw.dashboardAnalytics?.overview;
+      if (!overview) return false;
+      return overview.currentStreak >= 1 || overview.studyMinutesLast7Days >= 30;
+    },
+    score: (ctx) => {
+      const streak = ctx.raw.dashboardAnalytics?.overview?.currentStreak ?? 0;
+      return scoreWidget({
+        urgency: 0.15,
+        goalImpact: 0.4,
+        actionability: 0.3,
+        evidenceQuality: 0.85,
+        novelty: streak >= 7 ? 0.65 : 0.4,
+        userStateFit: 0.8,
+        anxietyCost: 0.01,
+        redundancyPenalty: 0.1,
+        alreadyHandledPenalty: 0,
+      });
+    },
+    build: (ctx): StudyStreakData => {
+      const overview = ctx.raw.dashboardAnalytics?.overview;
+      const streak = overview?.currentStreak ?? 0;
+      const message =
+        streak >= 14 ? 'Outstanding consistency' :
+        streak >= 7 ? 'Strong streak — keep it going' :
+        streak >= 3 ? 'Building momentum' :
+        streak >= 1 ? 'Started a streak today' :
+        'Study today to start a streak';
+      return {
+        currentStreak: streak,
+        activeDays: overview?.activeDays ?? 0,
+        studyMinutes7d: overview?.studyMinutesLast7Days ?? 0,
+        message,
+      };
+    },
+    visual: () => visualTokenForSignal('clinical_trust', 'quiet'),
+    component: StudyStreakWidget as React.ComponentType<{ data: unknown; visual: VisualToken }>,
+    cadence: { maxShowsPerWeek: 5 },
+    attribution: (ctx) => {
+      const streak = ctx.raw.dashboardAnalytics?.overview?.currentStreak ?? 0;
+      return `${streak}-day streak with ${ctx.raw.dashboardAnalytics?.overview?.activeDays ?? 0} active days this week.`;
+    },
+  },
+  {
+    id: 'fsrs_health',
+    class: 'forecast',
+    allowedSlots: ['secondary_left', 'secondary_right', 'below_fold_secondary'],
+    eligible: (ctx) => {
+      if (ctx.mode === 'low_data' || ctx.mode === 'overloaded') return false;
+      const fsrs = ctx.raw.dashboardAnalytics?.fsrs;
+      return Boolean(fsrs && fsrs.reviewCount >= 20 && fsrs.retentionPercent != null);
+    },
+    score: (ctx) => {
+      const retention = ctx.raw.dashboardAnalytics?.fsrs?.retentionPercent ?? 85;
+      return scoreWidget({
+        urgency: retention < 75 ? 0.55 : 0.2,
+        goalImpact: 0.5,
+        actionability: 0.35,
+        evidenceQuality: 0.78,
+        novelty: 0.45,
+        userStateFit: 0.7,
+        anxietyCost: retention < 70 ? 0.12 : 0.04,
+        redundancyPenalty: 0.08,
+        alreadyHandledPenalty: 0,
+      });
+    },
+    build: (ctx): FsrsHealthData => {
+      const fsrs = ctx.raw.dashboardAnalytics?.fsrs!;
+      const retention = fsrs.retentionPercent ?? 0;
+      const interpretation =
+        retention >= 90 ? 'Excellent retention' :
+        retention >= 80 ? 'Healthy retention curve' :
+        retention >= 70 ? 'Retention needs attention' :
+        'Retention below target — review more';
+      return {
+        reviewCount: fsrs.reviewCount,
+        retentionPercent: retention,
+        averageStability: fsrs.averageStability,
+        averageDifficulty: fsrs.averageDifficulty,
+        optimizerEligible: fsrs.optimizer?.eligible ?? null,
+        optimizerProgress: fsrs.optimizer?.progressPercent ?? null,
+        interpretation,
+      };
+    },
+    visual: () => visualTokenForSignal('readiness_forecast', 'quiet'),
+    component: FsrsHealthWidget as React.ComponentType<{ data: unknown; visual: VisualToken }>,
+    cadence: { maxShowsPerWeek: 4 },
+    attribution: (ctx) => {
+      const fsrs = ctx.raw.dashboardAnalytics?.fsrs;
+      return fsrs ? `${fsrs.reviewCount} reviews at ${Math.round(fsrs.retentionPercent ?? 0)}% retention.` : 'FSRS data unavailable.';
+    },
+  },
+  {
+    id: 'recent_sessions',
+    class: 'trust',
+    allowedSlots: ['below_fold_primary', 'below_fold_secondary'],
+    eligible: (ctx) => {
+      if (ctx.mode === 'low_data' || ctx.mode === 'overloaded') return false;
+      const sessions = ctx.raw.dashboardAnalytics?.recentSessions;
+      return Boolean(sessions && sessions.length >= 1);
+    },
+    score: () =>
+      scoreWidget({
+        urgency: 0.12,
+        goalImpact: 0.35,
+        actionability: 0.25,
+        evidenceQuality: 0.82,
+        novelty: 0.3,
+        userStateFit: 0.65,
+        anxietyCost: 0.02,
+        redundancyPenalty: 0.05,
+        alreadyHandledPenalty: 0,
+      }),
+    build: (ctx): RecentSessionsData => {
+      const sessions = ctx.raw.dashboardAnalytics?.recentSessions ?? [];
+      return {
+        sessions: sessions.slice(0, 3).map((s) => ({
+          id: s.id,
+          dateLabel: s.dateLabel,
+          modeLabel: s.modeLabel,
+          accuracy: s.accuracy,
+          durationMinutes: s.durationMinutes,
+        })),
+      };
+    },
+    visual: () => visualTokenForSignal('clinical_trust', 'quiet'),
+    component: RecentSessionsWidget as React.ComponentType<{ data: unknown; visual: VisualToken }>,
+    attribution: (ctx) => `${ctx.raw.dashboardAnalytics?.recentSessions?.length ?? 0} recent sessions logged.`,
   },
 ];

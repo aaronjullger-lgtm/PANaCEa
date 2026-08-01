@@ -92,3 +92,32 @@ export type WeaknessDrillData = {
   weaknessLabel: string;
   drillHref: string;
 };
+
+export type StudyStreakData = {
+  currentStreak: number;
+  activeDays: number;
+  studyMinutes7d: number;
+  message: string;
+};
+
+export type FsrsHealthData = {
+  reviewCount: number;
+  retentionPercent: number;
+  averageStability: number | null;
+  averageDifficulty: number | null;
+  optimizerEligible: boolean | null;
+  optimizerProgress: number | null;
+  interpretation: string;
+};
+
+export type RecentSessionEntry = {
+  id: string;
+  dateLabel: string;
+  modeLabel: string;
+  accuracy: number | null;
+  durationMinutes: number;
+};
+
+export type RecentSessionsData = {
+  sessions: RecentSessionEntry[];
+};
