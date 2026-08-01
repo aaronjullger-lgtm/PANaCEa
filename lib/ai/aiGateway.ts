@@ -245,6 +245,7 @@ function buildGeminiOptions(args: {
   endpoint: string;
   signal?: AbortSignal;
   imageParts?: Array<{ mimeType: string; data: string }>;
+  grounded?: boolean;
 }): GeminiRequestOptions {
   const contents: GeminiContent[] = [];
 
@@ -305,12 +306,16 @@ function buildGeminiOptions(args: {
     };
   }
 
+  const tools = args.grounded
+    ? [...(args.tools ?? []), { googleSearch: {} }]
+    : args.tools;
+
   return {
     model: args.model,
     systemInstruction: args.systemPrompt,
     contents,
     generationConfig,
-    tools: args.tools,
+    tools,
     cachedContent: args.cachedContent,
     endpoint: args.endpoint,
     signal: args.signal,
@@ -476,6 +481,7 @@ async function executeCore<T>(
     endpoint: string;
     signal?: AbortSignal;
     imageParts?: Array<{ mimeType: string; data: string }>;
+    grounded?: boolean;
     requestId: string;
     traceId: string;
     startMs: number;
@@ -515,6 +521,7 @@ async function executeCore<T>(
       endpoint: args.endpoint,
       signal: args.signal,
       imageParts: args.imageParts,
+      grounded: args.grounded,
     });
 
     let invokeResult: Awaited<ReturnType<typeof invokeModel>>;
@@ -715,6 +722,8 @@ async function callText(
       strategy,
       endpoint: request.endpoint,
       signal: request.signal,
+      grounded: request.grounded,
+      imageParts: request.imageParts,
       requestId,
       traceId,
       startMs,
@@ -812,6 +821,8 @@ async function callStructured<T>(
       strategy,
       endpoint: request.endpoint,
       signal: request.signal,
+      grounded: request.grounded,
+      imageParts: request.imageParts,
       requestId,
       traceId,
       startMs,

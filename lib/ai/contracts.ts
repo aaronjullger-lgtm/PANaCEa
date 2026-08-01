@@ -102,6 +102,8 @@ export interface GatewayRequestBase {
   signal?: AbortSignal;
   /** Trace correlation: pass in an existing trace ID to link calls. */
   parentTraceId?: string;
+  /** Enable Google Search grounding (Vertex AI) for clinical accuracy. */
+  grounded?: boolean;
 }
 
 export interface GatewayTextRequest extends GatewayRequestBase {

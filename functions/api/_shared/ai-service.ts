@@ -370,6 +370,46 @@ export async function streamGemini(
   options: GeminiRequestOptions
 ): Promise<Response> {
   const model = options.model ?? GeminiModel.FLASH_2_5;
+  const body = buildRequestBody(options);
+
+  // Route through Vertex AI when configured
+  if (isVertexAvailable(context.env as Record<string, unknown>)) {
+    try {
+      const vConfig = context.env as Record<string, string>;
+      const vProject = vConfig.VERTEX_AI_PROJECT;
+      const vLocation = vConfig.VERTEX_AI_LOCATION || 'us-central1';
+      const vKey = vConfig.VERTEX_AI_API_KEY;
+      const vEndpoint = vLocation === 'global'
+        ? 'aiplatform.googleapis.com'
+        : `${vLocation}-aiplatform.googleapis.com`;
+      const vUrl = `https://${vEndpoint}/v1/projects/${vProject}/locations/${vLocation}/publishers/google/models/${model}:streamGenerateContent?alt=sse`;
+
+      const vResponse = await fetch(vUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': vKey!,
+        },
+        body: JSON.stringify(body),
+        signal: options.signal,
+      });
+
+      if (vResponse.ok && vResponse.body) {
+        return new Response(vResponse.body, {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+          },
+        });
+      }
+      console.warn(`[ai-service] Vertex stream failed (${vResponse.status}), falling back to direct API`);
+    } catch (err) {
+      console.warn(`[ai-service] Vertex stream error, falling back:`, err instanceof Error ? err.message : err);
+    }
+  }
+
   const apiKey = context.env.GEMINI_API_KEY ? sanitizeEnvValue(context.env.GEMINI_API_KEY) : undefined;
 
   if (!apiKey) {
@@ -380,7 +420,6 @@ export async function streamGemini(
   }
 
   const url = buildGeminiUrl(apiKey, model, 'streamGenerateContent', context.env as Record<string, string>) + '&alt=sse';
-  const body = buildRequestBody(options);
 
   const response = await fetch(url, {
     method: 'POST',
