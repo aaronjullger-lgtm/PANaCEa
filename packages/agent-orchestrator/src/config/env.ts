@@ -20,11 +20,11 @@ import { existsSync, readFileSync } from 'node:fs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Load local orchestrator .env first
-const localEnvPath = resolve(__dirname, '../../../.env.agents');
+const localEnvPath = resolve(__dirname, '../../.env.agents');
 if (existsSync(localEnvPath)) loadDotenv({ path: localEnvPath });
 
 // Fallback to repo root .env (read-only — let loadDotenv override nothing already set)
-const rootEnvPath = resolve(__dirname, '../../../.env');
+const rootEnvPath = resolve(__dirname, '../../../../.env');
 if (existsSync(rootEnvPath)) loadDotenv({ path: rootEnvPath, override: false });
 
 // ─── Env types ────────────────────────────────────────────────────────────
