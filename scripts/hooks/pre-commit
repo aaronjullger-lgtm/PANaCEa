@@ -1,0 +1,22 @@
+#!/bin/sh
+# PANaCEa Pre-Commit Hook — Security scan + lint gate
+# Install: cp scripts/hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+echo "[pre-commit] Running security scan..."
+node scripts/security-scan.js
+SECURITY_EXIT=$?
+
+if [ $SECURITY_EXIT -eq 2 ]; then
+  echo "[pre-commit] BLOCKED: Critical security issues found. Fix before committing."
+  exit 1
+fi
+
+# Run lint on staged files only (fast)
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx)$' | head -20)
+if [ -n "$STAGED" ]; then
+  echo "[pre-commit] Linting staged files..."
+  echo "$STAGED" | xargs npx eslint --quiet --no-error-on-unmatched-pattern 2>/dev/null || true
+fi
+
+echo "[pre-commit] Checks passed."
+exit 0

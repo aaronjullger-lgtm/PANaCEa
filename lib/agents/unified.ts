@@ -152,10 +152,10 @@ export async function getBridgeHealth(): Promise<BridgeHealth> {
   };
   try {
     const health = await checkNodeOrchestratorHealth();
-    if (health) {
+    if (health?.ok) {
       nodeHttpStatus = {
-        status: health.status === 'ok' ? 'ok' : 'degraded',
-        agentCount: health.agents.length,
+        status: 'ok',
+        agentCount: 0, // Health endpoint doesn't return agent list
         url: 'http://localhost:4100',
       };
     }
@@ -456,20 +456,18 @@ export interface AgentSystemHealth {
  * Prefer `getBridgeHealth()` for detailed per-bridge status.
  */
 export async function getAgentSystemHealth(): Promise<AgentSystemHealth> {
-  const bridgeHealth = await getBridgeHealth();
-
-  // Node is "ok" only if the HTTP bridge is reachable (primary Edge-compatible bridge)
-  const nodeStatus: 'ok' | 'down' =
-    bridgeHealth.nodeHttp.status === 'ok' ? 'ok' : 'down';
-
-  const nodeAgentCount =
-    bridgeHealth.nodeHttp.status === 'ok'
-      ? bridgeHealth.nodeHttp.agentCount
-      : 0;
+  const edgeAgents = listAgents();
+  const nodeAgents = await listNodeAgents();
 
   return {
-    edge: bridgeHealth.edge,
-    node: { status: nodeStatus, agentCount: nodeAgentCount },
+    edge: {
+      status: 'ok' as const,
+      agentCount: edgeAgents.length,
+    },
+    node: {
+      status: nodeAgents.length > 0 ? 'ok' as const : 'down' as const,
+      agentCount: nodeAgents.length,
+    },
   };
 }
 

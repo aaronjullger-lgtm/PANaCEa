@@ -11,24 +11,24 @@ export type DashboardLayoutProfile = {
 export const dashboardModeProfiles: Record<DashboardMode, DashboardLayoutProfile> = {
   pance: {
     aboveFold: ['goal_context', 'today_command', 'insight_stack'],
-    secondary: ['blueprint_heatmap', 'review_coverage', 'readiness_pulse'],
+    secondary: ['weakness_drill', 'blueprint_heatmap', 'review_coverage', 'readiness_pulse'],
     belowFold: ['targeted_conditions', 'mastery_urgency_matrix', 'trust_timeline', 'plan_protocol_strip'],
     visualDensity: 'standard',
     maxVisibleWidgets: 8,
   },
   eor: {
     aboveFold: ['goal_context', 'today_command', 'insight_stack'],
-    secondary: ['exam_horizon', 'load_guardrail'],
+    secondary: ['weakness_drill', 'exam_horizon', 'load_guardrail'],
     belowFold: ['mastery_urgency_matrix', 'plan_protocol_strip', 'trust_timeline'],
     visualDensity: 'standard',
-    maxVisibleWidgets: 6,
+    maxVisibleWidgets: 7,
   },
   didactic: {
     aboveFold: ['goal_context', 'today_command', 'insight_stack'],
-    secondary: ['exam_horizon', 'review_coverage'],
+    secondary: ['weakness_drill', 'exam_horizon', 'review_coverage'],
     belowFold: ['targeted_conditions', 'mastery_urgency_matrix', 'plan_protocol_strip', 'trust_timeline'],
     visualDensity: 'standard',
-    maxVisibleWidgets: 6,
+    maxVisibleWidgets: 7,
   },
   overloaded: {
     aboveFold: ['goal_context', 'today_command', 'insight_stack'],
@@ -53,7 +53,7 @@ export const dashboardModeProfiles: Record<DashboardMode, DashboardLayoutProfile
   },
   behind: {
     aboveFold: ['goal_context', 'today_command', 'insight_stack'],
-    secondary: ['blueprint_heatmap', 'catch_up_plan', 'readiness_pulse'],
+    secondary: ['weakness_drill', 'blueprint_heatmap', 'catch_up_plan', 'readiness_pulse'],
     belowFold: ['targeted_conditions', 'mastery_urgency_matrix', 'review_coverage', 'trust_timeline'],
     visualDensity: 'standard',
     maxVisibleWidgets: 7,

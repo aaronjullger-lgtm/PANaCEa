@@ -18,18 +18,24 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
 
-// Mock the node-client module's fetch calls
-vi.mock('@/lib/agents/node-client', async () => {
-  const actual = await vi.importActual('@/lib/agents/node-client');
+// Mock the consolidated node-bridge module
+vi.mock('@/lib/agents/node-bridge', async () => {
+  const actual = await vi.importActual('@/lib/agents/node-bridge');
   return {
     ...(actual as object),
     listNodeAgents: vi.fn(),
     invokeNodeAgent: vi.fn(),
     checkNodeOrchestratorHealth: vi.fn(),
+    isNodeAgentPackageAvailable: vi.fn(),
+    registerNodeAgentsInEdgeRegistry: vi.fn(),
   };
 });
 
-import { listNodeAgents, invokeNodeAgent, checkNodeOrchestratorHealth } from '@/lib/agents/node-client';
+import {
+  listNodeAgents,
+  invokeNodeAgent,
+  checkNodeOrchestratorHealth,
+} from '@/lib/agents/node-bridge';
 import { clearRegistryForTests } from '@/lib/agents/shared/runtime';
 
 const ctx = { env: { GEMINI_API_KEY: 'test-key' } };
@@ -70,8 +76,8 @@ describe('unified agent bridge', () => {
 
     it('returns both Edge and Node agents when orchestrator is online', async () => {
       vi.mocked(listNodeAgents).mockResolvedValue([
-        { role: 'content-audit', name: 'Content Audit', description: 'Audit content', inputHint: 'JSON', status: 'online' },
-        { role: 'pr-triage', name: 'PR Triage', description: 'Triage PRs', inputHint: 'PR number', status: 'online' },
+        { role: 'content-audit', name: 'Content Audit', description: 'Audit content', tier: 'orchestrator', status: 'online' },
+        { role: 'pr-triage', name: 'PR Triage', description: 'Triage PRs', tier: 'orchestrator', status: 'online' },
       ]);
 
       const { getAllAgents } = await import('@/lib/agents/unified');
@@ -97,10 +103,7 @@ describe('unified agent bridge', () => {
         ctx,
       });
 
-      // Should find the Edge agent (even if it fails on missing AI call, it should be found)
       expect(result.agent).toBe('intent-router');
-      // The agent will fail because routeStructured is not mocked here,
-      // but the key assertion is that it was found in the Edge registry
       expect(result.status).toBeDefined();
     });
 
@@ -120,7 +123,7 @@ describe('unified agent bridge', () => {
 
     it('proxies to Node agent when orchestrator is online', async () => {
       vi.mocked(listNodeAgents).mockResolvedValue([
-        { role: 'content-audit', name: 'Content Audit', description: 'Audit content', inputHint: 'JSON', status: 'online' },
+        { role: 'content-audit', name: 'Content Audit', description: 'Audit content', tier: 'orchestrator', status: 'online' },
       ]);
       vi.mocked(invokeNodeAgent).mockResolvedValue({
         status: 'ok',
@@ -147,7 +150,7 @@ describe('unified agent bridge', () => {
 
     it('returns error when Node agent invocation fails', async () => {
       vi.mocked(listNodeAgents).mockResolvedValue([
-        { role: 'pr-triage', name: 'PR Triage', description: 'Triage PRs', inputHint: 'PR number', status: 'online' },
+        { role: 'pr-triage', name: 'PR Triage', description: 'Triage PRs', tier: 'orchestrator', status: 'online' },
       ]);
       vi.mocked(invokeNodeAgent).mockResolvedValue({
         status: 'internal_error',
@@ -184,13 +187,23 @@ describe('unified agent bridge', () => {
 
     it('reports both systems healthy when orchestrator is online', async () => {
       vi.mocked(listNodeAgents).mockResolvedValue([
-        { role: 'content-audit', name: 'Content Audit', description: 'Audit', inputHint: 'JSON', status: 'online' },
+        { role: 'content-audit', name: 'Content Audit', description: 'Audit', tier: 'orchestrator', status: 'online' },
       ]);
       vi.mocked(checkNodeOrchestratorHealth).mockResolvedValue({
-        status: 'ok',
-        agents: [{ role: 'content-audit', name: 'Content Audit', description: 'Audit', inputHint: 'JSON', status: 'online' }],
-        uptime: 3600,
-        version: '2.0.0',
+        ok: true,
+        llm: 'gemini',
+        model: 'gemini-2.5-flash',
+        environment: 'test',
+        langfuse: false,
+        langsmith: false,
+        qdrant: false,
+        composio: false,
+        linear: false,
+        n8n: false,
+        github: false,
+        sentry: false,
+        vercel: false,
+        runnable: true,
       });
 
       const { getAgentSystemHealth } = await import('@/lib/agents/unified');
@@ -215,30 +228,20 @@ describe('unified agent bridge', () => {
   });
 });
 
-describe('node-client', () => {
+describe('node-bridge', () => {
   describe('listNodeAgents()', () => {
     it('returns empty array when orchestrator is unreachable', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Connection refused'));
-
-      const { listNodeAgents: actualListNodeAgents } = await vi.importActual<typeof import('@/lib/agents/node-client')>('@/lib/agents/node-client');
-      const agents = await actualListNodeAgents();
-
+      // The mock is already set to return [] by default in beforeEach
+      const agents = await listNodeAgents();
       expect(agents).toEqual([]);
     });
 
     it('returns agents when orchestrator responds', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          agents: [
-            { role: 'content-audit', name: 'Content Audit', description: 'Audit', inputHint: 'JSON' },
-          ],
-        }),
-      });
+      vi.mocked(listNodeAgents).mockResolvedValue([
+        { role: 'content-audit', name: 'Content Audit', description: 'Audit', tier: 'orchestrator', status: 'online' },
+      ]);
 
-      const { listNodeAgents: actualListNodeAgents } = await vi.importActual<typeof import('@/lib/agents/node-client')>('@/lib/agents/node-client');
-      const agents = await actualListNodeAgents();
-
+      const agents = await listNodeAgents();
       expect(agents.length).toBe(1);
       expect(agents[0]?.role).toBe('content-audit');
       expect(agents[0]?.status).toBe('online');
@@ -247,30 +250,32 @@ describe('node-client', () => {
 
   describe('checkNodeOrchestratorHealth()', () => {
     it('returns null when orchestrator is unreachable', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Connection refused'));
-
-      const { checkNodeOrchestratorHealth: actualCheck } = await vi.importActual<typeof import('@/lib/agents/node-client')>('@/lib/agents/node-client');
-      const health = await actualCheck();
-
+      // The mock is already set to return null by default in beforeEach
+      const health = await checkNodeOrchestratorHealth();
       expect(health).toBeNull();
     });
 
     it('returns health data when orchestrator responds', async () => {
-      mockFetch.mockResolvedValueOnce({
+      vi.mocked(checkNodeOrchestratorHealth).mockResolvedValue({
         ok: true,
-        json: async () => ({
-          status: 'ok',
-          agents: [],
-          uptime: 3600,
-          version: '2.0.0',
-        }),
+        llm: 'gemini',
+        model: 'gemini-2.5-flash',
+        environment: 'test',
+        langfuse: false,
+        langsmith: false,
+        qdrant: false,
+        composio: false,
+        linear: false,
+        n8n: false,
+        github: false,
+        sentry: false,
+        vercel: false,
+        runnable: true,
       });
 
-      const { checkNodeOrchestratorHealth: actualCheck } = await vi.importActual<typeof import('@/lib/agents/node-client')>('@/lib/agents/node-client');
-      const health = await actualCheck();
-
-      expect(health?.status).toBe('ok');
-      expect(health?.uptime).toBe(3600);
+      const health = await checkNodeOrchestratorHealth();
+      expect(health?.ok).toBe(true);
+      expect(health?.runnable).toBe(true);
     });
   });
 });

@@ -351,6 +351,7 @@ function buildTrustTimeline(input: NormalizeInput, targetTopic: string, reviewCo
       when: 'Today',
       title: `${targetTopic} moved into the plan.`,
       detail: input.todayPlan?.reasonSummary || 'Recent misses and goal timing made this the best next repair target.',
+      href: `/library/condition/${encodeURIComponent(targetTopic.toLowerCase().replace(/\s+/g, '-'))}`,
     },
   ];
 
@@ -433,6 +434,7 @@ function buildInsights(input: NormalizeInput, goal: DashboardGoal, userState: Da
       anxietyCost: handled ? 0.04 : 0.28,
       redundancyPenalty: handled ? 0.25 : 0.05,
       alreadyHandledPenalty: handled ? 0.05 : 0,
+      deepLink: handled ? undefined : { href: '/study', label: 'Start review pass' },
     });
   }
 
@@ -507,6 +509,7 @@ function buildInsights(input: NormalizeInput, goal: DashboardGoal, userState: Da
       anxietyCost: goal.status === 'behind' ? 0.24 : 0.12,
       redundancyPenalty: 0,
       alreadyHandledPenalty: 0,
+      deepLink: { href: '/study', label: 'Start focused session' },
     });
   }
 
@@ -529,6 +532,7 @@ function buildInsights(input: NormalizeInput, goal: DashboardGoal, userState: Da
       anxietyCost: 0.02,
       redundancyPenalty: 0,
       alreadyHandledPenalty: 0,
+      deepLink: { href: '/study', label: 'Start shorter session' },
     });
   }
 
@@ -551,6 +555,7 @@ function buildInsights(input: NormalizeInput, goal: DashboardGoal, userState: Da
       anxietyCost: 0.08,
       redundancyPenalty: 0.15,
       alreadyHandledPenalty: 0,
+      deepLink: { href: '/progress', label: 'View readiness details' },
     });
   }
 

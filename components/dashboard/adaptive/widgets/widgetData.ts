@@ -81,3 +81,14 @@ export type TrustTimelineData = {
 export type TargetedConditionsData = {
   conditions: Array<{ name: string; href: string }>;
 };
+
+export type WeaknessDrillData = {
+  system: string;
+  systemLabel: string;
+  accuracy: number;
+  attempts: number;
+  trend: 'improving' | 'declining' | 'neutral';
+  gapPercent: number | null;
+  weaknessLabel: string;
+  drillHref: string;
+};

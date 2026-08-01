@@ -17,6 +17,8 @@ import { BlueprintHeatmapWidget } from './triage/BlueprintHeatmapWidget';
 import { PlanProtocolStripWidget } from './context/PlanProtocolStripWidget';
 import { TrustTimelineWidget } from './trust/TrustTimelineWidget';
 import { TargetedConditionsWidget } from './evidence/TargetedConditionsWidget';
+import { WeaknessDrillWidget } from './triage/WeaknessDrillWidget';
+import { getSystemDisplayFullName } from '@/config/topic-map';
 import type {
   BlueprintHeatmapData,
   CatchUpPlanData,
@@ -32,6 +34,7 @@ import type {
   TodayCommandData,
   TargetedConditionsData,
   TrustTimelineData,
+  WeaknessDrillData,
 } from './widgetData';
 
 function density(ctx: DashboardContext): VisualToken['density'] {
@@ -467,5 +470,54 @@ export const dashboardWidgetRegistry: DashboardWidgetDefinition[] = [
     visual: () => visualTokenForSignal('clinical_trust'),
     component: TrustTimelineWidget as React.ComponentType<{ data: unknown; visual: VisualToken }>,
     attribution: () => 'Trust timeline explains plan changes without adding above-fold clutter.',
+  },
+  {
+    id: 'weakness_drill',
+    class: 'triage',
+    allowedSlots: ['secondary_left', 'secondary_right', 'below_fold_secondary'],
+    eligible: (ctx) => {
+      if (ctx.mode === 'low_data' || ctx.mode === 'overloaded') return false;
+      const weak = ctx.raw.dashboardAnalytics?.weakSystems?.[0];
+      return Boolean(weak && weak.attempts >= 10);
+    },
+    score: (ctx) => {
+      const weak = ctx.raw.dashboardAnalytics?.weakSystems?.[0];
+      const accuracy = weak?.accuracy ?? 50;
+      return scoreWidget({
+        urgency: accuracy < 50 ? 0.82 : accuracy < 65 ? 0.62 : 0.4,
+        goalImpact: 0.78,
+        actionability: 0.92,
+        evidenceQuality: weak && weak.attempts >= 20 ? 0.85 : 0.6,
+        novelty: 0.55,
+        userStateFit: ctx.mode === 'behind' ? 0.95 : 0.75,
+        anxietyCost: accuracy < 45 ? 0.14 : 0.06,
+        redundancyPenalty: 0.08,
+        alreadyHandledPenalty: 0,
+      });
+    },
+    build: (ctx): WeaknessDrillData => {
+      const weak = ctx.raw.dashboardAnalytics?.weakSystems?.[0];
+      const system = weak?.system ?? 'CV';
+      return {
+        system,
+        systemLabel: getSystemDisplayFullName(system),
+        accuracy: weak?.accuracy ?? 0,
+        attempts: weak?.attempts ?? 0,
+        trend: weak?.trend ?? 'neutral',
+        gapPercent: weak?.gapPercent ?? null,
+        weaknessLabel: weak?.label ?? 'needs-accuracy-work',
+        drillHref: `/study?systems=${encodeURIComponent(system)}`,
+      };
+    },
+    visual: (_data, ctx) =>
+      ctx.mode === 'behind'
+        ? { ...visualTokenForSignal('confusion_pair', density(ctx)), tone: 'watch' }
+        : visualTokenForSignal('confusion_pair', density(ctx)),
+    component: WeaknessDrillWidget as React.ComponentType<{ data: unknown; visual: VisualToken }>,
+    cadence: { cooldownDays: 1 },
+    attribution: (ctx) => {
+      const weak = ctx.raw.dashboardAnalytics?.weakSystems?.[0];
+      return weak ? `${weak.system} at ${Math.round(weak.accuracy)}% accuracy over ${weak.attempts} attempts.` : 'No weakness data available.';
+    },
   },
 ];

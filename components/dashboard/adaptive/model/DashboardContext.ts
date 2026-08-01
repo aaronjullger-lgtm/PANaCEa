@@ -108,6 +108,7 @@ export type TrustEvent = {
   when: string;
   title: string;
   detail: string;
+  href?: string;
 };
 
 export type DashboardUserState = {

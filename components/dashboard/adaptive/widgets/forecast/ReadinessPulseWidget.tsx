@@ -1,5 +1,6 @@
 import React from 'react';
-import { Activity, Info } from 'lucide-react';
+import { Activity, Info, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { VisualToken } from '../../model/visualTokens';
 import { VisualTokenSurface } from '../../visuals/VisualTokenProvider';
 import { ConfidenceBand } from '../../visuals/ConfidenceBand';
@@ -40,6 +41,15 @@ export function ReadinessPulseWidget({ data, visual }: { data: ReadinessPulseDat
           This band uses recent completed sessions and review load. It is intentionally shown as a range, not a precise score prediction.
         </p>
       </details>
+      {data.available && (
+        <Link
+          to="/progress"
+          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--color-accent-button)] hover:text-[var(--color-accent)]"
+        >
+          View progress details
+          <ExternalLink className="h-3 w-3" aria-hidden="true" />
+        </Link>
+      )}
     </VisualTokenSurface>
   );
 }

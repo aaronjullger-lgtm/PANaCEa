@@ -1,5 +1,6 @@
 import React from 'react';
-import { GitBranch } from 'lucide-react';
+import { GitBranch, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { VisualToken } from '../../model/visualTokens';
 import { VisualTokenSurface } from '../../visuals/VisualTokenProvider';
 import type { TrustTimelineData } from '../widgetData';
@@ -21,6 +22,15 @@ export function TrustTimelineWidget({ data, visual }: { data: TrustTimelineData;
             <div>
               <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">{event.title}</h3>
               <p className="mt-1 text-sm leading-6 text-[var(--color-text-secondary)]">{event.detail}</p>
+              {event.href && (
+                <Link
+                  to={event.href}
+                  className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-[var(--color-accent-button)] hover:text-[var(--color-accent)]"
+                >
+                  View details
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                </Link>
+              )}
             </div>
           </li>
         ))}
