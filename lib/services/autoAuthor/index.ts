@@ -165,13 +165,13 @@ async function reportQualityFlags(stats: AutoAuthorStats): Promise<void> {
 
     try {
       const reviewedFlags = await prisma.contentQualityFlag.count({
-        where: { status: 'reviewed' },
+        where: { status: 'REVIEWED' },
       });
 
       const flaggedNoRegen = await prisma.contentQualityFlag.count({
         where: {
-          status: 'flagged',
-          regeneratedContent: null,
+          status: 'FLAGGED',
+          regeneratedContent: { equals: Prisma.JsonNull },
         },
       });
 
