@@ -64,6 +64,7 @@ export const onRequestPost = authenticatedEndpoint(PostReflectionSchema, async (
       confidenceRating: 0, // implicit-only: self-rating not accepted
       topicsToReview: reflection.topicsToReview,
       completedAt: new Date(),
+      updatedAt: new Date(),
     };
 
     let result;
