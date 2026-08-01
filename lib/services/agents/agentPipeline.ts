@@ -26,6 +26,7 @@ import {
 } from '@/lib/agents/middleware/hitl';
 import { createVirtualFS } from '@/lib/agents/middleware/filesystem';
 import type { VirtualFS } from '@/lib/agents/middleware/filesystem';
+import { injectPlanContext, checkCompletionGate } from '@/lib/agents/planning/session-recovery';
 
 export type { AgentRunResult };
 
@@ -70,6 +71,11 @@ export async function runAgentWithPipeline(
   }
 
   const coreHandler: MiddlewareNext = async (_input, _ctx) => {
+    const planContext = injectPlanContext();
+    if (planContext) {
+      args.userMessage = `${planContext}\n\n---\n\n${args.userMessage}`;
+    }
+
     const result = await runAgent(args);
     return {
       status: result.stopReason === 'completed' ? 'ok' : 'internal_error',
@@ -99,10 +105,13 @@ export async function runAgentWithPipeline(
   const pipelineResult = await pipeline(args.userMessage, ctx);
 
   if (pipelineResult.status === 'ok') {
+    const gate = checkCompletionGate();
+    const finalText = typeof pipelineResult.output === 'string' ? pipelineResult.output : '';
+
     return {
       steps: [],
-      finalText: typeof pipelineResult.output === 'string' ? pipelineResult.output : '',
-      stopReason: 'completed',
+      finalText: gate.canStop ? finalText : `${finalText}\n\n⚠️ ${gate.reason}`,
+      stopReason: gate.canStop ? 'completed' : 'completed',
       iterations: (pipelineResult.telemetry?.iterations as number) ?? 0,
       tokensUsed: (pipelineResult.telemetry?.tokensUsed as AgentRunResult['tokensUsed']) ?? { input: 0, output: 0, total: 0 },
       durationMs: pipelineResult.durationMs,

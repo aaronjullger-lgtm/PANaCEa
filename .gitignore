@@ -381,3 +381,4 @@ COMPREHENSIVE_REPOSITORY_AUDIT.md
 # LangGraph API
 .langgraph_api
 .env.agents
+.panacea/plans/
