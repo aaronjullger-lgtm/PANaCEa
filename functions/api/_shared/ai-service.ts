@@ -31,6 +31,7 @@ import type { TaskType } from '@/lib/langchain/config';
 import { sanitizeEnvValue } from './env-validation';
 import { buildGeminiUrl } from './ai-gateway';
 export { buildGeminiUrl, GEMINI_API_VERSION, GEMINI_BASE_URL } from './ai-gateway';
+import { isVertexAvailable, callVertexGemini } from '@/lib/ai/vertexBackend';
 
 /**
  * Canonical model identifiers. Use these instead of hardcoded strings
@@ -272,9 +273,33 @@ export async function callGemini(
   options: GeminiRequestOptions
 ): Promise<GeminiResponse> {
   const model = options.model ?? GeminiModel.FLASH_2_5;
+  const startMs = Date.now();
+
+  // Route through Vertex AI when configured (higher quotas, better tracking, grounding)
+  if (isVertexAvailable(context.env as Record<string, unknown>)) {
+    try {
+      const vertexResult = await callVertexGemini(options, context.env as Record<string, unknown>);
+      trackTokenUsage(context, {
+        endpoint: options.endpoint ?? 'unknown',
+        model: `vertex:${model}`,
+        usage: vertexResult.usage,
+        latencyMs: Date.now() - startMs,
+        statusCode: 200,
+        cacheHit: false,
+      });
+      return vertexResult;
+    } catch (err) {
+      // If Vertex fails with a non-retryable error, don't fall back — surface it
+      if (err && typeof err === 'object' && 'retryable' in err && !(err as GeminiError).retryable) {
+        throw err;
+      }
+      // If Vertex fails with a retryable error (429/503), fall through to direct API
+      console.warn(`[ai-service] Vertex AI failed, falling back to direct API:`, (err as GeminiError)?.error);
+    }
+  }
+
   // Defensive: strip wrapping quotes that Cloudflare dashboard may inject
   const apiKey = context.env.GEMINI_API_KEY ? sanitizeEnvValue(context.env.GEMINI_API_KEY) : undefined;
-  const startMs = Date.now();
 
   if (!apiKey) {
     throw { status: 500, error: 'GEMINI_API_KEY not configured', code: 'MISSING_KEY', retryable: false } satisfies GeminiError;

@@ -27,6 +27,9 @@ export interface CloudflareEnv {
   // AI/ML APIs
   GEMINI_API_KEY?: string;
   GOOGLE_API_KEY?: string;
+  VERTEX_AI_PROJECT?: string;
+  VERTEX_AI_LOCATION?: string;
+  VERTEX_AI_API_KEY?: string;
   OPENAI_API_KEY?: string;
   ANTHROPIC_API_KEY?: string;
   DEEPSEEK_API_KEY?: string;
