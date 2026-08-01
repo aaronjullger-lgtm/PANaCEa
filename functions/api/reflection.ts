@@ -21,9 +21,10 @@ import { createEndpointLogger } from './_shared/secureLogger';
 const ReflectionSchema = z.object({
   patternsNoticed: z.string().min(1).max(5000),
   improvementPlan: z.string().min(1).max(5000),
-  confidenceRating: z.number().int().min(1).max(5),
   topicsToReview: z.array(z.string()).max(50),
   sessionId: z.string().max(100).optional(),
+  // NOTE: No confidenceRating — confidence is derived implicitly from
+  // behavioral telemetry (lib/confidence/**). Self-rating is not accepted.
 });
 
 const PostReflectionSchema = z.object({
@@ -60,7 +61,7 @@ export const onRequestPost = authenticatedEndpoint(PostReflectionSchema, async (
       sessionId: reflection.sessionId ?? null,
       patternsNoticed: reflection.patternsNoticed,
       improvementPlan: reflection.improvementPlan,
-      confidenceRating: reflection.confidenceRating,
+      confidenceRating: 0, // implicit-only: self-rating not accepted
       topicsToReview: reflection.topicsToReview,
       completedAt: new Date(),
     };
