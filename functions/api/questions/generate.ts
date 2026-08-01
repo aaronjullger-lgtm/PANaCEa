@@ -23,6 +23,8 @@ import {
   stageGeneratedQuestionPreview,
 } from '../_shared/generated-question-preview';
 import { toGatewayContext } from '../../../lib/ai/aiGateway';
+import { runQualityGate } from '@/lib/agents/quality/qualityGate';
+import { createClinicalContentValidator } from '@/lib/agents/quality/llmValidator';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { validateQuestionDrugs } from '@/lib/services/medical-apis/rxnorm';
 
@@ -339,6 +341,42 @@ export const onRequestPost = aiEndpoint(
           );
 
           if (generatedQ) {
+            // ── Shared quality gate (opt-in via ENABLE_QUALITY_GATE=true) ──
+            // Runs the clinical-content validator over the generated question
+            // BEFORE staging. Quarantine fails closed: nothing below threshold
+            // reaches the staging lake. Default off — no production behavior
+            // change until the env flag is flipped.
+            if (context.env.ENABLE_QUALITY_GATE === 'true') {
+              const gateResult = await runQualityGate(
+                generatedQ,
+                {
+                  validator: createClinicalContentValidator({
+                    endpoint: '/api/questions/generate#quality-gate',
+                    task: 'grading',
+                  }),
+                  maxRetries: 1,
+                },
+                { env: context.env, userId: context.auth?.userId }
+              );
+              if (gateResult.outcome === 'quarantine') {
+                logger.warn('Question failed the quality gate', {
+                  attempts: gateResult.attempts,
+                  feedback: gateResult.feedback.slice(0, 3),
+                  userId: auth.userId,
+                });
+                return {
+                  status: 502,
+                  code: ErrorCode.GEMINI_ERROR,
+                  error:
+                    'The generated question did not pass the clinical quality gate and will not be delivered.',
+                  details: {
+                    gate: 'clinical-content',
+                    feedback: gateResult.feedback.slice(0, 3),
+                  },
+                };
+              }
+            }
+
             const hasTextbookContext = Boolean(textbookContext);
             const generatedMetadata = {
               originalQuery: queryText,

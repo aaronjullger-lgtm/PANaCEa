@@ -26,6 +26,9 @@ import {
   validateGeneratedContent,
   formatValidationResult,
 } from '../../services/cms/contentValidator';
+import { runQualityGate } from '@/lib/agents/quality/qualityGate';
+import { createClinicalContentValidator } from '@/lib/agents/quality/llmValidator';
+import type { AgentContext } from '@/lib/agents/shared/types';
 
 /**
  * Run auto-author pipeline for all conditions missing content.
@@ -84,13 +87,37 @@ export async function autoAuthorMissingContent(
       const result = await generateConditionContentMulti(apiKey, genOptions);
 
       if (result.success && result.content) {
+        // Shared quality gate (opt-in via ENABLE_QUALITY_GATE=true). Folds
+        // into the existing validation-failed path so nothing is saved to
+        // the database when the gate quarantines the generated content.
+        let gateFeedback: string[] = [];
+        if (process.env.ENABLE_QUALITY_GATE === 'true') {
+          const gateResult = await runQualityGate(
+            result.content,
+            {
+              validator: createClinicalContentValidator({
+                endpoint: 'autoAuthor#quality-gate',
+                task: 'grading',
+              }),
+              maxRetries: 1,
+            },
+            { env: process.env as unknown as AgentContext['env'] }
+          );
+          if (gateResult.outcome === 'quarantine') {
+            gateFeedback = gateResult.feedback;
+          }
+        }
+
         const validation = validateGeneratedContent(result.content);
 
-        if (!validation.isValid) {
+        if (!validation.isValid || gateFeedback.length > 0) {
           stats.validationFailed++;
           stats.errors.push({
             entity: condition.name,
-            error: `Quality validation failed: ${validation.issues.join('; ')}`,
+            error: `Quality validation failed: ${[
+              ...gateFeedback.slice(0, 3),
+              ...validation.issues,
+            ].join('; ')}`,
           });
         } else {
           const saved = await saveGeneratedContent(condition.id, result.content);

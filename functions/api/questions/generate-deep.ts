@@ -18,6 +18,8 @@ import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { gateway, GatewayError, toGatewayContext } from '../../../lib/ai/aiGateway';
+import { runQualityGate } from '@/lib/agents/quality/qualityGate';
+import { createClinicalContentValidator } from '@/lib/agents/quality/llmValidator';
 
 const GenerateDeepSchema = z.object({
   body: z.object({
@@ -201,6 +203,33 @@ Output valid JSON only, no markdown:
         }
       } catch {
         logger.warn('generate-deep JSON parse failed', { text: rawText.slice(0, 200) });
+      }
+
+      // ── Shared quality gate (opt-in via ENABLE_QUALITY_GATE=true) ──
+      // Admin-preview filter: quarantined questions are dropped from the
+      // response; the validator feedback is logged for the authoring review.
+      if (env.ENABLE_QUALITY_GATE === 'true' && questions.length > 0) {
+        const gate = createClinicalContentValidator({
+          endpoint: '/api/questions/generate-deep#quality-gate',
+          task: 'grading',
+        });
+        const passed: typeof questions = [];
+        for (const q of questions) {
+          const gateResult = await runQualityGate(
+            q,
+            { validator: gate, maxRetries: 0 },
+            { env, userId: auth?.userId }
+          );
+          if (gateResult.outcome === 'pass') {
+            passed.push(q);
+          } else {
+            logger.warn('generate-deep: question quarantined by quality gate', {
+              question: q.question?.slice(0, 120),
+              feedback: gateResult.feedback.slice(0, 3),
+            });
+          }
+        }
+        questions = passed;
       }
 
       logger.info('Deep questions generated', {

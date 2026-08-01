@@ -141,8 +141,11 @@ export async function runQualityGate<T>(
     });
 
     const exhausted = attempt > maxRetries;
-    if (exhausted || !improve) {
-      // Quarantine on budget exhaustion (or when no refinement exists).
+    // Retry when refinement exists (content may improve), or when the
+    // failure was transient (infra may have recovered). A non-transient
+    // FAIL with no improve step cannot be fixed by re-running — quarantine.
+    const canRetry = !exhausted && (Boolean(improve) || verdict.transient === true);
+    if (!canRetry) {
       return {
         outcome: 'quarantine',
         artifact,
@@ -152,7 +155,9 @@ export async function runQualityGate<T>(
       };
     }
 
-    artifact = await improve(artifact, verdict.feedback, attempt, ctx);
+    if (improve) {
+      artifact = await improve(artifact, verdict.feedback, attempt, ctx);
+    }
   }
 
   // Unreachable — the loop always returns inside. Kept for type narrowing.
