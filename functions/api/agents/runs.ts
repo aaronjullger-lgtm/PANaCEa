@@ -13,7 +13,8 @@
  * @module functions/api/agents/runs
  */
 
-import { authenticatedEndpoint } from '../_shared/auth';
+import { z } from 'zod';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import type {
   Run,
@@ -69,7 +70,7 @@ function runToResponse(run: RunRecord): Run {
 
 // ─── POST /api/agents/runs — Create a background run ────────────────────────
 
-export const onRequestPost = authenticatedEndpoint(async (context) => {
+export const onRequestPost = authenticatedEndpoint(z.object({}), async (context) => {
   const prisma = createEdgePrismaClient(context.env);
   try {
     const body: RunCreateRequest = await context.request.json();
@@ -127,7 +128,7 @@ export const onRequestPost = authenticatedEndpoint(async (context) => {
 
 // ─── GET /api/agents/runs/{run_id} — Get run status ─────────────────────────
 
-export const onRequestGet = authenticatedEndpoint(async (context) => {
+export const onRequestGet = authenticatedEndpoint(z.object({}), async (context) => {
   const prisma = createEdgePrismaClient(context.env);
   try {
     const url = new URL(context.request.url);

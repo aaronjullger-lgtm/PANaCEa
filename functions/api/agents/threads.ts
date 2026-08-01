@@ -14,7 +14,8 @@
  * @module functions/api/agents/threads
  */
 
-import { authenticatedEndpoint } from '../_shared/auth';
+import { z } from 'zod';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import type {
   Thread,
@@ -66,7 +67,7 @@ function threadToResponse(thread: ThreadRecord): Thread {
 
 // ─── POST /api/agents/threads — Create a thread ─────────────────────────────
 
-export const onRequestPost = authenticatedEndpoint(async (context) => {
+export const onRequestPost = authenticatedEndpoint(z.object({}), async (context) => {
   const prisma = createEdgePrismaClient(context.env);
   try {
     const body: ThreadCreateRequest = await context.request.json();
@@ -111,7 +112,7 @@ export const onRequestPost = authenticatedEndpoint(async (context) => {
 
 // ─── GET /api/agents/threads/{thread_id} — Get thread ───────────────────────
 
-export const onRequestGet = authenticatedEndpoint(async (context) => {
+export const onRequestGet = authenticatedEndpoint(z.object({}), async (context) => {
   const prisma = createEdgePrismaClient(context.env);
   try {
     const url = new URL(context.request.url);
@@ -163,7 +164,7 @@ export const onRequestGet = authenticatedEndpoint(async (context) => {
 
 // ─── PATCH /api/agents/threads/{thread_id} — Update thread ──────────────────
 
-export const onRequestPatch = authenticatedEndpoint(async (context) => {
+export const onRequestPatch = authenticatedEndpoint(z.object({}), async (context) => {
   const prisma = createEdgePrismaClient(context.env);
   try {
     const url = new URL(context.request.url);
@@ -226,7 +227,7 @@ export const onRequestPatch = authenticatedEndpoint(async (context) => {
 
 // ─── DELETE /api/agents/threads/{thread_id} — Delete thread ─────────────────
 
-export const onRequestDelete = authenticatedEndpoint(async (context) => {
+export const onRequestDelete = authenticatedEndpoint(z.object({}), async (context) => {
   const prisma = createEdgePrismaClient(context.env);
   try {
     const url = new URL(context.request.url);

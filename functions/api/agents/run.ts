@@ -29,12 +29,14 @@ import {
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
   runAgent,
-  createDefaultToolRegistry,
-  DEFAULT_TOOL_NAMES,
   type AgentRunResult,
   type ToolCategory,
   type ToolExecutionContext,
 } from '../../../lib/services/agents';
+import {
+  createDefaultToolRegistry,
+  DEFAULT_TOOL_NAMES,
+} from '../../../lib/services/agents/tools';
 import { logAgentTelemetry } from '../../../lib/services/agents/telemetry';
 
 // ─── Request schema ─────────────────────────────────────────────────────────
