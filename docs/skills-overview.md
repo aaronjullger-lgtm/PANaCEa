@@ -134,3 +134,16 @@ Source: [langchain-ai/langchain-skills](https://github.com/langchain-ai/langchai
 | `release-readiness` | `.agents/skills/release-readiness` | Verify functionality, safety, performance, accessibility, docs, release notes, and rollback before production deployment. |
 | `post-launch-monitoring-and-response` | `.agents/skills/post-launch-monitoring-and-response` | Set up post-launch monitoring, incident triage, runbooks, user communication, and postmortems. |
 | `supabase` | `.agents/skills/supabase` | Handle Supabase products, auth, SSR integrations, RLS, migrations, storage, realtime, vectors, CLI, and MCP work. |
+
+## ECC-Inspired Agent Engineering Skills
+
+Adapted from the [ECC repo](https://github.com/affaan-m/ecc) for PANaCEa's workflow.
+
+| Skill | Folder | Description |
+| --- | --- | --- |
+| `context-budget` | `.agents/skills/context-budget` | Audit token overhead across agents, skills, MCP servers, and rules. Use when context window feels heavy. |
+| `delivery-gate` | `.agents/skills/delivery-gate` | Session-level quality gate — checks uncommitted work, tests, types, console.log, security, and rationalization before declaring done. |
+| `continuous-learning-v2` | `.agents/skills/continuous-learning-v2` | Instinct-based learning — extract reusable patterns from sessions with confidence scoring. Use at session end. |
+| `eval-harness` | `.agents/skills/eval-harness` | Eval-driven development for AI features — capability evals, regression evals, pass@k metrics for question gen, tutoring, OSCE. |
+| `post-edit-verify` | `.agents/skills/post-edit-verify` | Post-edit verification — lint, typecheck, and security scan on changed files. Includes pre-commit hook setup. |
+| `agent-introspection` | `.agents/skills/agent-introspection` | Four-phase agent self-debugging loop (capture → diagnosis → recovery → report). Use when agent workflows fail repeatedly. |
