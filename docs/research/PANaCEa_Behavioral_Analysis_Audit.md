@@ -336,7 +336,7 @@ needed without breaking existing data. Think through each addition:
                              before any modulation. Store existing `grade` as rawGrade.
 - effectiveGrade Float    -- The modulated grade fed to FSRS. May differ from rawGrade.
 - rtZone String?          -- 'fast' | 'normal' | 'slow' | null
-- confidenceRating Int?   -- 0=unknown, 1=low, 2=medium, 3=high (user-reported or inferred)
+- confidenceRating Int?   -- 0=unknown sentinel (self-rating not accepted on POST /api/reflection; confidence derived implicitly from behavioral telemetry)
 - behavioralDeltas Json?  -- Store {rtDelta, confidenceDelta, streakDelta, fatigueDelta} 
                              for tracing/debugging
 

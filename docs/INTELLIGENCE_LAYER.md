@@ -28,7 +28,8 @@ The Intelligence Layer adds five advanced AI-powered modules on top of the core 
 
 - **Module 1 (OSCE Live)**  
   - Live config and vitals use the same auth and DB as the rest of the app. No extra env.  
-  - **Security:** `GET /api/osce/live-config` returns a **short-lived ephemeral token** (1 min to start session, 30 min to send messages), not the long-lived `GEMINI_API_KEY`. The key stays on the server; the client uses the token only for the Live WebSocket connection.
+  - **Primary endpoint:** `GET /api/osce/live-engine` (implementation: `functions/api/osce/live-engine.ts`; flow logic in `lib/agents/strategies/liveEngineStrategy.ts`). Legacy `GET /api/osce/live-config` may still exist for older clients.  
+  - **Security:** Live endpoints return a **short-lived ephemeral token** (1 min to start session, 30 min to send messages), not the long-lived `GEMINI_API_KEY`. The key stays on the server; the client uses the token only for the Live WebSocket connection. If token minting fails, `live-engine` returns `503` (fail-closed).
 
 - **Module 2 (Clinical Eye)**  
   - Uses `GEMINI_API_KEY` in the Edge function that calls Gemini 2.5 Flash.
@@ -74,7 +75,7 @@ See `podcast-service/README.md` for more detail.
 
 ## API Endpoints (summary)
 
-- **OSCE Live:** `GET /api/osce/live-config`, `GET /api/osce/session/:sessionId/vitals`
+- **OSCE Live:** `GET /api/osce/live-engine` (primary), `GET /api/osce/live-config` (legacy), `GET /api/osce/session/:sessionId/vitals`
 - **Clinical Eye:** `POST /api/clinical-eye/analyze`
 - **Knowledge:** `POST /api/knowledge/upload`, `POST /api/knowledge/cache`, `GET /api/knowledge/caches`, `DELETE /api/knowledge/cache/:id`, `POST /api/knowledge/cache/student-context`
 - **Visualizer:** `POST /api/visualizer/generate`

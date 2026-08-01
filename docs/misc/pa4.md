@@ -131,7 +131,7 @@
 
 | Research Recommendation | Status | PANaCEa Reality |
 |---|---|---|
-| AI-powered patient encounter simulation | ✅ | `functions/api/osce/live-engine.ts` — real-time patient interaction via Gemini 3 with extended thinking. Transcript pipeline, session state management. |
+| AI-powered patient encounter simulation | ✅ | `functions/api/osce/live-engine.ts` — real-time voice+text patient interaction via Gemini Live API (gemini-2.0-flash-exp); orchestrator strategy in `lib/agents/strategies/liveEngineStrategy.ts`. Transcript pipeline, session state management. |
 | Multi-dimensional grading rubrics | ✅ | `functions/api/osce/analysis/` — history depth, exam thoroughness, differential reasoning, rubric compliance. |
 | Clinical reasoning scaffold | ✅ | `lib/osce/clinicalReasoningScaffold.ts` — decision tree validation, missing reasoning detection. |
 | SOAP note trainer | ✅ | `components/osce/SOAPNoteTrainer.tsx` — real-time SOAP note feedback. |

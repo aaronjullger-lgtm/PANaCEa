@@ -91,6 +91,7 @@ tsx scripts/generateMissingContent.ts --max-conditions=25 --extended --dry-run
 
 - `DATABASE_URL` - PostgreSQL connection string (Prisma)
 - `DIRECT_DATABASE_URL` - Direct database URL for migrations
+- `ENABLE_QUALITY_GATE` - When `true`, runs LLM quality gate (`runQualityGate`) on generated content before save; quarantined content is counted in `validationFailed` and not persisted
 
 ## Workflow
 
@@ -108,7 +109,8 @@ For each missing condition:
 
 - Constructs a PANCE-focused prompt with clinical requirements
 - Calls Gemini API with retry logic (up to 3 attempts)
-- Validates generated JSON structure
+- Optionally runs LLM quality gate when `ENABLE_QUALITY_GATE=true` (quarantines content that fails clinical review)
+- Validates generated JSON structure (`validateGeneratedContent`)
 - Ensures required fields are present
 
 ### 3. Database Storage

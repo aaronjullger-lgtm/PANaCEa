@@ -104,12 +104,12 @@ Gemini 3 introduces **Thinking** (controlled via `thinking_level`), which is the
 
 ## Phase 4: Simulated Patient (OSCE Live)
 
-**Endpoints:** `GET /api/osce/live-config` — implementation: `functions/api/osce/live-config.ts`. `GET /api/osce/live-session-config` — implementation: `functions/api/osce/live-session-config.ts`.
+**Endpoints:** `GET /api/osce/live-engine` — implementation: `functions/api/osce/live-engine.ts` (orchestrator strategy: `lib/agents/strategies/liveEngineStrategy.ts`). Legacy: `GET /api/osce/live-config` (`functions/api/osce/live-config.ts`). Session bootstrap: `GET /api/osce/live-session-config` (`functions/api/osce/live-session-config.ts`).
 
 **Student benefit:** Real-time, voice-to-voice practice for history taking. Tests soft skills and efficiency. PANCE: **History Taking** (16%). Latency kills immersion; standard chatbots are too slow. WebSocket + native audio avoids text round-trip.
 
 **Implementation logic:**
-1. **Protocol:** Use WebSockets (not REST). Client gets ephemeral token + `wsUrl` + model from `GET /api/osce/live-config`, then connects to Gemini Live (`BidiGenerateContent`). Upstream: `wss://generativelanguage.googleapis.com/ws/...v1beta.GenerativeService.BidiGenerateContent` (or v1alpha when specified).
+1. **Protocol:** Use WebSockets (not REST). Client gets ephemeral token + `wsUrl` + `setup` from `GET /api/osce/live-engine` (or legacy `GET /api/osce/live-config`), then connects to Gemini Live (`BidiGenerateContent`). Upstream: `wss://generativelanguage.googleapis.com/ws/...v1beta.GenerativeService.BidiGenerateContent` (or v1alpha when specified).
 2. **Audio:** Stream raw 16 kHz PCM audio chunks bi-directionally. Do not transcode to text first (adds latency).
 3. **Barge-in:** The model handles interruptions natively. If the student speaks over the AI, the AI stops (like a real person).
 4. **Configuration (from live-session-config):** `response_modalities: ["AUDIO"]`, `speech_config: { voice_name: "Aoede" }` (Conversational). System instruction: "You are a 55yo male with chest pain. You are scared. Be brief. If the student is empathetic, open up. If they are rude, shut down."

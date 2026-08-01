@@ -233,10 +233,10 @@ defense (L1–L5)** for agents that browse untrusted pages.
 |---|---|---|
 | Auto-author content | `lib/services/autoAuthor/index.ts` (+ `langchainContentGenerator.ts`) | LangChain fallback chains for missing condition/lab content |
 | Ghost Grader | `lib/srs/ghostGrader.ts` | `applyHonestRatingWithDetail` — behavioral-biometric FSRS override |
-| OSCE Live | `functions/api/osce/live-engine.ts` | Gemini Live API WebSocket (gemini-2.0-flash-exp), ephemeral token minting |
+| OSCE Live | `functions/api/osce/live-engine.ts` → `lib/agents/strategies/liveEngineStrategy.ts` | Gemini Live API WebSocket (gemini-2.0-flash-exp), ephemeral token minting; endpoint delegates to orchestrator strategy |
 | Question gen (standard) | `functions/api/questions/generate.ts` | Staging lake, semantic cache, RxNorm validation |
 | Question gen (deep) | `functions/api/questions/generate-deep.ts` | 1M+ token PANCE blueprint `cachedContent` |
-| Question gen (enhanced) | `functions/api/questions/generate-enhanced.ts` | Chain-of-Verification (CoVe) draft→verify→refine |
+| Question gen (enhanced) | `functions/api/questions/generate-enhanced.ts` → `lib/agents/strategies/generateEnhancedStrategy.ts` | Chain-of-Verification (CoVe) draft→verify→refine; endpoint delegates to orchestrator strategy |
 
 ### 4.4 How Gemini is called today
 
@@ -253,17 +253,14 @@ defense (L1–L5)** for agents that browse untrusted pages.
 1. **Edge vs. Node split (registry)** — ops-tier agents can't run in production Edge; the
    orchestrator is restricted to encounter-tier agents on the Edge. *Keep the split (it's
    correct), but define a clean contract so ops agents are invocable from local/CI tooling.*
-2. **Ad-hoc endpoint wiring** — `generate-enhanced.ts`, `live-engine.ts`, and others bypass
-   the LangGraph runtime: duplicated prompt handling, verification, logging. *Consolidate
-   onto the orchestrator as registered agents.*
+2. **Ad-hoc endpoint wiring** — *Partially addressed (Phase 3):* `generate-enhanced.ts` and `live-engine.ts` now delegate to orchestrator strategies (`runGenerateEnhancedFlow`, `runLiveEngineFlow`) with stable HTTP envelopes. Remaining routes still have duplicated prompt/verification patterns.
 3. **Stateless OSCE/tutor** — `standardizedPatient.ts` stateless; client replays full history.
    No persistent server-side session coordinator. *Add Durable-Object or Supabase-backed
    session state.*
 4. **No central user-facing supervisor** — `supervisor-v2.ts` is ops-only. Students get no
    single router for "explain this question" vs "start an OSCE" vs "tutor me".
    *Promote/derive a user-facing supervisor agent.*
-5. **Quality gates are per-endpoint, not reusable** — only `generate-enhanced.ts` verifies
-   (CoVe). No shared PASS/FAIL + retry gate before reservoir entry.
+5. **Quality gates are per-endpoint, not reusable** — `generate-enhanced.ts` uses CoVe; auto-author optionally uses `runQualityGate()` when `ENABLE_QUALITY_GATE=true`. No shared PASS/FAIL gate before reservoir entry for all generation paths.
 6. **Prompts are string literals** — no versioning, no eval harness, no declared tool
    manifests. *Evals + prompt library are missing entirely.*
 
@@ -351,9 +348,9 @@ Each phase is independently shippable and testable. Order = dependency + value.
   `runQualityGate()`; wire into `generate.ts`, `generate-deep.ts`, autoAuthor. Structured
   validator output + retry ≤3 + quarantine flag. Regression tests around
   PASS→reservoir / FAIL→quarantine.
-- **Phase 3 — Endpoint consolidation onto orchestrator.** Register `generate-enhanced` and
-  `live-engine` flows as orchestrator strategies (typed state, standard logging/telemetry).
-  Keep endpoint signatures stable.
+- **Phase 3 — Endpoint consolidation onto orchestrator.** ✅ Done for `generate-enhanced` and
+  `live-engine`: flows registered as orchestrator strategies with typed state and standard
+  logging/telemetry; endpoint signatures unchanged. See `docs/api/API_OVERVIEW.md`.
 - **Phase 4 — Session state coordinator.** Durable Objects (or Supabase sessions) for
   OSCE/tutor; server-side resume; kill client-replay. Verify edge runtime constraints.
 - **Phase 5 — Prompt library + evals.** Versioned `prompts/` catalog with anatomy + inputs
