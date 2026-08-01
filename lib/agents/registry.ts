@@ -35,12 +35,13 @@ import { registerBuiltInOrchestrators } from './orchestrator';
 import { registerAllSupervisorsV2 } from './supervisor-v2';
 import { registerUserSupervisorV2 } from './userSupervisor';
 import { registerBuiltInSkills } from './deep-agents';
+import { registerProductionMCPTools } from './mcp-config';
 import { configureBridge } from './bridge';
 
 registerBuiltInOrchestrators();
 registerAllSupervisorsV2();
-registerUserSupervisorV2();
 registerBuiltInSkills();
+registerProductionMCPTools();
 
 // Auto-configure bridge from env if orchestrator URL is available
 // In Edge runtime, this reads from context.env; in Node, from process.env
