@@ -45,7 +45,7 @@ Learn about PANaCEa's system design:
 
 Backend endpoint contracts and API behavior docs:
 
-- **[API Overview](api/API_OVERVIEW.md)** - Updated admin and OSCE endpoint contracts (`/api/admin/check-access`, `/api/admin/stats`, `/api/osce/complete`, `/api/osce/stats`)
+- **[API Overview](api/API_OVERVIEW.md)** - Updated endpoint contracts including `POST /api/agents/run` (student agent loop), admin (`/api/admin/check-access`, `/api/admin/stats`), and OSCE (`/api/osce/complete`, `/api/osce/stats`)
 
 ---
 
