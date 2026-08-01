@@ -13,7 +13,9 @@
   "dependencies": ["./package.json"],
   "graphs": {
     "clinical_tutor": "./lib/agents/graphs/clinical-tutor.ts:clinicalTutorGraph",
-    "preceptor_pimping": "./lib/agents/graphs/preceptor.ts:preceptorGraph"
+    "preceptor_pimping": "./lib/agents/graphs/preceptor.ts:preceptorGraph",
+    "clinical_research": "./lib/agents/graphs/clinical-research.ts:compiledClinicalResearchGraph",
+    "agent_orchestrator": "./lib/agents/graphs/orchestrator-graph.ts:defaultOrchestratorGraph"
   },
   "env": ".env.langgraph"
 }

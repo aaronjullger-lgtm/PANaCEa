@@ -460,3 +460,26 @@ export async function* streamOrchestratorGraph(
     yield chunk as Partial<OrchestratorStateType>;
   }
 }
+
+// ─── Default Compiled Graph (for LangGraph Cloud) ──────────────────────────
+
+/**
+ * Default orchestrator graph pre-compiled for LangGraph Cloud deployment.
+ * Uses a generic config — customize via LangGraph Cloud's per-deployment
+ * environment variables or by forking this graph.
+ */
+export const defaultOrchestratorGraph = buildOrchestratorGraph({
+  name: 'default-orchestrator',
+  description: 'Default agent orchestrator for LangGraph Cloud',
+  agents: ['ddx-generator', 'soap-note-grader', 'feedback-summarizer'],
+  strategy: 'conditional',
+  routeFn: (state) => {
+    const lastMessage = state.messages[state.messages.length - 1];
+    if (!lastMessage) return END;
+    const content = typeof lastMessage.content === 'string' ? lastMessage.content : '';
+    if (content.includes('diagnosis') || content.includes('ddx')) return 'ddx-generator';
+    if (content.includes('soap') || content.includes('note')) return 'soap-note-grader';
+    if (content.includes('feedback') || content.includes('summary')) return 'feedback-summarizer';
+    return 'ddx-generator';
+  },
+});
