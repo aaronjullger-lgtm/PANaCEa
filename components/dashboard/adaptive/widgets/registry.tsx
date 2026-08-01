@@ -22,6 +22,7 @@ import { StudyStreakWidget } from './trust/StudyStreakWidget';
 import { FsrsHealthWidget } from './forecast/FsrsHealthWidget';
 import { RecentSessionsWidget } from './trust/RecentSessionsWidget';
 import { getSystemDisplayFullName } from '@/config/topic-map';
+import { ROUTES } from '@/config/routes';
 import type {
   BlueprintHeatmapData,
   CatchUpPlanData,
@@ -512,7 +513,7 @@ export const dashboardWidgetRegistry: DashboardWidgetDefinition[] = [
         trend: weak?.trend ?? 'neutral',
         gapPercent: weak?.gapPercent ?? null,
         weaknessLabel: weak?.label ?? 'needs-accuracy-work',
-        drillHref: `/study?systems=${encodeURIComponent(system)}`,
+        drillHref: `${ROUTES.STUDY_MAIN_SESSION}?systems=${encodeURIComponent(system)}&source=weakness_drill&mode=system&count=20`,
       };
     },
     visual: (_data, ctx) =>
