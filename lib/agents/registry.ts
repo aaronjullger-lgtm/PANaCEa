@@ -29,7 +29,7 @@ import './ops/schemaDriftDetector';
 import './ops/envVarAuditor';
 
 // Side-effect import: registers preceptor-pimping (tutor-intent target for user-supervisor-v2)
-import './graphs/preceptor';
+import './graphs/preceptor.ts';
 
 import { registerBuiltInOrchestrators } from './orchestrator';
 import { registerAllSupervisorsV2 } from './supervisor-v2';
