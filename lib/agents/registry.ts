@@ -28,8 +28,7 @@ import './ops/promptContractValidator';
 import './ops/schemaDriftDetector';
 import './ops/envVarAuditor';
 
-// Graphs (self-registering) — preceptor-pimping is the tutor-intent target for
-// user-supervisor-v2. Already edge-safe: the encounter registry imports it.
+// Side-effect import: registers preceptor-pimping (tutor-intent target for user-supervisor-v2)
 import './graphs/preceptor';
 
 import { registerBuiltInOrchestrators } from './orchestrator';
@@ -74,6 +73,19 @@ export {
   registerAllSupervisorsV2,
 } from './supervisor-v2';
 export type { SupervisorV2Config, SupervisorV2Result } from './supervisor-v2';
+
+// User Supervisor (student-facing intent routing)
+export {
+  registerUserSupervisorV2,
+  routeUserIntent,
+  runUserSupervisor,
+  classifyUserIntent,
+  userIntentKeywordRouter,
+  buildUserRouterConfig,
+  USER_INTENTS,
+  USER_INTENT_AGENTS,
+} from './userSupervisor';
+export type { UserIntent, UserRoutingDecision, UserSupervisorResult } from './userSupervisor';
 
 // LLM Router
 export {
