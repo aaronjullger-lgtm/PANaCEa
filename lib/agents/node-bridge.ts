@@ -53,15 +53,17 @@ let nodeOrchestratorAvailable: boolean | null = null;
  * Cached — only probes the filesystem once.
  */
 async function isNodeOrchestratorAvailable(): Promise<boolean> {
-  if (nodeAgentMetaCache.size > 0) return true; // already loaded
+  if (nodeAgentMetaCache.size > 0) return true;
   if (nodeOrchestratorAvailable !== null) return nodeOrchestratorAvailable;
 
+  if (typeof process === 'undefined' || !process.versions?.node) {
+    nodeOrchestratorAvailable = false;
+    return false;
+  }
+
   try {
-    // Dynamic import — won't bundle into Edge code because it's behind
-    // a runtime conditional. On Edge, this will throw.
-    const mod = await import(
-      '../../packages/agent-orchestrator/src/agents/registry.js'
-    );
+    const pkgPath = '../../packages/agent-orchestrator/src/agents/registry.js';
+    const mod = await import(pkgPath);
     const { AGENT_REGISTRY } = mod as {
       AGENT_REGISTRY: Record<string, NodeAgentMeta>;
     };
@@ -74,9 +76,8 @@ async function isNodeOrchestratorAvailable(): Promise<boolean> {
 
     // Also load specialists
     try {
-      const specMod = await import(
-        '../../packages/agent-orchestrator/src/agents/specialists.js'
-      );
+      const specPkgPath = '../../packages/agent-orchestrator/src/agents/specialists.js';
+      const specMod = await import(specPkgPath);
       const { SPECIALIST_DEFS } = specMod as {
         SPECIALIST_DEFS: Record<string, NodeAgentMeta & { role: string }>;
       };
@@ -87,9 +88,8 @@ async function isNodeOrchestratorAvailable(): Promise<boolean> {
           description: def.description,
           inputHint: def.inputHint,
           build: async (opts) => {
-            const { buildSpecialist } = await import(
-              '../../packages/agent-orchestrator/src/agents/specialists.js'
-            );
+            const specPkgPath = '../../packages/agent-orchestrator/src/agents/specialists.js';
+            const { buildSpecialist } = await import(specPkgPath);
             return buildSpecialist(role as Parameters<typeof buildSpecialist>[0], opts);
           },
         });

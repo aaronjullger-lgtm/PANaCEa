@@ -57,18 +57,22 @@ async function discoverNodeAgents(): Promise<NodeAgentDef[]> {
   if (_nodeAgentDefs) return _nodeAgentDefs;
   if (_nodeAgentDefsError) return [];
 
+  // Guard: only attempt import in Node.js runtime, never in Edge/Workers
+  if (typeof process === 'undefined' || !process.versions?.node) {
+    _nodeAgentDefsError = 'Not running in Node.js — Edge runtime detected';
+    return [];
+  }
+
   try {
-    // Dynamic import — only resolves in Node.js runtime, not Edge
-    const mod = await import(
-      '../../../packages/agent-orchestrator/src/agents/registry.js'
-    );
+    // Dynamic import with runtime-constructed path to prevent esbuild bundling
+    const pkgPath = '../../../packages/agent-orchestrator/src/agents/registry.js';
+    const mod = await import(pkgPath);
     const registry = mod.AGENT_REGISTRY as Record<string, NodeAgentDef>;
     _nodeAgentDefs = Object.values(registry);
     return _nodeAgentDefs;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     _nodeAgentDefsError = msg;
-    // Not an error — expected in Edge runtime where the package isn't bundled
     console.debug('[NodeAgentBridge] Node agent registry unavailable:', msg);
     return [];
   }
