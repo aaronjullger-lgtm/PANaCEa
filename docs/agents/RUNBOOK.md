@@ -105,6 +105,9 @@ npm run dev          # http://localhost:4300, proxies /api/orchestrator/* → :4
 Deploy to Vercel; set `ORCHESTRATOR_API_URL` to the orchestrator's public URL. The dashboard proxies agent
 invokes through a rewrite so the browser never holds the orchestrator's Bearer token.
 
+**Edge production routes** (Cloudflare Pages): see [`docs/api/API_OVERVIEW.md`](../../api/API_OVERVIEW.md) for
+`/api/agents/protocol`, `/api/agents/invoke`, `/api/agents/run`, Agent Protocol `runs`/`threads`, and MCP.
+
 ## MCP configuration
 
 These were wired so agents-in-your-editor (Claude Code, Cursor, Codex, OpenCode) can also drive Linear + Qdrant
