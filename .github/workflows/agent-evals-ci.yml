@@ -1,0 +1,70 @@
+name: Agent Evals — LangSmith
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/agents/**'
+      - 'lib/langchain/**'
+      - 'lib/services/agents/**'
+      - 'functions/api/agents/**'
+      - 'packages/agent-orchestrator/**'
+  pull_request:
+    paths:
+      - 'lib/agents/**'
+      - 'lib/langchain/**'
+      - 'lib/services/agents/**'
+      - 'functions/api/agents/**'
+      - 'packages/agent-orchestrator/**'
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 6 AM UTC
+  workflow_dispatch:
+
+jobs:
+  agent-evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Run agent runtime tests
+        run: npx vitest run tests/agents-runtime.test.ts --reporter=verbose
+
+      - name: Run agent bridge tests
+        run: npx vitest run tests/agents-unified-bridge.test.ts --reporter=verbose
+
+      - name: Run agent runner tests
+        run: npx vitest run lib/services/agents/agentRunner.test.ts --reporter=verbose
+
+      - name: Run agent quality gate tests
+        run: npx vitest run tests/agents-quality-gate.test.ts --reporter=verbose
+        continue-on-error: true
+
+      - name: Run agent user supervisor tests
+        run: npx vitest run tests/agents-user-supervisor.test.ts --reporter=verbose
+        continue-on-error: true
+
+      - name: Run LangSmith eval datasets (smoke)
+        if: env.LANGSMITH_API_KEY != ''
+        env:
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+          LANGSMITH_PROJECT: panacea-dev-agents
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          npx tsx -e "
+            const { runAllEvals, CLINICAL_AGENT_EVAL_DATASETS, summarizeEvalRuns } = require('@/lib/langchain/evals/agent-evals');
+            const env = { GEMINI_API_KEY: process.env.GEMINI_API_KEY };
+            const ctx = { env, userId: 'ci-runner' };
+            runAllEvals({ env, ctx, datasets: CLINICAL_AGENT_EVAL_DATASETS }).then(runs => {
+              console.log(summarizeEvalRuns(runs));
+            });
+          "
+        continue-on-error: true
