@@ -19,13 +19,11 @@ import { getAgent, listAgents } from './shared/runtime';
 import {
   listNodeAgents,
   invokeNodeAgent,
-  checkNodeOrchestratorHealth,
-  type NodeAgentInfo,
-} from './node-client';
-import {
   isNodeAgentPackageAvailable,
   registerNodeAgentsInEdgeRegistry,
-} from './shared/node-agent-bridge';
+  checkNodeOrchestratorHealth,
+  type NodeAgentInfo,
+} from './node-bridge';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
