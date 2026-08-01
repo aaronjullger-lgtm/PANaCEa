@@ -723,7 +723,7 @@ export async function assessTestReadiness(): Promise<TestReadinessAssessment> {
       evidence:
         'Dunning-Kruger effect research shows overconfidence leads to underprepared test performance',
       expectedImpact: 'Reduced surprise on difficult questions',
-      actionable: 'Before answering, rate your confidence, then track accuracy by confidence level',
+      actionable: 'Use the app\'s behavioral calibration insights — confidence is derived from your response patterns automatically',
     });
   }
 
