@@ -33,6 +33,7 @@ All scheduled lanes also expose `workflow_dispatch` for operator reruns.
 
 - `config/automation-lanes.ts` is the machine-readable mirror of the Schedule Matrix (9 lanes: slug, workflow, cron, npmScript, endpoints, purpose).
 - `npm run automation:lanes:check` (`scripts/automation/check-lane-registry.ts`) validates registry ↔ workflow files ↔ package.json scripts and flags orphans (umbrella scripts warn by design).
+- `npm run automation:supervise` (`scripts/automation/laneSupervisor.ts`) is the local operator counterpart to the scheduled lanes: validates the registry, reports lane status, and can execute lanes locally with captured logs + report artifacts (`--check`, `--run <slug>`, `--run-all`). Production endpoint-fanout lanes are never dispatched locally.
 - `npm run scripts:list [filter]` (`scripts/help-scripts.mjs`) groups the 160+ npm scripts for navigation.
 
 When adding a lane: add the `sched-*.yml` workflow, then update both the Schedule Matrix above and `config/automation-lanes.ts`; run `npm run automation:lanes:check` to confirm consistency.

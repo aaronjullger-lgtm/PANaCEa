@@ -140,7 +140,7 @@ Fetched `.github/workflows/` of freeCodeCamp this session. Patterns:
 ### 3.4 Security & governance
 
 - `.gitleaks.toml` present; `.husky/pre-commit` delegates to `scripts/git-hooks/pre-commit.sh` (design-token audit + critical FSRS tests + gitleaks staged scan); `.git/hooks/{pre-commit,pre-push}` symlinked via `install-hooks.sh`; pre-push mirrors all 5 CI gates (lint, typecheck:ci, test:critical, build+size, gitleaks); CSP in `public/_headers`.
-- **Added 2026-07-31:** dependabot.yml (weekly grouped), CodeQL weekly workflow. **Absent:** renovate, SECURITY.md, CONTRIBUTING.md, LICENSE, CHANGELOG.md [V-L/X].
+- **Added 2026-07-31:** dependabot.yml (weekly grouped), CodeQL weekly workflow, SECURITY.md, CONTRIBUTING.md. **Absent:** renovate, LICENSE, CHANGELOG.md [V-L/X].
 - Present: `.github/copilot-instructions.md`.
 
 ### 3.5 Docs
@@ -189,9 +189,10 @@ GitHub Actions (25 workflows, incl. _automation-lane reusable runner)
     └─ Additions (status as of 2026-07-31):
         A. ✅ lane registry (config/automation-lanes.ts + scripts/automation/check-lane-registry.ts,
            npm run automation:lanes:check) — single source of truth: lane → workflow → cron → script
-        B. ⏳ orchestrator supervisor pass: lib/agents/supervisor-v2 already exists — add a
-           "lane supervisor" that reads the registry, dispatches scripts/automation jobs,
-           collects results, writes a per-lane report artifact (still deferred)
+        B. ✅ lane supervisor: scripts/automation/laneSupervisor.ts + `npm run automation:supervise`
+           (--check/--run <slug>/--run-all) — registry-driven local dispatcher with captured
+           logs + per-lane report artifacts (reuses shared/reporting.ts + commandRunner.ts);
+           endpoint-fanout lanes never dispatched locally
         C. ✅ CI hardening lane: dependabot.yml + CodeQL + gitleaks in pre-commit + husky
            delegation (typecheck:ci + test:critical via pre-push parity gates), closing G1/G2/G3
         D. ◐ perf gate lane: benchmark-relevance.yml weekly baseline added (closes G5 partially);
@@ -216,7 +217,7 @@ GitHub Actions (25 workflows, incl. _automation-lane reusable runner)
 | P0 | Add `dependabot.yml` (weekly, grouped) | G1 | S | ✅ done |
 | P0 | Add CodeQL analysis workflow | G2 | S | ✅ done |
 | P0 | Wire gitleaks into pre-commit; expand pre-commit gates | G3 | S | ✅ done (design audit + critical FSRS tests in pre-commit; typecheck:ci via pre-push parity) |
-| P1 | Lane registry + orchestrator supervisor pass (5.1 A/B) | G10/G11 | M | ◐ A done (registry + validator); B supervisor still deferred |
+| P1 | Lane registry + orchestrator supervisor pass (5.1 A/B) | G10/G11 | M | ✅ done (registry + validator + lane supervisor) |
 | P1 | CI perf gate: bundle-size + relevance benchmark in CI | G5 | M | ◐ benchmark-relevance.yml weekly done; bundle-size stays local + pre-push |
 | P1 | `store/` test coverage (0 → threshold) | G6 | M | ✅ done — tests existed (13 passing); doc claim corrected |
 | P2 | Agent-sync check workflow (skills ↔ docs) | G12 | S | ✅ done |
@@ -236,4 +237,5 @@ Effort: S < 1h, M = 1–3h. All items are reversible local/CI changes; no schema
 - `RATE_LIMIT_KV` usage: asserted in CLAUDE.md; rate-limit file name in `_shared/` not confirmed this session (ls truncated at `notifications.ts`).
 - 2026-07-31 Step 2 implementation landed (approved backlog): dependabot.yml, codeql.yml, benchmark-relevance.yml, agent-sync-check.yml, config/automation-lanes.ts (9 lanes), scripts/automation/check-lane-registry.ts, scripts/help-scripts.mjs, `automation:lanes:check` + `scripts:list` npm scripts, hooks hardened (pre-commit: design audit + critical FSRS tests + gitleaks; pre-push: 5 CI gates; both symlinked by install-hooks.sh; old custom gate backed up to `pre-commit.bak.20260731-140714`), agent-evaluations.yml → agent-evals-langchain.yml.
 - Verification 2026-07-31: 25/25 workflows + dependabot YAML-parse OK; `automation:lanes:check` PASS (4 benign umbrella warnings); pre-commit chain exit 0; `tests/store/useStudyStore.test.ts` 13/13; lint 5 pre-existing errors (none in new files); `typecheck:ci` blocked by pre-existing `drillReviewService.ts:616/763` Json-type errors (file untouched this session; `prisma generate` hangs locally — environment issue, not caused by these changes).
-- Next step (user decision): review Step 2 implementation; optional follow-ups — SECURITY.md/CONTRIBUTING.md, supervisor pass (5.1 B), bundle-size in ci.yml.
+- 2026-07-31 (cont.): lane supervisor landed (`scripts/automation/laneSupervisor.ts`, `npm run automation:supervise`, `--check` PASS 9 lanes; 5 umbrella warnings benign) — closes 5.1 B; SECURITY.md + CONTRIBUTING.md added (note: literal "Hard/Easy" phrase triggers the repo safety hook in docs — use "binary Again/Good" phrasing in future contributions).
+- Next step (user decision): review Step 2 implementation; optional follow-ups — LICENSE/CHANGELOG.md, bundle-size in ci.yml.
