@@ -35,8 +35,10 @@ import {
 } from '../../../lib/services/agents';
 import {
   createDefaultToolRegistry,
+} from '../../../lib/services/agents/toolRegistry';
+import {
   DEFAULT_TOOL_NAMES,
-} from '../../../lib/services/agents/tools/index';
+} from '../../../lib/services/agents/tools';
 import { logAgentTelemetry } from '../../../lib/services/agents/telemetry';
 
 // ─── Request schema ─────────────────────────────────────────────────────────

@@ -136,3 +136,32 @@ export function buildFunctionDeclarations(
     },
   ];
 }
+
+// ─── Convenience factories ─────────────────────────────────────────────────
+
+/**
+ * Build the default PANaCEa tool registry with all 10 tools.
+ * Use the tool-set constants (CLINICAL_TOOLS, QUALITY_TOOLS, etc.)
+ * to build restricted registries for specific agent domains.
+ */
+export function createDefaultToolRegistry(): ToolRegistry {
+  // Lazy-import to avoid circular dependency with tools/index.ts
+  const { ALL_TOOLS } = require('./tools/index') as { ALL_TOOLS: AnyToolDefinition[] };
+  return new ToolRegistry(ALL_TOOLS);
+}
+
+/**
+ * Build a registry restricted to clinical study tools (student-facing).
+ */
+export function createClinicalToolRegistry(): ToolRegistry {
+  const { CLINICAL_TOOLS } = require('./tools/index') as { CLINICAL_TOOLS: AnyToolDefinition[] };
+  return new ToolRegistry(CLINICAL_TOOLS);
+}
+
+/**
+ * Build a registry for content quality verification agents.
+ */
+export function createQualityToolRegistry(): ToolRegistry {
+  const { QUALITY_TOOLS } = require('./tools/index') as { QUALITY_TOOLS: AnyToolDefinition[] };
+  return new ToolRegistry(QUALITY_TOOLS);
+}
