@@ -19,7 +19,7 @@ PANaCEa already has LangSmith tracing enabled (via `LANGSMITH_TRACING=true` + `L
 | `lib/langchain/` | ✅ LangSmith auto-instrumentation | All LangGraph graphs, chains, and agents |
 | `lib/agents/` | ✅ Langfuse CallbackHandler | Edge-side agents via `invokeWithTracing` |
 | `packages/agent-orchestrator/` | ✅ Langfuse + LangSmith | Dual tracing on every agent invoke |
-| `functions/api/agents/` | ⚠️ Partial | Health endpoint only; invoke endpoints need tracing |
+| `functions/api/agents/` | ⚠️ Partial | `/api/agents/run` emits telemetry; `/api/agents/runs` and `/api/agents/threads` (Agent Protocol) need tracing; see `docs/api/API_OVERVIEW.md` |
 
 ---
 

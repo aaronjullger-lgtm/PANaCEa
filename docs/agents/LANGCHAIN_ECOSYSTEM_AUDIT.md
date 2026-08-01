@@ -138,9 +138,9 @@ PANaCEa has built a **sophisticated, production-grade agent infrastructure** tha
 
 | Capability | PANaCEa Status | Gap |
 |-----------|---------------|-----|
-| Standardized messages | ⚠️ Custom types | Partial — no interoperability |
+| Standardized messages | ✅ `lib/agents/protocol/types.ts` | Edge handlers at `/api/agents/runs` and `/api/agents/threads` — see [API Overview](../api/API_OVERVIEW.md) |
 | Capability discovery | ❌ None | **GAP** — No agent capability advertisement |
-| Task lifecycle | ⚠️ Implicit only | Partial — no explicit task states |
+| Task lifecycle | ⚠️ In-memory runs/threads | Partial — no D1/KV persistence yet |
 | Error standardization | ✅ AgentError type | Covered |
 
 ---
