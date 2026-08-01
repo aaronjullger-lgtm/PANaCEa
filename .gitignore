@@ -377,3 +377,7 @@ docs/superpowers/plans/
 # One-off audit outputs
 COMPREHENSIVE_REPOSITORY_AUDIT.md
 .audit/
+
+# LangGraph API
+.langgraph_api
+.env.agents

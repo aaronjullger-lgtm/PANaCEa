@@ -77,3 +77,7 @@ export type PlanProtocolStripData = {
 export type TrustTimelineData = {
   events: TrustEvent[];
 };
+
+export type TargetedConditionsData = {
+  conditions: Array<{ name: string; href: string }>;
+};
