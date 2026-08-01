@@ -6,67 +6,71 @@ This document tracks the request/response contracts for the most recently change
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/admin/check-access` | Verifies whether the authenticated user currently has admin access. |
-| GET | `/api/admin/stats` | Returns admin dashboard platform metrics (users, activity, flags, top systems). |
-| POST | `/api/osce/complete` | Marks an OSCE session complete (idempotent) and optionally persists analytics to `CaseFile`. |
-| GET | `/api/osce/stats` | Returns OSCE-only performance metrics and trend data from completed sessions with scores. |
+| GET | `/api/admin/content-gaps` | Lists detected blueprint/content gaps with aggregation and pagination (admin only). |
+| POST | `/api/reflection` | Saves or updates post-session metacognitive reflection for the authenticated user. |
 
 ## Endpoint Contracts
 
-### `GET /api/admin/check-access`
-
-**Auth:** Required (authenticated endpoint)
-
-**Request body:** None
-
-**Success response (`200 OK`)**
-
-```json
-{
-  "success": true,
-  "hasAccess": true,
-  "role": "admin",
-  "userId": "string",
-  "email": "optional-string"
-}
-```
-
-`role` can be `admin` or `superadmin`.
-
-**Error responses**
-
-- `403` → `{ "success": false, "hasAccess": false, "message": "Forbidden - Admin access required" }`
-- `500` → `{ "error": "Internal server error", "hasAccess": false }`
-
-**Notes**
-
-- Access is resolved in this order: `SUPERADMIN_USER_IDS`/`ADMIN_USER_IDS` env values first, then database role lookup.
-
----
-
-### `GET /api/admin/stats`
+### `GET /api/admin/content-gaps`
 
 **Auth:** Required (admin-authenticated endpoint)
 
+**Query parameters**
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `system` | string | — | Filter by organ system (e.g. `CV`, `PULM`). |
+| `gapType` | string | — | Filter by gap type (e.g. `blueprint`, `accuracy`, `coverage`). |
+| `resolved` | `"true"` \| `"false"` | — | Filter by resolution state (`resolvedAt` set vs. null). |
+| `limit` | number | `50` | Page size (1–200). |
+| `offset` | number | `0` | Pagination offset. |
+
 **Request body:** None
 
 **Success response (`200 OK`)**
 
 ```json
 {
-  "success": true,
   "data": {
-    "totalUsers": 0,
-    "activeUsersToday": 0,
-    "totalStudySessions": 0,
-    "averageAccuracy": 0,
-    "popularSystems": [
+    "gaps": [
       {
+        "id": "string",
+        "userId": "string | null",
         "system": "string",
-        "count": 0
+        "taskCategory": "string | null",
+        "conditionId": "string | null",
+        "topic": "string",
+        "gapType": "string",
+        "severity": 0,
+        "questionCount": 0,
+        "avgAccuracy": 0,
+        "lastReviewAt": "2026-01-01T00:00:00.000Z | null",
+        "detectedAt": "2026-01-01T00:00:00.000Z",
+        "resolvedAt": "2026-01-01T00:00:00.000Z | null",
+        "metadata": {}
       }
     ],
-    "pendingFlags": 0
+    "aggregation": {
+      "bySystem": [
+        {
+          "system": "string",
+          "count": 0,
+          "avgSeverity": 0
+        }
+      ],
+      "byGapType": [
+        {
+          "gapType": "string",
+          "count": 0
+        }
+      ]
+    },
+    "pagination": {
+      "limit": 50,
+      "offset": 0,
+      "total": 0,
+      "hasMore": false
+    }
   }
 }
 ```
@@ -74,15 +78,17 @@ This document tracks the request/response contracts for the most recently change
 **Error responses**
 
 - `403` → `{ "error": "Admin access required" }`
-- `500` → `{ "error": "Failed to fetch admin stats" }`
+- `500` → `{ "error": "Failed to fetch content gaps" }`
 
 **Notes**
 
-- If `DATABASE_URL` is missing, returns zeroed stats with `note: "Database not configured"`.
+- Gaps are ordered by `severity` (desc), then `detectedAt` (desc).
+- Aggregation counts default to unresolved gaps when no `resolved` filter is applied.
+- `userId` is `null` for global/platform gaps; non-null for per-user gaps.
 
 ---
 
-### `POST /api/osce/complete`
+### `POST /api/reflection`
 
 **Auth:** Required (authenticated endpoint)
 
@@ -90,65 +96,40 @@ This document tracks the request/response contracts for the most recently change
 
 ```json
 {
-  "body": {
-    "sessionId": "string",
-    "diagnosis": "string (optional)",
-    "treatmentPlan": "string (optional)",
-    "soapComparison": {},
-    "timingAnalytics": {},
-    "infographics": ["string"]
+  "reflection": {
+    "patternsNoticed": "string (1–5000 chars)",
+    "improvementPlan": "string (1–5000 chars)",
+    "topicsToReview": ["string"],
+    "sessionId": "string (optional, max 100 chars)"
   }
 }
 ```
-
-**Success responses**
-
-- `200 OK` → `{ "success": true }`
-- `200 OK` (idempotent repeat) → `{ "success": true, "alreadyCompleted": true }`
-
-**Error responses**
-
-- `404` → `{ "error": "User not found" }` or `{ "error": "Session not found" }`
-- `500` → `{ "error": "Internal server error" }`
-
-**Notes**
-
-- Creates `CaseFile` on a best-effort basis when `soapComparison` or `timingAnalytics` is provided.
-- `CaseFile` creation failure is logged but does not fail completion.
-
----
-
-### `GET /api/osce/stats`
-
-**Auth:** Required (authenticated endpoint)
-
-**Request body:** None
 
 **Success response (`200 OK`)**
 
 ```json
 {
-  "totalEncounters": 0,
-  "passRate": 0,
-  "averageScore": 0,
-  "averageClinicalReasoningScore": 0,
-  "trend": [
-    {
-      "sessionId": "string",
-      "date": "2026-01-01T00:00:00.000Z",
-      "score": 0,
-      "clinicalReasoningScore": 0
+  "data": {
+    "success": true,
+    "message": "Reflection saved",
+    "reflection": {
+      "id": "string",
+      "completedAt": "2026-01-01T00:00:00.000Z"
     }
-  ]
+  }
 }
 ```
 
+`message` is `"Reflection updated"` when a reflection already exists for the given `sessionId`.
+
 **Error responses**
 
-- `404` → `{ "error": "User not found" }`
-- `500` → `{ "error": "Failed to load OSCE stats" }`
+- `400` → `{ "error": "Validation failed: ..." }` (missing/invalid fields, invalid JSON)
+- `401` → `{ "error": "Authentication required" }`
+- `500` → `{ "error": "Reflection POST failed: ..." }`
 
 **Notes**
 
-- Metrics are computed from completed `PatientEncounterSession` rows that have an `OsceResult`.
-- Pass threshold is score `>= 70`.
+- **No `confidenceRating` in request.** PANaCEa uses implicit-only confidence derived from behavioral telemetry (`lib/confidence/**`). The API persists `confidenceRating: 0` (unknown sentinel) server-side.
+- When `sessionId` is provided and a reflection already exists for that session, the record is updated (upsert-by-session).
+- Called from `SessionEndSummary` → `MetacognitiveReflection` after main study sessions.

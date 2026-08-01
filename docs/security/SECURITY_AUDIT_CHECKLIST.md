@@ -80,6 +80,7 @@
 | `/api/user/stability-trend` | ✅   | standard   | ❌             |
 | `/api/analytics/session`    | ✅   | standard   | ❌             |
 | `/api/drills/*`             | ✅   | gemini     | ⚠️ Partial     |
+| `/api/reflection`           | ✅   | standard   | ✅             |
 
 ### Admin Endpoints (Admin Auth Required)
 
@@ -90,6 +91,7 @@
 | `/api/admin/media/approve` | ✅          | admin      | ✅     |
 | `/api/admin/media/pending` | ✅          | admin      | ✅     |
 | `/api/admin/cache-metrics` | ✅          | admin      | ✅     |
+| `/api/admin/content-gaps`  | ✅          | admin      | ✅     |
 
 ### Public Endpoints (No Auth Needed)
 
