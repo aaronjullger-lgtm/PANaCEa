@@ -26,7 +26,7 @@ Welcome to the PANaCEa documentation! This index helps you quickly find the info
 
 ### For API Surface
 
-1. **[API Overview](api/API_OVERVIEW.md)** - Current request/response contracts for updated endpoints
+1. **[API Overview](api/API_OVERVIEW.md)** - Agent orchestration and `/api/agents/*` request/response contracts
 
 ---
 
