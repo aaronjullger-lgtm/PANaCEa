@@ -16,6 +16,7 @@ import { MasteryUrgencyMatrixWidget } from './triage/MasteryUrgencyMatrixWidget'
 import { BlueprintHeatmapWidget } from './triage/BlueprintHeatmapWidget';
 import { PlanProtocolStripWidget } from './context/PlanProtocolStripWidget';
 import { TrustTimelineWidget } from './trust/TrustTimelineWidget';
+import { TargetedConditionsWidget } from './evidence/TargetedConditionsWidget';
 import type {
   BlueprintHeatmapData,
   CatchUpPlanData,
@@ -29,6 +30,7 @@ import type {
   ReadinessPulseData,
   ReviewCoverageData,
   TodayCommandData,
+  TargetedConditionsData,
   TrustTimelineData,
 } from './widgetData';
 
@@ -183,6 +185,38 @@ export const dashboardWidgetRegistry: DashboardWidgetDefinition[] = [
     visual: (_data, ctx) => ({ ...visualTokenForSignal(ctx.mode === 'low_data' ? 'low_data' : 'readiness_forecast', density(ctx)), motif: 'none', motion: 'none' }),
     component: InsightStackWidget as React.ComponentType<{ data: unknown; visual: VisualToken }>,
     attribution: (ctx) => `${ctx.insights.length} insight candidate${ctx.insights.length === 1 ? '' : 's'} survived eligibility, scoring, and suppression.`,
+  },
+  {
+    id: 'targeted_conditions',
+    class: 'evidence',
+    allowedSlots: ['below_fold_secondary', 'secondary_left', 'secondary_right'],
+    eligible: (ctx) => {
+      const conditions = ctx.raw.todayPlan?.targetedConditions;
+      return Boolean(conditions && conditions.length > 0);
+    },
+    score: (ctx) => {
+      const count = ctx.raw.todayPlan?.targetedConditions?.length ?? 0;
+      return scoreWidget({
+        urgency: 0.3,
+        goalImpact: 0.55,
+        actionability: count > 0 ? 0.6 : 0.2,
+        evidenceQuality: 0.72,
+        novelty: 0.5,
+        userStateFit: 0.65,
+        anxietyCost: 0.02,
+        redundancyPenalty: 0.1,
+        alreadyHandledPenalty: 0,
+      });
+    },
+    build: (ctx): TargetedConditionsData => ({
+      conditions: (ctx.raw.todayPlan?.targetedConditions ?? []).map((name: string) => ({
+        name,
+        href: `/library/condition/${encodeURIComponent(name.toLowerCase().replace(/\s+/g, '-'))}`,
+      })),
+    }),
+    visual: () => visualTokenForSignal('readiness_forecast', 'quiet'),
+    component: TargetedConditionsWidget as React.ComponentType<{ data: unknown; visual: VisualToken }>,
+    attribution: () => 'Targeted conditions link to the clinical library for deeper review.',
   },
   {
     id: 'review_coverage',

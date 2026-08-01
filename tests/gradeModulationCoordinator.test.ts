@@ -177,10 +177,9 @@ describe('modulateGrade - ex-Gaussian integration', () => {
     const result = modulateGrade(makeContext({
       userRtHistory: history,
       streakCount: 3,
-      userConfidenceRating: 3, // high
     }));
 
-    // Confidence delta should still work
+    // Confidence delta should still be present (implicit-only → 0)
     expect(result.deltas.confidenceDelta).toBeDefined();
     // Streak delta should still work
     expect(result.deltas.streakDelta).toBeDefined();

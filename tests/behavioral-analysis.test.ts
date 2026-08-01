@@ -288,39 +288,37 @@ describe('modulateGrade', () => {
     expect(result.discreteGrade).toBe(3); // 3.4 < 3.5 → Good
   });
 
-  it('rawGrade=3 + all max positive deltas should reach 4.0', () => {
+  it('rawGrade=3 + fast RT + max streak → 3.48 (implicit-only: no confidence delta)', () => {
     const result = modulateGrade({
       ...baseContext,
       responseTimeMs: 3000, // fast
-      userConfidenceRating: 3, // high + correct = +0.3
       streakCount: 5, // streak 4+ = +0.08
     });
-    // rtDelta=+0.4, confDelta=+0.3, streakDelta=+0.08 → total=+0.78
-    // effective = 3.0 + 0.78 = 3.78
-    expect(result.effectiveGrade).toBeCloseTo(3.78, 2);
-    expect(result.discreteGrade).toBe(4); // ≥ 3.5 → Easy
+    // rtDelta=+0.4, confDelta=0.0 (implicit-only), streakDelta=+0.08 → total=+0.48
+    // effective = 3.0 + 0.48 = 3.48
+    expect(result.effectiveGrade).toBeCloseTo(3.48, 2);
+    expect(result.discreteGrade).toBe(3); // 3.48 < 3.5 → Good
   });
 
-  it('rawGrade=3 + max negative deltas clamps at 1.0', () => {
+  it('rawGrade=3 + max negative deltas (implicit-only) → 2.553', () => {
     const result = modulateGrade({
       ...baseContext,
       responseTimeMs: 30000, // slow + correct → -0.3
       isCorrect: true,
-      userConfidenceRating: 1, // low + correct → -0.15
       streakCount: 0,
       sessionQuestionIndex: 20,
       rollingWindowAccuracy: 0.3,
       rollingWindowMeanRtMs: 25000,
       sessionMeanAccuracy: 0.8,
     });
-    // rtDelta=-0.3, confDelta=-0.15, streakDelta=0.0
+    // rtDelta=-0.3, confDelta=0.0 (implicit-only), streakDelta=0.0
     // fatigue: rtRatio=25000/15000=1.67>1.3, accRatio=0.3/0.8=0.375<0.7
-    // fatigueScore = min(1.0, (1.67-1.3)*2) = min(1.0, 0.74) = 0.74
-    // fatigueDelta = 0.74 * -0.2 = -0.148
-    // total = -0.3 + -0.15 + 0 + -0.148 = -0.598
-    // effective = max(1.0, 3.0 - 0.598) = 2.402
-    expect(result.effectiveGrade).toBeCloseTo(2.402, 1);
-    expect(result.discreteGrade).toBe(2); // [1.5, 2.5) → Hard
+    // fatigueScore = min(1.0, (1.67-1.3)*2) = min(1.0, 0.7333) = 0.7333
+    // fatigueDelta = 0.7333 * -0.2 = -0.1467
+    // total = -0.3 + 0 + 0 + -0.1467 = -0.4467
+    // effective = max(1.0, 3.0 - 0.4467) = 2.5533
+    expect(result.effectiveGrade).toBeCloseTo(2.5533, 3);
+    expect(result.discreteGrade).toBe(3); // [2.5, 3.5) → Good
   });
 
   it('zeroes RT delta when userMedianRtMs is null (cold start)', () => {
@@ -349,10 +347,9 @@ describe('modulateGrade', () => {
       ...baseContext,
       rawGrade: 4,
       responseTimeMs: 3000, // fast + correct → +0.4
-      userConfidenceRating: 3, // high + correct → +0.3
       streakCount: 5, // +0.08
     });
-    // rawGrade=4 + 0.78 → 4.78 → clamped to 4.0
+    // rawGrade=4 + 0.48 → 4.48 → clamped to 4.0
     expect(result.effectiveGrade).toBe(4.0);
     expect(result.discreteGrade).toBe(4);
   });

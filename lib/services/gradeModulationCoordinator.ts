@@ -40,8 +40,6 @@ export interface BehavioralContext {
   isCorrect: boolean;
   /** The unmodulated discrete grade (1=Again, 3=Good in binary system) */
   rawGrade: number;
-  /** User self-reported confidence: 0=unknown, 1=low, 2=medium, 3=high */
-  userConfidenceRating?: 0 | 1 | 2 | 3;
   /** Consecutive correct answers on same/similar items */
   streakCount: number;
   /** 0-based index of this question within the session */
@@ -68,7 +66,7 @@ export interface BehavioralSignals {
   fatigueScore: number;
   /** Streak-based stability multiplier */
   streakMultiplier: number;
-  /** Mapped confidence category from raw rating */
+  /** Confidence category — always 'unknown' (implicit-only, no self-rated input) */
   confidenceCategory: 'low' | 'medium' | 'high' | 'unknown';
   /** Fast RT + incorrect answer → impulsive error, not true knowledge gap */
   isImpulsiveError: boolean;
@@ -391,7 +389,7 @@ export function calculateFatigueDelta(fatigueScore: number): number {
  * This is the main entry point. It:
  * 1. Classifies RT zone from user median
  * 2. Computes fatigue score from rolling window
- * 3. Maps confidence rating to category
+ * 3. Applies implicit confidence category (always 'unknown' — no self-rated input)
  * 4. Computes all four deltas (RT, confidence, streak, fatigue)
  * 5. Clamps effective grade to [1.0, 4.0]
  * 6. Maps continuous grade to discrete FSRS grade
@@ -427,7 +425,8 @@ export function modulateGrade(context: BehavioralContext): GradeModulation {
     context.sessionMeanAccuracy
   );
 
-  const confidenceCategory = mapConfidenceCategory(context.userConfidenceRating);
+  // Confidence is implicit-only (no self-rated input) → always 'unknown', zero delta.
+  const confidenceCategory: 'unknown' = 'unknown';
 
   const isImpulsiveError = rtZone === 'fast' && !context.isCorrect;
   const isEffortfulRetrieval = rtZone === 'slow' && context.isCorrect;

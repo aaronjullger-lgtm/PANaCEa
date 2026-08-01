@@ -302,13 +302,11 @@ describe('modulateGrade', () => {
   });
 
   it('effectiveGrade is clamped to 4.0 maximum', () => {
-    // rawGrade=3 + fast_correct(+0.4) + high_conf_correct(+0.3) + streak_4(+0.08) = 3.78
-    // Even with all boosts, can approach but not exceed 4.0
+    // rawGrade=4 + fast_correct(+0.4) + streak_4(+0.08) = 4.48 → clamped to 4.0
     const ctx: BehavioralContext = {
       ...baseContext,
       responseTimeMs: 1000,
       rawGrade: 4,
-      userConfidenceRating: 3,
       streakCount: 10,
     };
     const r = modulateGrade(ctx);
@@ -322,20 +320,18 @@ describe('modulateGrade', () => {
       responseTimeMs: 30000,  // slow
       isCorrect: false,
       rawGrade: 1,
-      userConfidenceRating: 3, // high + incorrect = -0.3
     };
     const r = modulateGrade(ctx);
     expect(r.effectiveGrade).toBeGreaterThanOrEqual(1.0);
   });
 
   it('discreteGrade=1 when effectiveGrade < 1.5', () => {
-    // rawGrade=1, slow+incorrect (0.0), high+incorrect (-0.3) → 0.7 → clamped to 1.0
+    // rawGrade=1, slow+incorrect (0.0) → 1.0 → discrete Grade 1 (Again)
     const ctx: BehavioralContext = {
       ...baseContext,
       responseTimeMs: 30000,
       isCorrect: false,
       rawGrade: 1,
-      userConfidenceRating: 3,
     };
     const r = modulateGrade(ctx);
     expect(r.discreteGrade).toBe(1);
@@ -362,7 +358,6 @@ describe('modulateGrade', () => {
     const r = modulateGrade({
       ...baseContext,
       responseTimeMs: 5000,
-      userConfidenceRating: 3,
       streakCount: 3,
     });
     const expectedTotal = r.deltas.rtDelta + r.deltas.confidenceDelta +
