@@ -26,10 +26,8 @@ import './encounter/ddxGenerator';
 import './encounter/diagnosticWorkupAdvisor';
 import './encounter/feedbackSummarizer';
 import './encounter/soapNoteGrader';
-// FIXME: esbuild cannot resolve ./graphs/preceptor in Cloudflare Pages Functions build.
-// The file exists in git and is tracked, but the Functions build fails with
-// "Could not resolve" despite the correct relative path. Temporarily disabled
-// to unblock deployment. See commit history for investigation details.
+// Test: can esbuild resolve any file in ./graphs/ ?
+import './graphs/clinical-tutor';
 
 export { listAgents, invokeAgent, getAgent, clearRegistryForTests };
 export type {
