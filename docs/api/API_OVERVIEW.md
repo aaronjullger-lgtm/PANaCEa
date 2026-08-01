@@ -6,149 +6,195 @@ This document tracks the request/response contracts for the most recently change
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/admin/check-access` | Verifies whether the authenticated user currently has admin access. |
-| GET | `/api/admin/stats` | Returns admin dashboard platform metrics (users, activity, flags, top systems). |
-| POST | `/api/osce/complete` | Marks an OSCE session complete (idempotent) and optionally persists analytics to `CaseFile`. |
-| GET | `/api/osce/stats` | Returns OSCE-only performance metrics and trend data from completed sessions with scores. |
+| POST | `/api/questions/generate` | Authenticated single-question generation (cache → staging lake → AI); preview-only output staged for review. |
+| POST | `/api/questions/generate-deep` | Admin-only deep-context generation via cached PANCE blueprint; returns non-persisted preview questions. |
 
-## Endpoint Contracts
+## Cross-cutting: Clinical Quality Gate
 
-### `GET /api/admin/check-access`
+Both generation routes and the `autoAuthor` batch pipeline optionally run generated artifacts through the shared quality gate (`lib/agents/quality/qualityGate.ts` + `createClinicalContentValidator`).
 
-**Auth:** Required (authenticated endpoint)
+| Setting | Behavior |
+|---|---|
+| `ENABLE_QUALITY_GATE` unset / `false` | Gate skipped — existing production behavior. |
+| `ENABLE_QUALITY_GATE=true` | LLM verifier runs before delivery; failures are quarantined. |
 
-**Request body:** None
+**Per-route behavior when enabled:**
 
-**Success response (`200 OK`)**
+- **`POST /api/questions/generate`** — Quarantine returns `502` with `code: GEMINI_ERROR` and `details.gate: "clinical-content"`. No question is cached or returned.
+- **`POST /api/questions/generate-deep`** — Quarantined items are dropped from the `questions` array; the request still succeeds if any items pass. Validator feedback is logged server-side.
+- **`autoAuthor` (script, not HTTP)** — Quarantined content is treated as validation failure; nothing is saved to `MedicalContent`.
 
-```json
-{
-  "success": true,
-  "hasAccess": true,
-  "role": "admin",
-  "userId": "string",
-  "email": "optional-string"
-}
-```
-
-`role` can be `admin` or `superadmin`.
-
-**Error responses**
-
-- `403` → `{ "success": false, "hasAccess": false, "message": "Forbidden - Admin access required" }`
-- `500` → `{ "error": "Internal server error", "hasAccess": false }`
-
-**Notes**
-
-- Access is resolved in this order: `SUPERADMIN_USER_IDS`/`ADMIN_USER_IDS` env values first, then database role lookup.
+Gate uses gateway task `grading` (balanced tier), structured `{ passed, feedback, score? }` verdicts, and `maxRetries: 1` on generate / `maxRetries: 0` on generate-deep.
 
 ---
 
-### `GET /api/admin/stats`
+## Endpoint Contracts
 
-**Auth:** Required (admin-authenticated endpoint)
+### `POST /api/questions/generate`
 
-**Request body:** None
+**Auth:** Required (`aiEndpoint` — authenticated user)
+
+**Rate limit:** 60 requests/minute per user
+
+**Request body**
+
+```json
+{
+  "queryText": "Pulmonary embolism",
+  "questionType": "mcq",
+  "system": "Pulmonary",
+  "difficulty": "medium"
+}
+```
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `queryText` | string | yes | Condition/topic used to resolve `MedicalContent` |
+| `questionType` | string | yes | e.g. `mcq` |
+| `system` | string | no | Blueprint system override |
+| `difficulty` | string | no | e.g. `medium` |
 
 **Success response (`200 OK`)**
 
 ```json
 {
   "success": true,
-  "data": {
-    "totalUsers": 0,
-    "activeUsersToday": 0,
-    "totalStudySessions": 0,
-    "averageAccuracy": 0,
-    "popularSystems": [
-      {
-        "system": "string",
-        "count": 0
-      }
-    ],
-    "pendingFlags": 0
+  "question": {
+    "id": "string",
+    "text": "string",
+    "options": ["string"],
+    "correctAnswer": "string",
+    "system": "string",
+    "difficulty": "medium",
+    "submissionReady": false,
+    "requiresApproval": true,
+    "metadata": {
+      "stagingQuestionId": "string",
+      "persistence": "staged_for_review",
+      "medicalContentId": "string",
+      "conditionId": "string",
+      "cached": false,
+      "fromCache": false,
+      "fromStaging": false
+    },
+    "drugValidation": {
+      "checked": true,
+      "allValid": true,
+      "drugCount": 2,
+      "invalidDrugs": [],
+      "hasInteractions": false
+    }
+  },
+  "cached": false,
+  "similarity": 0.94
+}
+```
+
+`similarity` is present only when `cached: true`. `drugValidation` is advisory (RxNorm) and may be omitted. All generated/cached items are preview-only (`submissionReady: false`, `requiresApproval: true`).
+
+**Error responses**
+
+| Status | `code` | When |
+|---|---|---|
+| `404` | `NOT_FOUND` | No approved clinical source for `queryText` |
+| `502` | `GEMINI_ERROR` | AI generation failed, quality gate quarantine, or no learner-facing item produced |
+| `502` | `DB_ERROR` | Generated question could not be staged for review |
+
+Quality-gate failure example:
+
+```json
+{
+  "error": "The generated question did not pass the clinical quality gate and will not be delivered.",
+  "code": "GEMINI_ERROR",
+  "details": {
+    "gate": "clinical-content",
+    "feedback": ["specific defect 1", "specific defect 2"]
   }
 }
 ```
 
-**Error responses**
-
-- `403` → `{ "error": "Admin access required" }`
-- `500` → `{ "error": "Failed to fetch admin stats" }`
-
 **Notes**
 
-- If `DATABASE_URL` is missing, returns zeroed stats with `note: "Database not configured"`.
+- Resolution order: semantic cache → graded `StagingQuestion` → AI generation.
+- New AI output is always staged via `stageGeneratedQuestionPreview` before return.
+- Pearl harvesting runs after successful generation (non-blocking).
+- Requires `GEMINI_API_KEY` and `DATABASE_URL` (validated via `validateFunctionEnv`).
 
 ---
 
-### `POST /api/osce/complete`
+### `POST /api/questions/generate-deep`
 
-**Auth:** Required (authenticated endpoint)
+**Auth:** Required — **admin only** (`adminAuthenticatedEndpoint`)
+
+**Rate limit:** 25 requests/minute per user
 
 **Request body**
 
 ```json
 {
   "body": {
-    "sessionId": "string",
-    "diagnosis": "string (optional)",
-    "treatmentPlan": "string (optional)",
-    "soapComparison": {},
-    "timingAnalytics": {},
-    "infographics": ["string"]
+    "condition": "Heart Failure",
+    "category": "Cardiology",
+    "implicitDifficulty": 0.65,
+    "cachedContent": "cache_pance_master_v1",
+    "count": 1
   }
 }
 ```
 
-**Success responses**
-
-- `200 OK` → `{ "success": true }`
-- `200 OK` (idempotent repeat) → `{ "success": true, "alreadyCompleted": true }`
-
-**Error responses**
-
-- `404` → `{ "error": "User not found" }` or `{ "error": "Session not found" }`
-- `500` → `{ "error": "Internal server error" }`
-
-**Notes**
-
-- Creates `CaseFile` on a best-effort basis when `soapComparison` or `timingAnalytics` is provided.
-- `CaseFile` creation failure is logged but does not fail completion.
-
----
-
-### `GET /api/osce/stats`
-
-**Auth:** Required (authenticated endpoint)
-
-**Request body:** None
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `body.condition` | string | yes | Condition or topic |
+| `body.category` | string | no | PANCE system for blueprint cross-reference |
+| `body.implicitDifficulty` | number (0–1) | no | Influences vignette difficulty hint |
+| `body.cachedContent` | string | no | Cached content name; defaults to `CACHE_PANCE_MASTER_NAME` env |
+| `body.count` | integer (1–5) | no | Default `1` |
 
 **Success response (`200 OK`)**
 
 ```json
 {
-  "totalEncounters": 0,
-  "passRate": 0,
-  "averageScore": 0,
-  "averageClinicalReasoningScore": 0,
-  "trend": [
-    {
-      "sessionId": "string",
-      "date": "2026-01-01T00:00:00.000Z",
-      "score": 0,
-      "clinicalReasoningScore": 0
-    }
-  ]
+  "ok": true,
+  "data": {
+    "questions": [
+      {
+        "id": "deep-preview-1730000000000-0",
+        "question": "stem text",
+        "options": ["A text", "B text", "C text", "D text"],
+        "correctAnswerIndex": 0,
+        "explanation": "brief rationale",
+        "system": "Cardiovascular",
+        "conditionId": "optional-id",
+        "submissionReady": false,
+        "requiresApproval": true,
+        "metadata": {
+          "source": "generate-deep-preview",
+          "persistence": "admin_preview_only",
+          "adminPreviewOnly": true,
+          "submissionReady": false,
+          "requiresApproval": true,
+          "condition": "Heart Failure",
+          "category": "Cardiology"
+        }
+      }
+    ]
+  }
 }
 ```
 
+Malformed model output (missing required fields, fewer than four options, invalid `correctAnswerIndex`) is filtered before mapping. With `ENABLE_QUALITY_GATE=true`, failed items are dropped rather than returned.
+
 **Error responses**
 
-- `404` → `{ "error": "User not found" }`
-- `500` → `{ "error": "Failed to load OSCE stats" }`
+| Status | `code` / shape | When |
+|---|---|---|
+| `400` / validation | `VALIDATION_FAILED` | Missing cached content config, safety filter block, bad gateway request |
+| `429` | `RATE_LIMITED` | Gateway rate limit |
+| `500` | `ENV_MISCONFIGURED` | Missing `GEMINI_API_KEY` or gateway auth failure |
+| `502` | `GEMINI_ERROR` | Gateway generation failure |
 
 **Notes**
 
-- Metrics are computed from completed `PatientEncounterSession` rows that have an `OsceResult`.
-- Pass threshold is score `>= 70`.
+- Uses AI gateway `callText` with `task: generation`, `tier: balanced` (gemini-2.5-flash), and `cachedContent` for 1M+ token blueprint context.
+- **Does not persist** questions — admin preview only (`persistence: "admin_preview_only"`).
+- Requires `GEMINI_API_KEY` and either `body.cachedContent` or `CACHE_PANCE_MASTER_NAME`.

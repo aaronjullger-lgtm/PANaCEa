@@ -68,16 +68,17 @@ The question generation system has **four tiers** of generation, **two variant p
 
 ## 2. Generation Endpoints Audit
 
-### 2.1 `functions/api/questions/generate.ts` (478 lines)
+### 2.1 `functions/api/questions/generate.ts` (~610 lines)
 **Role:** Primary single-question generation with 3-tier cache strategy.
 
-**Flow:** Semantic cache → staging lake lookup → AI generation (Gemini + grounding) → clinical pearl extraction → cache result.
+**Flow:** Semantic cache → staging lake lookup → AI generation (Gemini + grounding) → optional clinical quality gate → clinical pearl extraction → cache result.
 
-**DB writes:** `medicalContent` (pearls), `semanticCache` (via helper).
+**DB writes:** `medicalContent` (pearls), `semanticCache` (via helper), `stagingQuestion` (preview staging).
 
 **Issues found:**
 - PubMed enrichment call (`enrichWithPubMed`) in `_shared/question-generator.ts` is **unguarded** — if PubMed API fails, the entire generation fails. Should be wrapped in try/catch with fallback.
 - Rate limited at 60 req/min (good).
+- **Added (2026-08):** Optional shared clinical quality gate via `ENABLE_QUALITY_GATE=true` — quarantine fails closed with `502 GEMINI_ERROR` (no cache, no delivery).
 
 ### 2.2 `functions/api/questions/generate-batch.ts` (373 lines)
 **Role:** Bulk pre-generation seeding the `PreGeneratedQuestion` pool.
@@ -99,14 +100,15 @@ The question generation system has **four tiers** of generation, **two variant p
 - **CoVe failure still saves to DB.** After 3 retry failures, the code logs a warning but continues to write the unverified question to the staging table. This means questions that failed all verification attempts can still enter the pipeline.
 - This is the only edge function using the full CoVe pipeline.
 
-### 2.4 `functions/api/questions/generate-deep.ts` (167 lines)
-**Role:** Lightweight generation using Gemini cached context.
+### 2.4 `functions/api/questions/generate-deep.ts` (~265 lines)
+**Role:** Admin-only deep-context generation using Gemini cached context (AI gateway `callText`).
 
-**DB writes:** None — returns JSON only.
+**DB writes:** None — returns JSON preview only (`persistence: "admin_preview_only"`).
 
-**Issues found:**
-- **No field validation on response.** Parses Gemini response but only filters by count, not by required field presence.
-- No retry on HTTP failures (returns 502).
+**Issues found (updated 2026-08):**
+- **Addressed:** Malformed model output is filtered (required fields, ≥4 options, valid `correctAnswerIndex`) before mapping.
+- **Addressed:** Optional shared clinical quality gate when `ENABLE_QUALITY_GATE=true` (quarantined items dropped from response).
+- No retry on HTTP failures (returns 502 via gateway error mapping).
 
 ### 2.5 `functions/api/admin/generate-question.ts` (182 lines)
 **Role:** Admin taxonomy-driven generation.
@@ -386,7 +388,7 @@ effectiveMvrt = max(SERVER_MVRT_THRESHOLD_MS=2000, userMvrtCalibration)
 | M1 | Grounding context fetch silently swallows errors | `question-generator.ts:19-42` | Questions generated without current clinical evidence, no caller awareness |
 | M2 | No dedup check at generation time | `ensureDueVariant.ts`, `generate-batch.ts` | Duplicate questions generated, wasting Gemini tokens and review time |
 | M3 | Non-transactional stats writes before FSRS transaction | `drillReviewService.ts` | If FSRS fails, stats are recorded but scheduling isn't updated |
-| M4 | `generate-deep.ts` no field validation | `generate-deep.ts:166` | Malformed Gemini responses pass through unchecked |
+| ~~M4~~ | ~~`generate-deep.ts` no field validation~~ | `generate-deep.ts` | **Addressed** — malformed items filtered; optional quality gate when `ENABLE_QUALITY_GATE=true` |
 | M5 | `questionSeedService` appears unused | `questionSeedService.ts` | 317 lines of well-implemented template permutation logic sitting dormant |
 | M6 | Hardcoded model in variant generator | `questionVariantGenerator.ts` | `gemini-2.0-flash-exp` won't update with constants |
 | M7 | `ensureDueVariant` sibling threshold is only 1 | `ensureDueVariant.ts:77` | High-confusion conditions get insufficient variant coverage |
