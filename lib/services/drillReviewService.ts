@@ -613,7 +613,7 @@ async function recordStudyPlanAttemptProgress(
     await delegate.update({
       where: { id: row.id },
       data: {
-        recommendedSessions: tasks,
+        recommendedSessions: tasks as unknown as Prisma.InputJsonValue,
         status: totals.status,
         actualQuestionsAnswered: totals.questionsAnswered,
         actualDurationMinutes: totals.durationMinutes,
@@ -760,7 +760,7 @@ async function getCardRtBaseline(
         questionId,
         isMainSession: true,
         durationMs: { gt: 500 },
-        telemetryJson: { not: null },
+        telemetryJson: { not: Prisma.DbNull },
       },
       select: {
         telemetryJson: true,
