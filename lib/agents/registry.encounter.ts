@@ -26,8 +26,7 @@ import './encounter/ddxGenerator';
 import './encounter/diagnosticWorkupAdvisor';
 import './encounter/feedbackSummarizer';
 import './encounter/soapNoteGrader';
-// Test: can esbuild resolve any file in ./graphs/ ?
-import './graphs/clinical-tutor';
+import './graphs/preceptor';
 
 export { listAgents, invokeAgent, getAgent, clearRegistryForTests };
 export type {
