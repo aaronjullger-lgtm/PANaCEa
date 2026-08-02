@@ -41,6 +41,8 @@ export const onRequestPost = authenticatedEndpoint(QuestionFetchSchema, async (c
     const history = await prisma.userQuestionSeen.findMany({
       where: historyWhere,
       select: { questionId: true },
+      take: 5000,
+      orderBy: { lastSeenAt: 'desc' },
     });
     type HistoryItem = (typeof history)[0];
     const seenQuestionIds = history.map((h: HistoryItem) => h.questionId);
@@ -70,7 +72,7 @@ export const onRequestPost = authenticatedEndpoint(QuestionFetchSchema, async (c
     // Enables the flag-rate kill switch: questions with flagRate > 0.1 AND timesServed >= 20
     // are auto-rejected by contentHealthService. Without timesServed the kill switch never fires.
     if (questions.length > 0) {
-      prisma.preGeneratedQuestion
+      const updatePromise = prisma.preGeneratedQuestion
         .updateMany({
           where: { id: { in: questions.map((q) => q.id) } },
           data: { timesServed: { increment: 1 } },
@@ -80,6 +82,7 @@ export const onRequestPost = authenticatedEndpoint(QuestionFetchSchema, async (c
             error: err instanceof Error ? err.message : String(err),
           })
         );
+      context.waitUntil?.(updatePromise);
     }
 
     return {

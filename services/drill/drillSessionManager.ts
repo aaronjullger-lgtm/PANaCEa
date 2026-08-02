@@ -408,31 +408,34 @@ export async function getDrillPerformanceBySystem(
  */
 export async function getDrillOverview(prisma: PrismaLike, userId: string): Promise<DrillOverview> {
   try {
-    // Get all drill sessions (isMainSession = false)
     const sessions = await prisma.studySession.findMany({
       where: {
         userId,
-        sessionType: { in: ['CRAM', 'DRILL'] }, // CRAM = legacy sessions, DRILL = current
+        sessionType: { in: ['CRAM', 'DRILL'] },
       },
+      select: { startedAt: true },
       orderBy: {
         startedAt: 'desc',
       },
     });
 
-    // Get all drill attempts
-    const attempts = await prisma.questionAttempt.findMany({
+    const totalAttempts = await prisma.questionAttempt.count({
+      where: { userId, isMainSession: false },
+    });
+    const correctAttempts = await prisma.questionAttempt.count({
+      where: { userId, isMainSession: false, wasCorrect: true },
+    });
+    const overallAccuracy = totalAttempts > 0 ? correctAttempts / totalAttempts : 0;
+
+    const recentAttempts = await prisma.questionAttempt.findMany({
       where: {
         userId,
         isMainSession: false,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      select: { createdAt: true, wasCorrect: true, questionType: true },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
     });
-
-    // Calculate overall accuracy
-    const correctAttempts = attempts.filter((a) => a.wasCorrect).length;
-    const overallAccuracy = attempts.length > 0 ? correctAttempts / attempts.length : 0;
 
     // Calculate streaks (days with at least one drill session)
     const sessionDates = sessions.map((s) => s.startedAt.toISOString().split('T')[0]);
@@ -479,7 +482,7 @@ export async function getDrillOverview(prisma: PrismaLike, userId: string): Prom
     // Group recent activity by date and drill type
     const recentActivity: Record<string, Record<string, { correct: number; total: number }>> = {};
 
-    attempts.slice(0, 100).forEach((attempt) => {
+    recentAttempts.forEach((attempt) => {
       const date = attempt.createdAt.toISOString().split('T')[0];
       const drillType = attempt.questionType || 'unknown';
 
@@ -526,7 +529,7 @@ export async function getDrillOverview(prisma: PrismaLike, userId: string): Prom
 
     return {
       totalSessions: sessions.length,
-      totalAttempts: attempts.length,
+      totalAttempts,
       overallAccuracy,
       currentStreak,
       bestStreak,
