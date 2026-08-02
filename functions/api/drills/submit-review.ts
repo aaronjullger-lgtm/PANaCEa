@@ -12,6 +12,7 @@ import { resolveReviewQuestion } from './_shared/reviewQuestionResolver';
 import { getRelativeDrillPerformance } from '../../../lib/services/drillAnalyticsService';
 import { markConsumed } from '../../../lib/services/reservoir';
 import { setInCache, isKVAvailable } from '../_shared/cache';
+import { d1InvalidatePrefix } from '../_shared/d1-cache';
 import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 import {
   beginSubmissionIdempotency,
@@ -340,6 +341,12 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
           error: cacheError instanceof Error ? cacheError.message : String(cacheError),
         });
       }
+    }
+
+    if (env.EDGE_DB) {
+      context.waitUntil?.(
+        d1InvalidatePrefix(env.EDGE_DB, `dashboard:stats:${auth.userId}`).catch(() => {})
+      );
     }
 
     return { data: responseData };

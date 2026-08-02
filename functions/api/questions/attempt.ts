@@ -17,6 +17,7 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 import { getFromCache, isKVAvailable, setInCache } from '../_shared/cache';
+import { d1InvalidatePrefix } from '../_shared/d1-cache';
 import { upsertCanonicalQuestionMirror } from '../_shared/canonical-question-mirror';
 import {
   withProductionPregeneratedSafety,
@@ -493,6 +494,15 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
         buildAttemptIdemKey(auth.userId, idempotencyKey),
         responseData,
         IDEM_TTL_SECONDS
+      );
+    }
+
+    // Invalidate the per-user dashboard stats cache so the next dashboard load
+    // reflects this attempt. Fire-and-forget: D1 cache invalidation must never
+    // fail the user-visible write path.
+    if (env.EDGE_DB) {
+      context.waitUntil?.(
+        d1InvalidatePrefix(env.EDGE_DB, `dashboard:stats:${auth.userId}`).catch(() => {})
       );
     }
 
