@@ -21,14 +21,14 @@ const RunRequestSchema = z.object({
   agentName: z.string().min(1),
   input: z.unknown(),
   threadId: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const onRequestPost = authenticatedEndpoint(
   RunRequestSchema,
   async (context: AuthenticatedContext & { validated: z.infer<typeof RunRequestSchema> }) => {
     const { agentName, input, threadId, metadata } = context.validated;
-    const userId = context.userId ?? 'anonymous';
+    const userId = context.auth.userId ?? 'anonymous';
 
     const runId = `run_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const startedAt = new Date().toISOString();
