@@ -50,6 +50,16 @@ jobs:
           set -euo pipefail
           npx prisma generate
 
+      - name: Diagnose DB connectivity (temp)
+        if: ${{ always() }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_DATABASE_URL: ${{ secrets.DIRECT_DATABASE_URL }}
+        run: |
+          set +e
+          npx tsx scripts/_tmp_db_diag.ts
+          exit 0
+
       - name: Run runtime sanity checks
         id: runtime_sanity
         env:
