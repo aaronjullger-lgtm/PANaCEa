@@ -101,6 +101,23 @@ async function checkDatabaseConnection(): Promise<void> {
     });
     report.summary.passed++;
   } catch (error: any) {
+    // Serialize the full error chain so CI logs show the real underlying cause
+    // (Prisma 7 driver-adapter errors often have empty top-level messages).
+    const cause =
+      error?.cause && typeof error.cause === 'object'
+        ? JSON.stringify(error.cause, Object.getOwnPropertyNames(error.cause))
+        : error?.cause ?? 'none';
+    console.error(
+      'DB_CHECK_ERROR',
+      JSON.stringify({
+        name: error?.name ?? 'unknown',
+        code: error?.code ?? null,
+        message: error?.message ?? '',
+        meta: error?.meta ?? null,
+        cause,
+        stack: error?.stack?.split('\n').slice(0, 6).join(' | '),
+      })
+    );
     report.checks.push({
       name: 'Database Connection',
       status: 'fail',
