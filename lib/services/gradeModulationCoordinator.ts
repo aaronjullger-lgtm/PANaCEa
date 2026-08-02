@@ -142,7 +142,10 @@ export const BEHAVIORAL_CONSTANTS = {
     /** Slow RT + incorrect: deliberate failure → no RT adjustment */
     RT_SLOW_INCORRECT: 0.0,
 
-    /** High confidence + correct: full stability gain */
+    /** Reserved for future implicit confidence mapping (see F-01 in
+     *  docs/audits/BEHAVIORAL_FSRS_CONFIDENCE_AUDIT.md). PANaCEa is
+     *  implicit-only: confidenceCategory is hardcoded to 'unknown', so
+     *  these deltas never fire. Do not wire self-rated confidence in. */
     CONF_HIGH_CORRECT: +0.3,
     /** High confidence + incorrect: overconfidence penalty */
     CONF_HIGH_INCORRECT: -0.3,

@@ -34,6 +34,10 @@ export interface CalibrationBucket {
 export interface UserCalibration {
   /** Brier score: 0 = perfect calibration, 1 = worst */
   brierScore: number;
+  /** MSEP = Brier − p̄(1−p̄): calibration skill beyond predicting the base rate. <0 = better than base-rate guess */
+  msep: number;
+  /** Brier score weighted by recency: w = exp(−age_days/30). Null when pair timestamps unavailable */
+  timeWeightedBrier: number | null;
   /** Linear regression slope of predicted vs actual: >1 = underconfident, <1 = overconfident */
   calibrationSlope: number;
   /** Intercept of calibration regression */
@@ -87,6 +91,43 @@ export function computeBrierScore(
     return acc + (p.confidence - actual) ** 2;
   }, 0);
   return sum / pairs.length;
+}
+
+/**
+ * Mean Squared Error of Prediction: Brier − p̄(1−p̄).
+ * p̄(1−p̄) is the Brier of always predicting the base rate, so MSEP isolates
+ * calibration skill beyond a trivial base-rate guess. Negative = better than
+ * predicting the mean; positive = worse.
+ */
+export function computeMSEPScore(
+  pairs: Array<{ confidence: number; wasCorrect: boolean }>
+): number {
+  if (pairs.length === 0) return 0;
+  const meanConf = pairs.reduce((s, p) => s + p.confidence, 0) / pairs.length;
+  const brier = computeBrierScore(pairs);
+  return brier - meanConf * (1 - meanConf);
+}
+
+/**
+ * Brier score with exponential recency weighting:
+ * w_i = exp(−age_days_i / 30), so a review pair 30 days old contributes 37%
+ * as much as a fresh pair. Returns null when timestamps are missing.
+ */
+export function computeTimeWeightedBrierScore(
+  pairs: Array<{ confidence: number; wasCorrect: boolean; reviewedAt?: Date | null }>
+): number | null {
+  const now = Date.now();
+  let weightSum = 0;
+  let weightedError = 0;
+  for (const p of pairs) {
+    if (!p.reviewedAt) return null;
+    const ageDays = (now - p.reviewedAt.getTime()) / 86400000;
+    const w = Math.exp(-ageDays / 30);
+    const actual = p.wasCorrect ? 1 : 0;
+    weightSum += w;
+    weightedError += w * (p.confidence - actual) ** 2;
+  }
+  return weightSum === 0 ? null : weightedError / weightSum;
 }
 
 /**
@@ -165,15 +206,19 @@ export function deriveDampenerFactor(slope: number, brierScore: number): number 
  * Compute full calibration profile from prediction-outcome pairs.
  */
 export function computeCalibrationProfile(
-  pairs: Array<{ confidence: number; wasCorrect: boolean }>
+  pairs: Array<{ confidence: number; wasCorrect: boolean; reviewedAt?: Date | null }>
 ): UserCalibration {
   const brierScore = computeBrierScore(pairs);
+  const msep = computeMSEPScore(pairs);
+  const timeWeightedBrier = computeTimeWeightedBrierScore(pairs);
   const { slope, intercept } = linearRegression(pairs);
   const buckets = computeCalibrationBuckets(pairs);
   const dampenerFactor = deriveDampenerFactor(slope, brierScore);
 
   return {
     brierScore: Math.round(brierScore * 10000) / 10000,
+    msep: Math.round(msep * 10000) / 10000,
+    timeWeightedBrier: timeWeightedBrier == null ? null : Math.round(timeWeightedBrier * 10000) / 10000,
     calibrationSlope: Math.round(slope * 1000) / 1000,
     calibrationIntercept: Math.round(intercept * 1000) / 1000,
     buckets,
@@ -194,7 +239,7 @@ export async function buildCalibrationPairs(
   prisma: PrismaClient,
   userId: string,
   lookbackDays: number = 90
-): Promise<Array<{ confidence: number; wasCorrect: boolean }>> {
+): Promise<Array<{ confidence: number; wasCorrect: boolean; reviewedAt: Date }>> {
   const cutoff = new Date(Date.now() - lookbackDays * 86400000);
 
   // Fetch reviews with confidence, grouped by condition
@@ -218,7 +263,7 @@ export async function buildCalibrationPairs(
   });
 
   // Group by conditionId
-  const byCondition = new Map<string, Array<{ confidence: number; wasCorrect: boolean }>>();
+  const byCondition = new Map<string, Array<{ confidence: number; wasCorrect: boolean; reviewedAt: Date }>>();
   for (const r of reviews) {
     if (!r.conditionId || r.implicit_confidence == null) continue;
     if (!byCondition.has(r.conditionId)) {
@@ -227,11 +272,12 @@ export async function buildCalibrationPairs(
     byCondition.get(r.conditionId)!.push({
       confidence: r.implicit_confidence as number,
       wasCorrect: r.wasCorrect as boolean,
+      reviewedAt: r.reviewedAt as Date,
     });
   }
 
   // Build pairs: confidence from review_i predicting wasCorrect of review_i+1
-  const pairs: Array<{ confidence: number; wasCorrect: boolean }> = [];
+  const pairs: Array<{ confidence: number; wasCorrect: boolean; reviewedAt: Date }> = [];
   for (const [, conditionReviews] of byCondition) {
     for (let i = 0; i < conditionReviews.length - 1; i++) {
       const curr = conditionReviews[i];
@@ -241,6 +287,7 @@ export async function buildCalibrationPairs(
       pairs.push({
         confidence: curr.confidence,
         wasCorrect: next.wasCorrect,
+        reviewedAt: next.reviewedAt,
       });
     }
   }
@@ -258,6 +305,8 @@ export async function getUserCalibration(
 ): Promise<UserCalibration> {
   const neutralCalibration: UserCalibration = {
     brierScore: 0.25,
+    msep: 0,
+    timeWeightedBrier: null,
     calibrationSlope: 1,
     calibrationIntercept: 0,
     buckets: [],
