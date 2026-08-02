@@ -147,3 +147,39 @@ Adapted from the [ECC repo](https://github.com/affaan-m/ecc) for PANaCEa's workf
 | `eval-harness` | `.agents/skills/eval-harness` | Eval-driven development for AI features — capability evals, regression evals, pass@k metrics for question gen, tutoring, OSCE. |
 | `post-edit-verify` | `.agents/skills/post-edit-verify` | Post-edit verification — lint, typecheck, and security scan on changed files. Includes pre-commit hook setup. |
 | `agent-introspection` | `.agents/skills/agent-introspection` | Four-phase agent self-debugging loop (capture → diagnosis → recovery → report). Use when agent workflows fail repeatedly. |
+
+## ECC Stack & Domain Skills (vended from upstream)
+
+Vended as-is from the [ECC repo](https://github.com/affaan-m/everything-claude-code) on 2026-08-01. Curated to fill gaps not covered by existing skills; selected from 281 candidates after stack/domain/redundancy filtering. Each is a standalone `SKILL.md` (no `references/` or `scripts/`). Do not duplicate functionality already owned by a `panacea-*` skill — use these as generic pattern references, fall back to project-specific skills for PANaCEa internals.
+
+### Frontend stack patterns (React 19 + Vite 6)
+
+| Skill | Folder | Description |
+| --- | --- | --- |
+| `accessibility` | `.agents/skills/accessibility` | WCAG 2.2 AA implementation: semantic ARIA, POUR principles, target size, focus appearance, contrast. Use when defining UI specs, auditing a11y barriers, or implementing 2.2 SCs. |
+| `react-patterns` | `.agents/skills/react-patterns` | React 18/19 idioms: hooks discipline, Suspense + error boundaries, server/client component boundaries, form actions, state management decision trees, accessibility-first defaults. |
+| `react-performance` | `.agents/skills/react-performance` | 70+ Vercel Engineering rules across 8 priority categories (re-renders, bundles, hydration, lazy loading, data fetching). Use when optimizing React rendering or payload. |
+| `react-testing` | `.agents/skills/react-testing` | React Testing Library + Vitest/Jest + MSW + axe assertions. Boundary guidance between component tests and Playwright/Cypress. Complements `vitest-author` (project conventions). |
+| `vite-patterns` | `.agents/skills/vite-patterns` | Vite config, plugins, HMR, env vars, proxy, library mode, dependency pre-bundling, build optimization. Activate on `vite.config.ts` edits or build-perf work. |
+
+### Data layer patterns (Prisma 7 + Postgres/Supabase)
+
+| Skill | Folder | Description |
+| --- | --- | --- |
+| `prisma-patterns` | `.agents/skills/prisma-patterns` | Prisma ORM patterns + critical traps (updateMany returns count, `$transaction` timeouts, N+1, pagination, migrations). Complements project-specific `panacea-prisma-data-integrity` and `migration-safety`. |
+| `postgres-patterns` | `.agents/skills/postgres-patterns` | Postgres schema design, indexing, query optimization, security. Supabase best practices. Complements `panacea-prisma-data-integrity` (integrity) and `supabase` (Supabase-specific). |
+
+### Quality, infra, and integration
+
+| Skill | Folder | Description |
+| --- | --- | --- |
+| `error-handling` | `.agents/skills/error-handling` | Typed errors, error boundaries, retries, circuit breakers, user-facing messages. Cross-stack (TS/Py/Go). Complements `async-state-hardening` (loading/empty states). |
+| `e2e-testing` | `.agents/skills/e2e-testing` | Playwright patterns: Page Object Model, config, CI integration, artifact management, flaky-test strategies. Use for `e2e/` work. |
+| `mcp-server-patterns` | `.agents/skills/mcp-server-patterns` | Build MCP servers with Node/TS SDK: tools, resources, prompts, Zod validation, stdio vs Streamable HTTP. Use when authoring a new MCP server. |
+
+### Clinical domain (synergy with PANaCEa clinical content)
+
+| Skill | Folder | Description |
+| --- | --- | --- |
+| `healthcare-cdss-patterns` | `.agents/skills/healthcare-cdss-patterns` | Clinical Decision Support patterns: drug interaction checking, dose validation, clinical scoring (NEWS2, qSOFA), alert severity. Relevant to clinical content enrichment, drug data, scoring rubrics. |
+| `scientific-db-pubmed-database` | `.agents/skills/scientific-db-pubmed-database` | PubMed/NCBI E-utilities search workflows (MeSH queries, PMID lookup, citation retrieval). Use for evidence-based clinical content grounding and citation provenance. Complements `clinical-library-search` (internal content). |

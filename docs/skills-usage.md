@@ -47,6 +47,18 @@ Use this guide when deciding which `.agents/skills` workflow should drive a Stud
 | "Combine vector, keyword, graph, and table memory" | `hybrid-retrieval` | `rag-quality`, `memory-regression-eval`, `memory-safety` |
 | "End session, save progress, write handoff, commit" | `wrap-up` | Release or verification skill if near ship point |
 | "Personal decision support or priority reasoning" | `think` | None (non-code work) |
+| "WCAG 2.2 / ARIA / accessibility audit or implementation" | `accessibility` | `panacea-style-system`, `panacea-verify` |
+| "React 19 hooks, Suspense, state decision, or component patterns" | `react-patterns` | `react-refactor` (if decomposition needed), `panacea-style-system` |
+| "React rendering perf, bundle, or hydration optimization" | `react-performance` | `perf-bundle-edge`, `performance-audit-optimise`, `panacea-verify` |
+| "React component test (RTL/Vitest/MSW) or component-vs-E2E boundary" | `react-testing` | `vitest-author` (PANaCEa conventions), `panacea-regression-guard` |
+| "vite.config.ts edit, plugin work, or build-perf" | `vite-patterns` | `perf-bundle-edge`, `panacea-verify` |
+| "Prisma ORM pattern or trap (updateMany, $transaction, N+1)" | `prisma-patterns` | `panacea-prisma-data-integrity` (PANaCEa integrity primary), `migration-safety` |
+| "Postgres schema, indexing, or query optimization" | `postgres-patterns` | `panacea-prisma-data-integrity`, `supabase`, `panacea-verify` |
+| "Typed errors, retries, circuit breakers, error UX" | `error-handling` | `async-state-hardening`, `panacea-edge-endpoints` |
+| "Playwright E2E pattern, POM, or flaky-test strategy" | `e2e-testing` | `panacea-regression-guard`, `panacea-verify` |
+| "Build a new MCP server (TS SDK, tools/resources/prompts)" | `mcp-server-patterns` | `panacea-verify` |
+| "Clinical scoring, dose validation, drug interaction logic" | `healthcare-cdss-patterns` | `panacea-clinical-content-auditor`, `clinical-content-gen`, `panacea-content-refinery` |
+| "PubMed literature search for citation grounding" | `scientific-db-pubmed-database` | `clinical-library-search`, `panacea-clinical-content-auditor` |
 
 ## Prompt Engineering Defaults
 
