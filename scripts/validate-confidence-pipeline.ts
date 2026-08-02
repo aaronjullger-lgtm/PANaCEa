@@ -29,6 +29,8 @@ import {
 import {
   computeBrierScore,
   computeCalibrationBuckets,
+  computeMSEPScore,
+  computeTimeWeightedBrierScore,
   linearRegression,
 } from '../lib/services/calibrationService';
 import * as fs from 'fs';
@@ -50,6 +52,8 @@ interface ReviewPair {
   stabilityMultiplier: number;
   /** Elapsed days at review_i */
   elapsedDays: number;
+  /** Timestamp of review_i (for recency weighting) */
+  reviewedAt: Date;
 }
 
 interface AblationResult {
@@ -63,6 +67,8 @@ interface ValidationResult {
   timestamp: string;
   totalPairs: number;
   brierScoreOverall: number;
+  msep: number;
+  timeWeightedBrier: number | null;
   calibrationSlope: number;
   calibrationIntercept: number;
   calibrationBuckets: Array<{
@@ -166,6 +172,7 @@ async function main() {
             confidence * fluencyIllusionDampener(elapsed)
           ),
           elapsedDays: elapsed,
+          reviewedAt: current.reviewedAt,
         });
       }
     }
@@ -181,8 +188,11 @@ async function main() {
     const brierPairs = pairs.map(p => ({
       confidence: p.confidence,
       wasCorrect: p.nextWasCorrect,
+      reviewedAt: p.reviewedAt,
     }));
     const brierScoreOverall = computeBrierScore(brierPairs);
+    const msep = computeMSEPScore(brierPairs);
+    const timeWeightedBrier = computeTimeWeightedBrierScore(brierPairs);
 
     // ── Calibration ──
     const { slope, intercept } = linearRegression(brierPairs);
@@ -258,6 +268,9 @@ async function main() {
       timestamp: new Date().toISOString(),
       totalPairs: pairs.length,
       brierScoreOverall: Math.round(brierScoreOverall * 10000) / 10000,
+      msep: Math.round(msep * 10000) / 10000,
+      timeWeightedBrier:
+        timeWeightedBrier == null ? null : Math.round(timeWeightedBrier * 10000) / 10000,
       calibrationSlope: Math.round(slope * 1000) / 1000,
       calibrationIntercept: Math.round(intercept * 1000) / 1000,
       calibrationBuckets,
@@ -283,6 +296,8 @@ async function main() {
     console.log('═══════════════════════════════════════════\n');
     console.log(`Total review pairs:    ${result.totalPairs}`);
     console.log(`Overall Brier score:   ${result.brierScoreOverall} (lower = better, 0 = perfect)`);
+    console.log(`MSEP (skill beyond base-rate guess): ${result.msep} (<0 = better than predicting the mean)`);
+    console.log(`Time-weighted Brier:   ${result.timeWeightedBrier ?? 'n/a'} (recency-weighted, w = exp(-age/30))`);
     console.log(`Calibration slope:     ${result.calibrationSlope} (1.0 = well-calibrated)`);
     console.log(`Stability correlation: ${result.stabilityMultiplierCorrelation} (higher = better)`);
     console.log(`\nBrier by telemetry quality:`);
