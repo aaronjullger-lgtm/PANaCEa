@@ -17,8 +17,11 @@ PANaCEa's backend is a ~200-endpoint Cloudflare Pages Functions API. The middlew
 
 | Endpoint | Method | Purpose | Caller | Validation | Auth | Failure Risk |
 |---|---|---|---|---|---|---|
-| `/api/questions/attempt` | POST | Record main-session answer + FSRS | `syncManager`, `attemptService` | Zod (body-wrapped) | `authenticatedEndpoint` | **HIGH** — O(N) aggregate |
-| `/api/drills/submit-review` | POST | Record drill answer + FSRS | `useDrillFSRS` hook | Zod (body-wrapped) | `authenticatedEndpoint` | MEDIUM — OPTIONS bug |
+| `/api/questions/attempt` | POST | Record attempt stats only (no FSRS) | `syncManager`, `attemptService` | Zod (body-wrapped) | `authenticatedEndpoint` | LOW — O(1) aggregate; idempotent |
+| `/api/drills/submit-review` | POST | Canonical FSRS review pipeline | `useDrillFSRS`, `syncManager` | Zod (flat body) | `authenticatedEndpoint` | MEDIUM — idempotency + cache invalidation |
+| `/api/agents/mcp` | POST | MCP JSON-RPC over HTTP | Agent orchestrator | JSON-RPC | None (system tools) | MEDIUM — DB-dependent tools need `DATABASE_URL` |
+| `/api/library/semantic-search` | POST | Semantic/hybrid library search | `useSemanticSearch` | Zod (flat body) | `aiEndpoint` | LOW — `gemini-embedding-2` + pgvector |
+| `/api/embeddings/generate-questions` | POST | Admin question embedding backfill | Scripts/admin | Zod (body-wrapped) | `adminAuthenticatedEndpoint` | LOW — rate-limited batch |
 | `/api/srs/submit` | POST | Legacy+FSRS SRS review | `srsService`, `SrsFlashcardView` | Zod (body-wrapped) | `authenticatedEndpoint` | MEDIUM — dual Prisma client |
 | `/api/srs/due` | GET | Fetch due SRS items | `SmartReviewMode` | Zod (query-wrapped) | `authenticatedEndpoint` | LOW |
 | `/api/questions/fetch` | POST | Fetch pre-generated questions | `sessionService` | Zod (flat) | `authenticatedEndpoint` | **CRITICAL** — IDOR |
@@ -38,7 +41,7 @@ PANaCEa's backend is a ~200-endpoint Cloudflare Pages Functions API. The middlew
 | `/api/osce/chat` | POST | Save OSCE messages | `OSCEChat` | Zod (body) | `authenticatedEndpoint` | LOW |
 | `/api/osce/complete` | POST | Complete OSCE session | `OSCEComplete` | Zod (body) | `authenticatedEndpoint` | LOW |
 | `/api/gemini/stream` | POST | AI streaming (SSE) | `useGeminiStream` | Zod + size check | Raw auth | LOW — well-handled |
-| `/api/dashboard/stats` | GET | Dashboard metrics | `DashboardPage` | Zod | `authenticatedEndpoint` | MEDIUM — mixed IDs |
+| `/api/dashboard/stats` | GET | Dashboard metrics (D1-cached 120s) | `DashboardPage` | Zod | `authenticatedEndpoint` | LOW — cache invalidated on attempt/review writes |
 | `/api/webhooks/clerk` | POST | User lifecycle | Clerk | Svix signature | Webhook verify | **HIGH** — cascade delete |
 | `/api/debug/god-mode` | GET | Admin diagnostics | Admin panel | None | Raw auth (no RL) | MEDIUM — no rate limit |
 | `/api/cron/replenish-pool` | POST | Question pool check | Scheduler | Bearer CRON_SECRET | Cron secret | LOW |
