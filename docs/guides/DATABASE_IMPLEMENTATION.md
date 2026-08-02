@@ -145,22 +145,26 @@ GET / api / media / list;
 ### Fetching Questions for a User
 
 ```typescript
-// Frontend code
+// Frontend code — user identity comes from the Clerk session (Bearer token), not the body
 const response = await fetch('/api/questions/fetch', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${await getToken()}`,
+  },
   body: JSON.stringify({
-    userId: currentUser.id,
     system: 'CV', // Cardiovascular
     difficulty: 'medium',
     limit: 10,
   }),
 });
 
-const { questions, source, needsGeneration } = await response.json();
+const envelope = await response.json();
+const { questions, source, needsGeneration, generationNeeded } = envelope.data;
 
-// source: "database" (questions from repository)
-// source: "database_and_generation_needed" (needs more questions)
+// source: "database"
+// needsGeneration: true when fewer than `limit` unseen questions were available
+// generationNeeded: shortfall count (limit - count)
 ```
 
 ### Recording Question Viewed

@@ -21,7 +21,7 @@ PANaCEa's backend is a ~200-endpoint Cloudflare Pages Functions API. The middlew
 | `/api/drills/submit-review` | POST | Record drill answer + FSRS | `useDrillFSRS` hook | Zod (body-wrapped) | `authenticatedEndpoint` | MEDIUM — OPTIONS bug |
 | `/api/srs/submit` | POST | Legacy+FSRS SRS review | `srsService`, `SrsFlashcardView` | Zod (body-wrapped) | `authenticatedEndpoint` | MEDIUM — dual Prisma client |
 | `/api/srs/due` | GET | Fetch due SRS items | `SmartReviewMode` | Zod (query-wrapped) | `authenticatedEndpoint` | LOW |
-| `/api/questions/fetch` | POST | Fetch pre-generated questions | `sessionService` | Zod (flat) | `authenticatedEndpoint` | **CRITICAL** — IDOR |
+| `/api/questions/fetch` | POST | Fetch pre-generated questions | `sessionService` | Zod (flat) | `authenticatedEndpoint` | LOW — IDOR fixed (auth-derived userId) |
 | `/api/questions/session` | GET | Session question setup | `QuizView` | Zod | `authenticatedEndpoint` | MEDIUM — user retry loop |
 | `/api/questions/generate` | POST | AI question generation | `sessionService` | Zod | `authenticatedEndpoint` | MEDIUM — Gemini dependency |
 | `/api/sync` | POST | 3-way merge sync | `syncManager` | Zod (body-wrapped) | `authenticatedEndpoint` | **HIGH** — non-atomic |
@@ -49,14 +49,12 @@ PANaCEa's backend is a ~200-endpoint Cloudflare Pages Functions API. The middlew
 
 ## Top 15 Findings
 
-### Finding 1 — IDOR in `questions/fetch` (client-supplied userId)
-- **Severity:** CRITICAL
+### Finding 1 — IDOR in `questions/fetch` (client-supplied userId) — **FIXED**
+- **Severity:** Was CRITICAL; resolved.
 - **Type:** Security
-- **File:** `functions/api/questions/fetch.ts:12–28`
-- **Root Cause:** The `QuestionFetchSchema` accepts a `userId` field from the POST body and uses it directly to query `UserQuestionSeen`. The endpoint uses `authenticatedEndpoint` for auth but **never compares `validated.userId` against `auth.userId`**. Any authenticated user can pass another user's ID and retrieve their question history and unseen questions.
-- **User Impact:** Data leakage — an attacker can enumerate other users' study progress by submitting arbitrary user IDs.
-- **Recommended Fix:** Remove `userId` from the schema entirely. Resolve the internal user ID from `auth.userId` via `resolveUserByClerkId()`, same as every other authenticated endpoint.
-- **Blocks Production:** YES — active IDOR vulnerability.
+- **File:** `functions/api/questions/fetch.ts`
+- **Resolution:** `userId` was removed from `QuestionFetchSchema`. The handler resolves the internal user via `resolveUserByClerkId(prisma, auth.userId)` and never trusts client-supplied IDs. Seen-history queries are capped to the 5,000 most recent `UserQuestionSeen` rows.
+- **Blocks Production:** No — closed.
 
 ### Finding 2 — O(N) Unbounded Aggregate Query per Attempt Submission
 - **Severity:** HIGH
@@ -188,15 +186,9 @@ PANaCEa's backend is a ~200-endpoint Cloudflare Pages Functions API. The middlew
 
 ## 3 Highest-Leverage Fixes
 
-### Fix 1: Patch the IDOR in `questions/fetch` (30 minutes)
+### Fix 1: Patch the IDOR in `questions/fetch` — **DONE**
 
-**Why:** Active security vulnerability. Any authenticated user can read another user's question history.
-
-**Steps:**
-1. In `functions/api/questions/fetch.ts`, remove `userId` from `QuestionFetchSchema`.
-2. Add `const user = await resolveUserByClerkId(prisma, auth.userId);` after the Prisma client creation.
-3. Use `user.id` everywhere `validated.userId` is currently used.
-4. Add a guard `if (!user) return { status: 404, error: 'User not found' };`.
+Resolved: `userId` removed from schema; internal user resolved via `resolveUserByClerkId(prisma, auth.userId)`.
 
 ### Fix 2: Fix the FSRS Optimizer ID Mismatch (15 minutes)
 

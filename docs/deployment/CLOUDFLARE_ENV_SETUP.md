@@ -139,6 +139,14 @@ For a fully functional deployment, set these in Cloudflare Pages Environment Var
 - [ ] `GEMINI_API_KEY` - Gemini API access
 - [ ] `DATABASE_URL` - PostgreSQL connection string (use Prisma Accelerate for Edge)
 
+### Backend (Runtime - Optional AI routing)
+
+- [ ] `VERTEX_AI_PROJECT` - Google Cloud project ID (routes `ai-service` through Vertex when set with `VERTEX_AI_API_KEY`)
+- [ ] `VERTEX_AI_LOCATION` - Vertex region (default `us-central1`)
+- [ ] `VERTEX_AI_API_KEY` - Vertex AI API key
+- [ ] `CACHE_PANCE_MASTER_NAME` - Default cached content name for `/api/questions/generate-deep`
+- [ ] `ENABLE_QUALITY_GATE` - Set to `true` to run clinical content validation on generated previews (`generate-deep`, `generate`)
+
 ### Sentry (Build-time - Optional, for source maps)
 
 - [ ] `SENTRY_AUTH_TOKEN` - Sentry API token

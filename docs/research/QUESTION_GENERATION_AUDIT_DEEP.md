@@ -19,7 +19,7 @@ Eight distinct generation paths exist, each with different prompt templates, mod
 | `lib/questionVariantGenerator.ts` | gemini-2.0-flash-exp | default | None | None | None | None |
 | `generate-enhanced.ts` | gemini-2.5-pro | implicit | None (prompt-based) | None | MedicalContent JSONB | CoVe (4-step, 3 retries) |
 | `generate-batch.ts` | gemini-2.0-flash | 0.8 | None | None | None | Distractor score ≥ 70 |
-| `generate-deep.ts` | gemini-2.5-flash | 0.7 | None | None | Cached PANCE blueprint (1M+ tokens) | None |
+| `generate-deep.ts` | gemini-2.5-flash (AI Gateway `balanced`) | 0.7 | None | None | Cached PANCE blueprint (1M+ tokens), `grounded: true` | Field filter + optional `ENABLE_QUALITY_GATE` |
 | `cove-verification.ts` (claims) | indirect | — | — | — | DB content as ground truth | Is the verifier |
 | Variant generator | gemini-2.0-flash-exp | default | None | None | Original question only | None |
 

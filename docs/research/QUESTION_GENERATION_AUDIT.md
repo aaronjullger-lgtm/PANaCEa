@@ -99,14 +99,19 @@ The question generation system has **four tiers** of generation, **two variant p
 - **CoVe failure still saves to DB.** After 3 retry failures, the code logs a warning but continues to write the unverified question to the staging table. This means questions that failed all verification attempts can still enter the pipeline.
 - This is the only edge function using the full CoVe pipeline.
 
-### 2.4 `functions/api/questions/generate-deep.ts` (167 lines)
-**Role:** Lightweight generation using Gemini cached context.
+### 2.4 `functions/api/questions/generate-deep.ts`
+**Role:** Admin-only preview generation using AI Gateway + Gemini cached PANCE blueprint context.
 
-**DB writes:** None — returns JSON only.
+**DB writes:** None — returns preview JSON only (`submissionReady: false`, `persistence: "admin_preview_only"`).
 
-**Issues found:**
-- **No field validation on response.** Parses Gemini response but only filters by count, not by required field presence.
-- No retry on HTTP failures (returns 502).
+**Current behavior:**
+- Routes through `lib/ai/aiGateway.ts` (`task: 'generation'`, `tier: 'balanced'`, `grounded: true`) with `cachedContent`.
+- Filters malformed items (required fields, ≥4 options, valid `correctAnswerIndex`) before responding.
+- Optional `ENABLE_QUALITY_GATE=true` runs `runQualityGate()` and drops quarantined previews.
+
+**Remaining gaps:**
+- Gateway text path does not force `responseMimeType: application/json` (markdown fence stripping still required).
+- Preview output is not yet on the canonical generated-question schema adapter.
 
 ### 2.5 `functions/api/admin/generate-question.ts` (182 lines)
 **Role:** Admin taxonomy-driven generation.
@@ -386,7 +391,7 @@ effectiveMvrt = max(SERVER_MVRT_THRESHOLD_MS=2000, userMvrtCalibration)
 | M1 | Grounding context fetch silently swallows errors | `question-generator.ts:19-42` | Questions generated without current clinical evidence, no caller awareness |
 | M2 | No dedup check at generation time | `ensureDueVariant.ts`, `generate-batch.ts` | Duplicate questions generated, wasting Gemini tokens and review time |
 | M3 | Non-transactional stats writes before FSRS transaction | `drillReviewService.ts` | If FSRS fails, stats are recorded but scheduling isn't updated |
-| M4 | `generate-deep.ts` no field validation | `generate-deep.ts:166` | Malformed Gemini responses pass through unchecked |
+| M4 | ~~`generate-deep.ts` no field validation~~ | `generate-deep.ts` | **Addressed** — malformed items filtered; optional `ENABLE_QUALITY_GATE` |
 | M5 | `questionSeedService` appears unused | `questionSeedService.ts` | 317 lines of well-implemented template permutation logic sitting dormant |
 | M6 | Hardcoded model in variant generator | `questionVariantGenerator.ts` | `gemini-2.0-flash-exp` won't update with constants |
 | M7 | `ensureDueVariant` sibling threshold is only 1 | `ensureDueVariant.ts:77` | High-confusion conditions get insufficient variant coverage |
