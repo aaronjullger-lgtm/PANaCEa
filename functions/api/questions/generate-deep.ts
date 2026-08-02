@@ -104,12 +104,13 @@ Output valid JSON only, no markdown:
         const result = await gateway.callText(toGatewayContext(context), {
           mode: 'text',
           task: 'generation',
-          tier: 'balanced', // gemini-2.5-flash — preserves prior endpoint model
+          tier: 'balanced',
           endpoint: '/api/questions/generate-deep',
           userPrompt: prompt,
           temperature: 0.7,
           maxOutputTokens: 4096,
           cachedContent: normalizedCacheName,
+          grounded: true,
         });
         if (result.blocked) {
           logger.warn('Gemini generate-deep blocked by safety filter', {

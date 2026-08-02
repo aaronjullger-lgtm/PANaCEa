@@ -104,6 +104,8 @@ export interface GatewayRequestBase {
   parentTraceId?: string;
   /** Enable Google Search grounding (Vertex AI) for clinical accuracy. */
   grounded?: boolean;
+  /** Inline image parts for vision requests (optional on all modes for flexibility). */
+  imageParts?: Array<{ mimeType: string; data: string }>;
 }
 
 export interface GatewayTextRequest extends GatewayRequestBase {
