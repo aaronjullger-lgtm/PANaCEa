@@ -146,10 +146,13 @@ describe('OPTIMIZER_CONSTANTS', () => {
     expect(Array.isArray(OPTIMIZER_CONSTANTS.PARAM_BOUNDS)).toBe(true);
   });
 
-  it('requires at least 1000 reviews before production optimization', () => {
-    expect(OPTIMIZER_CONSTANTS.MIN_REVIEWS_FOR_OPTIMIZATION).toBeGreaterThanOrEqual(1000);
+  it('uses a 3-tier optimization threshold system', () => {
+    expect(OPTIMIZER_CONSTANTS.MIN_REVIEWS_FOR_PRETRAIN).toBeGreaterThanOrEqual(16);
+    expect(OPTIMIZER_CONSTANTS.MIN_REVIEWS_FOR_SAFE_OPT).toBeGreaterThanOrEqual(
+      OPTIMIZER_CONSTANTS.MIN_REVIEWS_FOR_PRETRAIN
+    );
     expect(OPTIMIZER_CONSTANTS.MIN_REVIEWS_FOR_FULL_OPTIMIZATION).toBeGreaterThanOrEqual(
-      OPTIMIZER_CONSTANTS.MIN_REVIEWS_FOR_OPTIMIZATION
+      OPTIMIZER_CONSTANTS.MIN_REVIEWS_FOR_SAFE_OPT
     );
   });
 

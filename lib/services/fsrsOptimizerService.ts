@@ -50,8 +50,10 @@ interface ReviewDatum {
 
 // ── Constants ──
 
-const MIN_REVIEWS_FOR_OPTIMIZATION = 1000;
+const MIN_REVIEWS_FOR_PRETRAIN = 16;
+const MIN_REVIEWS_FOR_SAFE_OPT = 100;
 const MIN_REVIEWS_FOR_FULL_OPTIMIZATION = 1000;
+const MIN_REVIEWS_FOR_OPTIMIZATION = MIN_REVIEWS_FOR_PRETRAIN;
 const LEARNING_RATE = 0.01;
 const MAX_ITERATIONS = 50;
 const CONVERGENCE_THRESHOLD = 1e-6;
@@ -67,6 +69,7 @@ const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 // w[19-20]: retrievability curve — optimize carefully
 // w[21-28]: FSRS v7-alpha 8-parameter forgetting curve (only when w.length === 29)
 const OPTIMIZABLE_INDICES_V6 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 19, 20];
+const SAFE_OPT_INDICES_V6 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
 const OPTIMIZABLE_INDICES_V7 = [...OPTIMIZABLE_INDICES_V6, 21, 22, 23, 24, 25, 26, 27, 28];
 // Back-compat: default export name preserved for any external callers.
 const OPTIMIZABLE_INDICES = OPTIMIZABLE_INDICES_V6;
@@ -289,12 +292,15 @@ export async function optimizeForUser(
     return null;
   }
 
-  // Production optimization runs only after MIN_REVIEWS_FOR_OPTIMIZATION.
-  // If these thresholds diverge in the future, fall back to w0-w3 pretraining
-  // below the full threshold without exposing partially-fit weights earlier.
-  const indices = reviewData.length < MIN_REVIEWS_FOR_FULL_OPTIMIZATION
+  // 3-tier optimization:
+  //   16-99 reviews:  pretrain (w0-w3 only — initial stability per rating)
+  //   100-999:        safe optimization (w0-w14 — excludes retrievability curve)
+  //   1000+:           full optimization (all safe indices including w19-w20)
+  const indices = reviewData.length < MIN_REVIEWS_FOR_SAFE_OPT
     ? PRETRAIN_INDICES
-    : OPTIMIZABLE_INDICES;
+    : reviewData.length < MIN_REVIEWS_FOR_FULL_OPTIMIZATION
+      ? SAFE_OPT_INDICES_V6
+      : OPTIMIZABLE_INDICES;
   const { parameters, initialLoss, finalLoss } = optimizeParameters(reviewData, undefined, indices);
 
   const result: OptimizationResult = {
@@ -341,6 +347,8 @@ export function clearOptimizerCache(): void {
 
 /** Export constants for testing */
 export const OPTIMIZER_CONSTANTS = {
+  MIN_REVIEWS_FOR_PRETRAIN,
+  MIN_REVIEWS_FOR_SAFE_OPT,
   MIN_REVIEWS_FOR_OPTIMIZATION,
   MIN_REVIEWS_FOR_FULL_OPTIMIZATION,
   LEARNING_RATE,
@@ -348,6 +356,7 @@ export const OPTIMIZER_CONSTANTS = {
   CONVERGENCE_THRESHOLD,
   OPTIMIZABLE_INDICES,
   OPTIMIZABLE_INDICES_V6,
+  SAFE_OPT_INDICES_V6,
   OPTIMIZABLE_INDICES_V7,
   PRETRAIN_INDICES,
   PARAM_BOUNDS,
