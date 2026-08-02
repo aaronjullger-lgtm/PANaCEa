@@ -19,6 +19,8 @@ where factor = 0.9^(−1/w₂₀) − 1
 
 This ensures R(S, S) = 0.9 for any w₂₀ value, meaning stability S always equals the interval at which recall probability is **90%**. The default w₂₀ = 0.1542 (constrained to [0.1, 0.8]). For FSRS-5 compatibility, setting w₂₀ = 0.5 recovers the classic formula R = (1 + t·19/81/S)^(−0.5).
 
+> **Convention note (F-06, 2026-08):** This document uses the *positive-exponent* convention (w₂₀ = 0.1542, applied as `R = (1 + factor·t/S)^(−w₂₀)`). The production scheduler in `lib/fsrs.ts` stores w[20] as the **negative exponent directly** per the ts-fsrs v6 published defaults (`w[20] = 2.2700`, `w[19] = 0.1597`). `computeDecayFactor()` bridges the two. The 0.1542/0.0658 pair here is the pre-2026-04 value — treat `lib/fsrs.ts` as authoritative; see `docs/audits/BEHAVIORAL_FSRS_CONFIDENCE_AUDIT.md` F-06.
+
 **Default parameters (w0–w20)**, optimized across several hundred million reviews from ~10,000 users:
 
 ```

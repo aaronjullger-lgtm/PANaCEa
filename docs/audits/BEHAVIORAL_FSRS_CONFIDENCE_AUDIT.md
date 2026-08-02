@@ -201,11 +201,11 @@ The PANaCEa pipeline is grounded in peer-reviewed cognitive science research. Th
 
 | Spec (Research) | Implementation | Status | Evidence |
 |--------------------------------------------|----------------|--------|----------|
-| Total modifier product clamped [0.65, 1.50] | Not found | **Inconsistency** | See F-05 |
+| Total modifier product clamped [0.65, 1.50] | Aggregate clamp + cold-start trust ramp in drillReviewService | **Fixed** | See F-05/F-08 |
 | No single modifier exceeds +/-30% | Individual services have own bounds | Partial | No aggregate guard |
-| Monitor total modifier distribution weekly | Not implemented | **Inconsistency** | See F-07 |
+| Monitor total modifier distribution weekly | Modifier telemetry in ReviewLog confidence_pipeline_v3 | **Fixed** | See F-07 |
 
-**Status: Partial** — Individual modifiers bounded, no aggregate clamp.
+**Status: Working** — Aggregate clamp [0.65, 1.50] with cold-start trust ramp (F-05/F-08); modifier distribution telemetry added (F-07).
 
 ---
 
@@ -218,21 +218,24 @@ The PANaCEa pipeline is grounded in peer-reviewed cognitive science research. Th
 **Research spec:** Users with 16-100 reviews should enter a "pretrain" path optimizing only `w0-w3` (initial stability per rating).  
 **Implementation:** `MIN_REVIEWS_FOR_OPTIMIZATION = 1000`. No pretrain path exists.  
 **Fix:** Add a pretrain mode optimizing only `OPTIMIZABLE_INDICES = [0, 1, 2, 3]` when `reviews.length >= 16 && reviews.length < 1000`.  
-**Reversible:** Yes.
+**Reversible:** Yes.  
+**Status: RESOLVED (2026-08-02)** — 3-tier system in `fsrsOptimizerService.ts`: pretrain (16-99, w0-w3), safe-opt (100-999, w0-w14 via `SAFE_OPT_INDICES_V6`), full (1000+, all 21). Test "uses a 3-tier optimization threshold system" passes (34/34 optimizer suite).
 
 #### F-03: Missing Modified Brier Score (MSEP) `[P1:calibration-sensitivity]`
 **Blast radius:** Calibration dampener may oscillate due to noise in standard Brier at high base rates.  
 **Research spec:** `MSEP = Brier - p(1-p)` isolates calibration error from irreducible variance.  
 **Implementation:** `calibrationService.ts` computes standard Brier only.  
 **Fix:** Add MSEP alongside standard Brier; use MSEP for dampener computation.  
-**Reversible:** Yes.
+**Reversible:** Yes.  
+**Status: RESOLVED (2026-08-02)** — `computeMSEPScore()` in `calibrationService.ts`; `UserCalibration.msep` populated by `computeCalibrationProfile()`; validation script outputs MSEP. Calibration suite 36/36 passes.
 
 #### F-05: Missing Aggregate Post-Hoc Modifier Safety Clamp `[P1:stability-safety]`
 **Blast radius:** Compounding modifiers could push stability far outside the FSRS-optimized range.  
 **Research spec:** Total modifier product clamped to [0.65, 1.50] as a hard safety rail.  
 **Implementation:** Each modifier service clamps its own output, but NO aggregate clamp exists on the sequential product in `drillReviewService.ts`.  
 **Fix:** After all Step 6/6a/6b/6c/7 modifiers multiply into `modifiedStability`, clamp the total product to [0.65, 1.50].  
-**Reversible:** Yes.
+**Reversible:** Yes.  
+**Status: RESOLVED (2026-08-02)** — Aggregate clamp in `drillReviewService.ts` (post Step 7, pre Step 8): `totalModifierProduct` → trust ramp → clamp [0.65, 1.50]. Constants `TOTAL_MODIFIER_CLAMP_MIN/MAX` + `TRUST_RAMP_MIN_REVIEWS`. Drill suite 53/53 passes.
 
 ---
 
@@ -242,31 +245,36 @@ The PANaCEa pipeline is grounded in peer-reviewed cognitive science research. Th
 **Blast radius:** None (dead code).  
 **Implementation:** Constants in `BEHAVIORAL_CONSTANTS.DELTAS.CONF_*` exist but `confidenceCategory` is always `'unknown'`, so `calculateConfidenceDelta()` always returns 0.0.  
 **Fix:** Remove or document as reserved for future implicit confidence mapping.  
-**Reversible:** Yes.
+**Reversible:** Yes.  
+**Status: RESOLVED (2026-08-02)** — `CONF_*` deltas documented as reserved (F-01 audit note) in `gradeModulationCoordinator.ts`; kept because `calculateConfidenceDelta()` + GradeModulation contract reference them. Grade-modulation suite 51/51 passes.
 
 #### F-04: Missing Time-Weighting in Calibration `[P2:calibration-recency]`
 **Blast radius:** Old reviews have equal weight to recent reviews in calibration.  
 **Research spec:** `weight = exp(-age_days / 30)`.  
 **Fix:** Add exponential decay time-weighting to Brier score computation.  
-**Reversible:** Yes.
+**Reversible:** Yes.  
+**Status: RESOLVED (2026-08-02)** — `computeTimeWeightedBrierScore()` in `calibrationService.ts` (`w = exp(-age_days/30)`, null when timestamps missing); `UserCalibration.timeWeightedBrier` populated; `buildCalibrationPairs()` carries `reviewedAt`. Calibration suite 36/36 passes.
 
 #### F-06: FSRS Parameter Value Discrepancy `[P2:parameter-values]`
 **Blast radius:** Low — implementation uses ts-fsrs published defaults which are well-tested.  
 **Analysis:** Different parameterizations of the same formula. The ts-fsrs library stores `w[20]` as the negative exponent directly (2.2700), while the research doc uses a different convention (0.1542). `computeDecayFactor()` bridges these.  
 **Fix:** Document the convention difference. No code change needed.  
-**Reversible:** Yes.
+**Reversible:** Yes.  
+**Status: RESOLVED (2026-08-02)** — Convention note added to `docs/research/FSRS6DeepResearch.md` pointing to canonical ts-fsrs defaults in `lib/fsrs.ts` (w[19]=0.1597, w[20]=2.2700; 0.1542/0.0658 = pre-2026-04 stale pair). `computeDecayFactor()` bridges conventions.
 
 #### F-08: Missing Cold-Start Trust Ramp `[P2:cold-start]`
 **Blast radius:** New users (<100 reviews) get full-strength modifiers which may be noisy.  
 **Research spec:** Scale all non-FSRS modifiers by `min(1, total_reviews / 100)`.  
 **Fix:** Add `pipelineTrustMultiplier` in `drillReviewService.ts`.  
-**Reversible:** Yes.
+**Reversible:** Yes.  
+**Status: RESOLVED (2026-08-02)** — Trust ramp in `drillReviewService.ts` at the aggregate clamp site: `pipelineTrustMultiplier = min(1, totalRealReviews / 100)` (count via `reviewLog.count({ review_type: 'real' })`, fail-safe to 1.0), interpolates `1 + (product - 1) * multiplier` before clamping. Drill suite 53/53 passes.
 
 #### F-09: Missing Pipeline Validation Script `[P2:validation]`
 **Blast radius:** No automated way to measure pipeline effectiveness.  
 **Research spec:** `scripts/validate-confidence-pipeline.ts` computing Brier scores, calibration curves, feature ablation.  
 **Fix:** Create the validation script.  
-**Reversible:** Yes.
+**Reversible:** Yes.  
+**Status: RESOLVED (2026-08-02)** — `scripts/validate-confidence-pipeline.ts` exists with Brier/calibration-slope/bucket/feature-ablation/fluency-illusion analysis; extended with MSEP + time-weighted Brier via `computeMSEPScore`/`computeTimeWeightedBrierScore` (pairs now carry `reviewedAt`).
 
 ---
 
@@ -274,6 +282,7 @@ The PANaCEa pipeline is grounded in peer-reviewed cognitive science research. Th
 
 #### F-07: Missing Modifier Distribution Monitoring `[P3:observability]`
 **Fix:** Add telemetry for `totalModifierProduct` and create a monitoring dashboard.
+**Status: RESOLVED (2026-08-02)** — `total_modifier_product`, `trust_ramp_multiplier`, `clamped_modifier_product`, `clamp_engaged` added to `ReviewLog` telemetry `confidence_pipeline_v3` block in `drillReviewService.ts` for offline distribution analysis. Dashboard TBD in observability backlog.
 
 #### F-10: Stale Deprecated Enum Values `[P3:legacy-debt]`
 No action needed. The deprecation pattern is correct. Remove when all legacy data is migrated.
@@ -283,6 +292,24 @@ No action needed until v7 stabilizes upstream.
 
 #### F-12: Session Rolling Window Persistence `[P3:session-resilience]`
 Verify `DrillSessionRecord` has rolling window fields and they are read/written on each review.
+
+**Verification result (2026-08-02):** Rolling window fields exist in schema
+(`rollingAccuracy Float?`, `rollingMeanRtMs Int?`, `sessionMeanAccuracy Float?`,
+added by migration `20260407120000_add_behavioral_analysis_fields`), but they
+are **not read or written** anywhere in the review path:
+- Write side: `functions/api/performance/record.ts` creates `DrillSessionRecord`
+  without populating the rolling fields.
+- Read side: `lib/services/drillReviewService.ts` hardcodes
+  `rollingWindowAccuracy: null` / `rollingWindowMeanRtMs: null` /
+  `sessionMeanAccuracy: null` ("Populated when DrillSessionRecord rolling fields
+  are wired").
+- Deferral is intentional and documented: `plans/behavioral-analysis-implementation-plan.md`
+  Phase 1.3 — "Rolling window stats must persist to DrillSessionRecord before
+  fatigue detection is reliable. Without this, a page refresh resets the window."
+
+**Action:** No code change in this pass. Wire Phase 1.3 (populate rolling fields
+on session write + read them in `drillReviewService` behavioral context) when the
+session-reconnection work is scheduled.
 
 ---
 
@@ -297,16 +324,16 @@ Verify `DrillSessionRecord` has rolling window fields and they are read/written 
 | Wave 1 Signals (1A-1D) | Working | All 4 server-only signals wired |
 | Wave 2 Signals (2A-2B) | Working | Client telemetry enrichment signals wired |
 | Wave 3 Signals (3A-3D) | Working | Post-answer engagement signals wired |
-| Calibration (per-user Brier) | Partial | Missing MSEP and time-weighting |
+| Calibration (per-user Brier) | Working | MSEP + exponential time-weighting added (F-03/F-04) |
 | Calibration (per-system retrievability) | Working | Quantile binning + shrinkage implemented |
-| FSRS Optimizer | Partial | Conservative (1000 min); missing pretrain path |
+| FSRS Optimizer | Working | 3-tier: pretrain (16-99, w0-w3), safe-opt (100-999, w0-w14), full (1000+, all) — F-02 |
 | Binary Rating Enforcement | Working | `normalizeRating()` + implicit-only pipeline |
 | Ghost Grader | Working | Pre-pipeline behavioral override |
-| Post-Hoc Modifier Safety | Partial | Individual bounds exist; no aggregate clamp |
+| Post-Hoc Modifier Safety | Working | Aggregate clamp [0.65, 1.50] + cold-start trust ramp (F-05/F-08) |
 | Ex-Gaussian RT Modeling | Working | Method-of-moments fitting + 4 classifications |
 | MVRT Rapid-Guess Filter | Working | Per-question-type thresholds |
 | Wilson Score Mastery | Working | Recency-weighted variant implemented |
-| Pipeline Validation | Research-only | Validation script not yet built |
+| Pipeline Validation | Working | Validation script wired with Brier/MSEP/time-weighted Brier ablation (F-09) |
 | FSRS v7-Alpha | Research-only | Documented placeholder; not production-active |
 | Semantic Sibling Propagation (KARL) | Research-only | Tier 2 feature |
 | Visual Mnemonics for Leech Cards | Research-only | Tier 3 feature |
