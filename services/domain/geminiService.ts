@@ -148,7 +148,7 @@ export async function callGeminiJSON<T = any>(
 
 /**
  * Generate embedding for a given text using Google AI Embedding API.
- * Uses text-embedding-005 model (768 dimensions).
+ * Uses gemini-embedding-2 model (768 dimensions) via lib/gemini.getEmbedding.
  *
  * @param text - The text to embed
  * @returns Array of 768 floating-point numbers (embedding vector)

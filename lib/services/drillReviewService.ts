@@ -1719,11 +1719,19 @@ export async function submitDrillReview(
               : new Date(),
         };
 
-        // Use the discrete rating (Again=1, Good=3) for FSRS scheduling, not the
-        // continuous grade float. The continuous grade is useful for ReviewLog telemetry
-        // but FSRS.next() should receive the binary rating the system is designed around.
-        // (Finding 2 fix: gradeContinuous caused interpolated scheduling drift.)
-        const { card: rawCard } = fsrs.next(currentCard, new Date(), rating);
+        // FSRS.next() accepts a float rating and interpolates intervals between
+        // the discrete anchors, so feed the continuous confidence grade — a fluent
+        // answer schedules further out than a hesitant one. Lapse stays binary:
+        // pass the discrete rating whenever the pipeline decided Again so FSRS
+        // always enters Relearning (rating < 1.5). Floor at 1.5 guarantees a Good
+        // decision never crosses into the lapse zone after Ghost Grader hint
+        // penalties push gradeContinuous into [1.0, 2.0).
+        // (Supersedes the "Finding 2 fix": its drift came from dual-path writes
+        // via /api/questions/attempt (now stats-only), not from the float rating —
+        // the FSRS optimizer already trains on grade_continuous.)
+        const fsrsSchedulingRating =
+          rating === Rating.Again ? rating : Math.max(gradeContinuous, 1.5);
+        const { card: rawCard } = fsrs.next(currentCard, new Date(), fsrsSchedulingRating);
 
         // ── Wave 1A: Lapse severity — amplify difficulty for severe lapses ──
         let lapseSeverityResult:
@@ -2037,10 +2045,10 @@ export async function submitDrillReview(
         // ── Behavioral grade modulation (Phase 1 — Behavioral Analysis Audit) ──
         // Runs AFTER the full confidence pipeline and FSRS state update.
         // Produces rawGrade/effectiveGrade/behavioralDeltas for ReviewLog storage.
-        // Does NOT retroactively change the FSRS scheduling — the discrete rating
-        // fed to fsrs.next() remains the binary rating (Finding 2 fix preserved).
-        // Instead, the modulated grade provides the FSRS optimizer with richer
-        // training signal and enables future shadow-mode A/B testing.
+        // Does NOT retroactively change the FSRS scheduling — fsrs.next() already
+        // consumed gradeContinuous at scheduling time (see above). The modulated
+        // grade instead provides the FSRS optimizer with richer training signal
+        // and enables future shadow-mode A/B testing.
         let gradeModulationResult: GradeModulation | null = null;
         try {
           const streakCount = (telemetry?.consecutive_correct as number | undefined) ?? 0;

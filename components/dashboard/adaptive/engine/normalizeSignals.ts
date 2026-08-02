@@ -2,6 +2,7 @@ import type { TodayPlanData } from '@/hooks/useTodayPlan';
 import type { DashboardAnalyticsModel } from '@/lib/dashboard/realStudyAnalytics';
 import type { PerformanceRecord, SessionSettings, UserProfile } from '@/types';
 import { NCCPA_BLUEPRINT_WEIGHTS } from '@/lib/nccpa-question-weighting';
+import { ROUTES } from '@/config/routes';
 import { classifyDashboardMode, getGoalStatusLabel } from './classifyUserState';
 import { scoreWidget } from './scoreWidget';
 import type {
@@ -351,7 +352,7 @@ function buildTrustTimeline(input: NormalizeInput, targetTopic: string, reviewCo
       when: 'Today',
       title: `${targetTopic} moved into the plan.`,
       detail: input.todayPlan?.reasonSummary || 'Recent misses and goal timing made this the best next repair target.',
-      href: `/library/condition/${encodeURIComponent(targetTopic.toLowerCase().replace(/\s+/g, '-'))}`,
+      href: `${ROUTES.STUDY_KNOWLEDGE}?q=${encodeURIComponent(targetTopic)}`,
     },
   ];
 

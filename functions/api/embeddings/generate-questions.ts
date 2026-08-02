@@ -1,7 +1,7 @@
 /**
  * POST /api/embeddings/generate-questions
  *
- * Batch-embeds questions using Gemini text-embedding-004 and stores
+ * Batch-embeds questions using Gemini gemini-embedding-2 and stores
  * the vectors in the QuestionEmbedding table (pgvector).
  *
  * Designed for batch backfill and incremental embedding of new questions.
@@ -24,7 +24,7 @@ import {
 } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
-const EMBEDDING_MODEL = 'text-embedding-004';
+const EMBEDDING_MODEL = 'gemini-embedding-2';
 const EMBEDDING_DIMENSIONS = 768;
 const MAX_BATCH_SIZE = 100;
 

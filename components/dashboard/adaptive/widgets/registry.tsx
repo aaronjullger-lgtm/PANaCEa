@@ -221,7 +221,7 @@ export const dashboardWidgetRegistry: DashboardWidgetDefinition[] = [
     build: (ctx): TargetedConditionsData => ({
       conditions: (ctx.raw.todayPlan?.targetedConditions ?? []).map((name: string) => ({
         name,
-        href: `/library/condition/${encodeURIComponent(name.toLowerCase().replace(/\s+/g, '-'))}`,
+        href: `${ROUTES.STUDY_KNOWLEDGE}?q=${encodeURIComponent(name)}`,
       })),
     }),
     visual: () => visualTokenForSignal('readiness_forecast', 'quiet'),

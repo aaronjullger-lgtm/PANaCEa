@@ -26,6 +26,9 @@ export {
 } from './tools/from-registry.js';
 export * from './orchestrator/factory.js';
 export * from './orchestrator/subAgentBuilder.js';
+// Both modules export finalResponse (subAgentBuilder mirrors factory); the
+// explicit re-export resolves the star-export ambiguity (TS2308).
+export { finalResponse } from './orchestrator/factory.js';
 export * from './agents/registry.js';
 export { buildContentAuditAgent, CONTENT_AUDIT_SYSTEM_PROMPT, CONTENT_AUDIT_ROLE } from './agents/contentAudit.js';
 export { buildPRTriageAgent, PR_TRIAGE_SYSTEM_PROMPT, PR_TRIAGE_ROLE } from './agents/prTriage.js';

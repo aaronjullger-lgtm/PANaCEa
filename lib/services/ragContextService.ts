@@ -4,7 +4,7 @@
  * Retrieves relevant clinical content from the MedicalContent knowledge base
  * to ground AI question generation and explanations in evidence-based guidelines.
  *
- * Uses pgvector HNSW index + Gemini text-embedding-005 for semantic retrieval.
+ * Uses pgvector HNSW index + Gemini gemini-embedding-2 for semantic retrieval.
  *
  * Research basis:
  * - MedRAG (Xiong et al., ACL 2024): Hybrid retrieval outperforms single-corpus

@@ -503,6 +503,14 @@ describe('submitDrillReview', () => {
       expect(result.implicitMetrics.gradeContinuous).toBe(3.42);
       expect(result.implicitMetrics.confidence).toBe(0.78);
 
+      // fsrs.next() receives the continuous confidence grade, not the binary
+      // rating — a fluent answer schedules further out than a hesitant one
+      expect(fsrsInstance.next).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        3.42
+      );
+
       // Verify ReviewLog creation with new float columns
       expect(prisma.reviewLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1210,6 +1218,13 @@ describe('submitDrillReview', () => {
           }),
         })
       );
+
+      // Easy→Good override keeps the continuous grade (4.0) for scheduling
+      expect(fsrsInstance.next).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        4.0
+      );
     });
 
     it('should cap rating at Again when answer switches > 2 (binary system)', async () => {
@@ -1236,6 +1251,11 @@ describe('submitDrillReview', () => {
       // Binary system: Easy(4)→Good(3) normalize, switches>2→Again(1)
       expect(applyHonestRatingWithDetail).toHaveBeenCalledWith(
         expect.objectContaining({ userRating: Rating.Again })
+      );
+      expect(currentFsrsInstance.next).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        Rating.Again
       );
     });
 

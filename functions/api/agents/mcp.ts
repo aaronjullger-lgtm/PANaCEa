@@ -12,6 +12,7 @@
 
 import { McpServer } from '@/lib/agents/mcp/server';
 import type { ToolExecutionContext } from '@/lib/services/agents/types';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 // ─── CORS Headers ───────────────────────────────────────────────────────────
 
@@ -27,6 +28,7 @@ const CORS_HEADERS = {
 export async function onRequestPost(
   context: EventContext<Record<string, string>, string, Record<string, unknown>>,
 ): Promise<Response> {
+  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
   try {
     // Parse request body
     const body = await context.request.json().catch(() => null);
@@ -38,11 +40,8 @@ export async function onRequestPost(
     }
 
     // Create tool execution context
-    // Note: Prisma client would be injected here in production.
-    // For now, tools that don't require Prisma will work; DB-dependent
-    // tools will return errors with clear messages.
     const toolContext: ToolExecutionContext = {
-      prisma: undefined, // Will be wired when Prisma Edge client is available
+      prisma,
       env: (context.env ?? {}) as Record<string, unknown>,
       userId: 'mcp-system', // MCP tools are system-level, not user-scoped
     };
@@ -68,6 +67,8 @@ export async function onRequestPost(
       },
       500,
     );
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
 }
 

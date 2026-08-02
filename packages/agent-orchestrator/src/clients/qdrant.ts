@@ -6,7 +6,7 @@
  *   panacea_agents_decisions   — structured decisions / action items produced by agents
  *   panacea_agents_context     — ingested reference context (repo audit snippets, Sentry events, PR diffs)
  *
- * Embeddings: Gemini text-embedding-004 (768-dim) when GEMINI_API_KEY is set,
+ * Embeddings: Gemini gemini-embedding-2 (768-dim) when GEMINI_API_KEY is set,
  * falling back to OpenAI text-embedding-3-small (1536-dim). The collection
  * vector size is fixed at creation time, so the embedding model is pinned
  * per-collection and recorded in the payload metadata.
@@ -283,7 +283,7 @@ async function embed(text: string): Promise<number[]> {
     try {
       const { GoogleGenerativeAI } = await import('@google/generative-ai');
       const genAI = new GoogleGenerativeAI(requireEnv('GEMINI_API_KEY'));
-      const model = genAI.getGenerativeModel({ model: 'embedding-001' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-embedding-2' });
       const res = await model.embedContent(text);
       return res.embedding.values;
     } catch (err) {

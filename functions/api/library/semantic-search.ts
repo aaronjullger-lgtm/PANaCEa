@@ -2,7 +2,7 @@
  * POST /api/library/semantic-search
  *
  * Semantic search over Reference Library (MedicalContent) using pgvector
- * and Google AI text-embedding-005. Returns nearest neighbors by cosine similarity.
+ * and Google AI gemini-embedding-2. Returns nearest neighbors by cosine similarity.
  */
 
 import { z } from 'zod';

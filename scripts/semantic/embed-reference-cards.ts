@@ -2,7 +2,7 @@
  * Reference Library Embedding Backfill
  *
  * Generates embeddings for MedicalContent (reference cards) using Google AI
- * text-embedding-005 (768 dims) and stores them in MedicalContentEmbedding (pgvector).
+ * gemini-embedding-2 (768 dims) and stores them in MedicalContentEmbedding (pgvector).
  *
  * Usage:
  *   npx tsx scripts/semantic/embed-reference-cards.ts [--dry-run] [--batch=50] [--skip=0]
@@ -14,7 +14,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-const EMBED_MODEL = 'text-embedding-005';
+const EMBED_MODEL = 'gemini-embedding-2';
 const EMBED_DIMS = 768;
 const BATCH_SIZE = 10; // rate limit friendly
 const PAUSE_MS = 200;
