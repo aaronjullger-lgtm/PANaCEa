@@ -114,6 +114,27 @@ import { resolveOrCreateQuestionIdentity } from '../study/questionIdentityPersis
 
 type DrillReviewPrismaClient = PrismaClient | Prisma.TransactionClient;
 
+/**
+ * Aggregate post-hoc modifier safety clamp.
+ * The total product of all stability modifiers (circadian, interference,
+ * fluency, desirable difficulty, trend, calibration, etc.) is clamped to
+ * this range to prevent compounding effects from pushing stability far
+ * outside the FSRS-optimized range.
+ *
+ * @see docs/research/fsrs-optimizer-best-practices.md — "Total modifier
+ * product range must be clamped to [0.65, 1.50] as a hard safety rail."
+ */
+const TOTAL_MODIFIER_CLAMP_MIN = 0.65;
+const TOTAL_MODIFIER_CLAMP_MAX = 1.50;
+
+/**
+ * Cold-start trust ramp: scales all non-FSRS stability modifiers for new
+ * users. Below TRUST_RAMP_MIN_REVIEWS, modifiers are dampened linearly.
+ *
+ * @see docs/audits/BEHAVIORAL_FSRS_CONFIDENCE_AUDIT.md — F-08
+ */
+const TRUST_RAMP_MIN_REVIEWS = 100;
+
 /** Active A/B test experiment IDs wired into the review pipeline */
 const AB_EXPERIMENTS = [
   'scheduling_retention_target', // Variant config overrides request_retention (0.85, 0.90, 0.95)
@@ -2016,6 +2037,47 @@ export async function submitDrillReview(
           });
         }
 
+        // ── Cold-start trust ramp (F-08) ──
+        // New users' behavioral modifiers are noisy — scale the aggregate
+        // modifier deviation toward 1.0 (neutral) linearly with real review
+        // count, saturating at TRUST_RAMP_MIN_REVIEWS.
+        // @see docs/audits/BEHAVIORAL_FSRS_CONFIDENCE_AUDIT.md — F-08
+        let pipelineTrustMultiplier = 1.0;
+        try {
+          const totalRealReviews = await prisma.reviewLog.count({
+            where: { userId, review_type: 'real' },
+          });
+          pipelineTrustMultiplier = Math.min(
+            1,
+            totalRealReviews / TRUST_RAMP_MIN_REVIEWS
+          );
+        } catch {
+          // Non-fatal: full-strength modifiers on count failure
+        }
+
+        // ── Aggregate post-hoc modifier safety clamp (F-05) ──
+        // All individual modifiers above are bounded, but their product can
+        // compound beyond safe limits. Clamp the total ratio to [0.65, 1.50]
+        // to prevent feedback loops that shift scheduling far from the
+        // FSRS-optimized range.
+        // @see docs/research/fsrs-optimizer-best-practices.md
+        const totalModifierProduct = modifiedStability / rawCard.stability;
+        // Interpolate toward 1.0 (neutral) for cold-start users
+        const trustRampedProduct =
+          1 + (totalModifierProduct - 1) * pipelineTrustMultiplier;
+        const clampedProduct = Math.max(
+          TOTAL_MODIFIER_CLAMP_MIN,
+          Math.min(TOTAL_MODIFIER_CLAMP_MAX, trustRampedProduct)
+        );
+        modifiedStability = rawCard.stability * clampedProduct;
+        if (pipelineTrustMultiplier < 1.0) {
+          logger?.debug?.('Cold-start trust ramp applied', {
+            pipelineTrustMultiplier,
+            modifierProductBeforeRamp: totalModifierProduct,
+            modifierProductAfterRamp: trustRampedProduct,
+          });
+        }
+
         // Step 8: Confidence-weighted difficulty modulation (Metcalfe & Kornell, 2005)
         // Modulate how aggressively difficulty shifts based on confidence.
         // Does not change FSRS core math — operates on the delta after FSRS computes.
@@ -2226,6 +2288,13 @@ export async function submitDrillReview(
                   confusion_pair_count: wave3ConfusionAction?.pairCount ?? null,
                   confusion_escalated: wave3ConfusionAction?.escalate ?? null,
                   confusion_difficulty_boost: wave3ConfusionAction?.difficultyBoost ?? null,
+                  // Aggregate modifier distribution (F-05/F-07) — for offline
+                  // monitoring of how far the modifier product deviates from
+                  // neutral and how often the safety clamp engages.
+                  total_modifier_product: Math.round(totalModifierProduct * 10000) / 10000,
+                  trust_ramp_multiplier: Math.round(pipelineTrustMultiplier * 10000) / 10000,
+                  clamped_modifier_product: Math.round(clampedProduct * 10000) / 10000,
+                  clamp_engaged: clampedProduct !== trustRampedProduct,
                   final_stability: updatedCard.stability,
                   final_difficulty: updatedCard.difficulty,
                 },
