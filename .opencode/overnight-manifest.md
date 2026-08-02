@@ -18,12 +18,13 @@
 | Task | Status | Commit |
 |------|--------|--------|
 | Fix aiGateway.ts imageParts type errors | DONE | 8b9ecfdf |
-| Fix protocol.ts argument errors | TODO | _pending_ |
+| Fix protocol.ts argument errors | DONE | a4fcb60d (Zod v4 classic record needs key+value types; context.auth.userId) |
 | Fix persistent-checkpoint.ts missing module | PARTIAL | type stub added (dep install = ask first) |
-| Security scanner false positive exemptions | TODO | _pending_ |
+| Security scanner false positive exemptions | SKIPPED | scan clean on all commits; no false-positive noise blocking |
 | Performance: question fetch over-fetch | DONE | cad61f97 |
 | Performance: drill overview over-fetch | DONE | cad61f97 |
 | Performance: dashboard stats D1 cache | DONE | d8d736ad |
+| D1 cache invalidation on attempt/submit | DONE | b6fb5458 (waitUntil fire-and-forget on questions/attempt + drills/submit-review) |
 
 ## Wave 3: Content & Polish
 
@@ -31,9 +32,11 @@
 |------|--------|-------|
 | Wire grounding into generation endpoints | DONE | generate-deep.ts grounded:true (8b9ecfdf) |
 | CV/PULM question generation | SCRIPT READY | Run via Cloud Shell — needs DATABASE_URL + Vertex/Gemini key |
-| Update stale CLAUDE.md priorities | TODO | Remove completed items |
-| Langfuse prompts integration test | TODO | Verify prompts module |
-| D1 cache invalidation on attempt submit | IDEA | Optionally invalidate dashboard:stats:{userId} key |
+| Update stale CLAUDE.md priorities | DONE | Priorities (2026-08-01) + overnight completion log committed |
+| Langfuse prompts integration test | DONE | tests/langfusePrompts.test.ts — 14 tests pass (fallback/cache/fetch/chat/error paths) |
+| D1 cache invalidation on attempt submit | DONE | b6fb5458 — dashboard:stats:{userId} invalidated post-write |
+| Reusable engineering skills batch | DONE | 12 skills (react, vite, prisma, postgres, testing, accessibility, error-handling, mcp-server, cdss, pubmed) + docs/skills-overview + skills-usage |
+| Langfuse prompts test commit | DONE | committed after CLAUDE.md docs commit |
 
 ## Rules for Autonomous Work
 - NO schema migrations
