@@ -375,9 +375,9 @@ npm run orchestrate:full     # Full automation pipeline
 
 ---
 
-## Current Priorities (2026-04-18)
+## Current Priorities (2026-08-01)
 
-1. Generate questions for under-represented PANCE blueprint areas (CV, PULM)
+1. Generate questions for under-represented PANCE blueprint areas (CV, PULM) — generator script ready at `scripts/generate-cv-pulm-gap.ts`; run via Cloud Shell (`scripts/cloud-shell/generate-questions.sh`) with `DATABASE_URL` + Vertex/Gemini key
 2. Finish/resume the parked QuizView refactor on `wip/quizview-refactor-parked` (currently 192 TS errors — state + button primitives need rewiring)
 3. Resolve drill routing split (DrillShell vs. useDrillFSRS) — decide which drill types consolidate
 4. Pending Prisma migrations — awaiting approval to apply:
@@ -393,6 +393,15 @@ npm run orchestrate:full     # Full automation pipeline
    - `20260418000000_enable_rls_student_reservoir_item`
    - `20260418000100_drop_redundant_indexes` (removed `MC_buzzwords_gin_idx`, `idx_user_question_seen_user_last`, `idx_ubm_user_created`, `Drug_drugClass_idx`)
    - `20260418000200_question_embedding_ivfflat_to_hnsw` (re-tunes to repo standard m=24, ef_construction=200)
+
+### Recently Completed (2026-08-01 Overnight Session)
+- ✅ Vertex AI backend (`lib/ai/vertexBackend.ts`) wired into `ai-service.ts` — callGemini/streamGemini route via Vertex when configured (`VERTEX_AI_PROJECT`/`VERTEX_AI_LOCATION`/`VERTEX_AI_API_KEY`), fall back to direct Gemini on retryable errors.
+- ✅ Google Search grounding (`grounded: true` on GatewayRequestBase in `lib/ai/contracts.ts`) threaded through `aiGateway.ts`; enabled on `functions/api/questions/generate-deep.ts`.
+- ✅ Cloud Shell automation scripts (`scripts/cloud-shell/{setup,generate-questions,blueprint-audit,health-check}.sh`), `scripts/test-vertex-ai.ts` smoke test, `npm run test:vertex`.
+- ✅ Langfuse versioned prompts module (`lib/observability/langfusePrompts.ts`) with cache + fallback.
+- ✅ ECC-inspired skills added: `context-budget`, `delivery-gate`, `continuous-learning-v2`, `eval-harness`, `post-edit-verify`, `agent-introspection`. Security scanner `scripts/security-scan.js` + pre-commit hook installed (`npm run audit:security`).
+- ✅ Performance: `functions/api/questions/fetch.ts` seen-history `take: 5000`; `services/drill/drillSessionManager.ts` getDrillOverview count/select (no more fetch-all); dashboard stats cached in D1 (`dashboard:stats:{userId}`, 120s TTL) with invalidation on `questions/attempt` + `drills/submit-review`.
+- ✅ `functions/api/agents/protocol.ts` type errors fixed (Zod record signature + `context.auth.userId`).
 
 ### Recently Completed (2026-05 Integration Session)
 - ✅ `/study` now routes through `CommandCenterHub -> CommandCenterWorkspace -> AdaptiveDashboardPage`.
