@@ -19,7 +19,7 @@ Audit date: 2026-05-01
 | Due review selection | Partial | `functions/api/srs/due.ts`, `functions/api/srs/next.ts`, `conceptQuestionSelector.ts` | Due endpoints return concepts while sessions need question identities. | Due item can launch a real review question. |
 | Study plan | Partial | `lib/services/studyPlanService.ts`, `functions/api/_shared/studyPlanService.ts` | Two implementations and different task shapes. | Targeted task preserves condition IDs and completes correctly. |
 | Schedule adjustment | Partial | `functions/api/study-plan/progress.ts`, `functions/api/users/me/daily-plan.ts` | Missed-day recovery is basic; user resolver inconsistent. | Plan progress action test for new user. |
-| Dashboard analytics | Mostly functional | `functions/api/dashboard/stats.ts`, `lib/services/dashboardAnalyticsService.ts` | Stale cache, envelope drift, query cost. | Dashboard contract tests against wrapped envelope. |
+| Dashboard analytics | Mostly functional | `functions/api/dashboard/stats.ts`, `lib/services/dashboardAnalyticsService.ts` | D1 cache (120s TTL) invalidated on attempt/review writes; envelope is `{ data: ... }`. | Dashboard contract tests against wrapped envelope and cache invalidation. |
 | Recommendations | Partial | `functions/api/recommendations/*`, `lib/recommendationEngine.ts` | Duplicates daily plan logic and cache invalidation is unclear. | Generate/action/list cache consistency test. |
 
 ## Major Broken Links
