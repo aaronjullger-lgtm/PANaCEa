@@ -19,6 +19,7 @@ import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveOrCreateUserRecord, resolveUserRecord } from '../_shared/user-resolver';
+import { d1InvalidatePrefix } from '../_shared/d1-cache';
 
 // Validation schemas
 const UserPreferencesSchema = z.object({
@@ -222,6 +223,15 @@ export const onRequestPost = authenticatedEndpoint<z.infer<typeof UserPreference
         fieldsUpdated: Object.keys(payload).length,
       });
 
+      // Invalidate the per-user dashboard stats cache — streakGoalDays,
+      // streakFreezes, and userCoins feed the cached stats payload.
+      // Fire-and-forget: D1 cache invalidation must never fail the write path.
+      if (env.EDGE_DB) {
+        context.waitUntil?.(
+          d1InvalidatePrefix(env.EDGE_DB, `dashboard:stats:${auth.userId}`).catch(() => {})
+        );
+      }
+
       return {
         data: {
           success: true,
@@ -276,6 +286,12 @@ export const onRequestPatch = authenticatedEndpoint<z.infer<typeof PartialPrefer
           fieldsSet: Object.keys(payload).length,
         });
 
+        if (env.EDGE_DB) {
+          context.waitUntil?.(
+            d1InvalidatePrefix(env.EDGE_DB, `dashboard:stats:${auth.userId}`).catch(() => {})
+          );
+        }
+
         return {
           data: {
             success: true,
@@ -309,6 +325,12 @@ export const onRequestPatch = authenticatedEndpoint<z.infer<typeof PartialPrefer
       logger.info('Preferences updated (partial)', {
         fieldsUpdated: Object.keys(payload).length,
       });
+
+      if (env.EDGE_DB) {
+        context.waitUntil?.(
+          d1InvalidatePrefix(env.EDGE_DB, `dashboard:stats:${auth.userId}`).catch(() => {})
+        );
+      }
 
       return {
         data: {
@@ -351,6 +373,12 @@ export const onRequestDelete = authenticatedEndpoint(EmptySchema, async (context
     });
 
     logger.info('Preferences deleted successfully');
+
+    if (env.EDGE_DB) {
+      context.waitUntil?.(
+        d1InvalidatePrefix(env.EDGE_DB, `dashboard:stats:${auth.userId}`).catch(() => {})
+      );
+    }
 
     return {
       data: {
