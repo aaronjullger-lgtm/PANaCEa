@@ -2,95 +2,95 @@
 /**
  * CV/PULM Blueprint Gap Generator
  *
- * Generates questions for under-represented PANCE blueprint areas:
- * Cardiovascular (CV) and Pulmonary (PULM).
- *
- * These are the two highest-weight organ systems on the PANCE:
- *   CV: 16% of exam | PULM: 10% of exam
+ * Generates questions for under-represented PANCE blueprint areas.
+ * Uses the canonical analyzer (lib/services/reservoir/blueprintGapAnalyzer)
+ * to compute REAL deficits from the prod DB — no stale hardcoded estimates.
  *
  * Usage:
- *   npx tsx scripts/generate-cv-pulm-gap.ts           # generate for both
- *   npx tsx scripts/generate-cv-pulm-gap.ts --system CV    # CV only
- *   npx tsx scripts/generate-cv-pulm-gap.ts --system PULM  # PULM only
+ *   npx tsx scripts/generate-cv-pulm-gap.ts --dry-run          # report gaps only, no Gemini
+ *   npx tsx scripts/generate-cv-pulm-gap.ts                    # generate for ALL gapped systems
+ *   npx tsx scripts/generate-cv-pulm-gap.ts --system CV        # CV only
+ *   npx tsx scripts/generate-cv-pulm-gap.ts --system PULM      # PULM only
+ *   npx tsx scripts/generate-cv-pulm-gap.ts --system CV --dry-run
  */
 
 import 'dotenv/config';
+import { prisma } from './helpers/prisma-client';
+import { analyzeBlueprintGaps } from '../lib/services/reservoir/blueprintGapAnalyzer';
 
-// ─── Target definitions ──────────────────────────────────────────────────────
+// ─── CLI parsing ─────────────────────────────────────────────────────────────
 
-interface GapTarget {
-  system: string;
-  systemName: string;
-  blueprintWeight: number; // % of PANCE
-  target: number;
-  estimatedCurrent: number;
-  deficit: number;
+function parseArgs(argv: string[]) {
+  const systemFilter = argv.find((a) => a.startsWith('--system='))?.split('=')[1];
+  const dryRun = argv.includes('--dry-run');
+  return { systemFilter, dryRun };
 }
-
-const TARGETS: GapTarget[] = [
-  {
-    system: 'CV',
-    systemName: 'Cardiovascular',
-    blueprintWeight: 16,
-    target: 50,
-    estimatedCurrent: 30,
-    deficit: 20,
-  },
-  {
-    system: 'PULM',
-    systemName: 'Pulmonary',
-    blueprintWeight: 10,
-    target: 35,
-    estimatedCurrent: 20,
-    deficit: 15,
-  },
-];
 
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 async function main() {
-  const args = process.argv.slice(2);
-  const systemFilter = args.find((a) => a.startsWith('--system='))?.split('=')[1];
+  const { systemFilter, dryRun } = parseArgs(process.argv.slice(2));
 
-  const targets = systemFilter
-    ? TARGETS.filter((t) => t.system === systemFilter)
-    : TARGETS;
+  console.log('=== Blueprint Gap Generator ===\n');
+
+  // Real numbers from the canonical analyzer
+  const { totalUnused, gaps } = await analyzeBlueprintGaps(prisma);
+
+  console.log(`Total unused (pool) questions: ${totalUnused}\n`);
+
+  if (gaps.length === 0) {
+    console.log('No gapped systems — pool is proportionally healthy. Nothing to generate.');
+    return;
+  }
+
+  console.log('Gapped systems (ratio < 0.5 or critical pool):');
+  for (const g of gaps) {
+    console.log(
+      `  ${g.abbreviation} (${g.system}): unused=${g.unusedCount} expected%=${g.expectedPercent.toFixed(1)} actual%=${g.actualPercent.toFixed(1)} ratio=${g.gapRatio.toFixed(2)} deficit=${g.deficit}`
+    );
+  }
+
+  // Apply system filter
+  const targets = systemFilter ? gaps.filter((g) => g.abbreviation === systemFilter) : gaps;
 
   if (targets.length === 0) {
-    console.error(`No matching systems. Available: ${TARGETS.map((t) => t.system).join(', ')}`);
+    console.error(
+      `\nNo gapped systems match --system=${systemFilter}. ` +
+        `Gapped: ${gaps.map((g) => g.abbreviation).join(', ') || '(none)'}`
+    );
     process.exit(1);
   }
 
-  console.log('=== CV/PULM Blueprint Gap Generator ===\n');
-  console.log('Targets:');
-  for (const t of targets) {
-    console.log(`  ${t.system} (${t.systemName}): ${t.blueprintWeight}% of PANCE, need ${t.deficit} more (${t.estimatedCurrent}/${t.target})`);
-  }
-  const totalDeficit = targets.reduce((sum, t) => sum + t.deficit, 0);
-  console.log(`\nTotal deficit: ${totalDeficit} questions\n`);
+  const totalDeficit = targets.reduce((sum, g) => sum + g.deficit, 0);
+  console.log(`\nTarget deficit: ${totalDeficit} questions (${targets.map((g) => `${g.abbreviation}:${g.deficit}`).join(', ')})`);
 
-  // Dynamically import the batch generator service
+  if (dryRun) {
+    console.log('\n[DRY RUN] No generation performed. Re-run without --dry-run to generate.');
+    return;
+  }
+
+  // Dynamically import the batch generator service (Node-only Gemini SDK)
   let generateBatchForSystem: (system: string, count: number) => Promise<{ promoted: number; pending: number; failed: number }>;
   try {
     const mod = await import('../services/ai/batchGeneratorService');
     generateBatchForSystem = mod.generateBatchForSystem;
   } catch (err) {
     console.error('Failed to import batchGeneratorService:', err instanceof Error ? err.message : err);
-    console.error('\nMake sure you have DATABASE_URL and GEMINI_API_KEY set in .env');
+    console.error('\nMake sure you have DATABASE_URL and GEMINI_API_KEY set.');
     process.exit(1);
   }
 
   const results: Record<string, { promoted: number; pending: number; failed: number }> = {};
 
-  for (const { system, systemName, deficit } of targets) {
-    console.log(`\n--- Generating for ${system} (${systemName}) — need ${deficit} more ---`);
+  for (const { abbreviation, system, deficit } of targets) {
+    console.log(`\n--- Generating for ${abbreviation} (${system}) — need ${deficit} more ---`);
     try {
-      const batch = await generateBatchForSystem(system, deficit);
-      results[system] = batch;
+      const batch = await generateBatchForSystem(abbreviation, deficit);
+      results[abbreviation] = batch;
       console.log(`  Promoted: ${batch.promoted}, Pending: ${batch.pending}, Failed: ${batch.failed}`);
     } catch (error) {
-      console.error(`  ERROR for ${system}:`, error instanceof Error ? error.message : error);
-      results[system] = { promoted: 0, pending: 0, failed: 0 };
+      console.error(`  ERROR for ${abbreviation}:`, error instanceof Error ? error.message : error);
+      results[abbreviation] = { promoted: 0, pending: 0, failed: 0 };
     }
   }
 
@@ -112,7 +112,11 @@ async function main() {
   }
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

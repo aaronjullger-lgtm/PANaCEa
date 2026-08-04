@@ -15,7 +15,7 @@
  * @module lib/agents/orchestrator/enhanced
  */
 
-import { Annotation, StateGraph, START, END } from '@langchain/langgraph';
+import { Annotation, StateGraph, START, END, type BaseCheckpointSaver } from '@langchain/langgraph';
 import type { AgentContext, InvokeResult } from '../shared/types';
 import { invokeUnifiedAgent } from '../unified';
 import {
@@ -37,6 +37,7 @@ import {
   serializeFSState,
   type VirtualFS,
 } from '../middleware/filesystem';
+import { getPersistentCheckpointSaver } from '../shared/persistent-checkpoint';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -85,6 +86,8 @@ export interface OrchestratorState {
   consecutiveFailures: number;
   /** Progress (0-100) */
   progress: number;
+  /** Pipeline output */
+  output: unknown;
 }
 
 // ─── Defaults ──────────────────────────────────────────────────────────────
@@ -283,6 +286,10 @@ export const OrchestratorStateAnnotation = Annotation.Root({
     reducer: (_, next) => next,
     default: () => 0,
   }),
+  output: Annotation<unknown>({
+    reducer: (_, next) => next,
+    default: () => null,
+  }),
 });
 
 // ─── Enhanced Orchestrator ─────────────────────────────────────────────────
@@ -339,6 +346,9 @@ export async function runEnhancedOrchestrator<T>(
   const start = Date.now();
   const cb = createCircuitBreaker();
 
+  // Initialize persistent checkpoint saver for resumable workflows
+  const checkpointSaver = await getPersistentCheckpointSaver();
+
   // Create virtual filesystem for this run
   const fs = createVirtualFS(`orch-${cfg.name}-${Date.now()}`);
 
@@ -353,6 +363,7 @@ export async function runEnhancedOrchestrator<T>(
     circuitBreakerTripped: false,
     consecutiveFailures: 0,
     progress: 0,
+    output: null,
   };
 
   const emit = (phase: string, progress: number, message: string) => {
@@ -392,24 +403,39 @@ export async function runEnhancedOrchestrator<T>(
 
     emit('init', 5, `Orchestrator "${cfg.name}" initialized`);
 
-    // Execute the pipeline
-    const output = await executor(state, ctx, emit);
+    const graph = new StateGraph(OrchestratorStateAnnotation)
+      .addNode('execute', async (graphState) => {
+        try {
+          const output = await executor(graphState, ctx, emit);
+          recordCircuitBreakerResult(cb, true, cfg);
+          state.done = true;
+          emit('complete', 100, `Orchestrator "${cfg.name}" completed successfully`);
+          offloadToFS(fs, 'output/state', state, { tags: ['output', 'state'] });
+          return { done: true, progress: 100, output };
+        } catch (err) {
+          recordCircuitBreakerResult(cb, false, cfg);
+          const message = err instanceof Error ? err.message : String(err);
+          state.error = message;
+          state.done = true;
+          emit('error', state.progress, `Pipeline failed: ${message}`);
+          return { error: message, done: true, progress: state.progress };
+        }
+      })
+      .addEdge(START, 'execute')
+      .addEdge('execute', END)
+       .compile(checkpointSaver ? { checkpointer: checkpointSaver as BaseCheckpointSaver } : undefined);
 
-    // Record success
-    recordCircuitBreakerResult(cb, true, cfg);
-    state.done = true;
-    emit('complete', 100, `Orchestrator "${cfg.name}" completed successfully`);
-
-    // Offload final state
-    offloadToFS(fs, 'output/state', state, { tags: ['output', 'state'] });
+    const graphResult = await graph.invoke(state, {
+      configurable: { thread_id: cfg.name },
+    }) as OrchestratorState;
 
     return {
-      output,
+      output: graphResult.output as T,
       state,
       metadata: {
         durationMs: Date.now() - start,
         retries: state.retryCount,
-        circuitBreakerTripped: false,
+        circuitBreakerTripped: state.circuitBreakerTripped,
         fsStats: (await import('../middleware/filesystem')).getFSStats(fs),
       },
     };
