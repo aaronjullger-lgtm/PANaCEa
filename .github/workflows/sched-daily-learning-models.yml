@@ -85,6 +85,7 @@ jobs:
       - name: Run daily learning-model refresh
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_DATABASE_URL: ${{ secrets.DIRECT_DATABASE_URL }}
         run: |
           set -euo pipefail
           limit="${{ github.event_name == 'workflow_dispatch' && inputs.profile_limit || '0' }}"

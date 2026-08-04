@@ -83,6 +83,7 @@ jobs:
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.target_scope == 'repo-rollups-only' || inputs.target_scope == 'full-lane' }}
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_DATABASE_URL: ${{ secrets.DIRECT_DATABASE_URL }}
         run: |
           set -euo pipefail
           args=()

@@ -67,6 +67,7 @@ jobs:
       - name: Run daily content audit
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_DATABASE_URL: ${{ secrets.DIRECT_DATABASE_URL }}
         run: |
           set -euo pipefail
 
