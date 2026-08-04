@@ -79,8 +79,18 @@ jobs:
           set -euo pipefail
 
           if [ -z "${PRODUCTION_URL:-}" ] || [ -z "${CRON_SECRET:-}" ]; then
-            echo "PRODUCTION_URL and CRON_SECRET are required for reservoir supply." >&2
-            exit 1
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              echo "PRODUCTION_URL and CRON_SECRET are required for live reservoir runs." >&2
+              exit 1
+            fi
+            echo "PRODUCTION_URL and/or CRON_SECRET not configured; skipping live reservoir fanout."
+            {
+              echo "### Reservoir Supply Skipped (report-only)"
+              echo ""
+              echo "- PRODUCTION_URL or CRON_SECRET not configured in repository secrets."
+              echo "- Scheduled lane degraded to report-only; configure secrets to re-enable live fanout."
+            } >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
           fi
 
           mkdir -p logs/automation-http
