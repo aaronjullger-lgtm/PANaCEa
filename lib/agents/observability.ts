@@ -336,6 +336,10 @@ class MetricsCollector {
     };
   }
 
+  clear(): void {
+    this.metrics.clear();
+  }
+
   getAllMetrics(): Record<string, AgentMetrics> {
     const result: Record<string, AgentMetrics> = {};
     for (const [name] of this.metrics) {

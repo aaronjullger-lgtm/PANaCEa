@@ -24,6 +24,7 @@ import {
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import '@/lib/agents/registry.encounter';
 import { invokeAgent, listAgents } from '@/lib/agents/registry.encounter';
+import { traceAgentInvocation, recordAgentMetric } from '@/lib/agents/langsmith-edge';
 
 const ALLOWED_AGENT_NAMES = new Set(
   listAgents().filter((a) => a.tier === 'encounter').map((a) => a.name),
@@ -77,20 +78,38 @@ export const onRequestPost = aiEndpoint(
       async start(controller) {
         controller.enqueue(encoder.encode(sseEvent('agent_started', { agent: agentName })));
 
-        try {
-          const result = await invokeAgent(agentName, input, {
-            env: {
-              GEMINI_API_KEY: env.GEMINI_API_KEY,
-              OPENAI_API_KEY: env.OPENAI_API_KEY,
-              ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY,
-              DEEPSEEK_API_KEY: env.DEEPSEEK_API_KEY,
-              DEEPINFRA_API_KEY: env.DEEPINFRA_API_KEY,
-              LANGSMITH_API_KEY: env.LANGSMITH_API_KEY,
-              LANGSMITH_PROJECT: env.LANGSMITH_PROJECT,
-              LANGSMITH_SAMPLE_RATE: env.LANGSMITH_SAMPLE_RATE,
-            },
-            userId: auth.userId,
-          });
+         try {
+           const result = await traceAgentInvocation({
+             agent: agentName,
+             input,
+             userId: auth.userId,
+             env: {
+               GEMINI_API_KEY: env.GEMINI_API_KEY,
+               OPENAI_API_KEY: env.OPENAI_API_KEY,
+               ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY,
+               DEEPSEEK_API_KEY: env.DEEPSEEK_API_KEY,
+               DEEPINFRA_API_KEY: env.DEEPINFRA_API_KEY,
+               LANGSMITH_API_KEY: env.LANGSMITH_API_KEY,
+               LANGSMITH_PROJECT: env.LANGSMITH_PROJECT,
+               LANGSMITH_SAMPLE_RATE: env.LANGSMITH_SAMPLE_RATE,
+             },
+             invoke: () =>
+               invokeAgent(agentName, input, {
+                 env: {
+                   GEMINI_API_KEY: env.GEMINI_API_KEY,
+                   OPENAI_API_KEY: env.OPENAI_API_KEY,
+                   ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY,
+                   DEEPSEEK_API_KEY: env.DEEPSEEK_API_KEY,
+                   DEEPINFRA_API_KEY: env.DEEPINFRA_API_KEY,
+                   LANGSMITH_API_KEY: env.LANGSMITH_API_KEY,
+                   LANGSMITH_PROJECT: env.LANGSMITH_PROJECT,
+                   LANGSMITH_SAMPLE_RATE: env.LANGSMITH_SAMPLE_RATE,
+                 },
+                 userId: auth.userId,
+               }),
+           });
+
+           recordAgentMetric(agentName, result.durationMs, result.status === 'ok');
 
           if (result.status === 'ok') {
             controller.enqueue(

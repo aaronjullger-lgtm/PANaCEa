@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { InlineSpinner } from '@/components/loading';
-import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { useAgentStream, type AgentStreamStep } from '@/hooks/useAgentStream';
 
 // ─── Types (mirror server AgentRunResult / AgentStep) ──────────────────────
 
@@ -133,22 +133,25 @@ const EXAMPLE_PROMPTS: ReadonlyArray<{ title: string; prompt: string }> = [
 
 const AgentChat: React.FC<AgentChatProps> = ({ onExit, userContext }) => {
   const { getToken } = useAuth();
+  const { send: sendStream, abort, status, result, error: streamError, steps } = useAgentStream(getToken);
 
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showTrace, setShowTrace] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const loading = status === 'connecting' || status === 'started';
+  const error = localError ?? streamError;
 
   // Auto-scroll to newest message whenever turns grow or loading toggles.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-  }, [turns, loading]);
+  }, [turns, loading, status]);
 
   // Escape to exit.
   useEffect(() => {
@@ -159,16 +162,55 @@ const AgentChat: React.FC<AgentChatProps> = ({ onExit, userContext }) => {
     return () => globalThis.removeEventListener('keydown', onKey);
   }, [onExit, loading]);
 
+  // When stream completes, materialise the assistant turn from the result.
+  useEffect(() => {
+    if (status !== 'completed' || !result) return;
+
+    const output = result.output as Record<string, unknown> | undefined;
+    const run: AgentRunResponse = {
+      finalText: (output?.finalText as string) ?? '',
+      stopReason: ((output?.stopReason as string) ?? 'completed') as AgentStopReason,
+      iterations: (output?.iterations as number) ?? 0,
+      tokensUsed: (output?.tokensUsed as { input: number; output: number; total: number }) ?? { input: 0, output: 0, total: 0 },
+      durationMs: result.durationMs,
+      error: output?.error as { message: string; code?: string } | undefined,
+      steps: output?.steps as AgentStep[] | undefined,
+    };
+
+    const assistantText =
+      run.finalText.trim().length > 0
+        ? run.finalText
+        : stopReasonFallbackText(run.stopReason, run.error?.message);
+
+    const assistantTurn: ChatTurn = {
+      id: `assistant-${Date.now()}`,
+      role: 'assistant',
+      text: assistantText,
+      run,
+    };
+    setTurns((prev) => [...prev, assistantTurn]);
+
+    if (run.stopReason !== 'completed') {
+      setLocalError(
+        run.error?.message ??
+          `Agent stopped early (${run.stopReason}).`
+      );
+    }
+
+    // Return focus to the textarea so the student can keep typing.
+    textareaRef.current?.focus();
+  }, [status, result]);
+
   const sendMessage = useCallback(
-    async (messageText: string) => {
+    (messageText: string) => {
       const trimmed = messageText.trim();
       if (!trimmed || loading) return;
       if (trimmed.length > MAX_MESSAGE_CHARS) {
-        setError(`Message must be under ${MAX_MESSAGE_CHARS} characters.`);
+        setLocalError(`Message must be under ${MAX_MESSAGE_CHARS} characters.`);
         return;
       }
 
-      setError(null);
+      setLocalError(null);
       const userTurn: ChatTurn = {
         id: `user-${Date.now()}`,
         role: 'user',
@@ -176,82 +218,26 @@ const AgentChat: React.FC<AgentChatProps> = ({ onExit, userContext }) => {
       };
       setTurns((prev) => [...prev, userTurn]);
       setInput('');
-      setLoading(true);
 
-      try {
-        const token = await getToken();
-        if (!token) {
-          throw new Error('You need to be signed in to use the agent.');
-        }
-
-        const res = await fetch(getApiEndpoint('/api/agents/run'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            message: trimmed,
-            includeSteps: true,
-            userContext: userContext ?? undefined,
-          }),
-        });
-
-        const json = (await res.json().catch(() => ({}))) as {
-          data?: AgentRunResponse;
-          error?: string;
-        };
-
-        if (!res.ok) {
-          throw new Error(
-            json?.error ?? `Agent request failed (${res.status}).`
-          );
-        }
-
-        const run = json.data;
-        if (!run) {
-          throw new Error('Agent returned an empty response.');
-        }
-
-        const assistantText =
-          run.finalText.trim().length > 0
-            ? run.finalText
-            : stopReasonFallbackText(run.stopReason, run.error?.message);
-
-        const assistantTurn: ChatTurn = {
-          id: `assistant-${Date.now()}`,
-          role: 'assistant',
-          text: assistantText,
-          run,
-        };
-        setTurns((prev) => [...prev, assistantTurn]);
-
-        if (run.stopReason !== 'completed') {
-          setError(
-            run.error?.message ??
-              `Agent stopped early (${run.stopReason}).`
-          );
-        }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        setError(message);
-      } finally {
-        setLoading(false);
-        // Return focus to the textarea so the student can keep typing.
-        textareaRef.current?.focus();
-      }
+      sendStream({
+        agent: 'clinical-explorer',
+        input: {
+          message: trimmed,
+          includeSteps: true,
+          userContext: userContext ?? undefined,
+        },
+      });
     },
-    [getToken, loading, userContext]
+    [loading, userContext, sendStream]
   );
 
   const handleSend = useCallback(() => {
-    void sendMessage(input);
+    sendMessage(input);
   }, [input, sendMessage]);
 
   const handleRetry = useCallback(() => {
     const lastUser = [...turns].reverse().find((t) => t.role === 'user');
     if (!lastUser) return;
-    // Remove the failed assistant turn (if any) before retrying.
     setTurns((prev) => {
       const lastIdx = prev.length - 1;
       if (lastIdx >= 0 && prev[lastIdx]?.role === 'assistant') {
@@ -259,8 +245,12 @@ const AgentChat: React.FC<AgentChatProps> = ({ onExit, userContext }) => {
       }
       return prev;
     });
-    void sendMessage(lastUser.text);
+    sendMessage(lastUser.text);
   }, [turns, sendMessage]);
+
+  const handleStop = useCallback(() => {
+    abort();
+  }, [abort]);
 
   const handleExamplePick = useCallback(
     (prompt: string) => {
@@ -357,7 +347,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ onExit, userContext }) => {
             ))}
           </AnimatePresence>
 
-          {loading && <LoadingBubble />}
+          {loading && <LoadingBubble steps={steps} />}
 
           {error && !loading && (
             <ErrorBanner message={error} onRetry={turns.length > 0 ? handleRetry : undefined} />
@@ -496,21 +486,35 @@ const TurnBubble: React.FC<{ turn: ChatTurn }> = ({ turn }) => {
   );
 };
 
-const LoadingBubble: React.FC = () => (
-  <div className="flex gap-3">
-    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]">
-      <Bot className="h-4 w-4" />
+const LoadingBubble: React.FC<{ steps: AgentStreamStep[] }> = ({ steps }) => {
+  const startedStep = steps.find((s) => s.event === 'agent_started');
+  const statusLabel = startedStep
+    ? `Running ${startedStep.data.agent as string}…`
+    : 'Connecting…';
+
+  return (
+    <div className="flex gap-3">
+      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]">
+        <Bot className="h-4 w-4" />
+      </div>
+      <div
+        className="flex flex-col gap-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-4 py-3 text-sm text-[var(--color-text-secondary)]"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="flex items-center gap-2">
+          <InlineSpinner size="sm" className="text-[var(--color-accent)]" />
+          {statusLabel}
+        </div>
+        {steps.length > 1 && (
+          <div className="text-xs text-[var(--color-text-muted)]">
+            {steps.length - 1} event{steps.length - 1 === 1 ? '' : 's'} received
+          </div>
+        )}
+      </div>
     </div>
-    <div
-      className="flex items-center gap-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-4 py-3 text-sm text-[var(--color-text-secondary)]"
-      role="status"
-      aria-live="polite"
-    >
-      <InlineSpinner size="sm" className="text-[var(--color-accent)]" />
-      Thinking, searching, and checking your progress…
-    </div>
-  </div>
-);
+  );
+};
 
 const ErrorBanner: React.FC<{ message: string; onRetry?: () => void }> = ({
   message,

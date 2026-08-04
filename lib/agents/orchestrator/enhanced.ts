@@ -15,7 +15,7 @@
  * @module lib/agents/orchestrator/enhanced
  */
 
-import { Annotation, StateGraph, START, END } from '@langchain/langgraph';
+import { Annotation, StateGraph, START, END, type BaseCheckpointSaver } from '@langchain/langgraph';
 import type { AgentContext, InvokeResult } from '../shared/types';
 import { invokeUnifiedAgent } from '../unified';
 import {
@@ -37,6 +37,7 @@ import {
   serializeFSState,
   type VirtualFS,
 } from '../middleware/filesystem';
+import { getPersistentCheckpointSaver } from '../shared/persistent-checkpoint';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -85,6 +86,8 @@ export interface OrchestratorState {
   consecutiveFailures: number;
   /** Progress (0-100) */
   progress: number;
+  /** Pipeline output */
+  output: unknown;
 }
 
 // ─── Defaults ──────────────────────────────────────────────────────────────
@@ -283,6 +286,10 @@ export const OrchestratorStateAnnotation = Annotation.Root({
     reducer: (_, next) => next,
     default: () => 0,
   }),
+  output: Annotation<unknown>({
+    reducer: (_, next) => next,
+    default: () => null,
+  }),
 });
 
 // ─── Enhanced Orchestrator ─────────────────────────────────────────────────
@@ -339,6 +346,9 @@ export async function runEnhancedOrchestrator<T>(
   const start = Date.now();
   const cb = createCircuitBreaker();
 
+  // Initialize persistent checkpoint saver for resumable workflows
+  const checkpointSaver = await getPersistentCheckpointSaver();
+
   // Create virtual filesystem for this run
   const fs = createVirtualFS(`orch-${cfg.name}-${Date.now()}`);
 
@@ -353,6 +363,7 @@ export async function runEnhancedOrchestrator<T>(
     circuitBreakerTripped: false,
     consecutiveFailures: 0,
     progress: 0,
+    output: null,
   };
 
   const emit = (phase: string, progress: number, message: string) => {
@@ -392,24 +403,64 @@ export async function runEnhancedOrchestrator<T>(
 
     emit('init', 5, `Orchestrator "${cfg.name}" initialized`);
 
-    // Execute the pipeline
-    const output = await executor(state, ctx, emit);
+    const graph = new StateGraph(OrchestratorStateAnnotation)
+      .addNode('execute', async (graphState) => {
+        let lastError: Error | null = null;
 
-    // Record success
-    recordCircuitBreakerResult(cb, true, cfg);
-    state.done = true;
-    emit('complete', 100, `Orchestrator "${cfg.name}" completed successfully`);
+        for (let attempt = 0; attempt <= cfg.maxRetries; attempt++) {
+          try {
+            const output = await executor(graphState, ctx, emit);
+            recordCircuitBreakerResult(cb, true, cfg);
+            state.done = true;
+            emit('complete', 100, `Orchestrator "${cfg.name}" completed successfully`);
+            offloadToFS(fs, 'output/state', state, { tags: ['output', 'state'] });
+            return { done: true, progress: 100, output };
+          } catch (err) {
+            recordCircuitBreakerResult(cb, false, cfg);
+            lastError = err instanceof Error ? err : new Error(String(err));
+            state.retryCount = attempt + 1;
 
-    // Offload final state
-    offloadToFS(fs, 'output/state', state, { tags: ['output', 'state'] });
+            if (attempt < cfg.maxRetries) {
+              const delay = backoffDelay(
+                attempt,
+                cfg.retryBaseDelayMs,
+                cfg.retryMaxDelayMs,
+              );
+              emit(
+                'retry',
+                Math.round(((attempt + 1) / (cfg.maxRetries + 1)) * 90),
+                `Retry ${attempt + 1}/${cfg.maxRetries} for orchestrator "${cfg.name}" in ${delay}ms: ${lastError.message}`,
+              );
+              await new Promise((resolve) => setTimeout(resolve, delay));
+            }
+          }
+        }
+
+        // All retries exhausted
+        const message =
+          lastError instanceof Error
+            ? lastError.message
+            : `All ${cfg.maxRetries + 1} attempts failed`;
+        state.error = message;
+        state.done = true;
+        emit('error', state.progress, `Pipeline failed: ${message}`);
+        return { error: message, done: true, progress: state.progress };
+      })
+      .addEdge(START, 'execute')
+      .addEdge('execute', END)
+       .compile(checkpointSaver ? { checkpointer: checkpointSaver as BaseCheckpointSaver } : undefined);
+
+    const graphResult = await graph.invoke(state, {
+      configurable: { thread_id: cfg.name },
+    }) as OrchestratorState;
 
     return {
-      output,
+      output: graphResult.output as T,
       state,
       metadata: {
         durationMs: Date.now() - start,
         retries: state.retryCount,
-        circuitBreakerTripped: false,
+        circuitBreakerTripped: state.circuitBreakerTripped,
         fsStats: (await import('../middleware/filesystem')).getFSStats(fs),
       },
     };
@@ -446,7 +497,7 @@ export async function runSequentialPipeline(
   agentNames: string[],
   initialInput: unknown,
   ctx: AgentContext,
-  config: EnhancedOrchestratorConfig = {},
+  config: EnhancedOrchestratorConfig = DEFAULTS,
 ): Promise<{
   results: OrchestratorState['results'];
   finalOutput: unknown;
@@ -507,7 +558,7 @@ export async function runParallelPipeline(
   agentNames: string[],
   input: unknown,
   ctx: AgentContext,
-  config: EnhancedOrchestratorConfig = {},
+  config: EnhancedOrchestratorConfig = DEFAULTS,
   merger?: (results: Array<{ agent: string; output: unknown }>) => unknown,
 ): Promise<{
   results: OrchestratorState['results'];
@@ -557,7 +608,7 @@ export async function runParallelPipeline(
 export async function runFanOutPipeline(
   subAgentDefs: SubAgentDefinition[],
   ctx: AgentContext,
-  config: EnhancedOrchestratorConfig = {},
+  config: EnhancedOrchestratorConfig = DEFAULTS,
   merger?: (batch: SubAgentBatchResult) => unknown,
 ): Promise<{
   batch: SubAgentBatchResult;

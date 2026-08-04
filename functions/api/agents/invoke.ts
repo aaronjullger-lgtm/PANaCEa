@@ -33,6 +33,7 @@ import { invokeAgent, listAgents, getAgent } from '@/lib/agents/registry.encount
 import { createCostTracker } from '@/lib/ai/costTracker';
 import { createCircuitBreaker } from '@/lib/ai/circuitBreaker';
 import { setRequestCostGuardrails, clearRequestCostGuardrails } from '@/lib/ai/costGuardrailContext';
+import { traceAgentInvocation, recordAgentMetric } from '@/lib/agents/langsmith-edge';
 
 // ─── Allowlist ────────────────────────────────────────────────────────────
 
@@ -114,8 +115,11 @@ export const onRequestPost = aiEndpoint(
     const circuitBreaker = createCircuitBreaker();
     setRequestCostGuardrails({ costTracker, circuitBreaker, userId: auth.userId });
 
-    try {
-      const result = await invokeAgent(agentName, input, {
+     try {
+      const result = await traceAgentInvocation({
+        agent: agentName,
+        input,
+        userId: auth.userId,
         env: {
           GEMINI_API_KEY: env.GEMINI_API_KEY,
           OPENAI_API_KEY: env.OPENAI_API_KEY,
@@ -126,13 +130,28 @@ export const onRequestPost = aiEndpoint(
           LANGSMITH_PROJECT: env.LANGSMITH_PROJECT,
           LANGSMITH_SAMPLE_RATE: env.LANGSMITH_SAMPLE_RATE,
         },
-        userId: auth.userId,
-        log: (level, message, data) => {
-          if (level === 'error') log.error(message, data as Record<string, unknown> | undefined);
-          else if (level === 'warn') log.warn(message, data as Record<string, unknown> | undefined);
-          else log.info(message, data as Record<string, unknown> | undefined);
-        },
+        invoke: () =>
+          invokeAgent(agentName, input, {
+            env: {
+              GEMINI_API_KEY: env.GEMINI_API_KEY,
+              OPENAI_API_KEY: env.OPENAI_API_KEY,
+              ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY,
+              DEEPSEEK_API_KEY: env.DEEPSEEK_API_KEY,
+              DEEPINFRA_API_KEY: env.DEEPINFRA_API_KEY,
+              LANGSMITH_API_KEY: env.LANGSMITH_API_KEY,
+              LANGSMITH_PROJECT: env.LANGSMITH_PROJECT,
+              LANGSMITH_SAMPLE_RATE: env.LANGSMITH_SAMPLE_RATE,
+            },
+            userId: auth.userId,
+            log: (level, message, data) => {
+              if (level === 'error') log.error(message, data as Record<string, unknown> | undefined);
+              else if (level === 'warn') log.warn(message, data as Record<string, unknown> | undefined);
+              else log.info(message, data as Record<string, unknown> | undefined);
+            },
+          }),
       });
+
+      recordAgentMetric(agentName, result.durationMs, result.status === 'ok');
 
       // Persist agent results that have database counterparts.
       if (result.status === 'ok' && result.output) {

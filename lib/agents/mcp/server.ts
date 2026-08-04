@@ -187,15 +187,10 @@ export class McpServer {
    * For notifications (no id), returns null.
    */
   async handleRequest(body: unknown): Promise<JsonRpcResponse | JsonRpcResponse[] | null> {
-    // Parse and validate JSON-RPC request
-    const request = this.parseRequest(body);
-    if (!request) return null; // notification or parse error already handled
-
-    // Batch requests
+    // Batch requests — must check before parseRequest (array has no .jsonrpc)
     if (Array.isArray(body)) {
-      const requests = body as unknown[];
       const responses: JsonRpcResponse[] = [];
-      for (const item of requests) {
+      for (const item of body) {
         const req = this.parseRequest(item);
         if (req) {
           responses.push(await this.dispatch(req));
@@ -203,6 +198,9 @@ export class McpServer {
       }
       return responses.length > 0 ? responses : null;
     }
+
+    const request = this.parseRequest(body);
+    if (!request) return null;
 
     return this.dispatch(request);
   }
