@@ -110,6 +110,7 @@ Source: [langchain-ai/langchain-skills](https://github.com/langchain-ai/langchai
 | `deep-agents-memory` | `.agents/skills/deep-agents-memory` | Memory, persistence, filesystem middleware. |
 | `deep-agents-orchestration` | `.agents/skills/deep-agents-orchestration` | Subagents, task planning, human-in-the-loop. |
 | `managed-deep-agents` | `.agents/skills/managed-deep-agents` | Managed Deep Agents: deploy with the CLI, stream runs, MCP tools, React `useStream`. |
+| `panacea-deep-agents` | `.agents/skills/panacea-deep-agents` | Repo-native Deep-Agents-inspired infra: subagent fan-out, virtual FS offload, persistent checkpoint, enhanced orchestrator, agent pipelines. |
 
 ### Evaluation & Utilities
 

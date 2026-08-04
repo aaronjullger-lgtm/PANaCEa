@@ -44,6 +44,7 @@ Use this guide when deciding which `.agents/skills` workflow should drive a Stud
 | "Audit API, database, or Supabase connection issues" | `api-database-audit-and-fix` | `supabase`, `security-and-privacy-audit`, `panacea-edge-endpoints` |
 | "Optimize CI/CD, GitHub Actions, or deployment pipeline" | `optimize-ci-cd` | `release-readiness`, `panacea-deployment-guard`, `panacea-verify` |
 | "Work on OSCE, virtual patients, SOAP notes, or station flow" | `panacea-osce-simulation` | `ai-agent-design-and-eval`, `security-and-privacy-audit`, `panacea-edge-endpoints` |
+| "Work on subagent fan-out, virtual FS, or agent pipelines" | `panacea-deep-agents` | `ai-agent-design-and-eval`, `panacea-edge-endpoints`, `panacea-verify` |
 | "Combine vector, keyword, graph, and table memory" | `hybrid-retrieval` | `rag-quality`, `memory-regression-eval`, `memory-safety` |
 | "End session, save progress, write handoff, commit" | `wrap-up` | Release or verification skill if near ship point |
 | "Personal decision support or priority reasoning" | `think` | None (non-code work) |
