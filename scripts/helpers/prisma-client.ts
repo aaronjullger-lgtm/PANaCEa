@@ -32,7 +32,17 @@ if (!directUrl) {
 }
 
 // Prisma v7 requires adapter for PostgreSQL
-const pool = new Pool({ connectionString: directUrl });
+// sslmode=require/prefer means "encrypt, don't verify the chain" (Supabase direct
+// hosts use a non-public CA). pg-connection-string v2.12 aliases require/prefer
+// to verify-full, which breaks against those hosts — so map it explicitly.
+const sslmode = new URL(directUrl).searchParams.get('sslmode') ?? 'prefer';
+const pool = new Pool({
+  connectionString: directUrl,
+  ssl:
+    sslmode === 'require' || sslmode === 'prefer'
+      ? { rejectUnauthorized: false }
+      : undefined,
+});
 const adapter = new PrismaPg(pool);
 
 export const prisma = new PrismaClient({
