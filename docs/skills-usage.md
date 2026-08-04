@@ -59,6 +59,9 @@ Use this guide when deciding which `.agents/skills` workflow should drive a Stud
 | "Build a new MCP server (TS SDK, tools/resources/prompts)" | `mcp-server-patterns` | `panacea-verify` |
 | "Clinical scoring, dose validation, drug interaction logic" | `healthcare-cdss-patterns` | `panacea-clinical-content-auditor`, `clinical-content-gen`, `panacea-content-refinery` |
 | "PubMed literature search for citation grounding" | `scientific-db-pubmed-database` | `clinical-library-search`, `panacea-clinical-content-auditor` |
+| "Chat/codegen via 9Router gateway" | `9router-chat` | `9router` (setup/model discovery on first use) |
+| "Image/TTS/STT/embeddings via 9Router" | `9router-image` / `9router-tts` / `9router-stt` / `9router-embeddings` | `9router` (setup/model discovery on first use) |
+| "Web search or URL fetch via 9Router" | `9router-web-search` / `9router-web-fetch` | `9router` (setup/model discovery on first use) |
 
 ## Prompt Engineering Defaults
 

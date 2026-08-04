@@ -183,3 +183,18 @@ Vended as-is from the [ECC repo](https://github.com/affaan-m/everything-claude-c
 | --- | --- | --- |
 | `healthcare-cdss-patterns` | `.agents/skills/healthcare-cdss-patterns` | Clinical Decision Support patterns: drug interaction checking, dose validation, clinical scoring (NEWS2, qSOFA), alert severity. Relevant to clinical content enrichment, drug data, scoring rubrics. |
 | `scientific-db-pubmed-database` | `.agents/skills/scientific-db-pubmed-database` | PubMed/NCBI E-utilities search workflows (MeSH queries, PMID lookup, citation retrieval). Use for evidence-based clinical content grounding and citation provenance. Complements `clinical-library-search` (internal content). |
+
+## AI Gateway (9Router) Skills
+
+9Router is a local/remote AI gateway (`NINEROUTER_URL`, default `http://localhost:20128`) with OpenAI-compatible REST. Copied from user-level opencode global skills on 2026-08-02 so all repo agents (Codex/OpenClaw) can use them. Start/verify/stop: see `docs/STARTUP.md`. Entry skill includes setup, auth, model discovery, and error handling; capability skills cover each REST endpoint.
+
+| Skill | Folder | Description |
+| --- | --- | --- |
+| `9router` | `.agents/skills/9router` | Entry point — setup, `NINEROUTER_URL`/key env, model discovery (`/v1/models[/image|tts|embedding|web|stt|image-to-text]`), error taxonomy. Fetch the capability SKILL.md referenced for each workflow. |
+| `9router-chat` | `.agents/skills/9router-chat` | Chat/codegen via `/v1/chat/completions` or Anthropic `/v1/messages`, streaming, auto-fallback combos. Use to ask an LLM or generate code through the gateway. |
+| `9router-image` | `.agents/skills/9router-image` | Image generation via `/v1/images/generations` (OpenAI/Imagen/DALL-E/FLUX/MiniMax/SDWebUI/ComfyUI/Codex). |
+| `9router-tts` | `.agents/skills/9router-tts` | Text-to-speech via `/v1/audio/speech` (ElevenLabs/Edge/OpenAI/Deepgram voices). |
+| `9router-stt` | `.agents/skills/9router-stt` | Speech-to-text via `/v1/audio/transcriptions` (Whisper/Groq/Gemini/Deepgram). |
+| `9router-embeddings` | `.agents/skills/9router-embeddings` | Embeddings via `/v1/embeddings` (OpenAI/Gemini/Mistral/Voyage/Nvidia/GitHub) for RAG, semantic search, similarity. Complements repository RAG/vector work. |
+| `9router-web-search` | `.agents/skills/9router-web-search` | Web search via `/v1/search` (Tavily/Exa/Brave/Serper/SearXNG/Google PSE/Linkup/SearchAPI/You.com/Perplexity). Use when gateway search is preferred over built-in websearch. |
+| `9router-web-fetch` | `.agents/skills/9router-web-fetch` | URL → markdown/text/HTML via `/v1/web/fetch` (Firecrawl/Jina Reader/Tavily Extract/Exa Contents). Use to scrape or read pages through the gateway. |
