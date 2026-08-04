@@ -15,26 +15,11 @@
  * Schedule: Weekly via GitHub Actions or cron
  */
 
-import { config } from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
+import { prisma, disconnectPrisma } from '../helpers/prisma-client';
 
 // Load environment variables
-config();
-
-// Prisma v7 requires adapter for PostgreSQL
-const directUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
-if (!directUrl) {
-  console.error('❌ DATABASE_URL not set in environment');
-  process.exit(1);
-}
-// @ts-ignore
-const pool = new Pool({ connectionString: directUrl });
-// @ts-ignore
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+// (handled by scripts/helpers/prisma-client.ts with override: true)
 
 // =============================================================================
 // TYPES
@@ -431,7 +416,7 @@ async function main() {
     console.error('❌ Drift detection failed:', error);
     process.exit(1);
   } finally {
-    await prisma.$disconnect();
+    await disconnectPrisma();
   }
 }
 
