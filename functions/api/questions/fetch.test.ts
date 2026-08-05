@@ -70,7 +70,10 @@ function makeContext(validated: Record<string, unknown> = {}) {
 describe('/api/questions/fetch', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // vitest.config.ts mockReset:true wipes hoisted implementations each test.
+    mockDisconnect.mockResolvedValue(undefined);
     mockResolveUser.mockResolvedValue({ id: 'user-db-1' });
+    mockQuestionUpdateMany.mockResolvedValue({ count: 1 });
   });
 
   it('excludes seen questions and applies filters', async () => {
@@ -113,7 +116,7 @@ describe('/api/questions/fetch', () => {
       questions: [{ id: 'q4' }, { id: 'q5' }],
       source: 'database',
       count: 2,
-      needsGeneration: false,
+      needsGeneration: true,
       generationNeeded: 3,
     });
   });
