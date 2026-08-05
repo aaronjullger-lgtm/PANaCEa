@@ -4891,6 +4891,7 @@ model StudentReservoirItem {
   User                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, questionId])
+  @@index([questionId])
   @@index([userId, status, priority])
   @@index([userId, scope, status])
   @@index([expiresAt])

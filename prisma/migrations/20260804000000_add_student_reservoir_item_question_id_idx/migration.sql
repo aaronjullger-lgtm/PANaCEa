@@ -1,0 +1,48 @@
+-- ============================================================================
+-- Proposed migration: StudentReservoirItem.questionId index
+-- Date: 2026-08-04
+-- Status: DRAFT — awaiting Aaron's approval to apply.
+-- Paired with: prisma/schema.prisma StudentReservoirItem model
+--              (add `@@index([questionId])` directive).
+--
+-- Context:
+-- Verified 2026-08-04 (code-level, not audit-doc) against the DB audit
+-- findings. The reservoir consume/release/fail hot paths query
+-- StudentReservoirItem BY questionId alone:
+--
+--   lib/services/reservoir/reservoirService.ts
+--     - markConsumed()     : updateMany { reservedBy, questionId: { in }, status: 'reserved' }
+--     - releaseReservation(): updateMany { reservedBy, status: 'reserved', questionId?: { in } }
+--     - failReservation()  : updateMany { reservedBy, status: 'reserved', questionId?: { in } }
+--
+-- The only questionId-covering index today is
+--   @@unique([userId, questionId])  (Postgres btree, leftmost-prefix)
+-- which serves userId-prefix scans but CANNOT serve a questionId-alone
+-- lookup (questionId is the SECOND column). The queries above filter on
+-- questionId WITHOUT userId, so they fall through to a seq scan on every
+-- session submit.
+--
+-- Additionally, StudentReservoirItem.questionId has a FK with
+-- onDelete: Cascade (prisma/schema.prisma line ~4890):
+--   PreGeneratedQuestion PreGeneratedQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+-- Postgres does not auto-create an index on the referencing column for a
+-- FK constraint; ON DELETE CASCADE scans the referencing table without
+-- one. A questionId index makes cascade deletes from PreGeneratedQuestion
+-- (content pruning / quarantine sweep) O(log n) instead of O(table).
+--
+-- NOTE on a second candidate: ContentGap.conditionId was also flagged by an
+-- earlier scan, but is NOT proposed here. functions/api/admin/content-gaps.ts
+-- filters ContentGap by system/gapType/resolvedAt only — nothing queries
+-- conditionId. Adding that index would be dead weight. Rejected deliberately.
+--
+-- Table is small (reservoir rows are short-lived: queued -> reserved ->
+-- consumed/expired), so plain CREATE INDEX (no CONCURRENTLY) is fine at
+-- apply time. Add CONCURRENTLY if re-applying against a hot replica.
+--
+-- Apply via:
+--   npx prisma migrate dev --name add_student_reservoir_item_question_id_idx
+-- or Supabase MCP apply_migration once reconnected.
+-- ============================================================================
+
+CREATE INDEX IF NOT EXISTS "StudentReservoirItem_questionId_idx"
+  ON "StudentReservoirItem"("questionId");
