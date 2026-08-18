@@ -6,6 +6,8 @@ import { ReadinessVitalsWidget } from '../widgets/command-center/ReadinessVitals
 import { TodayStudyPrescriptionWidget } from '../widgets/command-center/TodayStudyPrescriptionWidget';
 import { WhyThisDrawer } from '../widgets/trust/WhyThisDrawer';
 import { DashboardSlot } from './DashboardSlot';
+import { LearnerAgentPanel } from '@/components/learnerAgent/LearnerAgentPanel';
+import { isLearnerAgentEnabled } from '@/hooks/useLearnerAgent';
 import {
   AdaptiveSignalStack,
   DashboardCommandBrief,
@@ -159,6 +161,7 @@ export function DashboardShell({ viewModel }: { viewModel: DashboardViewModel })
             ) : null}
 
             <DashboardSlot widgets={slots.goal_context} />
+            {isLearnerAgentEnabled() ? <LearnerAgentPanel /> : null}
             <DashboardCommandBrief context={context} />
             <div className="grid gap-6 2xl:grid-cols-[minmax(24rem,0.92fr)_minmax(0,1.08fr)] 2xl:items-start">
               <TodayStudyPrescriptionWidget

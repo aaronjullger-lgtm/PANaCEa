@@ -36,9 +36,10 @@ export interface ToolExecutionContext {
  * Category determines whether a tool is allowed in a given agent mode.
  * - `read`:    fetches data, no side effects                (always safe)
  * - `compute`: transforms data or calls an external API     (safe for most agents)
- * - `write`:   mutates user state, database rows, etc.      (requires explicit allow)
+ * - `write`:            mutates user state, database rows, etc.      (requires explicit allow)
+ * - `canonical_write`:  verified pipeline writes (e.g. submitDrillReview) — never duplicates FSRS
  */
-export type ToolCategory = 'read' | 'compute' | 'write';
+export type ToolCategory = 'read' | 'compute' | 'write' | 'canonical_write';
 
 /**
  * Cost hint lets the runner rank tools and can be surfaced in telemetry.

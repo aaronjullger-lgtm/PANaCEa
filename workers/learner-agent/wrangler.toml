@@ -1,0 +1,25 @@
+name = "panacea-learner-agent"
+main = "src/index.ts"
+compatibility_date = "2026-07-15"
+compatibility_flags = ["nodejs_compat"]
+
+[[durable_objects.bindings]]
+name = "LEARNER_AGENT"
+class_name = "LearnerAgent"
+
+[[workflows]]
+name = "study-plan-revision"
+binding = "STUDY_PLAN_REVISION_WORKFLOW"
+class_name = "StudyPlanRevisionWorkflow"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["LearnerAgent"]
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "7df124d8b81f400eafe6ba55477bf11d"
+
+# Secrets: CLERK_SECRET_KEY, DATABASE_URL, GEMINI_API_KEY, PAGES_API_URL
+[vars]
+WORKER_LABEL = "learner-agent"
