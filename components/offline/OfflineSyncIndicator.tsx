@@ -20,12 +20,32 @@ import {
   setupAutoSync,
   isOnline as checkOnline,
 } from '@/lib/services/offlineSyncService';
+import {
+  discardDeadLetterQueue,
+  getDeadLetterQueue,
+  getQueueStatus,
+  processQueue,
+  retryDeadLetterQueue,
+} from '@/lib/services/sync/offlineSync';
 import { useSyncManager } from '@/lib/services/sync/syncManager';
 
 interface SyncStatus {
   pendingCount: number;
   lastSyncTime: number | null;
   isOffline: boolean;
+}
+
+interface LegacySyncStatus {
+  pendingCount: number;
+  deadLetteredCount: number;
+}
+
+function getLegacySyncStatus(): LegacySyncStatus {
+  const queueStatus = getQueueStatus();
+  return {
+    pendingCount: queueStatus.pending,
+    deadLetteredCount: getDeadLetterQueue().length,
+  };
 }
 
 export function OfflineSyncIndicator() {
@@ -40,6 +60,7 @@ export function OfflineSyncIndicator() {
   // Lazy initializer reads current sync state immediately, avoiding a flash of "nothing to show"
   // on the first render when offline or with pending items.
   const [offlineStatus, setOfflineStatus] = useState<SyncStatus>(() => getSyncStatus());
+  const [legacyStatus, setLegacyStatus] = useState<LegacySyncStatus>(() => getLegacySyncStatus());
   const [syncing, setSyncing] = useState(false);
   const [recovering, setRecovering] = useState(false);
   const [isOnline, setIsOnline] = useState(checkOnline());
@@ -51,14 +72,16 @@ export function OfflineSyncIndicator() {
     syncManagerStatus.pendingAnswers +
     syncManagerStatus.pendingPearlActions +
     syncManagerStatus.pendingReviews;
-  const totalPending = offlineStatus.pendingCount + managerPending;
+  const totalPending = offlineStatus.pendingCount + legacyStatus.pendingCount + managerPending;
   const hasSyncError = !!syncManagerStatus.lastSyncError;
-  const hasDeadLettered = deadLetteredCount > 0;
+  const totalDeadLettered = deadLetteredCount + legacyStatus.deadLetteredCount;
+  const hasDeadLettered = totalDeadLettered > 0;
 
   // Update offline status periodically
   useEffect(() => {
     const updateStatus = () => {
       const newStatus = getSyncStatus();
+      const newLegacyStatus = getLegacySyncStatus();
       const newIsOnline = checkOnline();
 
       setOfflineStatus((prev) => {
@@ -68,6 +91,16 @@ export function OfflineSyncIndicator() {
           prev.isOffline !== newStatus.isOffline
         ) {
           return newStatus;
+        }
+        return prev;
+      });
+
+      setLegacyStatus((prev) => {
+        if (
+          prev.pendingCount !== newLegacyStatus.pendingCount ||
+          prev.deadLetteredCount !== newLegacyStatus.deadLetteredCount
+        ) {
+          return newLegacyStatus;
         }
         return prev;
       });
@@ -116,8 +149,10 @@ export function OfflineSyncIndicator() {
     try {
       const token = await getToken();
       await syncPendingOperations(token || undefined);
+      await processQueue(token || undefined);
       await syncNow(token ?? undefined);
       setOfflineStatus(getSyncStatus());
+      setLegacyStatus(getLegacySyncStatus());
     } catch (error) {
       console.error('Manual sync failed:', error);
       toast.error('Sync paused. Your progress is saved locally.');
@@ -134,11 +169,16 @@ export function OfflineSyncIndicator() {
     setRecovering(true);
     try {
       const token = await getToken();
-      const result = await retryDeadLettered(token ?? undefined);
-      const total = result.answers + result.reviews + result.pearls;
+      const [result, legacyRetried] = await Promise.all([
+        retryDeadLettered(token ?? undefined),
+        retryDeadLetterQueue(token ?? undefined),
+      ]);
+      const total = result.answers + result.reviews + result.pearls + legacyRetried;
       if (total > 0) {
         toast.success(`Recovered ${total} stuck item${total === 1 ? '' : 's'}.`);
       }
+      setOfflineStatus(getSyncStatus());
+      setLegacyStatus(getLegacySyncStatus());
     } catch (error) {
       console.error('Dead-letter retry failed:', error);
       toast.warning('Sync retry paused. Your progress is saved locally.');
@@ -153,16 +193,19 @@ export function OfflineSyncIndicator() {
     if (recovering) return;
 
     const message =
-      deadLetteredCount === 1
+      totalDeadLettered === 1
         ? 'Discard 1 stuck item? This cannot be undone and it will not reach the server.'
-        : `Discard ${deadLetteredCount} stuck items? This cannot be undone and they will not reach the server.`;
+        : `Discard ${totalDeadLettered} stuck items? This cannot be undone and they will not reach the server.`;
 
     if (!window.confirm(message)) return;
 
     try {
       const counts = discardDeadLettered();
-      const total = counts.answers + counts.reviews + counts.pearlActions;
+      const legacyDiscarded = discardDeadLetterQueue();
+      const total = counts.answers + counts.reviews + counts.pearlActions + legacyDiscarded;
       toast.success(`Discarded ${total} stuck item${total === 1 ? '' : 's'}.`);
+      setOfflineStatus(getSyncStatus());
+      setLegacyStatus(getLegacySyncStatus());
     } catch (error) {
       console.error('Dead-letter discard failed:', error);
       toast.error('Discard unavailable. Try again when you are ready.');
@@ -220,7 +263,7 @@ export function OfflineSyncIndicator() {
     : recovering
       ? 'Recovering…'
       : hasDeadLettered
-        ? `${deadLetteredCount} stuck`
+        ? `${totalDeadLettered} stuck`
         : isOfflineState
           ? 'Offline'
           : hasSyncError
@@ -302,7 +345,7 @@ export function OfflineSyncIndicator() {
                 <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-[var(--color-data-fail)]" />
                 <div>
                   <p className="text-xs font-semibold text-[var(--color-text-primary)]">
-                    {deadLetteredCount} item{deadLetteredCount === 1 ? '' : 's'} need attention
+                    {totalDeadLettered} item{totalDeadLettered === 1 ? '' : 's'} need attention
                   </p>
                   <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
                     Retry when connected, or discard only if you do not need these saved.

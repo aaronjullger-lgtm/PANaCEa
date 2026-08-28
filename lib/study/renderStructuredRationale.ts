@@ -49,7 +49,7 @@ export function renderStructuredRationale(rationale: StructuredRationaleInput): 
   // 3. Why Each Distractor Is Wrong (teaching moment)
   const whyIncorrectLines: string[] = [];
   for (const letter of OPTION_LETTERS) {
-    const key = `whyIncorrect${letter}` as keyof StructuredRationaleInput;
+    const key = `whyIncorrect${letter}` as const;
     const text = cleanText(rationale[key]);
     if (text) {
       whyIncorrectLines.push(`Why option ${letter} is incorrect: ${text}`);
@@ -101,7 +101,7 @@ export function renderDistractorRationale(
 
   for (let i = 0; i < OPTION_LETTERS.length; i++) {
     const letter = OPTION_LETTERS[i]!;
-    const key = `whyIncorrect${letter}` as keyof StructuredRationaleInput;
+    const key = `whyIncorrect${letter}` as const;
     const text = cleanText(rationale[key]);
     if (!text) continue;
 
