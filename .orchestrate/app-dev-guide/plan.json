@@ -1,0 +1,22 @@
+{
+  "goal": "Create a detailed plan for orchestrating mobile or web app delivery from start to finish — a clear, actionable roadmap or project management guide.",
+  "summary": "App delivery orchestration guide from discovery through operations",
+  "rootSlug": "app-dev-guide",
+  "baseBranch": "main",
+  "repoUrl": "https://github.com/aaronjullger-lgtm/PANaCEa",
+  "syncStateToGit": true,
+  "tasks": [
+    {
+      "name": "guide-deliverable",
+      "type": "worker",
+      "status": "done",
+      "scopedGoal": "Write docs/guides/APP_DELIVERY_ORCHESTRATION_GUIDE.md covering all phases: requirements, design, architecture, team assignment, milestones, testing, deployment, communication, risk management, and quality gates.",
+      "acceptance": [
+        "Guide covers phases 0–9 with deliverables and quality gates",
+        "Includes RACI, milestone, risk register, and checklist templates",
+        "Includes communication cadence and collaboration playbook",
+        "Documents how to map phases to /orchestrate worker tasks"
+      ]
+    }
+  ]
+}
