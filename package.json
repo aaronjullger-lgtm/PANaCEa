@@ -199,7 +199,7 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.69",
-    "@ai-sdk/google": "^3.0.62",
+    "@ai-sdk/google": "^4.0.27",
     "@ai-sdk/openai": "^3.0.52",
     "@clerk/backend": "^2.25.0",
     "@clerk/clerk-react": "^5.57.1",
