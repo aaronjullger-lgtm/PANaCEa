@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { unwrapApiEnvelope, getApiEnvelopeError } from '@/lib/utils/apiEnvelope';
+import {
+  unwrapApiEnvelope,
+  unwrapApiEnvelopeArrayField,
+  getApiEnvelopeError,
+} from '@/lib/utils/apiEnvelope';
 
 describe('unwrapApiEnvelope', () => {
   it('extracts data from a success envelope', () => {
@@ -86,5 +90,50 @@ describe('getApiEnvelopeError', () => {
 
   it('returns default fallback for non-envelope without custom', () => {
     expect(getApiEnvelopeError(null)).toBe('Request failed');
+  });
+});
+
+describe('unwrapApiEnvelopeArrayField', () => {
+  it('extracts an array field from a unified object payload', () => {
+    const payload = {
+      ok: true,
+      data: {
+        conditions: [
+          { id: 'cardio-1', name: 'Heart failure' },
+          { id: 'pulm-1', name: 'Asthma' },
+        ],
+        total: 2,
+      },
+    };
+
+    expect(unwrapApiEnvelopeArrayField<{ id: string }>(payload, 'conditions')).toEqual([
+      { id: 'cardio-1', name: 'Heart failure' },
+      { id: 'pulm-1', name: 'Asthma' },
+    ]);
+  });
+
+  it('extracts drugs from the drug library envelope payload', () => {
+    const payload = {
+      ok: true,
+      data: {
+        drugs: [{ id: 'drug-1', genericName: 'Amoxicillin' }],
+        pagination: { total: 1, hasMore: false },
+      },
+    };
+
+    expect(unwrapApiEnvelopeArrayField<{ genericName: string }>(payload, 'drugs')).toEqual([
+      { id: 'drug-1', genericName: 'Amoxicillin' },
+    ]);
+  });
+
+  it('preserves legacy direct array payloads', () => {
+    const payload = [{ id: 'direct-1' }, { id: 'direct-2' }];
+
+    expect(unwrapApiEnvelopeArrayField<{ id: string }>(payload, 'conditions')).toEqual(payload);
+  });
+
+  it('returns an empty array when the requested field is missing or not an array', () => {
+    expect(unwrapApiEnvelopeArrayField({ ok: true, data: { conditions: null } }, 'conditions')).toEqual([]);
+    expect(unwrapApiEnvelopeArrayField({ ok: true, data: { total: 0 } }, 'conditions')).toEqual([]);
   });
 });

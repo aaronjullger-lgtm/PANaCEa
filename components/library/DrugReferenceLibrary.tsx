@@ -1,6 +1,4 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-
-const SEARCH_DEBOUNCE_MS = 320;
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/clerk-react';
 import {
@@ -17,7 +15,9 @@ import {
 
 import DrugMaster, { type Drug as DrugDetail } from './DrugMaster';
 import { InlineSpinner } from '@/components/loading';
-import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
+import { unwrapApiEnvelope, unwrapApiEnvelopeArrayField } from '@/lib/utils/apiEnvelope';
+
+const SEARCH_DEBOUNCE_MS = 320;
 
 // Types
 interface DrugClass {
@@ -413,7 +413,7 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
         return;
       }
       const data = JSON.parse(text);
-      setDrugs(data.drugs || []);
+      setDrugs(unwrapApiEnvelopeArrayField<DrugSummary>(data, 'drugs'));
     } catch (err) {
       console.error('[DrugReferenceLibrary] drugs fetch failed', err);
       setError(err instanceof Error ? err.message : 'Failed to load drug data');

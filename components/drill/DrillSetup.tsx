@@ -13,7 +13,7 @@ import { SkeletonLoader, InlineSpinner } from '@/components/loading';
 import { SliderWithInput } from '@/components/ui/SliderWithInput';
 import type { SystemCode, SessionSettings } from '../../types';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
+import { getApiEnvelopeError, unwrapApiEnvelopeArrayField } from '@/lib/utils/apiEnvelope';
 
 interface ConditionMetadata {
   id: string;
@@ -100,7 +100,7 @@ export function DrillSetup({
           throw new Error(getApiEnvelopeError(responseJson, `Failed to load conditions: ${response.status}`));
         }
 
-        const data = unwrapApiEnvelope<ConditionMetadata[]>(responseJson);
+        const data = unwrapApiEnvelopeArrayField<ConditionMetadata>(responseJson, 'conditions');
         setConditions(data);
       } catch (err) {
         console.error('Error fetching conditions:', err);

@@ -29,3 +29,18 @@ export function unwrapApiEnvelope<T>(json: unknown): T {
   }
   return json as T;
 }
+
+export function unwrapApiEnvelopeArrayField<T>(json: unknown, field: string): T[] {
+  const payload = unwrapApiEnvelope<unknown>(json);
+
+  if (Array.isArray(payload)) {
+    return payload as T[];
+  }
+
+  if (typeof payload !== 'object' || payload === null) {
+    return [];
+  }
+
+  const value = (payload as Record<string, unknown>)[field];
+  return Array.isArray(value) ? (value as T[]) : [];
+}
