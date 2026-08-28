@@ -116,7 +116,7 @@ jobs:
 
       - name: Upload learner-model artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sched-daily-learning-models-${{ github.run_number }}
           path: |

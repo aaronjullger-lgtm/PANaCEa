@@ -87,7 +87,7 @@ jobs:
 
       - name: Upload runtime sanity artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: runtime-sanity-${{ github.run_number }}
           path: |
