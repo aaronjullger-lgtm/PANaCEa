@@ -426,10 +426,10 @@ const App: React.FC = () => {
   // processed when connectivity returns — without this, flushed data sits in
   // localStorage permanently and never reaches the server.
   useEffect(() => {
-    if (!getToken) return;
+    if (!authLoaded || !isSignedIn || isGuestMode) return;
     const cleanup = setupAutoSync(() => getToken());
     return cleanup;
-  }, [getToken]);
+  }, [authLoaded, getToken, isGuestMode, isSignedIn]);
 
   // ---- derived: "growth areas" and heatmap data ----
   // Heatmap and growth areas use synced performanceData filtered by focus === 'all'
