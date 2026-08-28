@@ -7,6 +7,7 @@
  * - No FSRS tracking (session state is local only)
  */
 
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import type { Question } from '@/types';
 import type {
   CustomSessionConfig,
@@ -123,7 +124,7 @@ export async function fetchSessionQuestions(
       throw new Error(error.error || `Failed to fetch questions: ${response.status}`);
     }
 
-    const data: GenerateCustomSessionResponse = await response.json();
+    const data = unwrapApiEnvelope<GenerateCustomSessionResponse>(await response.json());
 
     if (data.warning) {
       console.warn('[CustomSession] Warning:', data.warning);

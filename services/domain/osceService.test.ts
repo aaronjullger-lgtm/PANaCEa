@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { completeOSCESession, gradeOSCESession } from './osceService';
+import { completeOSCESession, getRandomEncounterCase, gradeOSCESession } from './osceService';
 
 describe('osceService request contracts', () => {
   beforeEach(() => {
@@ -61,5 +61,45 @@ describe('osceService request contracts', () => {
     expect(JSON.parse(String(init.body))).toEqual({
       body: { sessionId: 'session_grade_1' },
     });
+  });
+
+  it('unwraps the random encounter case API envelope', async () => {
+    const encounterCase = {
+      id: 'case_acs',
+      patientName: 'Jordan Lee',
+      chiefComplaint: 'Chest pain',
+      age: 58,
+      sex: 'M',
+      vitalSigns: { bp: '148/92', hr: 104, rr: 20, temp: 98.8, o2sat: 96 },
+      historyData: { onset: 'Sudden substernal pressure' },
+      physicalExamData: { heart: 'Regular tachycardia' },
+      labData: { troponin: 'Elevated' },
+      essentialQuestions: ['onset', 'radiation'],
+      helpfulQuestions: ['risk factors'],
+      unnecessaryQuestions: ['toe pain'],
+      correctDiagnosis: 'Acute coronary syndrome',
+      differentialDiagnoses: ['GERD', 'Pulmonary embolism'],
+      idealWorkup: ['ECG', 'Troponin'],
+      teachingPoints: ['Treat ACS as time-sensitive until ruled out'],
+      targetSystem: 'cardiovascular',
+      difficulty: 'moderate',
+    };
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, data: encounterCase }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getRandomEncounterCase('token_xyz', {
+      targetSystems: ['cardiovascular'],
+      difficulty: 'moderate',
+    });
+
+    expect(result).toEqual(encounterCase);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/osce/cases/random?targetSystem=cardiovascular&difficulty=moderate');
+    expect(init.headers).toEqual({ Authorization: 'Bearer token_xyz' });
   });
 });
