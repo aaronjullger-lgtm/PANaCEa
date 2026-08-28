@@ -1,6 +1,11 @@
 import type { Guideline } from '@/types/guidelines';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 let guidelineCache: Guideline[] | null = null;
+
+function unwrapGuidelinePayload(json: unknown): unknown {
+  return unwrapApiEnvelope<unknown>(unwrapApiEnvelope<unknown>(json));
+}
 
 export const guidelineService = {
   /**
@@ -13,7 +18,10 @@ export const guidelineService = {
       const response = await fetch('/api/reference/guidelines');
       if (!response.ok) throw new Error('Failed to fetch guidelines');
 
-      const data = await response.json();
+      const data = unwrapGuidelinePayload(await response.json());
+      if (!Array.isArray(data)) {
+        throw new Error('Guidelines response was not an array');
+      }
       guidelineCache = data;
       return data;
     } catch (error) {
@@ -34,7 +42,8 @@ export const guidelineService = {
     try {
       const response = await fetch(`/api/reference/guidelines/${id}`);
       if (!response.ok) throw new Error('Failed to fetch guideline');
-      return await response.json();
+      const data = unwrapGuidelinePayload(await response.json());
+      return data && typeof data === 'object' ? (data as Guideline) : null;
     } catch (error) {
       console.error(`Error fetching guideline ${id}:`, error);
       return null;

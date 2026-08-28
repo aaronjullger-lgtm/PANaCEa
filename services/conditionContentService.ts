@@ -5,6 +5,7 @@
  * safe for use in browser environments (no Prisma/fs imports).
  */
 
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import type { SystemCode } from '../types';
 
 export interface ConditionContentData {
@@ -100,7 +101,7 @@ export async function fetchConditionContent(
       return { found: false, message: `API error: ${response.status}` };
     }
 
-    const data: LoadedConditionContent = await response.json();
+    const data = unwrapApiEnvelope<LoadedConditionContent>(await response.json());
 
     // Cache the result
     contentCache.set(cacheKey, { data, timestamp: now });
