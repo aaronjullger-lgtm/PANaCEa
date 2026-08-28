@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveUserByClerkId } from '../_shared/resolveUser';
 import { IDSchema } from '../_shared/schemas';
 
 // Schema accepts sessionId via query param. Body-based POSTs also fall back
@@ -60,11 +61,26 @@ async function handleCleanup(context: any) {
 
     log.info('Cleaning up OSCE chat history', { sessionId });
 
-    // Chat history is stored in PatientEncounterSession.messages; clear it for this session
+    const user = await resolveUserByClerkId(prisma, auth.userId);
+    if (!user) {
+      log.warn('User not found for OSCE cleanup', { clerkId: auth.userId });
+      return { status: 404, error: 'User not found' };
+    }
+
+    // Chat history is stored in PatientEncounterSession.messages; clear it only
+    // for sessions owned by the authenticated user.
     const updated = await prisma.patientEncounterSession.updateMany({
-      where: { id: sessionId },
+      where: { id: sessionId, userId: user.id },
       data: { messages: [] },
     });
+
+    if (updated.count === 0) {
+      log.warn('Session not found or not owned by user for cleanup', {
+        sessionId,
+        userId: user.id,
+      });
+      return { status: 404, error: 'Session not found' };
+    }
 
     log.info('Cleanup completed', { updated: updated.count });
     return {
