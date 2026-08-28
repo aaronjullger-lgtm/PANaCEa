@@ -98,6 +98,10 @@ import {
   getTranslatedText,
   generateTrendData,
 } from '@/lib/utils/encounterHelpers';
+import {
+  osceMessagesToPatientQuestions,
+  patientQuestionsToOSCEChatMessages,
+} from '@/lib/utils/osceTranscript';
 import { useVitalsEngine } from '@/hooks/useVitalsEngine';
 import { formatPatientAgeShort } from '@/lib/utils/ageFormatter';
 
@@ -228,6 +232,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const diagnosisMetricIdRef = useRef<string | null>(null);
   const debriefAbortRef = useRef<AbortController | null>(null);
   const chatSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const sessionQuestionsRef = useRef<PatientQuestion[]>([]);
+  const chatTurnInFlightRef = useRef(false);
 
   // Abort debrief stream on unmount so we do not update state after unmount
   useEffect(() => {
@@ -236,6 +242,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       debriefAbortRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    sessionQuestionsRef.current = session?.questions ?? [];
+  }, [session?.questions]);
 
   // Fetch OSCE stats for landing page sparkline
 
@@ -514,10 +524,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       enhancedOSCE.initializeSession(newCase as any);
 
       let sessionId: string | undefined;
+      let restoredQuestions: PatientQuestion[] = [];
       try {
         const osceSession = await startOSCESession(newCase.id, token);
         if (osceSession) {
           sessionId = osceSession.id;
+          restoredQuestions = osceMessagesToPatientQuestions(osceSession.messages);
         }
       } catch (e) {
         console.error('Failed to start OSCE session', e);
@@ -525,10 +537,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       }
 
       const startTs = Date.now();
+      sessionQuestionsRef.current = restoredQuestions;
       setSession({
         id: sessionId,
         caseId: newCase.id,
-        questions: [],
+        questions: restoredQuestions,
         startTime: startTs,
       });
       setEncounterStartTime(startTs);
@@ -544,17 +557,19 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   };
 
   const handleAskQuestion = async () => {
-    if (!currentQuestion.trim() || !currentCase || !session) return;
+    const questionText = currentQuestion.trim();
+    if (!questionText || !currentCase || !session || isTyping || chatTurnInFlightRef.current) return;
 
+    chatTurnInFlightRef.current = true;
     setIsTyping(true);
-    detectInterventionIntent(currentQuestion);
+    detectInterventionIntent(questionText);
 
     // Track question in scoring engine + OSCE metrics
-    osceMetrics.logAction('communication', currentQuestion);
-    osceMetrics.logSpeech(currentQuestion);
+    osceMetrics.logAction('communication', questionText);
+    osceMetrics.logSpeech(questionText);
 
     // Auto-detect rapport behaviors from question text
-    const qLower = currentQuestion.toLowerCase();
+    const qLower = questionText.toLowerCase();
     if (/\b(sorry|understand|must be|that sounds|i can see|how are you feeling|concerned)\b/.test(qLower)) {
       osceMetrics.logRapportBehavior('empathyStatements');
     }
@@ -563,7 +578,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     }
     if (/^(tell me|describe|how|what|can you explain|walk me through)\b/.test(qLower)) {
       osceMetrics.logRapportBehavior('openEndedQuestions');
-    } else if (/\?$/.test(currentQuestion.trim())) {
+    } else if (/\?$/.test(questionText)) {
       osceMetrics.logRapportBehavior('closedEndedQuestions');
     }
     if (/\b(my name is|i'm (dr|doctor|your (pa|provider|nurse)))\b/.test(qLower)) {
@@ -574,16 +589,18 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     }
 
     if (enhancedOSCE.state.isSessionActive) {
-      enhancedOSCE.processMessage(currentQuestion);
+      enhancedOSCE.processMessage(questionText);
     }
+
+    const currentQuestions = sessionQuestionsRef.current;
 
     // NEW: Track conversation node for echo path
     const parentNodeId =
-      session.questions.length > 0 ? `node-${session.questions.length - 1}` : undefined;
-    const nodeId = recordNode('question', currentQuestion, parentNodeId, 0.8); // 0.8 = relevance
+      currentQuestions.length > 0 ? `node-${currentQuestions.length - 1}` : undefined;
+    const nodeId = recordNode('question', questionText, parentNodeId, 0.8); // 0.8 = relevance
 
     // Prepare history for AI
-    const chatHistory = session.questions
+    const chatHistory = currentQuestions
       .map((q) => [
         { role: 'user' as const, content: q.questionText },
         { role: 'model' as const, content: q.response },
@@ -595,28 +612,30 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       const response = await chatWithPatientSimulator(
         currentCase,
         chatHistory,
-        currentQuestion,
+        questionText,
         patientPersona,
         scenarioModifiers
       );
 
       // NEW: Forward to SOAP generator
-      await addTranscript('student', currentQuestion);
+      await addTranscript('student', questionText);
       await addTranscript('patient', response);
 
       const newQuestion: PatientQuestion = {
-        questionText: currentQuestion,
-        category: determineCategory(currentQuestion),
+        questionText,
+        category: determineCategory(questionText),
         relevance: 'helpful', // Default for AI interaction
         response: response,
         timestamp: Date.now(),
       };
 
+      const updatedQuestions = [...sessionQuestionsRef.current, newQuestion];
+      sessionQuestionsRef.current = updatedQuestions;
       setSession((prev) =>
         prev
           ? {
               ...prev,
-              questions: [...prev.questions, newQuestion],
+              questions: updatedQuestions,
             }
           : null
       );
@@ -626,14 +645,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       // Persist chat to server via serialized queue to prevent concurrent overwrites
       if (session.id) {
         const token = await getToken();
-        const messages = [
-          ...session.questions.flatMap((q) => [
-            { role: 'user' as const, content: q.questionText },
-            { role: 'assistant' as const, content: q.response },
-          ]),
-          { role: 'user' as const, content: currentQuestion },
-          { role: 'assistant' as const, content: response },
-        ];
+        const messages = patientQuestionsToOSCEChatMessages(updatedQuestions);
         const savedSessionId = session.id;
         chatSaveQueueRef.current = chatSaveQueueRef.current
           .then(async () => {
@@ -652,6 +664,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       toast.error('Could not get patient response. Please try again.');
     } finally {
       setIsTyping(false);
+      chatTurnInFlightRef.current = false;
     }
   };
 
@@ -907,8 +920,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const handleEndEncounter = async () => {
     if (!currentCase || !session) return;
 
+    const currentSessionQuestions = sessionQuestionsRef.current;
     const sessionSummary = {
-      transcript: session.questions.flatMap((q) => [
+      transcript: currentSessionQuestions.flatMap((q) => [
         { role: 'user' as const, content: q.questionText },
         { role: 'model' as const, content: q.response },
       ]),
@@ -939,6 +953,15 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     }
 
     try {
+      await chatSaveQueueRef.current;
+      const transcriptMessages = patientQuestionsToOSCEChatMessages(sessionQuestionsRef.current);
+      if (transcriptMessages.length > 0) {
+        const flushed = await saveOSCEChat(sessionId, transcriptMessages, authToken);
+        if (!flushed) {
+          throw new Error('Failed to flush OSCE chat transcript before grading');
+        }
+      }
+
       // Calculate OSCE metrics telemetry to persist with session completion
       const metrics = osceMetrics.calculateMetrics();
       const telemetryPayload: OSCETelemetryPayload = {
@@ -1870,7 +1893,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       type="text"
                       value={currentQuestion}
                       onChange={(e) => setCurrentQuestion(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleAskQuestion()}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && !isTyping) void handleAskQuestion();
+                      }}
                       placeholder="e.g., When did the chest pain start?"
                       className="flex-1 px-4 py-3 bg-data-neutral-bg border border-data-neutral rounded-lg 
                                text-data-neutral placeholder-data-neutral 
@@ -1880,7 +1905,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     <Button
                       variant="ghost"
                       onClick={handleAskQuestion}
-                      disabled={!currentQuestion.trim()}
+                      disabled={!currentQuestion.trim() || isTyping}
                       aria-label="Send Question"
                     >
                       <Send className="w-5 h-5" />
