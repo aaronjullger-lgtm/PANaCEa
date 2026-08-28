@@ -1,154 +1,86 @@
 # API Overview
 
-This document tracks the request/response contracts for the most recently changed API routes.
+This document tracks request/response contracts for the most recently changed API surface.
 
 ## Changed Routes
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/admin/check-access` | Verifies whether the authenticated user currently has admin access. |
-| GET | `/api/admin/stats` | Returns admin dashboard platform metrics (users, activity, flags, top systems). |
-| POST | `/api/osce/complete` | Marks an OSCE session complete (idempotent) and optionally persists analytics to `CaseFile`. |
-| GET | `/api/osce/stats` | Returns OSCE-only performance metrics and trend data from completed sessions with scores. |
+| POST | `/api/authors/submit-question` | Authenticated content-author submission endpoint with condition validation and AI-assisted quality metadata. |
 
 ## Endpoint Contracts
 
-### `GET /api/admin/check-access`
+### `POST /api/authors/submit-question`
 
-**Auth:** Required (authenticated endpoint)
-
-**Request body:** None
-
-**Success response (`200 OK`)**
-
-```json
-{
-  "success": true,
-  "hasAccess": true,
-  "role": "admin",
-  "userId": "string",
-  "email": "optional-string"
-}
-```
-
-`role` can be `admin` or `superadmin`.
-
-**Error responses**
-
-- `403` → `{ "success": false, "hasAccess": false, "message": "Forbidden - Admin access required" }`
-- `500` → `{ "error": "Internal server error", "hasAccess": false }`
-
-**Notes**
-
-- Access is resolved in this order: `SUPERADMIN_USER_IDS`/`ADMIN_USER_IDS` env values first, then database role lookup.
-
----
-
-### `GET /api/admin/stats`
-
-**Auth:** Required (admin-authenticated endpoint)
-
-**Request body:** None
-
-**Success response (`200 OK`)**
-
-```json
-{
-  "success": true,
-  "data": {
-    "totalUsers": 0,
-    "activeUsersToday": 0,
-    "totalStudySessions": 0,
-    "averageAccuracy": 0,
-    "popularSystems": [
-      {
-        "system": "string",
-        "count": 0
-      }
-    ],
-    "pendingFlags": 0
-  }
-}
-```
-
-**Error responses**
-
-- `403` → `{ "error": "Admin access required" }`
-- `500` → `{ "error": "Failed to fetch admin stats" }`
-
-**Notes**
-
-- If `DATABASE_URL` is missing, returns zeroed stats with `note: "Database not configured"`.
-
----
-
-### `POST /api/osce/complete`
-
-**Auth:** Required (authenticated endpoint)
+**Auth:** Required (authenticated user via `requireAuth`)
 
 **Request body**
 
 ```json
 {
-  "body": {
-    "sessionId": "string",
-    "diagnosis": "string (optional)",
-    "treatmentPlan": "string (optional)",
-    "soapComparison": {},
-    "timingAnalytics": {},
-    "infographics": ["string"]
+  "question": "What is the gold standard diagnostic test for acute myocardial infarction?",
+  "options": [
+    "ECG only",
+    "Troponin only",
+    "ECG and serial troponin",
+    "Coronary angiography"
+  ],
+  "correctAnswer": 2,
+  "explanation": "Serial troponin with ECG changes confirms AMI diagnosis.",
+  "system": "Cardiovascular",
+  "conditionId": "cond_cardio_001",
+  "vignette": "A 65-year-old male with chest pain...",
+  "difficulty": "medium"
+}
+```
+
+**Validation rules**
+
+- Required fields: `question`, `options`, `correctAnswer`, `explanation`, `system`, `conditionId`
+- `options` must contain **4-5** choices
+- `correctAnswer` is a **0-based index** and must be within the `options` bounds
+- `conditionId` must exist
+- `system` must match the referenced condition's system
+
+**Success response (`201 Created`)**
+
+```json
+{
+  "submissionId": "sub_test_001",
+  "message": "Question submitted and queued for reviewer approval.",
+  "validationResults": {
+    "isDuplicate": false,
+    "coversGap": true,
+    "estimatedDifficulty": 0.65,
+    "estimatedHealthScore": 0.75
   }
 }
 ```
 
-**Success responses**
-
-- `200 OK` → `{ "success": true }`
-- `200 OK` (idempotent repeat) → `{ "success": true, "alreadyCompleted": true }`
-
-**Error responses**
-
-- `404` → `{ "error": "User not found" }` or `{ "error": "Session not found" }`
-- `500` → `{ "error": "Internal server error" }`
-
-**Notes**
-
-- Creates `CaseFile` on a best-effort basis when `soapComparison` or `timingAnalytics` is provided.
-- `CaseFile` creation failure is logged but does not fail completion.
-
----
-
-### `GET /api/osce/stats`
-
-**Auth:** Required (authenticated endpoint)
-
-**Request body:** None
-
-**Success response (`200 OK`)**
+`validationResults` may also include:
 
 ```json
 {
-  "totalEncounters": 0,
-  "passRate": 0,
-  "averageScore": 0,
-  "averageClinicalReasoningScore": 0,
-  "trend": [
-    {
-      "sessionId": "string",
-      "date": "2026-01-01T00:00:00.000Z",
-      "score": 0,
-      "clinicalReasoningScore": 0
-    }
-  ]
+  "duplicateOf": {
+    "id": "existing_q_123",
+    "question": "Similar question"
+  }
 }
 ```
 
 **Error responses**
 
-- `404` → `{ "error": "User not found" }`
-- `500` → `{ "error": "Failed to load OSCE stats" }`
+- `401` → unauthorized user
+- `400` → input validation failure (missing fields, invalid options length, invalid `correctAnswer`, or system mismatch)
+- `404` → `{ "error": "Condition not found" }`
+- `500` → server-side failure (including AI validation timeout/failure paths)
 
 **Notes**
 
-- Metrics are computed from completed `PatientEncounterSession` rows that have an `OsceResult`.
-- Pass threshold is score `>= 70`.
+- If the authenticated user has no `ContentAuthor` row, one is created automatically.
+- The endpoint accepts submissions even when flagged as a potential duplicate; duplicate status is returned in `validationResults`.
+- `questionsCreated` is incremented atomically with Prisma's `increment: 1` to avoid race conditions.
+- Response messaging varies by AI validation outcome:
+  - potential duplicate → includes "flagged as potential duplicate"
+  - blueprint-gap match → includes "Expedited review recommended"
+  - otherwise → includes "queued for reviewer approval"

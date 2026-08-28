@@ -389,6 +389,14 @@ model BaselineAssessment {
 
 ## API Endpoints
 
+### Content Authoring Endpoints (Current)
+
+```
+POST   /api/authors/submit-question       - Submit authored question (auth required; validates condition/system and returns AI validation metadata)
+```
+
+For the latest request/response payloads and error semantics, see [../api/API_OVERVIEW.md](../api/API_OVERVIEW.md).
+
 ### Achievement Endpoints (To Be Implemented)
 
 ```
