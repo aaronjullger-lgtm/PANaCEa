@@ -316,22 +316,32 @@ export function flushPendingToLocalStorage(): void {
         (op) => op.operation === 'save_progress' && op.status === 'pending'
       );
 
-      if (!existingProgressOp) {
+      const progressData = {
+        performanceRecords: performanceData ? JSON.parse(performanceData) : [],
+        savedQuestions: [
+          ...(missedData
+            ? JSON.parse(missedData).map((q: any) => ({ ...q, type: 'missed' }))
+            : []),
+          ...(flaggedData
+            ? JSON.parse(flaggedData).map((q: any) => ({ ...q, type: 'flagged' }))
+            : []),
+        ],
+      };
+
+      if (existingProgressOp) {
+        existingProgressOp.data = progressData;
+        existingProgressOp.timestamp = Date.now();
+        existingProgressOp.attempts = 0;
+        existingProgressOp.status = 'pending';
+        saveQueue(queue);
+        if (DEBUG_OFFLINE_SYNC)
+          offlineSyncLogger.debug('Updated pending progress queue item on beforeunload');
+      } else {
         // Create a new pending operation for the sync endpoint
         const op: SyncOperation = {
           id: `save_progress_beforeunload_${Date.now()}`,
           operation: 'save_progress',
-          data: {
-            performanceRecords: performanceData ? JSON.parse(performanceData) : [],
-            savedQuestions: [
-              ...(missedData
-                ? JSON.parse(missedData).map((q: any) => ({ ...q, type: 'missed' }))
-                : []),
-              ...(flaggedData
-                ? JSON.parse(flaggedData).map((q: any) => ({ ...q, type: 'flagged' }))
-                : []),
-            ],
-          },
+          data: progressData,
           timestamp: Date.now(),
           attempts: 0,
           status: 'pending',
