@@ -1,0 +1,39 @@
+name = "panacea-builder-agent"
+main = "src/index.ts"
+compatibility_date = "2026-07-15"
+compatibility_flags = ["nodejs_compat"]
+
+# PANaCEa Builder Agent — Durable Object + Workflow
+# Deploy: cd workers/builder-agent && npm install && npx wrangler deploy
+# Secrets: BUILDER_AGENT_API_KEY, BUILDER_AGENT_WEBHOOK_SECRET (required for webhooks)
+# Optional integrations: GITHUB_TOKEN, LINEAR_API_KEY, SENTRY_AUTH_TOKEN, SENTRY_ORG, CONTEXT7_API_KEY
+
+[vars]
+BUILDER_AGENT_DEFAULT_REPO = "aaronjullger-lgtm/PANaCEa"
+BUILDER_AGENT_DEFAULT_BRANCH = "main"
+BUILDER_AGENT_DRY_RUN = "true"
+BUILDER_AGENT_SANDBOX_ENABLED = "false"
+BUILDER_AGENT_ALLOWED_WORKSPACES = "panacea"
+WORKER_LABEL = "panacea-builder-agent"
+
+[[durable_objects.bindings]]
+name = "BUILDER_AGENT"
+class_name = "BuilderAgent"
+
+[[workflows]]
+name = "build-workflow"
+binding = "BUILD_WORKFLOW"
+class_name = "BuildWorkflow"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["BuilderAgent"]
+
+# Sandbox binding — uncomment when account has Containers/Sandbox enabled:
+# [[containers]]
+# class_name = "Sandbox"
+# image = "./Dockerfile"
+# max_instances = 5
+
+[observability]
+enabled = true
