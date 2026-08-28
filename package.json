@@ -237,7 +237,7 @@
     "@tanstack/react-virtual": "^3.13.18",
     "@testing-library/dom": "^10.4.1",
     "@vitejs/plugin-react": "^5.0.0",
-    "ai": "^6.0.158",
+    "ai": "^7.0.42",
     "autoprefixer": "^10.4.22",
     "bcrypt": "^6.0.0",
     "canvas-confetti": "^1.9.4",
