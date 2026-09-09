@@ -330,7 +330,7 @@
     "pg": "^8.17.2",
     "prettier": "^3.4.2",
     "prisma": "^7.7.0",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.4",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
     "typescript": "~5.8.2",
@@ -342,7 +342,7 @@
     "@rollup/rollup-darwin-arm64": "^4.60.1",
     "@rollup/rollup-linux-x64-gnu": "^4.9.5",
     "@rollup/rollup-linux-x64-musl": "^4.9.5",
-    "sharp": "^0.33.5"
+    "sharp": "^0.35.4"
   },
   "engines": {
     "node": "22"
