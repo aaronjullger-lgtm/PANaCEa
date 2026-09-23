@@ -52,15 +52,17 @@ function fallbackMetric(id: ReadinessVitalMetricId): ReadinessVitalMetric {
 
 function metricWithFallback(
   id: ReadinessVitalMetricId,
-  overrides: Partial<ReadinessVitalMetric>,
+  overrides: Partial<ReadinessVitalMetric>
 ): ReadinessVitalMetric {
-  return { ...fallbackMetric(id), ...overrides };
+  return { ...fallbackMetric(id), sparkline: undefined, ...overrides };
 }
 
 function buildReadinessVitals(context: DashboardContext): ReadinessVitalMetric[] {
   const overview = context.raw.dashboardAnalytics?.overview;
   const fsrs = context.raw.dashboardAnalytics?.fsrs;
-  const readiness = clampPercent(context.readiness.available ? context.readiness.points.at(-1) : null);
+  const readiness = clampPercent(
+    context.readiness.available ? context.readiness.points.at(-1) : null
+  );
   const accuracy = clampPercent(overview?.accuracyLast7Days);
   const retention = clampPercent(fsrs?.retentionPercent);
   const planProgress = clampPercent(context.raw.todayPlan?.progress?.percentComplete);
@@ -68,14 +70,23 @@ function buildReadinessVitals(context: DashboardContext): ReadinessVitalMetric[]
   return [
     metricWithFallback('pance-readiness', {
       value: readiness != null ? `${readiness}%` : fallbackMetric('pance-readiness').value,
-      status: readiness != null ? percentStatus(readiness, 76, 62) : context.userState.lowData ? 'calibrating' : fallbackMetric('pance-readiness').status,
-      context: readiness != null ? context.readiness.summary : fallbackMetric('pance-readiness').context,
+      status:
+        readiness != null
+          ? percentStatus(readiness, 76, 62)
+          : context.userState.lowData
+            ? 'calibrating'
+            : fallbackMetric('pance-readiness').status,
+      context:
+        readiness != null ? context.readiness.summary : fallbackMetric('pance-readiness').context,
       accessibleDescription:
         readiness != null
           ? `PANCE readiness estimate is ${readiness} percent. ${context.readiness.summary}`
           : fallbackMetric('pance-readiness').accessibleDescription,
       progress: readiness ?? fallbackMetric('pance-readiness').progress,
-      sparkline: context.readiness.points.length > 1 ? context.readiness.points.slice(-7) : fallbackMetric('pance-readiness').sparkline,
+      sparkline:
+        readiness != null && context.readiness.points.length > 1
+          ? context.readiness.points.slice(-7)
+          : undefined,
       source: readiness != null ? 'analytics' : 'mock',
     }),
     metricWithFallback('accuracy', {
@@ -108,7 +119,14 @@ function buildReadinessVitals(context: DashboardContext): ReadinessVitalMetric[]
     }),
     metricWithFallback('pace', {
       value: context.goal.statusLabel,
-      status: context.goal.status === 'behind' ? 'risk' : context.goal.status === 'catch_up' ? 'watch' : context.goal.status === 'calibrating' ? 'calibrating' : 'stable',
+      status:
+        context.goal.status === 'behind'
+          ? 'risk'
+          : context.goal.status === 'catch_up'
+            ? 'watch'
+            : context.goal.status === 'calibrating'
+              ? 'calibrating'
+              : 'stable',
       context:
         planProgress != null
           ? `${planProgress}% of today’s plan completed; ${context.today.durationMinutes} min prescribed.`
@@ -117,7 +135,7 @@ function buildReadinessVitals(context: DashboardContext): ReadinessVitalMetric[]
         planProgress != null
           ? `Study pace is ${context.goal.statusLabel}; ${planProgress} percent of today's plan is complete.`
           : `Study pace is ${context.goal.statusLabel}; today's prescription is ${context.today.durationMinutes} minutes.`,
-      progress: planProgress ?? fallbackMetric('pace').progress,
+      progress: planProgress ?? undefined,
       source: planProgress != null || context.raw.todayPlan ? 'plan' : 'derived',
     }),
     fallbackMetric('clinical-image-accuracy'),
@@ -155,7 +173,7 @@ function MiniSparkline({ values, status }: { values?: number[]; status: Readines
 
 function metricNextAction(metric: ReadinessVitalMetric): string {
   if (metric.source === 'mock') {
-    return 'Next: complete a short mixed block to replace mock calibration.';
+    return 'Keep studying; this signal will appear when enough data is available.';
   }
 
   switch (metric.id) {
@@ -185,17 +203,21 @@ function metricNextAction(metric: ReadinessVitalMetric): string {
 }
 
 function ReadinessVitalCard({ metric }: { metric: ReadinessVitalMetric }) {
-  const Icon = statusIcon[metric.status];
-  const progress = clampPercent(metric.progress) ?? 0;
+  const awaitingData = metric.source === 'mock';
+  const status = awaitingData ? 'calibrating' : metric.status;
+  const Icon = statusIcon[status];
+  const progress = awaitingData ? null : clampPercent(metric.progress);
 
   return (
     <div
       role="group"
-      aria-label={metric.accessibleDescription}
+      aria-label={
+        awaitingData ? `${metric.label}: not enough data yet.` : metric.accessibleDescription
+      }
       className={cn(
         'relative overflow-hidden rounded-2xl border bg-[color-mix(in_srgb,var(--atlas-bg-soft)_70%,transparent)] p-4',
         'min-h-[10.5rem] transition-colors',
-        statusClass[metric.status],
+        awaitingData ? 'border-atlas-border text-atlas-muted' : statusClass[status]
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -205,12 +227,10 @@ function ReadinessVitalCard({ metric }: { metric: ReadinessVitalMetric }) {
           </p>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="font-mono text-2xl font-semibold tabular-nums text-atlas-white">
-              {metric.value}
+              {awaitingData ? '—' : metric.value}
             </span>
-            {metric.source === 'mock' ? (
-              <span className="rounded-full border border-atlas-border px-1.5 py-0.5 text-[0.6rem] uppercase tracking-[0.12em] text-atlas-subtle">
-                mock
-              </span>
+            {awaitingData ? (
+              <span className="text-xs text-atlas-muted">Not enough data</span>
             ) : null}
           </div>
         </div>
@@ -219,14 +239,23 @@ function ReadinessVitalCard({ metric }: { metric: ReadinessVitalMetric }) {
         </span>
       </div>
 
-      <p className="mt-3 line-clamp-2 text-xs leading-5 text-atlas-muted">{metric.context}</p>
+      <p className="mt-3 line-clamp-2 text-xs leading-5 text-atlas-muted">
+        {awaitingData ? 'Your progress will appear here after it can be measured.' : metric.context}
+      </p>
 
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-atlas-glass" aria-hidden="true">
-          <div className="h-full rounded-full bg-current" style={{ width: `${Math.max(6, progress)}%` }} />
+      {!awaitingData && (progress != null || metric.sparkline?.length) ? (
+        <div className="mt-4 flex items-center justify-between gap-3">
+          {progress != null ? (
+            <div
+              className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-atlas-glass"
+              aria-hidden="true"
+            >
+              <div className="h-full rounded-full bg-current" style={{ width: `${progress}%` }} />
+            </div>
+          ) : null}
+          <MiniSparkline values={metric.sparkline} status={status} />
         </div>
-        <MiniSparkline values={metric.sparkline} status={metric.status} />
-      </div>
+      ) : null}
       <p className="mt-3 border-t border-atlas-border pt-3 text-xs leading-5 text-atlas-muted">
         {metricNextAction(metric)}
       </p>
@@ -236,7 +265,11 @@ function ReadinessVitalCard({ metric }: { metric: ReadinessVitalMetric }) {
 
 export function ReadinessVitalsSkeleton({ className }: { className?: string }) {
   return (
-    <section aria-labelledby="readiness-vitals-title" className={cn('space-y-3', className)} aria-busy="true">
+    <section
+      aria-labelledby="readiness-vitals-title"
+      className={cn('space-y-3', className)}
+      aria-busy="true"
+    >
       <div className="flex items-end justify-between gap-3">
         <div className="space-y-2">
           <Skeleton className="h-5 w-40 bg-atlas-glass" />
@@ -261,7 +294,7 @@ export function ReadinessVitalsWidget({
 }: ReadinessVitalsWidgetProps) {
   const resolvedMetrics = useMemo(
     () => metrics ?? buildReadinessVitals(context),
-    [context, metrics],
+    [context, metrics]
   );
   const mockCount = resolvedMetrics.filter((metric) => metric.source === 'mock').length;
   const analyticsCount = resolvedMetrics.length - mockCount;
@@ -283,7 +316,7 @@ export function ReadinessVitalsWidget({
         </div>
         <span className="hidden items-center gap-2 rounded-full border border-atlas-border bg-atlas-glass px-3 py-1 text-xs text-atlas-muted sm:inline-flex">
           <ShieldCheck className="h-3.5 w-3.5 text-atlas-cyan" aria-hidden />
-          {analyticsCount} live / {mockCount} calibrating
+          {analyticsCount} available / {mockCount} awaiting data
         </span>
       </div>
       <MedicalGlassCard className="p-3 sm:p-4">

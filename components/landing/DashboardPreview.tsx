@@ -551,8 +551,7 @@ export function DashboardPreview({ onOpenDashboard }: { onOpenDashboard: () => v
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
           <SectionHeader
-            eyebrow="Readiness command preview"
-            title="See exactly what today’s PANCE block should be."
+            title="A clear plan for the time you have."
             description="Readiness vitals, organ-system pressure, image accuracy, and the study prescription stay connected so no metric floats around without a next action."
             titleId="analytics-preview-title"
           />
@@ -567,7 +566,7 @@ export function DashboardPreview({ onOpenDashboard }: { onOpenDashboard: () => v
               scannerAccent
               iconRight={<ArrowRight className="size-4" aria-hidden="true" />}
             >
-              Open your readiness dashboard
+              Build my study plan
             </PremiumCTAButton>
           </div>
         </div>
@@ -582,11 +581,11 @@ export function DashboardPreview({ onOpenDashboard }: { onOpenDashboard: () => v
                     StudyPanacea readiness command center
                   </p>
                   <h3 className="mt-2 font-poppins text-2xl font-semibold text-atlas-white">
-                    Diagnostic Atlas OS study surface
+                    Your study overview
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-atlas-muted">
-                    Exam-window planning, weak-area targeting, review debt, and image-read remediation in one
-                    study surface.
+                    Exam-window planning, weak-area targeting, review debt, and image-read
+                    remediation in one study surface.
                   </p>
                 </div>
                 <div className="grid gap-2 text-xs sm:grid-cols-3 lg:min-w-[26rem]">

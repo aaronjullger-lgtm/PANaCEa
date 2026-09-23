@@ -116,3 +116,17 @@ Resolve with: `npx prisma migrate resolve --applied <dir>`
 ## Next Best Step
 
 **Audit and fix `UPDATED_PRODUCTION_READINESS_SCORECARD.md` and `NEXT_IMPLEMENTATION_PLAN.md`** — both are referenced by CLAUDE.md but don't exist. These are the primary status documents agents consult when picking up work.
+
+
+## Design audit session — 2026-09-23
+
+Branch: `design/site-usability-audit`; base `08d103d`.
+Full findings and release checklist: `docs/audits/2026-09-23-design-audit.md`.
+
+- Refined the landing hierarchy and copy; fixed tablet navigation, stable accessible training tabs, and the scanner animation lifecycle.
+- Replaced invented dashboard readiness percentages/trends with explicit missing-data states.
+- Added viewport-contained shared dialogs and keyboard-scrollable question tables.
+- Focused validation: 52 passing tests; changed-file lint, Vite production build, and bundle gate pass.
+- Full lint: 9 errors outside changed files. Full production typecheck after Prisma generation: 7 errors outside changed files (AI tracing and Prisma aggregate types). These checks remain blockers to a clean repository gate.
+- Browser reviewed production homepage and dashboard preview. Local preview was blocked by the cloud browser; changed-branch mobile/desktop screenshots and signed-in acceptance remain outstanding.
+- Next step: visually review the draft PR at phone/tablet/desktop widths and obtain Aaron's approval before merge/deploy, as required by AGENTS.md. No production deployment, migration, auth/RLS change, or dependency addition in this session.

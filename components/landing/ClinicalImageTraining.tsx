@@ -533,7 +533,6 @@ export function ClinicalImageTraining() {
     >
       <div className="mx-auto max-w-7xl">
         <SectionHeader
-          eyebrow="Clinical image training viewer"
           title="Train image-read discipline without real patient images."
           description="The image lab demonstrates search order, annotation review, confidence tagging, and follow-up practice with abstract ECG, chest imaging, dermatology, fundoscopy, and radiology-style panels."
           align="center"

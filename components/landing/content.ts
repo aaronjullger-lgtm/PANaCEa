@@ -20,11 +20,10 @@ import type { MetricVitalStatus } from '@/components/studypanacea/MetricVital';
 import type { OrganSystemBadgeState } from '@/components/studypanacea/OrganSystemBadge';
 
 export const NAV_LINKS = [
-  { label: 'Readiness Scanner', href: '#hero' },
-  { label: 'Diagnostic Path', href: '#diagnostic-story' },
-  { label: 'Training Dock', href: '#training-modes' },
-  { label: 'Image Lab', href: '#image-lab' },
-  { label: 'Command Center', href: '#analytics-preview' },
+  { label: 'How it works', href: '#diagnostic-story' },
+  { label: 'Study modes', href: '#training-modes' },
+  { label: 'Image practice', href: '#image-lab' },
+  { label: 'Dashboard', href: '#analytics-preview' },
 ] as const;
 
 export type LandingVital = {

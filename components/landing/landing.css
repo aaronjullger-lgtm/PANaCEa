@@ -1,0 +1,67 @@
+/* Marketing refinements are scoped so operational app themes stay independent. */
+.landing-page,
+.landing-auth {
+  --atlas-bg: #141c22;
+  --atlas-bg-soft: #18252e;
+  --atlas-surface: #1d2b35;
+  --atlas-surface-elevated: #253640;
+  --atlas-surface-glass: #1d2b35;
+  --atlas-text-muted: #b8cad5;
+  --atlas-text-subtle: #9bb1c0;
+  --atlas-clinical-white: #f6f8f8;
+  --atlas-shadow-glass: 0 18px 45px -28px rgb(0 0 0 / 55%);
+  --atlas-noise-opacity: 0;
+  color-scheme: dark;
+  text-underline-offset: 0.2em;
+}
+
+.landing-page ::selection,
+.landing-auth ::selection {
+  background: var(--atlas-accent-cyan);
+  color: var(--atlas-bg);
+}
+
+.landing-page {
+  scrollbar-color: var(--atlas-text-subtle) var(--atlas-bg);
+}
+
+.landing-page h1,
+.landing-page h2,
+.landing-page h3 {
+  text-wrap: balance;
+}
+
+.landing-page header h2 {
+  font-size: clamp(1.75rem, 3vw, 2.75rem);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.landing-page .atlas-glass-card {
+  background: var(--atlas-surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* The scanner is the single ambient motion moment. Controls stay quiet. */
+.landing-page .atlas-scanner-line::after {
+  display: none;
+}
+
+.landing-page .atlas-focus-ring:focus-visible,
+.landing-auth .atlas-focus-ring:focus-visible {
+  outline: 2px solid var(--atlas-accent-cyan);
+  outline-offset: 3px;
+  box-shadow: none;
+}
+
+.landing-page main > section + div[aria-hidden='true'] > div {
+  opacity: 0.65;
+}
+
+@media (max-width: 639px) {
+  .landing-page #hero {
+    padding-top: 2.5rem;
+  }
+}

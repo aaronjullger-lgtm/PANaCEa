@@ -1,14 +1,9 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, ChevronRight, Crosshair, ShieldCheck } from 'lucide-react';
-import {
-  MedicalGlassCard,
-  MetricVital,
-  PremiumCTAButton,
-  ScannerFrame,
-} from '@/components/studypanacea';
+import { ArrowRight, ChevronRight, Check } from 'lucide-react';
+import { PremiumCTAButton, ScannerFrame } from '@/components/studypanacea';
 import { cn } from '@/lib/utils';
-import { HERO_TRUST_INDICATORS, HERO_VITALS } from './content';
+import { HERO_TRUST_INDICATORS } from './content';
 import { FloatingDiagnosticLabels } from './FloatingDiagnosticLabels';
 
 const LazyHeroCanvas = React.lazy(async () => {
@@ -56,7 +51,8 @@ function useCanRenderHeroCanvas() {
       const hasEnoughCores =
         typeof navigator.hardwareConcurrency !== 'number' || navigator.hardwareConcurrency >= 4;
       const prefersDataSavings = Boolean(navigatorHints.connection?.saveData);
-      const eligible = mediaQuery.matches && hasEnoughMemory && hasEnoughCores && !prefersDataSavings;
+      const eligible =
+        mediaQuery.matches && hasEnoughMemory && hasEnoughCores && !prefersDataSavings;
 
       cancelPendingCanvas?.();
 
@@ -86,8 +82,8 @@ function entranceProps(prefersReducedMotion: boolean, delay = 0) {
   }
 
   return {
-    initial: { opacity: 0, y: 18 },
-    animate: { opacity: 1, y: 0 },
+    initial: { y: 12 },
+    animate: { y: 0 },
     transition: { duration: 0.55, delay },
   };
 }
@@ -114,18 +110,15 @@ function ScannerStatusRail() {
     <div className="absolute bottom-4 left-4 right-4 z-30 grid gap-3 rounded-2xl border border-atlas-border bg-atlas-background/78 p-4 shadow-atlas-glass backdrop-blur-xl md:left-auto md:max-w-xs">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-atlas-muted">
-          Study prescription
+          Example study plan
         </p>
-        <span className="inline-flex items-center gap-1 rounded-full border border-atlas-success/35 bg-atlas-success/10 px-2.5 py-1 font-mono text-xs text-atlas-success">
-          <ShieldCheck key="stable-icon" className="size-3" aria-hidden="true" />
-          stable
-        </span>
       </div>
       <h3 className="font-poppins text-lg font-semibold leading-tight text-atlas-white">
-        Cardio and pulmonary image reads before simulation
+        Focus next: cardio and pulmonary image reads
       </h3>
       <p className="text-sm leading-6 text-atlas-muted">
-        Clear chest-image search order, rhythm checkpoints, and therapy distractors before another timed block.
+        Clear chest-image search order, rhythm checkpoints, and therapy distractors before another
+        timed block.
       </p>
       <div
         className="h-2 overflow-hidden rounded-full bg-atlas-glass"
@@ -153,11 +146,11 @@ function HeroScannerPanel({ reducedMotion }: { reducedMotion: boolean }) {
           aria-hidden="true"
         />
         <ScannerFrame
-          label="PANCE readiness scanner"
-          footer="Translucent anatomy scan, organ-system signals, and readiness prescription."
+          label="Your learning signals"
+          footer="Illustrative learner data · Explore the dashboard below"
           className="relative z-10"
         >
-          <div className="relative min-h-[27rem] overflow-hidden bg-atlas-background-soft sm:min-h-[34rem] lg:min-h-[37rem]">
+          <div className="relative min-h-[27rem] overflow-hidden bg-atlas-background-soft sm:min-h-[30rem] lg:min-h-[32rem]">
             <div className="absolute inset-0 atlas-medical-grid opacity-20" aria-hidden="true" />
 
             <div className="absolute inset-x-4 top-4 z-30 hidden flex-wrap gap-2 sm:flex lg:hidden">
@@ -198,23 +191,18 @@ export function Hero({ onStartStudying }: HeroProps) {
         aria-hidden="true"
       />
 
-      <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[minmax(0,0.92fr)_minmax(30rem,1.08fr)] lg:items-center">
+      <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-center">
         <motion.div {...entranceProps(prefersReducedMotion)} className="relative z-10">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-atlas-border bg-atlas-glass px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-atlas-cyan shadow-atlas-glass">
-              <Crosshair className="size-3.5" aria-hidden="true" />
-              PANCE readiness scanner
-            </div>
-
             <h1
               id="landing-hero-title"
-              className="mt-6 max-w-4xl font-poppins text-4xl font-semibold leading-[1.02] tracking-normal text-atlas-white sm:text-5xl lg:text-6xl"
+              className="max-w-[12ch] text-balance font-poppins text-4xl font-semibold leading-[1.08] tracking-[-0.03em] text-atlas-white sm:text-5xl lg:text-6xl"
             >
-              Master the PANCE one clinical case at a time.
+              Your next study block. Chosen for you.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-8 text-atlas-muted sm:text-lg">
-              StudyPanacea reads your PANCE practice, clinical image work, weak systems, and review
-              debt, then prescribes the next study block with command-center precision.
+              Prepare for the PANCE with a plan that adapts to how you learn. Focus on weak systems,
+              revisit concepts when they’re due, and turn each clinical case into your next step.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -224,7 +212,7 @@ export function Hero({ onStartStudying }: HeroProps) {
                 className="w-full sm:w-auto"
                 iconRight={<ArrowRight className="size-4" aria-hidden="true" />}
               >
-                Start readiness scan
+                Build my study plan
               </PremiumCTAButton>
               <a
                 href="#analytics-preview"
@@ -236,38 +224,23 @@ export function Hero({ onStartStudying }: HeroProps) {
                 )}
               >
                 <span className="inline-flex items-center gap-2">
-                  Inspect readiness dashboard
+                  Explore the dashboard
                   <ChevronRight className="size-4" aria-hidden="true" />
                 </span>
               </a>
             </div>
 
-            <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            <ul
+              className="mt-8 flex flex-wrap gap-x-6 gap-y-3 border-t border-atlas-border pt-6 text-sm text-atlas-muted"
+              aria-label="Study tools"
+            >
               {HERO_TRUST_INDICATORS.map((indicator) => (
-                <MedicalGlassCard key={indicator.label} className="rounded-2xl p-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-atlas-cyan">
-                      {indicator.label}
-                    </p>
-                    <p className="mt-1 text-sm font-medium text-atlas-muted">{indicator.detail}</p>
-                  </div>
-                </MedicalGlassCard>
+                <li key={indicator.label} className="inline-flex items-center gap-2">
+                  <Check className="size-4 shrink-0 text-atlas-cyan" aria-hidden="true" />
+                  {indicator.label}
+                </li>
               ))}
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {HERO_VITALS.map((vital) => (
-                <MetricVital
-                  key={vital.label}
-                  label={vital.label}
-                  value={vital.value}
-                  change={vital.change}
-                  status={vital.status}
-                  compact
-                  accessibleText={vital.accessibleText}
-                />
-              ))}
-            </div>
+            </ul>
           </div>
         </motion.div>
 
