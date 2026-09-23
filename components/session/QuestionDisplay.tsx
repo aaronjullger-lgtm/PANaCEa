@@ -84,15 +84,22 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         ref={containerRef}
         id="question-container"
         tabIndex={-1}
-        className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] rounded-xl p-6 space-y-4"
-        style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
+        className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] rounded-xl p-4 sm:p-6 min-w-0 break-words space-y-4"
+        style={{
+          fontSize: `calc(1em + var(--font-size-adj, 0px))`,
+          boxShadow:
+            '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)',
+        }}
       >
         {/* Text before the table */}
         {beforeTable && <p className="whitespace-pre-wrap">{beforeTable}</p>}
 
         {/* Table */}
         <div
-          className="my-2"
+          className="my-2 max-w-full overflow-x-auto rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+          role="region"
+          aria-label="Question data table"
+          tabIndex={0}
           dangerouslySetInnerHTML={{ __html: sanitizeForRationale(tableHTML) }}
         />
 
@@ -118,8 +125,12 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         ref={containerRef}
         id="question-container"
         tabIndex={-1}
-        className="text-xl md:text-2xl font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap bg-[var(--color-bg-primary)] rounded-xl p-6"
-        style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
+        className="text-xl md:text-2xl font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap bg-[var(--color-bg-primary)] rounded-xl p-4 sm:p-6 min-w-0 break-words"
+        style={{
+          fontSize: `calc(1em + var(--font-size-adj, 0px))`,
+          boxShadow:
+            '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)',
+        }}
       >
         {normalizedText}
       </div>
@@ -135,8 +146,12 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
       ref={containerRef}
       id="question-container"
       tabIndex={-1}
-      className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] rounded-xl p-6"
-      style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
+      className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] rounded-xl p-4 sm:p-6 min-w-0 break-words"
+      style={{
+        fontSize: `calc(1em + var(--font-size-adj, 0px))`,
+        boxShadow:
+          '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)',
+      }}
     >
       <p className="whitespace-pre-wrap">{vignette}</p>
       <p className="font-semibold mt-4 whitespace-pre-wrap">{lastSentence}</p>

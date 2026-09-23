@@ -568,7 +568,7 @@ function DesktopScrollStory() {
   });
 
   return (
-    <div ref={trackRef} className="relative hidden h-[520vh] lg:block">
+    <div ref={trackRef} className="relative hidden h-[280vh] lg:block">
       <div className="sticky top-24 grid min-h-[calc(100vh-7rem)] grid-cols-[0.74fr_1.26fr] gap-8 py-8">
         <div className="grid content-center gap-5">
           <div
@@ -681,12 +681,16 @@ function StorySignalPanel() {
     {
       label: 'Output',
       value: 'Today’s Study Rx',
-      detail: 'The endpoint is a specific block, review queue, or image-read drill, not a vanity score.',
+      detail:
+        'The endpoint is a specific block, review queue, or image-read drill, not a vanity score.',
     },
   ];
 
   return (
-    <div className="rounded-3xl border border-atlas-border bg-atlas-glass p-4" aria-label="Diagnostic story signal flow">
+    <div
+      className="rounded-3xl border border-atlas-border bg-atlas-glass p-4"
+      aria-label="Diagnostic story signal flow"
+    >
       <div className="grid gap-3 sm:grid-cols-3">
         {signals.map((signal) => (
           <div
@@ -696,9 +700,7 @@ function StorySignalPanel() {
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-atlas-cyan">
               {signal.label}
             </p>
-            <p className="mt-2 font-mono text-sm font-semibold text-atlas-white">
-              {signal.value}
-            </p>
+            <p className="mt-2 font-mono text-sm font-semibold text-atlas-white">{signal.value}</p>
             <p className="mt-2 text-xs leading-5 text-atlas-muted">{signal.detail}</p>
           </div>
         ))}
@@ -719,16 +721,22 @@ export function DiagnosticScrollStory() {
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-6 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
           <SectionHeader
-            eyebrow="Diagnostic learning path"
-            title="Watch weak-area evidence become a study prescription."
-            description="The scroll sequence shows the actual product logic: identify the risky system, select the right training mode, reinforce recall, and recheck readiness."
+            title="From what you miss to what comes next."
+            description="Follow how practice, image interpretation, and spaced review inform your next study block. The examples below use illustrative learner data."
             titleAs="h2"
             titleId="diagnostic-story-title"
           />
           <StorySignalPanel />
         </div>
 
-        <div className="mt-10">
+        <a
+          href="#training-modes"
+          className="atlas-focus-ring mt-6 inline-flex min-h-11 items-center rounded-lg text-sm text-atlas-cyan underline underline-offset-4"
+        >
+          Skip to study modes
+        </a>
+
+        <div className="mt-6">
           {reducedMotion ? (
             <StackedStory reducedMotion={reducedMotion} />
           ) : (

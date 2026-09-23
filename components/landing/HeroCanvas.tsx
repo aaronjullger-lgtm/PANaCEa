@@ -43,21 +43,21 @@ function createScannerPoints(count: number): ScannerPoint[] {
 
 const SCANNER_POINTS = createScannerPoints(86);
 
-function readAtlasColor(name: string, fallback: string) {
+function readAtlasColor(element: Element, name: string, fallback: string) {
   if (typeof window === 'undefined') return fallback;
 
-  const value = window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const value = window.getComputedStyle(element).getPropertyValue(name).trim();
   return value || fallback;
 }
 
-function readScannerColors(): ScannerColors {
+function readScannerColors(element: Element): ScannerColors {
   return {
-    cyan: readAtlasColor('--atlas-accent-cyan', 'cyan'),
-    blue: readAtlasColor('--atlas-accent-blue', 'dodgerblue'),
-    violet: readAtlasColor('--atlas-accent-violet', 'mediumslateblue'),
-    pulse: readAtlasColor('--atlas-accent-pulse-pink', 'hotpink'),
-    success: readAtlasColor('--atlas-success-green', 'mediumspringgreen'),
-    white: readAtlasColor('--atlas-clinical-white', 'white'),
+    cyan: readAtlasColor(element, '--atlas-accent-cyan', 'cyan'),
+    blue: readAtlasColor(element, '--atlas-accent-blue', 'dodgerblue'),
+    violet: readAtlasColor(element, '--atlas-accent-violet', 'mediumslateblue'),
+    pulse: readAtlasColor(element, '--atlas-accent-pulse-pink', 'hotpink'),
+    success: readAtlasColor(element, '--atlas-success-green', 'mediumspringgreen'),
+    white: readAtlasColor(element, '--atlas-clinical-white', 'white'),
   };
 }
 
@@ -229,22 +229,15 @@ export function HeroCanvas({ reducedMotion = false }: HeroCanvasProps) {
     if (!context) return undefined;
 
     let animationFrame = 0;
-    let startedAt = performance.now();
-    const colors = readScannerColors();
+    const startedAt = performance.now();
+    const colors = readScannerColors(canvas);
+    let width = 1;
+    let height = 1;
+    let dpr = 1;
+    let inView = true;
+    let disposed = false;
 
-    const render = (timestamp: number) => {
-      const rect = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.6);
-      const width = Math.max(1, rect.width);
-      const height = Math.max(1, rect.height);
-      const pixelWidth = Math.round(width * dpr);
-      const pixelHeight = Math.round(height * dpr);
-
-      if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
-        canvas.width = pixelWidth;
-        canvas.height = pixelHeight;
-      }
-
+    const draw = (timestamp: number) => {
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
       drawScannerScene(
         context,
@@ -254,22 +247,50 @@ export function HeroCanvas({ reducedMotion = false }: HeroCanvasProps) {
         (timestamp - startedAt) / 1000,
         reducedMotion
       );
+    };
 
-      if (!reducedMotion) {
+    const canAnimate = () => !disposed && !reducedMotion && inView && !document.hidden;
+    const render = (timestamp: number) => {
+      animationFrame = 0;
+      if (!canAnimate()) return;
+      draw(timestamp);
+      animationFrame = window.requestAnimationFrame(render);
+    };
+    const syncAnimation = () => {
+      if (!canAnimate()) {
+        window.cancelAnimationFrame(animationFrame);
+        animationFrame = 0;
+      } else if (!animationFrame) {
         animationFrame = window.requestAnimationFrame(render);
       }
     };
+    const resize = () => {
+      // Measure only when the element resizes, never in the frame loop.
+      const rect = canvas.getBoundingClientRect();
+      dpr = Math.min(window.devicePixelRatio || 1, 1.6);
+      width = Math.max(1, rect.width);
+      height = Math.max(1, rect.height);
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      draw(performance.now());
+    };
 
-    const observer = new ResizeObserver(() => {
-      startedAt = performance.now();
-      render(startedAt);
+    const observer = new ResizeObserver(resize);
+    const intersection = new IntersectionObserver(([entry]) => {
+      inView = entry?.isIntersecting ?? false;
+      syncAnimation();
     });
-
     observer.observe(canvas);
-    render(startedAt);
+    intersection.observe(canvas);
+    document.addEventListener('visibilitychange', syncAnimation);
+    resize();
+    syncAnimation();
 
     return () => {
+      disposed = true;
       observer.disconnect();
+      intersection.disconnect();
+      document.removeEventListener('visibilitychange', syncAnimation);
       window.cancelAnimationFrame(animationFrame);
     };
   }, [reducedMotion]);
