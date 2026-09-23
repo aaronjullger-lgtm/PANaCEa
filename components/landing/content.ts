@@ -21,9 +21,9 @@ import type { OrganSystemBadgeState } from '@/components/studypanacea/OrganSyste
 
 export const NAV_LINKS = [
   { label: 'How it works', href: '#diagnostic-story' },
+  { label: 'The science', href: '#learning-science' },
   { label: 'Study modes', href: '#training-modes' },
-  { label: 'Image practice', href: '#image-lab' },
-  { label: 'Dashboard', href: '#analytics-preview' },
+  { label: 'For PA students', href: '#image-lab' },
 ] as const;
 
 export type LandingVital = {
@@ -175,20 +175,16 @@ export const TRAINING_MODES: TrainingMode[] = [
     label: 'Rapid Review',
     title: 'Rapid Review',
     description:
-      'High-yield misses surface in a fast recall loop before they decay into repeat errors.',
-    benefit: 'Compress overdue concepts into a clinically ranked warm-up block.',
+      'Short recall questions give you a focused way to practice between longer sessions.',
+    benefit: 'Make a small study window useful with a quick recall session.',
     bestFor: 'Short study windows before clinical shifts or lecture days.',
     systemMetric: 'Recall stability',
     metricLabel: 'Due now',
     metricValue: '18',
     metricStatus: 'warning',
     detail: '12 min pulse',
-    protocol: 'Recall queue, high-yield misses, confidence check',
-    previewPoints: [
-      'Overdue concepts first',
-      'Confidence tagged',
-      'Routes misses into spaced review',
-    ],
+    protocol: 'Quick prompts, answer feedback, short sessions',
+    previewPoints: ['Brief recall practice', 'Answer feedback', 'Fits short study windows'],
     tone: 'cyan',
     icon: Zap,
   },

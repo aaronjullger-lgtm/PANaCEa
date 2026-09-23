@@ -1,0 +1,229 @@
+{
+  "schema": "panacea-local-design-metadata",
+  "schemaVersion": 1,
+  "schemaNote": "Local source-backed metadata; not an official Impeccable schema.",
+  "updatedAt": "2026-09-23",
+  "project": "PANaCEa",
+  "scope": "Public landing page and Clerk entry presentation",
+  "status": "source-reviewed; rendered acceptance pending",
+  "deploymentClaimed": false,
+  "direction": {
+    "mode": "Persuade",
+    "thesis": "Study with purpose; remember with confidence.",
+    "reference": "Owner-supplied full-page visual reference, September 23, 2026",
+    "world": "Silver-white and ice-blue reading surfaces, deep navy product and contrast sections, restrained clinical-blue accents, decorative brain/glass sculpture",
+    "replacementWorld": true,
+    "seed": null,
+    "seedUsed": false,
+    "launcher": "Unavailable during this session",
+    "detectorScore": null,
+    "fidelityScore": null
+  },
+  "sources": {
+    "product": "PRODUCT.md",
+    "referenceBrief": "docs/design/landing-reference-brief.md",
+    "documentation": "DESIGN.md",
+    "composition": "components/landing/LandingPage.tsx",
+    "styles": "components/landing/landing.css",
+    "illustrativeData": "components/landing/referenceContent.ts",
+    "navigationAndModes": "components/landing/content.ts"
+  },
+  "scopeSelectors": [".landing-page", ".landing-auth"],
+  "tokens": {
+    "--landing-paper": "#eef2f6",
+    "--landing-white": "#fbfcfd",
+    "--landing-ink": "#172936",
+    "--landing-muted": "#4d6172",
+    "--landing-line": "#c8d3dd",
+    "--landing-accent": "#486f97",
+    "--landing-accent-soft": "#a9c8e7",
+    "--landing-navy": "#182833",
+    "--landing-panel": "#223642",
+    "--landing-panel-raised": "#2b4252",
+    "--landing-night-text": "#f3f7fb",
+    "--landing-night-muted": "#bed0df",
+    "--landing-night-line": "#425563",
+    "--landing-radius": "14px",
+    "--landing-shadow": "0 22px 48px -30px rgb(22 40 55 / 40%)"
+  },
+  "typography": {
+    "family": "Manrope Landing",
+    "fallback": ["Inter", "sans-serif"],
+    "fontFile": "public/fonts/Manrope-Latin.woff",
+    "license": "SIL Open Font License 1.1",
+    "fontDisplay": "swap",
+    "weightRange": [200, 800],
+    "hero": { "size": "clamp(2.8rem, 4.75vw, 4.2rem)", "weight": 500, "lineHeight": 1.05 },
+    "phoneHero": { "size": "clamp(2.35rem, 8.4vw, 3.5rem)", "lineHeight": 1.12 },
+    "sectionHeading": { "size": "clamp(1.9rem, 3vw, 2.8rem)", "weight": 500, "lineHeight": 1.2 },
+    "headingTracking": "-0.035em",
+    "body": { "size": "0.95rem", "lineHeight": 1.75 },
+    "eyebrow": { "size": "0.69rem", "weight": 700, "tracking": "0.17em", "transform": "uppercase" }
+  },
+  "layout": {
+    "container": "min(100% - 6rem, 1280px)",
+    "sectionPaddingBlock": "90px",
+    "heroColumns": "minmax(0, 0.82fr) minmax(0, 1.18fr)",
+    "primaryActionMinHeight": "52px",
+    "secondaryActionMinHeight": "44px",
+    "modeTabMinHeight": "48px",
+    "breakpoints": [
+      {
+        "maxWidth": 1199,
+        "effects": [
+          "2rem side gutters",
+          "Challenge and student sections stack",
+          "Final CTA reflows"
+        ]
+      },
+      {
+        "maxWidth": 1099,
+        "effects": ["Desktop navigation becomes mobile menu; desktop returns at 1100px"]
+      },
+      {
+        "maxWidth": 1023,
+        "effects": [
+          "Hero stacks",
+          "Section padding 65px",
+          "Mode tabs become horizontal scrolling strip",
+          "Footer becomes three columns"
+        ]
+      },
+      {
+        "maxWidth": 700,
+        "effects": [
+          "1.25rem side gutters",
+          "76px header",
+          "Header account actions move into menu",
+          "Tablet loses perspective and becomes one column",
+          "System bars hide; recall estimate remains",
+          "Learning loop, science, practice cards, and final CTA stack",
+          "Section padding 52px",
+          "Footer becomes two columns"
+        ]
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "LandingBrand",
+      "source": "components/landing/LandingBrand.tsx",
+      "role": "SVG crosshair identity and wordmark"
+    },
+    {
+      "name": "Hero",
+      "source": "components/landing/Hero.tsx",
+      "role": "Headline, account creation, product demonstration and decorative sculpture"
+    },
+    {
+      "name": "StudyPlanPreview",
+      "source": "components/landing/StudyPlanPreview.tsx",
+      "role": "HTML tablet with explicitly illustrative recall estimate and study plan"
+    },
+    {
+      "name": "StudyChallenges",
+      "source": "components/landing/LearningExperience.tsx",
+      "role": "Five study problems on navy"
+    },
+    {
+      "name": "LearningEngine",
+      "source": "components/landing/LearningExperience.tsx",
+      "role": "Five-step behavioral concept-review loop"
+    },
+    {
+      "name": "ConceptLearning",
+      "source": "components/landing/ConceptLearning.tsx",
+      "role": "Explicit two-prompt concept example and science disclosure"
+    },
+    {
+      "name": "TrainingModesDock",
+      "source": "components/landing/TrainingModesDock.tsx",
+      "role": "Keyboard-selectable practice modes and associated panel"
+    },
+    {
+      "name": "BuiltForStudents",
+      "source": "components/landing/LearningExperience.tsx",
+      "role": "Capability cards and student context"
+    },
+    {
+      "name": "AuthDialog",
+      "source": "components/landing/LandingPage.tsx",
+      "role": "Existing Clerk forms in Radix dialog"
+    }
+  ],
+  "interaction": {
+    "menu": ["Escape closes and restores toggle focus", "Desktop resize closes open menu"],
+    "tabs": [
+      "Roving tab stop",
+      "Orientation-aware arrow keys",
+      "Home and End",
+      "Manual scrolling to keep selected narrow tab visible"
+    ],
+    "conceptExample": ["Explicit button toggles two examples", "Polite atomic live region"],
+    "auth": [
+      "Body scroll lock",
+      "Bounded dialog scrolling",
+      "Trigger focus restoration with mobile-menu fallback"
+    ],
+    "focusOutline": "3px solid accent, offset 4px; soft accent on dark surfaces",
+    "skipLink": true,
+    "motion": {
+      "entrance": "700ms translate from 10px to 0; content already visible",
+      "enabledWhen": "prefers-reduced-motion: no-preference",
+      "hoverTransitions": "150–160ms color/shadow",
+      "automaticCarousel": false
+    },
+    "forcedColors": [
+      "Action/tablet/selected-tab borders",
+      "System highlight for preview marks",
+      "Decorative sculpture hidden"
+    ]
+  },
+  "assets": [
+    {
+      "path": "public/images/landing/learning-sculpture.webp",
+      "responsiveVariant": "public/images/landing/learning-sculpture-small.webp",
+      "srcsetWidths": [800, 1600],
+      "declaredDimensions": { "width": 1600, "height": 667 },
+      "kind": "Generated decorative marketing artwork",
+      "medicalInstructionalUse": false,
+      "decorative": true,
+      "provenanceDocument": "public/images/landing/PROVENANCE.md"
+    },
+    {
+      "path": "public/fonts/Manrope-Latin.woff",
+      "kind": "Locally hosted variable font",
+      "license": "SIL Open Font License 1.1"
+    }
+  ],
+  "contentConstraints": [
+    "Inference-first, concept-level review; no student confidence self-rating controls",
+    "Implicit binary Again/Good scheduling unchanged; no Hard/Easy ratings",
+    "Statistical confidence intervals do not currently drive scheduling; Wilson and shadow signals are separate and read-only",
+    "Fresh questions are the intended concept-review experience, not a universal never-repeat guarantee",
+    "Illustrative values must remain labelled and must not become learner-data fallbacks",
+    "No invented testimonials, adoption metrics, commercial terms, or validated learning outcomes",
+    "CTA opens account creation; no guaranteed assessment or payment offer"
+  ],
+  "validation": {
+    "basis": "Source inspection and main finish-session verification reports",
+    "focusedTests": { "status": "passed", "count": 57 },
+    "productionBuild": "passed",
+    "productionTypecheck": {
+      "status": "failed",
+      "existingErrorCount": 7,
+      "area": "Existing AI-tracing and Prisma group-by errors outside landing changes"
+    },
+    "changedFileLint": "passed",
+    "browserPreview": { "status": "blocked", "error": "ERR_BLOCKED_BY_CLIENT" },
+    "renderedAcceptance": "pending",
+    "renderedScreenshotsClaimed": false,
+    "measuredContrastPassClaimed": false,
+    "fidelityScore": null,
+    "limitations": [
+      "No phone, tablet, or desktop rendered visual pass",
+      "Real Clerk rendering, compact preview readability, focus presentation and sculpture composition need accessible-browser review",
+      "Science links and PANaCEa-specific learning outcomes are not independently validated by this design document"
+    ]
+  }
+}

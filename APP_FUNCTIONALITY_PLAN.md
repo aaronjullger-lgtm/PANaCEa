@@ -130,3 +130,13 @@ Full findings and release checklist: `docs/audits/2026-09-23-design-audit.md`.
 - Full lint: 9 errors outside changed files. Full production typecheck after Prisma generation: 7 errors outside changed files (AI tracing and Prisma aggregate types). These checks remain blockers to a clean repository gate.
 - Browser reviewed production homepage and dashboard preview. Local preview was blocked by the cloud browser; changed-branch mobile/desktop screenshots and signed-in acceptance remain outstanding.
 - Next step: visually review the draft PR at phone/tablet/desktop widths and obtain Aaron's approval before merge/deploy, as required by AGENTS.md. No production deployment, migration, auth/RLS change, or dependency addition in this session.
+
+## Reference overhaul and science audit — 2026-09-23
+
+- Rebuilt the public landing from the owner's silver-blue/navy reference. Behavioral concept memory, automatic timing, and fresh-question retrieval are the central story; decorative artwork and sample data are clearly separated from learner results.
+- Added accessible concept demo, science citations, new navigation/auth focus tests, scoped design documentation, asset provenance and font license. Fixed the shared dialog overlay inheriting the content-centering transform.
+- Verification: 57 focused tests pass, changed-source ESLint passes, Vite build and bundle gate pass. Production typecheck still reports the same 7 unrelated errors. Supported browser preview remains blocked, so no rendered acceptance or live Clerk claim.
+- Independent source finish review passed after four targeted fixes; design documenter completed root `DESIGN.md` and local `.impeccable/design.json`.
+- New findings: canonical history lacks confidence/RT fields read by behavioral history adjustments; Wilson bounds remain shadow and item-keyed with possible current-event duplication; fresh-item guarantees and variant difficulty need further verification.
+- Details: `docs/audits/2026-09-23-reference-overhaul.md` and `docs/research/2026-09-23-concept-learning-science-audit.md`.
+- Next step: rendered branch acceptance and real auth checks, then owner-approved merge/deploy. Backend scheduling findings are documented follow-ups; no algorithm, schema, or FSRS parameter change in this design task.
