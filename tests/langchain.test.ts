@@ -290,7 +290,7 @@ describe('LangChain Tracing', () => {
       { runName: 'test', tags: ['a'], metadata: { foo: 'bar' } }
     );
     expect(config.runName).toBe('test');
-    expect(config.tags).toEqual(['a']);
+    expect(config.tags).toEqual(['panacea', 'a']);
     expect((config.metadata as any).app).toBe('panacea');
     expect((config.metadata as any).foo).toBe('bar');
   });

@@ -12,6 +12,15 @@
  */
 
 import type { ToolCategory, ToolDefinition } from './types';
+// Static import across the toolRegistry <-> tools/index cycle is safe under
+// ESM semantics: both modules reference each other's exports only inside
+// function bodies, which run after module evaluation completes (live bindings;
+// hoisted function declarations). Factories stay synchronous.
+import {
+  createDefaultToolRegistry as buildDefaultRegistryFromTools,
+  CLINICAL_TOOLS,
+  QUALITY_TOOLS,
+} from './tools/index';
 
 // ─── Factory ────────────────────────────────────────────────────────────────
 
@@ -145,16 +154,14 @@ export function buildFunctionDeclarations(
  * to build restricted registries for specific agent domains.
  */
 export function createDefaultToolRegistry(): ToolRegistry {
-  // Lazy-import to avoid circular dependency with tools/index.ts
-  const { ALL_TOOLS } = require('./tools/index') as { ALL_TOOLS: AnyToolDefinition[] };
-  return new ToolRegistry(ALL_TOOLS);
+  // Delegate to the tools/index factory: ALL_TOOLS is module-private there.
+  return buildDefaultRegistryFromTools();
 }
 
 /**
  * Build a registry restricted to clinical study tools (student-facing).
  */
 export function createClinicalToolRegistry(): ToolRegistry {
-  const { CLINICAL_TOOLS } = require('./tools/index') as { CLINICAL_TOOLS: AnyToolDefinition[] };
   return new ToolRegistry(CLINICAL_TOOLS);
 }
 
@@ -162,6 +169,5 @@ export function createClinicalToolRegistry(): ToolRegistry {
  * Build a registry for content quality verification agents.
  */
 export function createQualityToolRegistry(): ToolRegistry {
-  const { QUALITY_TOOLS } = require('./tools/index') as { QUALITY_TOOLS: AnyToolDefinition[] };
   return new ToolRegistry(QUALITY_TOOLS);
 }

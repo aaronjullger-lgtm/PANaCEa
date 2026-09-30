@@ -116,3 +116,12 @@ Resolve with: `npx prisma migrate resolve --applied <dir>`
 ## Next Best Step
 
 **Audit and fix `UPDATED_PRODUCTION_READINESS_SCORECARD.md` and `NEXT_IMPLEMENTATION_PLAN.md`** — both are referenced by CLAUDE.md but don't exist. These are the primary status documents agents consult when picking up work.
+
+
+## 2026-09-30 development CI repair (review pending)
+
+The isolated development repair resolves ESM lint blockers while retaining synchronous agent registry factories, restores per-model tracing callback configuration, forwards the LangSmith endpoint, and narrows Prisma assignment/conversion contracts without changing queries. Calendar week assertions now use calendar dates; the circuit-breaker boundary check uses controlled time. No FSRS algorithm, authentication policy, migration, production data or deployment changed.
+
+Local validation: production and CI typecheck; lint (0 errors); build and bundle budget; 143 critical tests; full unit suite (558 files, 10,454 passed, one existing skip). Fresh-process registry import-order checks passed. A separate GLM5.3 source review found no confirmed regression; multi-model fallback tracing coverage and broader timezone coverage remain follow-ups. Hosted CI on the proposed head is still required.
+
+For PRs into agent-dev only, guard Neon create/delete jobs and the paid LangSmith model-evaluation step. All local agent test steps remain enabled; main, other branch and scheduled behavior remains unchanged. CI branch triggers already include agent-dev. Skipped paid evaluation is not a passing evaluation. This change authorizes neither deployment nor automatic merge.

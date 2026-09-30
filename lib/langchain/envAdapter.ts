@@ -34,6 +34,7 @@ export function fromCloudflareEnv(env: Record<string, unknown>): AIEnvKeys {
     OPENROUTER_API_KEY: asString(env.OPENROUTER_API_KEY),
     LANGSMITH_API_KEY: asString(env.LANGSMITH_API_KEY),
     LANGSMITH_PROJECT: asString(env.LANGSMITH_PROJECT),
+    LANGSMITH_ENDPOINT: asString(env.LANGSMITH_ENDPOINT),
   };
 }
 
@@ -65,6 +66,7 @@ export function fromExplicitKeys(keys: Partial<AIEnvKeys>): AIEnvKeys {
     OPENROUTER_API_KEY: keys.OPENROUTER_API_KEY,
     LANGSMITH_API_KEY: keys.LANGSMITH_API_KEY,
     LANGSMITH_PROJECT: keys.LANGSMITH_PROJECT,
+    LANGSMITH_ENDPOINT: keys.LANGSMITH_ENDPOINT,
   };
 }
 

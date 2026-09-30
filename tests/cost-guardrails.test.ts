@@ -213,21 +213,22 @@ describe('CircuitBreaker', () => {
   });
 
   it('should transition to half-open after cooldown', () => {
-    // Create breaker with short cooldown for testing
-    const shortCb = createCircuitBreaker({
-      ...DEFAULT_COST_GUARDRAIL_CONFIG,
-      circuitBreakerCooldownMs: 1, // 1ms cooldown
-    });
-
-    shortCb.tripForBudget('deepinfra');
-    expect(shortCb.isAvailable('deepinfra')).toBe(false);
-
-    // Wait for cooldown
-    return new Promise((resolve) => setTimeout(resolve, 10)).then(() => {
-      // Should now be half-open (available for test call)
+    vi.useFakeTimers();
+    try {
+      const shortCb = createCircuitBreaker({
+        ...DEFAULT_COST_GUARDRAIL_CONFIG,
+        circuitBreakerCooldownMs: 10,
+      });
+      shortCb.tripForBudget('deepinfra');
+      expect(shortCb.isAvailable('deepinfra')).toBe(false);
+      vi.advanceTimersByTime(9);
+      expect(shortCb.isAvailable('deepinfra')).toBe(false);
+      vi.advanceTimersByTime(1);
       expect(shortCb.isAvailable('deepinfra')).toBe(true);
       expect(shortCb.getState('deepinfra').state).toBe('half-open');
-    });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('should close circuit after successful half-open call', () => {

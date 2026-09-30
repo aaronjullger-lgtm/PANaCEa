@@ -10,8 +10,9 @@
 import {
   assignVariant,
   ensureExposure,
-  type ABPrismaClient,
+  type ConversionPrismaClient,
   type ABVariant,
+  type AssignmentPrismaClient,
 } from '../services/abTestService';
 import { logger } from '../logger';
 
@@ -77,7 +78,7 @@ function parseTargetStages(raw: unknown): string[] {
  * @param userStage  - Optional learner stage for stage-targeted experiments
  */
 export async function resolveAssignments(
-  db: ABPrismaClient,
+  db: AssignmentPrismaClient,
   userId: string,
   experimentIds?: string[],
   userStage?: string
@@ -145,7 +146,7 @@ export async function resolveAssignments(
  * Non-fatal — logs a warning on failure but never throws.
  */
 export async function logABConversion(
-  db: ABPrismaClient,
+  db: ConversionPrismaClient,
   userId: string,
   experimentId: string,
   variantName: string,

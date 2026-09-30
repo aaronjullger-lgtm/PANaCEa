@@ -67,14 +67,38 @@ describe('Calendar Sync Service', () => {
         expect(week.startDate).toBeInstanceOf(Date);
         expect(week.endDate).toBeInstanceOf(Date);
 
-        // End date should be 6 days after start date
-        const daysDiff = Math.ceil(
-          (week.endDate.getTime() - week.startDate.getTime()) / (24 * 60 * 60 * 1000)
-        );
-        expect(daysDiff).toBe(6);
+        // A calendar week can include a 23- or 25-hour daylight-saving day.
+        const expectedEnd = new Date(week.startDate);
+        expectedEnd.setDate(expectedEnd.getDate() + 6);
+        expect(week.endDate.getTime()).toBe(expectedEnd.getTime());
       });
     });
   });
+
+  it.each(['2026-03-06T12:00:00', '2026-10-30T12:00:00'])(
+    'keeps calendar weeks contiguous across a clock transition starting %s',
+    (start) => {
+      vi.useFakeTimers();
+      try {
+        vi.setSystemTime(new Date(start));
+        const examDate = new Date();
+        examDate.setDate(examDate.getDate() + 28);
+        const plan = generateStudyPlan(examDate);
+        expect(plan.length).toBeGreaterThan(0);
+        const expectedStart = new Date(start);
+        expectedStart.setHours(0, 0, 0, 0);
+        for (const week of plan) {
+          expect(week.startDate.getTime()).toBe(expectedStart.getTime());
+          const expectedEnd = new Date(expectedStart);
+          expectedEnd.setDate(expectedEnd.getDate() + 6);
+          expect(week.endDate.getTime()).toBe(expectedEnd.getTime());
+          expectedStart.setDate(expectedStart.getDate() + 7);
+        }
+      } finally {
+        vi.useRealTimers();
+      }
+    }
+  );
 
   describe('studyPlanToEvents', () => {
     it('should convert study plan to calendar events', () => {
