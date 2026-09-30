@@ -599,7 +599,10 @@ export const dashboardWidgetRegistry: DashboardWidgetDefinition[] = [
       });
     },
     build: (ctx): FsrsHealthData => {
-      const fsrs = ctx.raw.dashboardAnalytics?.fsrs!;
+      const fsrs = ctx.raw.dashboardAnalytics?.fsrs;
+      if (!fsrs) {
+        throw new Error('fsrs_health widget built without passing its eligible guard');
+      }
       const retention = fsrs.retentionPercent ?? 0;
       const interpretation =
         retention >= 90 ? 'Excellent retention' :

@@ -319,11 +319,29 @@ export interface ABPrismaClient {
 }
 
 /**
+ * Narrow contract for the assignment write path: only the operations
+ * resolveAssignments and ensureExposure actually use. Keeping this a Pick of
+ * ABPrismaClient means a real PrismaClient satisfies it without any structural
+ * comparison against the unrelated aBConversion delegate (notably its groupBy
+ * generic), which previously triggered TS2615 circular AND/NOT/OR errors.
+ * The broad ABPrismaClient remains for conversion/stats/reporting helpers.
+ */
+export type AssignmentPrismaClient = Pick<
+  ABPrismaClient,
+  'aBExperiment' | 'aBExposure'
+>;
+
+/** Conversion writes do not depend on aggregate-reporting delegates. */
+export interface ConversionPrismaClient {
+  aBConversion: Pick<ABPrismaClient['aBConversion'], 'create'>;
+}
+
+/**
  * Get or create an exposure record for a user in an experiment.
  * Idempotent — if the user was already exposed, returns the existing record.
  */
 export async function ensureExposure(
-  db: ABPrismaClient,
+  db: AssignmentPrismaClient,
   userId: string,
   experimentId: string,
   variantName: string
@@ -353,7 +371,7 @@ export async function ensureExposure(
  * Log a conversion event for a user in an experiment.
  */
 export async function logConversion(
-  db: ABPrismaClient,
+  db: ConversionPrismaClient,
   userId: string,
   experimentId: string,
   variantName: string,

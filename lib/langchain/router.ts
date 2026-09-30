@@ -205,8 +205,8 @@ async function executeWithFallback<T>(
         // Retries during error storms would otherwise multiply trace events
         // and burn through the LangSmith event quota.
         const activeConfig = retry === 0
-          ? tracingConfig
-          : { tags: tracingConfig.tags, metadata: tracingConfig.metadata };
+          ? modelTracingConfig
+          : { tags: modelTracingConfig.tags, metadata: modelTracingConfig.metadata };
 
         const result = await handler({ model, modelName, messages, tracingConfig: activeConfig });
         const latencyMs = Date.now() - start;

@@ -32,6 +32,7 @@ export interface AIEnvKeys {
   OPENROUTER_API_KEY?: string;
   LANGSMITH_API_KEY?: string;
   LANGSMITH_PROJECT?: string;
+  LANGSMITH_ENDPOINT?: string;
   LANGSMITH_SAMPLE_RATE?: string;
   LANGFUSE_PUBLIC_KEY?: string;
   LANGFUSE_SECRET_KEY?: string;

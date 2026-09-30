@@ -25,6 +25,7 @@
  * @module lib/agents/bridge
  */
 
+import { getAgent, listAgents } from './shared/runtime';
 import type { AgentContext, InvokeResult, AgentStatus } from './shared/types';
 import type { AgentRunConfig, AgentRunResult, ToolExecutionContext } from '../services/agents/types';
 import type { AgentTurnContext } from '../services/agents/geminiAgentClient';
@@ -128,8 +129,7 @@ export function resolveAgent(name: string): BridgeResolveResult {
     return { backend: 'node', agentName: name.slice(5) };
   }
 
-  // Check Edge registry (lazy import to avoid circular deps)
-  const { getAgent } = require('./shared/runtime') as { getAgent: (n: string) => import('./shared/types').AgentDefinition | undefined };
+  // Check Edge registry
   const edgeDef = getAgent(name);
   if (edgeDef) {
     return { backend: 'edge', agentName: name, edgeDef };
@@ -162,7 +162,6 @@ export function listAllAgents(): Array<{
 
   // Edge agents
   try {
-    const { listAgents } = require('./shared/runtime') as { listAgents: () => ReadonlyArray<{ name: string; description: string; tier: string }> };
     for (const a of listAgents()) {
       agents.push({ name: a.name, description: a.description, backend: 'edge', tier: a.tier });
     }
