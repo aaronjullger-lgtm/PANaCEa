@@ -386,9 +386,11 @@ function ReadinessVisual({ reducedMotion }: { reducedMotion: boolean }) {
             </p>
           </div>
           <div className="grid gap-2 text-right">
-            <span className="font-mono text-sm text-atlas-success">+12% readiness buffer</span>
+            <span className="font-mono text-sm text-atlas-success">
+              4 percentage points above demo target
+            </span>
             <span className="text-xs text-atlas-muted">
-              Projected from current mock readiness signals
+              Demo readiness 86% minus target 82%.
             </span>
           </div>
         </div>

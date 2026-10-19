@@ -8,12 +8,12 @@
 ## Status
 
 **Phase:** Active development — post-integration hardening
-**Last session:** 2026-10-19 focused landing-page usability/transparency patch (local only)
+**Last session:** 2026-10-19 focused landing-page usability/transparency patch (draft PR #366)
 **CI:** Typecheck, lint, build, unit tests, E2E smoke — run on push to main
 
-**Current focused task:** Landing navigation now covers tablet widths; auth has a bounded scrollable body, valid dialog semantics and focus return; synthetic metrics and account prerequisites are explicit. Clerk auth configuration and redirects are unchanged.
+**Current focused task:** Landing navigation now covers tablet widths; auth has a bounded scrollable body, valid dialog semantics and focus return; synthetic metrics and account prerequisites are explicit. The demo readiness buffer is 4 percentage points (86% minus 82%). Clerk auth configuration and redirects are unchanged.
 
-**Next step for this patch:** Review the local diff. Actual Clerk form cancel/back flows still need verification with a safely configured test environment. No PR, merge or deployment was requested or performed.
+**Next step for this patch:** Review draft PR #366 and monitor exact-head CI. Real Clerk forms on the automatic preview are blocked by the existing production-origin restriction; do not change keys/settings. Baseline lint and service-configuration failures remain outside this patch. No merge or production deployment was performed.
 
 ## Known Blockers (P0)
 
@@ -95,6 +95,7 @@ Resolve with: `npx prisma migrate resolve --applied <dir>`
 
 | Date | Command | Result | Notes |
 |------|---------|--------|-------|
+| 2026-10-19 | Demo-buffer follow-up: focused tests, lint/format, build/budget, Chromium | PASS | 36 tests; demo 86% minus 82% shown as +4 percentage points; 320/768/1440px checks clean; independent review found no blocking issue |
 | 2026-10-19 | `vitest run tests/landingPage.test.tsx tests/routeRegistry.test.ts` | PASS | 2 files, 35 tests, including 4 new landing regressions |
 | 2026-10-19 | `npm run test:critical` | PASS | 6 files, 143 tests |
 | 2026-10-19 | Focused ESLint + Prettier | PASS | Changed landing files and regression tests |

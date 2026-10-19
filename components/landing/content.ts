@@ -146,8 +146,8 @@ export const DIAGNOSTIC_SCROLL_STAGES: DiagnosticScrollStage[] = [
       'Readiness vitals stabilize as weak systems improve, review debt shrinks, and simulation performance becomes consistent.',
     signal: 'Readiness stabilizes only after weak systems and review debt improve',
     organSystem: 'Readiness Score',
-    metricLabel: 'Projected buffer',
-    metricValue: '+12%',
+    metricLabel: 'Above demo target',
+    metricValue: '+4 pp',
     status: 'success',
     icon: ChartNoAxesCombined,
   },
@@ -673,15 +673,15 @@ export const DASHBOARD_PREVIEW_VITALS: DashboardPreviewVital[] = [
   },
   {
     label: 'Readiness buffer',
-    value: '12%',
-    numericValue: 12,
-    formatter: (value) => `${Math.round(value)}%`,
-    change: 'above current target',
+    value: '+4 pp',
+    numericValue: 4,
+    formatter: (value) => `+${Math.round(value)} pp`,
+    change: 'percentage points above target',
     status: 'success',
     accessibleText:
-      'Sample readiness buffer is 12 percent above the current target. Synthetic demo data.',
-    context: 'Projection combines accuracy, coverage, recall stability, and image work.',
-    target: 'Target: 10% buffer',
+      'Sample readiness is 86 percent versus an 82 percent target, a buffer of 4 percentage points. Synthetic demo data.',
+    context: 'Demo readiness 86% minus target 82%.',
+    target: 'Demo target: 82%',
   },
   {
     label: 'Weak-area pressure',
@@ -710,12 +710,13 @@ export const DASHBOARD_PREVIEW_VITALS: DashboardPreviewVital[] = [
 export const ANALYTICS_METRICS: AnalyticsMetric[] = [
   {
     label: 'Readiness buffer',
-    value: '12%',
-    numericValue: 12,
-    formatter: (value) => `${Math.round(value)}%`,
-    change: 'above current target',
+    value: '+4 pp',
+    numericValue: 4,
+    formatter: (value) => `+${Math.round(value)} pp`,
+    change: 'percentage points above target',
     status: 'success',
-    accessibleText: 'Readiness buffer is 12 percent above the current target.',
+    accessibleText:
+      'Sample readiness is 86 percent versus an 82 percent target, a buffer of 4 percentage points. Synthetic demo data.',
   },
   {
     label: 'Weak-area pressure',
