@@ -347,14 +347,17 @@ export function TrainingModesDock() {
           titleId="training-modes-title"
         />
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
+        <p className="mt-6 text-center text-xs leading-5 text-atlas-muted">
+          Demo metrics — synthetic data, not measured learner outcomes.
+        </p>
+        <div className="mt-4 grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
           <ModePreview mode={activeMode} reducedMotion={reducedMotion} />
 
           <LayoutGroup>
             <div
               role="tablist"
               className="order-1 -mx-4 flex min-w-0 max-w-[100vw] snap-x gap-3 overflow-x-auto overscroll-x-contain px-4 pb-4 md:mx-0 md:grid md:max-w-none md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0 lg:order-2"
-              aria-label="StudyPanacea training modes"
+              aria-label="PANaCEa training modes"
             >
               {TRAINING_MODES.map((mode) => (
                 <ModeTile

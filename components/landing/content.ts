@@ -41,21 +41,24 @@ export const HERO_VITALS: LandingVital[] = [
     value: '86%',
     change: '+7 after weak-area blocks',
     status: 'success',
-    accessibleText: 'PANCE readiness is 86 percent, up 7 after weak-area blocks.',
+    accessibleText:
+      'Sample PANCE readiness is 86 percent, up 7 after weak-area blocks. Synthetic demo data.',
   },
   {
     label: 'Review debt',
     value: '18',
     change: 'clear before simulation',
     status: 'warning',
-    accessibleText: 'Review debt is 18 items to clear before simulation.',
+    accessibleText:
+      'Sample review debt is 18 items to clear before simulation. Synthetic demo data.',
   },
   {
     label: 'Image-read accuracy',
     value: '74%',
     change: 'cardio imaging lagging',
     status: 'info',
-    accessibleText: 'Clinical image-read accuracy is 74 percent, with cardiology imaging lagging.',
+    accessibleText:
+      'Sample clinical image-read accuracy is 74 percent, with cardiology imaging lagging. Synthetic demo data.',
   },
 ];
 
@@ -663,7 +666,8 @@ export const DASHBOARD_PREVIEW_VITALS: DashboardPreviewVital[] = [
     formatter: (value) => `${Math.round(value)}%`,
     change: '+7 after targeted blocks',
     status: 'success',
-    accessibleText: 'Readiness score is 86 percent, up 7 points after targeted blocks.',
+    accessibleText:
+      'Sample readiness score is 86 percent, up 7 points after targeted blocks. Synthetic demo data.',
     context: 'Stable enough for mixed blocks; keep cardiopulmonary review active.',
     target: 'Target: 82%+ sustained',
   },
@@ -674,7 +678,8 @@ export const DASHBOARD_PREVIEW_VITALS: DashboardPreviewVital[] = [
     formatter: (value) => `${Math.round(value)}%`,
     change: 'above current target',
     status: 'success',
-    accessibleText: 'Readiness buffer is 12 percent above the current target.',
+    accessibleText:
+      'Sample readiness buffer is 12 percent above the current target. Synthetic demo data.',
     context: 'Projection combines accuracy, coverage, recall stability, and image work.',
     target: 'Target: 10% buffer',
   },
@@ -685,7 +690,7 @@ export const DASHBOARD_PREVIEW_VITALS: DashboardPreviewVital[] = [
     formatter: (value) => `${Math.round(value)}`,
     change: 'systems need attention',
     status: 'warning',
-    accessibleText: 'Four organ systems need attention.',
+    accessibleText: 'Sample learner: four organ systems need attention. Synthetic demo data.',
     context: 'Cardiology and pulmonology are driving today’s prescription.',
     target: 'Target: 2 or fewer',
   },
@@ -696,7 +701,7 @@ export const DASHBOARD_PREVIEW_VITALS: DashboardPreviewVital[] = [
     formatter: (value) => `${Math.round(value)}%`,
     change: 'stable across 14 days',
     status: 'info',
-    accessibleText: 'Recall stability is 81 percent across 14 days.',
+    accessibleText: 'Sample recall stability is 81 percent across 14 days. Synthetic demo data.',
     context: 'Overdue high-yield misses should be cleared before simulation.',
     target: 'Target: 85% mature',
   },
@@ -829,7 +834,7 @@ export const DASHBOARD_STUDY_PRESCRIPTION: DashboardStudyPrescription = {
   duration: '42 min',
   rationale:
     'Cardiology and pulmonology misses overlap with image accuracy and pacing drift, so today’s plan starts there before simulation.',
-  expectedImpact: '+3 readiness points if review debt is cleared',
+  expectedImpact: 'Example goal: clear due reviews before the next simulation',
   steps: [
     {
       label: 'Targeted questions',
@@ -984,7 +989,7 @@ export const WORKFLOW_STEPS: WorkflowStep[] = [
 ];
 
 export const CTA_ASSURANCES = [
-  'Readiness baseline in minutes',
+  'Begin with a readiness baseline',
   'NCCPA blueprint aligned',
   'Adaptive from the first block',
 ] as const;
