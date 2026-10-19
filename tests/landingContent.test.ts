@@ -11,7 +11,9 @@ describe('Synthetic landing readiness display', () => {
     const latest = DASHBOARD_READINESS_TIMELINE.at(-1)!;
     const difference = latest.readiness - latest.target;
     const formatted = `+${difference} pp`;
-    const readiness = DASHBOARD_PREVIEW_VITALS.find((metric) => metric.label === 'Readiness score')!;
+    const readiness = DASHBOARD_PREVIEW_VITALS.find(
+      (metric) => metric.label === 'Readiness score'
+    )!;
     expect(readiness.numericValue).toBe(latest.readiness);
     expect(readiness.value).toBe(`${latest.readiness}%`);
 

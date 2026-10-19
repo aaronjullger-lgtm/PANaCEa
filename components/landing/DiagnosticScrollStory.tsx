@@ -389,9 +389,7 @@ function ReadinessVisual({ reducedMotion }: { reducedMotion: boolean }) {
             <span className="font-mono text-sm text-atlas-success">
               4 percentage points above demo target
             </span>
-            <span className="text-xs text-atlas-muted">
-              Demo readiness 86% minus target 82%.
-            </span>
+            <span className="text-xs text-atlas-muted">Demo readiness 86% minus target 82%.</span>
           </div>
         </div>
       </div>
