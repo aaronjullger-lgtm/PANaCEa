@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { SignIn, SignUp } from '@clerk/clerk-react';
 import { ArrowRight, Check, LockKeyhole, Menu, ScanLine, X } from 'lucide-react';
 import {
@@ -47,6 +47,7 @@ const clerkAppearance = {
 
 function LandingHeader({ onSignIn, onSignUp }: { onSignIn: () => void; onSignUp: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!mobileOpen) {
@@ -56,6 +57,7 @@ function LandingHeader({ onSignIn, onSignUp }: { onSignIn: () => void; onSignUp:
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setMobileOpen(false);
+        menuButtonRef.current?.focus();
       }
     };
 
@@ -71,9 +73,7 @@ function LandingHeader({ onSignIn, onSignUp }: { onSignIn: () => void; onSignUp:
             <img src="/favicondarkmodeTP.svg" alt="" className="size-7" aria-hidden="true" />
           </span>
           <span className="flex flex-col leading-none">
-            <span className="font-poppins text-base font-semibold text-atlas-white">
-              StudyPanacea
-            </span>
+            <span className="font-poppins text-base font-semibold text-atlas-white">PANaCEa</span>
             <span className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-atlas-cyan">
               PANCE Command Center
             </span>
@@ -92,7 +92,7 @@ function LandingHeader({ onSignIn, onSignUp }: { onSignIn: () => void; onSignUp:
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 sm:flex">
+        <div className="hidden items-center gap-3 lg:flex">
           <button
             type="button"
             onClick={onSignIn}
@@ -105,14 +105,15 @@ function LandingHeader({ onSignIn, onSignUp }: { onSignIn: () => void; onSignUp:
             scannerAccent
             iconRight={<ArrowRight className="size-4" aria-hidden="true" />}
           >
-            Start readiness scan
+            Create your account
           </PremiumCTAButton>
         </div>
 
         <button
+          ref={menuButtonRef}
           type="button"
           onClick={() => setMobileOpen((current) => !current)}
-          className="atlas-focus-ring inline-flex size-11 items-center justify-center rounded-xl border border-atlas-border bg-atlas-glass text-atlas-white sm:hidden"
+          className="atlas-focus-ring inline-flex size-11 items-center justify-center rounded-xl border border-atlas-border bg-atlas-glass text-atlas-white lg:hidden"
           aria-expanded={mobileOpen}
           aria-controls="landing-mobile-menu"
           aria-label="Toggle landing navigation"
@@ -128,7 +129,7 @@ function LandingHeader({ onSignIn, onSignUp }: { onSignIn: () => void; onSignUp:
       {mobileOpen ? (
         <div
           id="landing-mobile-menu"
-          className="border-t border-atlas-border bg-atlas-background-soft px-4 py-4 sm:hidden"
+          className="max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain border-t border-atlas-border bg-atlas-background-soft px-4 py-4 lg:hidden"
         >
           <nav className="grid gap-2" aria-label="Mobile navigation">
             {NAV_LINKS.map((link) => (
@@ -146,17 +147,19 @@ function LandingHeader({ onSignIn, onSignUp }: { onSignIn: () => void; onSignUp:
             <PremiumCTAButton
               onClick={() => {
                 setMobileOpen(false);
+                menuButtonRef.current?.focus();
                 onSignUp();
               }}
               scannerAccent
               iconRight={<ArrowRight className="size-4" aria-hidden="true" />}
             >
-              Start readiness scan
+              Create your account
             </PremiumCTAButton>
             <button
               type="button"
               onClick={() => {
                 setMobileOpen(false);
+                menuButtonRef.current?.focus();
                 onSignIn();
               }}
               className="atlas-focus-ring rounded-xl border border-atlas-border bg-atlas-glass px-4 py-3 text-sm font-semibold text-atlas-white"
@@ -211,7 +214,15 @@ function StoryConnector({ from, to }: { from: string; to: string }) {
   );
 }
 
-function AuthDialog({ authMode, onClose }: { authMode: AuthMode; onClose: () => void }) {
+function AuthDialog({
+  authMode,
+  onClose,
+  onReturnFocus,
+}: {
+  authMode: AuthMode;
+  onClose: () => void;
+  onReturnFocus: () => void;
+}) {
   return (
     <Dialog
       open
@@ -219,30 +230,29 @@ function AuthDialog({ authMode, onClose }: { authMode: AuthMode; onClose: () => 
         if (!open) onClose();
       }}
     >
-      <DialogContent className="theme-diagnostic-atlas w-[calc(100vw-2rem)] max-w-xl overflow-hidden border-atlas-border bg-[color-mix(in_srgb,var(--atlas-bg-elevated)_94%,transparent)] p-0 text-atlas-white shadow-atlas-glass sm:rounded-2xl">
-        <DialogHeader className="border-b border-atlas-border px-6 py-5 pr-14 text-left">
+      <DialogContent
+        aria-modal="true"
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          onReturnFocus();
+        }}
+        className="theme-diagnostic-atlas flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-xl flex-col gap-0 overflow-hidden border-atlas-border bg-[color-mix(in_srgb,var(--atlas-bg-elevated)_94%,transparent)] p-0 text-atlas-white shadow-atlas-glass sm:rounded-2xl"
+      >
+        <DialogHeader className="shrink-0 border-b border-atlas-border px-6 py-5 pr-14 text-left">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-atlas-cyan">
-            StudyPanacea access
+            PANaCEa access
           </p>
-          <DialogTitle
-            id="panacea-auth-title"
-            className="mt-2 font-poppins text-2xl font-semibold leading-tight text-atlas-white"
-          >
-            {authMode === 'sign-up'
-              ? 'Start your adaptive plan.'
-              : 'Return to your study surface.'}
+          <DialogTitle className="mt-2 font-poppins text-2xl font-semibold leading-tight text-atlas-white">
+            {authMode === 'sign-up' ? 'Start your adaptive plan.' : 'Return to your study surface.'}
           </DialogTitle>
-          <DialogDescription
-            id="panacea-auth-description"
-            className="mt-2 text-sm leading-6 text-atlas-muted"
-          >
+          <DialogDescription className="mt-2 text-sm leading-6 text-atlas-muted">
             {authMode === 'sign-up'
               ? 'Create an account to begin targeted questions, clinical image training, and readiness tracking.'
               : 'Sign in to resume your review queue, weak-area plan, and exam timeline.'}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-4 py-6 sm:px-6">
+        <div className="min-h-0 overflow-y-auto overscroll-contain px-4 py-6 sm:px-6">
           {authMode === 'sign-up' ? (
             <SignUp appearance={clerkAppearance} fallbackRedirectUrl="/" />
           ) : (
@@ -259,7 +269,7 @@ function LandingFooter({ onSignUp }: { onSignUp: () => void }) {
     <footer className="border-t border-atlas-border px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 text-sm text-atlas-muted md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="font-poppins text-base font-semibold text-atlas-white">StudyPanacea</p>
+          <p className="font-poppins text-base font-semibold text-atlas-white">PANaCEa</p>
           <p className="mt-2 max-w-xl">
             A premium PANCE prep command center for question practice, image training, weak-area
             targeting, and readiness analytics.
@@ -271,7 +281,7 @@ function LandingFooter({ onSignUp }: { onSignUp: () => void }) {
           className="atlas-focus-ring inline-flex items-center gap-2 self-start rounded-xl border border-atlas-border bg-atlas-glass px-4 py-3 font-semibold text-atlas-white transition-colors hover:border-atlas-border-glow md:self-center"
         >
           <span className="inline-flex items-center gap-2">
-            Begin readiness scan
+            Create account to begin
             <ArrowRight className="size-4" aria-hidden="true" />
           </span>
         </button>
@@ -318,7 +328,7 @@ function DashboardPreviewFallback({ onOpenDashboard }: { onOpenDashboard: () => 
               className="self-start"
               iconRight={<ArrowRight className="size-4" aria-hidden="true" />}
             >
-              Open your readiness dashboard
+              Create account for your dashboard
             </PremiumCTAButton>
           </div>
         </MedicalGlassCard>
@@ -330,13 +340,16 @@ function DashboardPreviewFallback({ onOpenDashboard }: { onOpenDashboard: () => 
 export function LandingPage() {
   const [authMode, setAuthMode] = useState<AuthMode>('sign-up');
   const [showAuth, setShowAuth] = useState(false);
+  const authOpenerRef = useRef<HTMLElement | null>(null);
 
   const openSignUp = () => {
+    authOpenerRef.current = document.activeElement as HTMLElement | null;
     setAuthMode('sign-up');
     setShowAuth(true);
   };
 
   const openSignIn = () => {
+    authOpenerRef.current = document.activeElement as HTMLElement | null;
     setAuthMode('sign-in');
     setShowAuth(true);
   };
@@ -419,8 +432,8 @@ export function LandingPage() {
                 Start the next study block with a readiness scan, not a guess.
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-atlas-muted sm:text-base">
-                StudyPanacea turns today’s weak system, image-read confidence, and review debt into
-                one focused PANCE study prescription.
+                PANaCEa turns today’s weak system, image-read confidence, and review debt into one
+                focused PANCE study prescription.
               </p>
 
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -430,7 +443,7 @@ export function LandingPage() {
                   className="w-full sm:w-auto"
                   iconRight={<ArrowRight className="size-4" aria-hidden="true" />}
                 >
-                  Start readiness scan
+                  Create your account
                 </PremiumCTAButton>
                 <button
                   type="button"
@@ -460,7 +473,13 @@ export function LandingPage() {
       </main>
 
       <LandingFooter onSignUp={openSignUp} />
-      {showAuth ? <AuthDialog authMode={authMode} onClose={() => setShowAuth(false)} /> : null}
+      {showAuth ? (
+        <AuthDialog
+          authMode={authMode}
+          onClose={() => setShowAuth(false)}
+          onReturnFocus={() => authOpenerRef.current?.focus()}
+        />
+      ) : null}
     </div>
   );
 }

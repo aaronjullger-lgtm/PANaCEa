@@ -56,7 +56,8 @@ function useCanRenderHeroCanvas() {
       const hasEnoughCores =
         typeof navigator.hardwareConcurrency !== 'number' || navigator.hardwareConcurrency >= 4;
       const prefersDataSavings = Boolean(navigatorHints.connection?.saveData);
-      const eligible = mediaQuery.matches && hasEnoughMemory && hasEnoughCores && !prefersDataSavings;
+      const eligible =
+        mediaQuery.matches && hasEnoughMemory && hasEnoughCores && !prefersDataSavings;
 
       cancelPendingCanvas?.();
 
@@ -114,22 +115,23 @@ function ScannerStatusRail() {
     <div className="absolute bottom-4 left-4 right-4 z-30 grid gap-3 rounded-2xl border border-atlas-border bg-atlas-background/78 p-4 shadow-atlas-glass backdrop-blur-xl md:left-auto md:max-w-xs">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-atlas-muted">
-          Study prescription
+          Demo study prescription
         </p>
         <span className="inline-flex items-center gap-1 rounded-full border border-atlas-success/35 bg-atlas-success/10 px-2.5 py-1 font-mono text-xs text-atlas-success">
           <ShieldCheck key="stable-icon" className="size-3" aria-hidden="true" />
           stable
         </span>
       </div>
-      <h3 className="font-poppins text-lg font-semibold leading-tight text-atlas-white">
+      <h2 className="font-poppins text-lg font-semibold leading-tight text-atlas-white">
         Cardio and pulmonary image reads before simulation
-      </h3>
+      </h2>
       <p className="text-sm leading-6 text-atlas-muted">
-        Clear chest-image search order, rhythm checkpoints, and therapy distractors before another timed block.
+        Clear chest-image search order, rhythm checkpoints, and therapy distractors before another
+        timed block.
       </p>
       <div
         className="h-2 overflow-hidden rounded-full bg-atlas-glass"
-        aria-label="Study prescription completion is 68 percent"
+        aria-label="Sample study prescription completion is 68 percent"
         aria-valuemax={100}
         aria-valuemin={0}
         aria-valuenow={68}
@@ -153,8 +155,8 @@ function HeroScannerPanel({ reducedMotion }: { reducedMotion: boolean }) {
           aria-hidden="true"
         />
         <ScannerFrame
-          label="PANCE readiness scanner"
-          footer="Translucent anatomy scan, organ-system signals, and readiness prescription."
+          label="Demo PANCE readiness scanner"
+          footer="Illustrative scan and metrics — synthetic data, not measured learner outcomes."
           className="relative z-10"
         >
           <div className="relative min-h-[27rem] overflow-hidden bg-atlas-background-soft sm:min-h-[34rem] lg:min-h-[37rem]">
@@ -213,8 +215,8 @@ export function Hero({ onStartStudying }: HeroProps) {
               Master the PANCE one clinical case at a time.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-8 text-atlas-muted sm:text-lg">
-              StudyPanacea reads your PANCE practice, clinical image work, weak systems, and review
-              debt, then prescribes the next study block with command-center precision.
+              PANaCEa reads your PANCE practice, clinical image work, weak systems, and review debt,
+              then prescribes the next study block with command-center precision.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -224,7 +226,7 @@ export function Hero({ onStartStudying }: HeroProps) {
                 className="w-full sm:w-auto"
                 iconRight={<ArrowRight className="size-4" aria-hidden="true" />}
               >
-                Start readiness scan
+                Create your account
               </PremiumCTAButton>
               <a
                 href="#analytics-preview"
@@ -255,7 +257,10 @@ export function Hero({ onStartStudying }: HeroProps) {
               ))}
             </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <p className="mt-5 text-xs leading-5 text-atlas-muted">
+              Demo metrics — synthetic data, not measured learner outcomes.
+            </p>
+            <div className="mt-2 grid gap-3 sm:grid-cols-3">
               {HERO_VITALS.map((vital) => (
                 <MetricVital
                   key={vital.label}

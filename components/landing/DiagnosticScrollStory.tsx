@@ -386,10 +386,10 @@ function ReadinessVisual({ reducedMotion }: { reducedMotion: boolean }) {
             </p>
           </div>
           <div className="grid gap-2 text-right">
-            <span className="font-mono text-sm text-atlas-success">+12% readiness buffer</span>
-            <span className="text-xs text-atlas-muted">
-              Projected from current mock readiness signals
+            <span className="font-mono text-sm text-atlas-success">
+              4 percentage points above demo target
             </span>
+            <span className="text-xs text-atlas-muted">Demo readiness 86% minus target 82%.</span>
           </div>
         </div>
       </div>
@@ -676,17 +676,21 @@ function StorySignalPanel() {
     {
       label: 'Clinical Diagnosis',
       value: 'Weak System Cluster',
-      detail: 'StudyPanacea groups repeated errors by organ system, task type, and review timing.',
+      detail: 'PANaCEa groups repeated errors by organ system, task type, and review timing.',
     },
     {
       label: 'Output',
       value: 'Today’s Study Rx',
-      detail: 'The endpoint is a specific block, review queue, or image-read drill, not a vanity score.',
+      detail:
+        'The endpoint is a specific block, review queue, or image-read drill, not a vanity score.',
     },
   ];
 
   return (
-    <div className="rounded-3xl border border-atlas-border bg-atlas-glass p-4" aria-label="Diagnostic story signal flow">
+    <div
+      className="rounded-3xl border border-atlas-border bg-atlas-glass p-4"
+      aria-label="Diagnostic story signal flow"
+    >
       <div className="grid gap-3 sm:grid-cols-3">
         {signals.map((signal) => (
           <div
@@ -696,9 +700,7 @@ function StorySignalPanel() {
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-atlas-cyan">
               {signal.label}
             </p>
-            <p className="mt-2 font-mono text-sm font-semibold text-atlas-white">
-              {signal.value}
-            </p>
+            <p className="mt-2 font-mono text-sm font-semibold text-atlas-white">{signal.value}</p>
             <p className="mt-2 text-xs leading-5 text-atlas-muted">{signal.detail}</p>
           </div>
         ))}
@@ -728,7 +730,10 @@ export function DiagnosticScrollStory() {
           <StorySignalPanel />
         </div>
 
-        <div className="mt-10">
+        <p className="mt-6 text-xs leading-5 text-atlas-muted">
+          Demo metrics — synthetic data, not measured learner outcomes.
+        </p>
+        <div className="mt-4">
           {reducedMotion ? (
             <StackedStory reducedMotion={reducedMotion} />
           ) : (

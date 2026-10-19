@@ -541,7 +541,10 @@ export function ClinicalImageTraining() {
           titleId="image-lab-title"
         />
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+        <p className="mt-6 text-center text-xs leading-5 text-atlas-muted">
+          Demo metrics — synthetic data, not measured learner outcomes.
+        </p>
+        <div className="mt-4 grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
           <div className="min-w-0">
             <DiagnosticViewer
               activeCase={activeCase}

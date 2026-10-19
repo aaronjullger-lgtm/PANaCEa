@@ -106,7 +106,7 @@ function DashboardPanel({
 
 function ReadinessVitals() {
   return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" aria-label="Readiness vitals">
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" aria-label="Sample readiness vitals">
       {DASHBOARD_PREVIEW_VITALS.map((vital) => (
         <div key={vital.label} className="grid min-h-[13rem] gap-3">
           <MetricVital
@@ -567,7 +567,7 @@ export function DashboardPreview({ onOpenDashboard }: { onOpenDashboard: () => v
               scannerAccent
               iconRight={<ArrowRight className="size-4" aria-hidden="true" />}
             >
-              Open your readiness dashboard
+              Create account for your dashboard
             </PremiumCTAButton>
           </div>
         </div>
@@ -579,14 +579,14 @@ export function DashboardPreview({ onOpenDashboard }: { onOpenDashboard: () => v
               <div className="flex flex-col gap-4 rounded-3xl border border-atlas-border bg-atlas-background/70 p-4 backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-atlas-cyan">
-                    StudyPanacea readiness command center
+                    PANaCEa readiness command center
                   </p>
                   <h3 className="mt-2 font-poppins text-2xl font-semibold text-atlas-white">
                     Diagnostic Atlas OS study surface
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-atlas-muted">
-                    Exam-window planning, weak-area targeting, review debt, and image-read remediation in one
-                    study surface.
+                    Exam-window planning, weak-area targeting, review debt, and image-read
+                    remediation in one study surface.
                   </p>
                 </div>
                 <div className="grid gap-2 text-xs sm:grid-cols-3 lg:min-w-[26rem]">
