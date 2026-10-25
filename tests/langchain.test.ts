@@ -38,12 +38,14 @@ vi.mock('@langchain/core/prompts', () => {
 });
 
 vi.mock('@langchain/core/tracers/tracer_langchain', () => ({
-  LangChainTracer: vi.fn().mockImplementation(() => ({
-    name: 'mock_tracer',
-    projectName: 'panacea',
-    client: {},
-    usesRunTreeMap: false,
-  })),
+  LangChainTracer: vi.fn(
+    class {
+      name = 'mock_tracer';
+      projectName = 'panacea';
+      client = {};
+      usesRunTreeMap = false;
+    }
+  ),
 }));
 
 function setupDefaultMocks() {
@@ -290,7 +292,9 @@ describe('LangChain Tracing', () => {
       { runName: 'test', tags: ['a'], metadata: { foo: 'bar' } }
     );
     expect(config.runName).toBe('test');
-    expect(config.tags).toEqual(['a']);
+    // buildTracingConfig intentionally prepends the application tag 'panacea'
+    // before caller-provided tags (tracing.ts tags array construction).
+    expect(config.tags).toEqual(['panacea', 'a']);
     expect((config.metadata as any).app).toBe('panacea');
     expect((config.metadata as any).foo).toBe('bar');
   });
