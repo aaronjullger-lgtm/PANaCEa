@@ -7,6 +7,8 @@
  * Edge runtime compatible — no process.env usage.
  */
 
+import type { Prisma } from '@prisma/client';
+
 import {
   assignVariant,
   ensureExposure,
@@ -151,7 +153,7 @@ export async function logABConversion(
   variantName: string,
   eventName: string,
   value?: number,
-  metadata?: Record<string, unknown>
+  metadata?: Prisma.InputJsonObject
 ): Promise<void> {
   try {
     await db.aBConversion.create({

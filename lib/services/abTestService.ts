@@ -7,6 +7,7 @@
  * Edge runtime compatible — no process.env usage.
  */
 
+import type { Prisma, PrismaClient } from '@prisma/client';
 import { logger } from '../logger';
 
 // ============================================================================
@@ -295,28 +296,12 @@ export function analyzeExperiment(
 // Prisma Integration Helpers
 // ============================================================================
 
+type ABPrismaDelegate = 'aBExperiment' | 'aBExposure' | 'aBConversion';
+
 /** Type for a Prisma client (or the Edge proxy) used by the service. */
-export interface ABPrismaClient {
-  aBExperiment: {
-    findMany: (args: any) => Promise<any>;
-    findUnique: (args: any) => Promise<any>;
-    create: (args: any) => Promise<any>;
-    update: (args: any) => Promise<any>;
-    delete: (args: any) => Promise<any>;
-    count: (args?: any) => Promise<number>;
-  };
-  aBExposure: {
-    findUnique: (args: any) => Promise<any>;
-    create: (args: any) => Promise<any>;
-    count: (args?: any) => Promise<number>;
-  };
-  aBConversion: {
-    create: (args: any) => Promise<any>;
-    findMany: (args: any) => Promise<any>;
-    groupBy: (args: any) => Promise<any>;
-    count: (args?: any) => Promise<number>;
-  };
-}
+export type ABPrismaClient =
+  | Pick<PrismaClient, ABPrismaDelegate>
+  | Pick<Prisma.TransactionClient, ABPrismaDelegate>;
 
 /**
  * Get or create an exposure record for a user in an experiment.
@@ -359,7 +344,7 @@ export async function logConversion(
   variantName: string,
   eventName: string,
   value?: number,
-  metadata?: Record<string, unknown>
+  metadata?: Prisma.InputJsonObject
 ): Promise<ABConversionRecord> {
   const conversion = await db.aBConversion.create({
     data: {

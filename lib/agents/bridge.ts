@@ -129,7 +129,8 @@ export function resolveAgent(name: string): BridgeResolveResult {
   }
 
   // Check Edge registry (lazy import to avoid circular deps)
-  const { getAgent } = require('./shared/runtime') as { getAgent: (n: string) => import('./shared/types').AgentDefinition | undefined };
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { getAgent } = require('./shared/runtime') as typeof import('./shared/runtime');
   const edgeDef = getAgent(name);
   if (edgeDef) {
     return { backend: 'edge', agentName: name, edgeDef };
@@ -162,7 +163,8 @@ export function listAllAgents(): Array<{
 
   // Edge agents
   try {
-    const { listAgents } = require('./shared/runtime') as { listAgents: () => ReadonlyArray<{ name: string; description: string; tier: string }> };
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { listAgents } = require('./shared/runtime') as typeof import('./shared/runtime');
     for (const a of listAgents()) {
       agents.push({ name: a.name, description: a.description, backend: 'edge', tier: a.tier });
     }
