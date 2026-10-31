@@ -91,6 +91,7 @@ Resolve with: `npx prisma migrate resolve --applied <dir>`
 
 | Date | Command | Result | Notes |
 |------|---------|--------|-------|
+| 2026-10-31 | Playwright 1.59.1 → 1.63.0 compatibility qualification | Candidate PASS on actual Ubuntu 26.04 | Baseline resolved no browser downloads and reported unsupported dependencies; 1.63.0 resolved dependencies/downloads and completed a synthetic Chromium click in the pinned official `v1.63.0-resolute` image (network disabled). Node 22 dry-run resolution also checked. PR378's new-head browser installation and application A11y/API gates remain separate hosted acceptance; no test or workflow gate was weakened. |
 | 2026-05-23 | `test:critical` | PASS | 6 files, 143 tests |
 | 2026-05-23 | `tests/fsrsSingleWriter` | PASS | 6 tests (hardened from 1) |
 | 2026-05-23 | `tests/drillReviewService` | PASS | 17 tests |
