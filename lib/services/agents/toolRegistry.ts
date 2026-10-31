@@ -146,7 +146,8 @@ export function buildFunctionDeclarations(
  */
 export function createDefaultToolRegistry(): ToolRegistry {
   // Lazy-import to avoid circular dependency with tools/index.ts
-  const { ALL_TOOLS } = require('./tools/index') as { ALL_TOOLS: AnyToolDefinition[] };
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ALL_TOOLS } = require('./tools/index') as typeof import('./tools/index');
   return new ToolRegistry(ALL_TOOLS);
 }
 
@@ -154,7 +155,8 @@ export function createDefaultToolRegistry(): ToolRegistry {
  * Build a registry restricted to clinical study tools (student-facing).
  */
 export function createClinicalToolRegistry(): ToolRegistry {
-  const { CLINICAL_TOOLS } = require('./tools/index') as { CLINICAL_TOOLS: AnyToolDefinition[] };
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { CLINICAL_TOOLS } = require('./tools/index') as typeof import('./tools/index');
   return new ToolRegistry(CLINICAL_TOOLS);
 }
 
@@ -162,6 +164,7 @@ export function createClinicalToolRegistry(): ToolRegistry {
  * Build a registry for content quality verification agents.
  */
 export function createQualityToolRegistry(): ToolRegistry {
-  const { QUALITY_TOOLS } = require('./tools/index') as { QUALITY_TOOLS: AnyToolDefinition[] };
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { QUALITY_TOOLS } = require('./tools/index') as typeof import('./tools/index');
   return new ToolRegistry(QUALITY_TOOLS);
 }

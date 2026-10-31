@@ -599,20 +599,20 @@ export const dashboardWidgetRegistry: DashboardWidgetDefinition[] = [
       });
     },
     build: (ctx): FsrsHealthData => {
-      const fsrs = ctx.raw.dashboardAnalytics?.fsrs!;
-      const retention = fsrs.retentionPercent ?? 0;
+      const fsrs = ctx.raw.dashboardAnalytics?.fsrs;
+      const retention = fsrs?.retentionPercent ?? 0;
       const interpretation =
         retention >= 90 ? 'Excellent retention' :
         retention >= 80 ? 'Healthy retention curve' :
         retention >= 70 ? 'Retention needs attention' :
         'Retention below target — review more';
       return {
-        reviewCount: fsrs.reviewCount,
+        reviewCount: fsrs?.reviewCount ?? 0,
         retentionPercent: retention,
-        averageStability: fsrs.averageStability,
-        averageDifficulty: fsrs.averageDifficulty,
-        optimizerEligible: fsrs.optimizer?.eligible ?? null,
-        optimizerProgress: fsrs.optimizer?.progressPercent ?? null,
+        averageStability: fsrs?.averageStability ?? 0,
+        averageDifficulty: fsrs?.averageDifficulty ?? 0,
+        optimizerEligible: fsrs?.optimizer?.eligible ?? null,
+        optimizerProgress: fsrs?.optimizer?.progressPercent ?? null,
         interpretation,
       };
     },

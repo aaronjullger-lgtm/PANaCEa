@@ -426,7 +426,7 @@ export function modulateGrade(context: BehavioralContext): GradeModulation {
   );
 
   // Confidence is implicit-only (no self-rated input) → always 'unknown', zero delta.
-  const confidenceCategory: 'unknown' = 'unknown';
+  const confidenceCategory = 'unknown' as const;
 
   const isImpulsiveError = rtZone === 'fast' && !context.isCorrect;
   const isEffortfulRetrieval = rtZone === 'slow' && context.isCorrect;

@@ -5,13 +5,18 @@
  * until after the specified delay has elapsed since the last time it was invoked.
  */
 
-export function debounce<T extends (...args: any[]) => any>(
+interface Debounced<T extends (...args: any[]) => any> {
+  (...args: Parameters<T>): void;
+  cancel(): void;
+}
+
+function createDebounced<T extends (...args: any[]) => any>(
   func: T,
   delay: number
-): (...args: Parameters<T>) => void {
+): Debounced<T> {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  return function debounced(...args: Parameters<T>) {
+  const debounced = ((...args: Parameters<T>) => {
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
     }
@@ -20,7 +25,23 @@ export function debounce<T extends (...args: any[]) => any>(
       func(...args);
       timeoutId = null;
     }, delay);
+  }) as Debounced<T>;
+
+  debounced.cancel = () => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
   };
+
+  return debounced;
+}
+
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  return createDebounced(func, delay);
 }
 
 /**
@@ -34,25 +55,6 @@ export function createDebouncedFunction<T extends (...args: any[]) => any>(
   debounced: (...args: Parameters<T>) => void;
   cancel: () => void;
 } {
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-  const debounced = (...args: Parameters<T>) => {
-    if (timeoutId !== null) {
-      clearTimeout(timeoutId);
-    }
-
-    timeoutId = setTimeout(() => {
-      func(...args);
-      timeoutId = null;
-    }, delay);
-  };
-
-  const cancel = () => {
-    if (timeoutId !== null) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
-    }
-  };
-
-  return { debounced, cancel };
+  const debounced = createDebounced(func, delay);
+  return { debounced, cancel: debounced.cancel };
 }

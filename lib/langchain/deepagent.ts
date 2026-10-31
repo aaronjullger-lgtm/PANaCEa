@@ -278,7 +278,8 @@ function createFallbackAgent(config: PanaceaDeepAgentConfig, env: AIEnvKeys): Pa
 
   return {
     async invoke(input) {
-      const { HumanMessage } = require('@langchain/core/messages');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { HumanMessage } = require('@langchain/core/messages') as typeof import('@langchain/core/messages');
       const messages = input.messages.map((m) => {
         if (m.role === 'user') return new HumanMessage(m.content);
         if (m.role === 'system') return new HumanMessage(m.content); // simplified
