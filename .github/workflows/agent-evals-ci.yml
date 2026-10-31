@@ -53,7 +53,7 @@ jobs:
         continue-on-error: true
 
       - name: Run LangSmith eval datasets (smoke)
-        if: env.LANGSMITH_API_KEY != ''
+        if: env.LANGSMITH_API_KEY != '' && github.base_ref != 'agent-dev'
         env:
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
           LANGSMITH_PROJECT: panacea-dev-agents
